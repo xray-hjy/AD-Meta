@@ -1,0 +1,19 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    environment:
+      AD_META_STORAGE_ROOT: /app/storage
+    volumes:
+      - ./backend/storage:/app/storage
+    expose:
+      - "8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"

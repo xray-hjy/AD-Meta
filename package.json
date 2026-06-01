@@ -1,0 +1,10 @@
+{
+  "name": "ad-meta",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "dev:backend": "cd backend && .venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000",
+    "dev:frontend": "npm --prefix frontend start",
+    "build": "npm --prefix frontend run build"
+  }
+}
