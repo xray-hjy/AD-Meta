@@ -68,6 +68,46 @@ The preferred sample identifier column is `sample_id`; legacy files with
 
 Generated files are stored under `backend/storage/`, which is ignored by git.
 
+The import command also writes normalized long-table records:
+
+- Taxonomy datasets populate `sample_info`, `taxon_anno`, and `species_abundance`.
+- KO datasets populate `sample_info`, `ko_anno`, and `ko_abundance`.
+- Species abundance stores non-zero values only; KO abundance keeps all values.
+- Chart JSON remains precomputed under `backend/storage/cache/` for fast public API reads.
+
+## Database Mode
+
+SQLite remains the default local development database:
+
+```bash
+export AD_META_DB_ENGINE=sqlite
+export AD_META_DB_PATH=storage/ad_meta.sqlite3
+```
+
+To use MySQL 8.0+, create the database first:
+
+```sql
+CREATE DATABASE ad_meta
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_0900_ai_ci;
+```
+
+Then configure the backend before starting the API or running imports:
+
+```bash
+export AD_META_DB_ENGINE=mysql
+export AD_META_MYSQL_HOST=127.0.0.1
+export AD_META_MYSQL_PORT=3306
+export AD_META_MYSQL_USER=root
+export AD_META_MYSQL_PASSWORD='your-password'
+export AD_META_MYSQL_DATABASE=ad_meta
+```
+
+`init_db()` creates the MySQL tables on startup/import. The schema keeps the
+six scientific tables from the ER plan and adds application support tables for
+dataset switching, chart caches, import jobs, KO annotations, and reference
+study de-duplication. See `docs/database.md` for the table-level contract.
+
 ## Production-Style Docker Run
 
 ```bash

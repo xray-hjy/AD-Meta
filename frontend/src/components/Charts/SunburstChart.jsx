@@ -9,15 +9,35 @@ function formatValue(value) {
   return v.toFixed(0);
 }
 
-function SunburstChart({ data, title }) {
+function formatPercent(value) {
+  const ratio = Number(value);
+  if (!Number.isFinite(ratio)) return null;
+  return `${(ratio * 100).toFixed(ratio < 0.01 ? 2 : 1)}%`;
+}
+
+function taxonomyLabel(params) {
+  const depth = Math.max((params.treePathInfo?.length || 1) - 1, 0);
+  const ratio = Number(params.data?.ratio ?? 1);
+  const name = params.name || '';
+
+  if (name.startsWith('Other ')) return name;
+  if (depth <= 1) return name;
+  if (depth === 2 && ratio >= 0.08) return name;
+  if (depth === 3 && ratio >= 0.12) return name;
+  return '';
+}
+
+function SunburstChart({ data, title, featureKind = 'taxonomy' }) {
   const option = useMemo(() => {
     if (!Array.isArray(data) || data.length === 0) return null;
+
+    const isKo = featureKind === 'ko';
 
     return {
       backgroundColor: 'transparent',
       title: {
-        text: '分类旭日图',
-        subtext: title || 'Taxonomy composition',
+        text: isKo ? 'KO 旭日图' : '分类旭日图',
+        subtext: title || (isKo ? 'KO feature composition' : 'Taxonomy composition'),
         left: 20,
         top: 14,
         textStyle: { fontSize: 18, color: '#0f172a', fontWeight: 700 },
@@ -27,14 +47,19 @@ function SunburstChart({ data, title }) {
         trigger: 'item',
         confine: true,
         formatter(params) {
+          const payload = params.data || {};
           const chain = params.treePathInfo
             .map(node => node.name)
             .filter(Boolean)
             .join(' > ');
+          const ratio = formatPercent(payload.ratio);
+          const mergedCount = Number(payload.mergedCount || 0);
           return `
             <b>${params.name}</b><br/>
             ${chain}<br/>
             丰度: ${formatValue(params.value)}
+            ${ratio ? `<br/>占父级: ${ratio}` : ''}
+            ${mergedCount ? `<br/>合并小分类: ${mergedCount}` : ''}
           `;
         },
         backgroundColor: 'rgba(15,23,42,0.96)',
@@ -59,6 +84,10 @@ function SunburstChart({ data, title }) {
             color: '#1e293b',
             fontSize: 11,
             overflow: 'truncate',
+            formatter: isKo ? undefined : taxonomyLabel,
+          },
+          labelLayout: {
+            hideOverlap: true,
           },
           levels: [
             {},
@@ -70,10 +99,10 @@ function SunburstChart({ data, title }) {
         },
       ],
     };
-  }, [data, title]);
+  }, [data, title, featureKind]);
 
   if (!option) {
-    return <div className="placeholder"><p>暂无分类旭日图数据</p></div>;
+    return <div className="placeholder"><p>暂无旭日图数据</p></div>;
   }
 
   return (

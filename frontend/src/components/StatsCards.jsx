@@ -17,11 +17,13 @@ function StatsCards({ stats }) {
     );
   }
 
+  const featureLabel = stats.featureLabel || '物种';
+
   const cards = [
     { label: '总样本数', value: stats.totalSamples },
     { label: 'AD组', value: stats.adSamples },
     { label: 'NC组', value: stats.ncSamples },
-    { label: '物种总数', value: stats.totalSpecies },
+    { label: `${featureLabel}总数`, value: stats.totalFeatures ?? stats.totalSpecies },
   ];
 
   return (

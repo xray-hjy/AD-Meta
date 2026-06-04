@@ -33,10 +33,31 @@ function svgToDataUrl(svgText) {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgText)}`;
 }
 
+function validColumnOrder(order, cols) {
+  if (!Array.isArray(order) || order.length !== cols) {
+    return Array.from({ length: cols }, (_, index) => index);
+  }
+  const seen = new Set(order);
+  if (seen.size !== cols) {
+    return Array.from({ length: cols }, (_, index) => index);
+  }
+  return order.every(index => Number.isInteger(index) && index >= 0 && index < cols)
+    ? order
+    : Array.from({ length: cols }, (_, index) => index);
+}
+
+function reorderMatrix(matrix, order) {
+  return matrix.map(row => order.map(index => row[index]));
+}
+
+function dateStamp() {
+  return new Date().toISOString().slice(0, 10).replace(/-/g, '');
+}
+
 /* ====== 布局参数 ====== */
 
-const COMPACT = { cellW: 14, left: 60, top: 44, right: 44, bottom: 28, colFont: 6, rowFont: 7, labelStep: 1 };
-const NORMAL  = { cellW: 26, left: 105, top: 56, right: 56, bottom: 36, colFont: 8, rowFont: 9, labelStep: 1 };
+const COMPACT = { cellW: 14, left: 60, top: 44, right: 44, bottom: 30, colFont: 6, rowFont: 7, labelStep: 1 };
+const NORMAL  = { cellW: 26, left: 105, top: 56, right: 56, bottom: 40, colFont: 8, rowFont: 9, labelStep: 1 };
 
 function cellHeight(rows) {
   if (rows <= 1) return 24;
@@ -48,7 +69,21 @@ function cellHeight(rows) {
 
 /* ====== D3 渲染子组件 ====== */
 
-function HeatmapCanvas({ title, matrix, rowLabels, colLabels, stats, mode, maxV, maxAbs, compact, fixedRows }) {
+function HeatmapCanvas({
+  title,
+  matrix,
+  rowLabels,
+  colLabels,
+  stats,
+  mode,
+  maxV,
+  maxAbs,
+  chartSubType,
+  filter,
+  onOpen,
+  compact,
+  fixedRows,
+}) {
   const svgRef = useRef();
   const { Tooltip, show, move, hide } = useTooltip();
   const [exporting, setExporting] = useState(false);
@@ -76,6 +111,16 @@ function HeatmapCanvas({ title, matrix, rowLabels, colLabels, stats, mode, maxV,
       clonedSvg.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
 
       const serializer = new XMLSerializer();
+      const doc = clonedSvg.ownerDocument || document;
+      const note = doc.createElementNS('http://www.w3.org/2000/svg', 'text');
+      note.setAttribute('x', totalW / 2);
+      note.setAttribute('y', totalH - 6);
+      note.setAttribute('text-anchor', 'middle');
+      note.setAttribute('fill', '#94a3b8');
+      note.setAttribute('font-size', 7);
+      note.textContent = `筛选: Wilcoxon p<${filter?.pValueMax ?? 0.05}, |log₂FC|>${filter?.log2FcMinAbs ?? 1} | 行列聚类: 层次聚类(average) | 数据: log₁₀(丰度+1)`;
+      clonedSvg.appendChild(note);
+
       const svgText = serializer.serializeToString(clonedSvg);
       const img = new Image();
 
@@ -98,7 +143,9 @@ function HeatmapCanvas({ title, matrix, rowLabels, colLabels, stats, mode, maxV,
 
       const link = document.createElement('a');
       link.href = canvas.toDataURL('image/png');
-      link.download = `${sanitizeFilename(title)}.png`;
+      const filterStr = `p${filter?.pValueMax ?? 0.05}-log2FC${filter?.log2FcMinAbs ?? 1}`;
+      const filename = `heatmap_${chartSubType}_${filterStr}_${dateStamp()}.png`;
+      link.download = `${sanitizeFilename(filename)}.png`;
       link.click();
     } catch (error) {
       console.error('Export heatmap failed:', error);
@@ -261,9 +308,14 @@ function HeatmapCanvas({ title, matrix, rowLabels, colLabels, stats, mode, maxV,
         </button>
       </div>
       <div style={{ fontSize: compact ? 10 : 11, color: '#94a3b8', marginBottom: 6 }}>
-        {mode === 'diff' ? '红色=AD高 蓝色=NC高' : '颜色越深 log丰度越高'}
+        {mode === 'diff' ? '红色=AD高 蓝色=NC高' : '颜色越深 log丰度越高'} · 点击热图可放大
       </div>
-      <div style={{ position: 'relative', width: '100%', overflowX: 'auto' }}>
+      <div
+        onClick={() => {
+          if (svgRef.current && onOpen) onOpen(svgRef.current.outerHTML);
+        }}
+        style={{ position: 'relative', width: '100%', overflowX: 'auto', cursor: onOpen ? 'zoom-in' : 'default' }}
+      >
         <svg ref={svgRef} style={{ display: 'block', width: '100%', height: 'auto' }} />
         <Tooltip />
       </div>
@@ -271,10 +323,117 @@ function HeatmapCanvas({ title, matrix, rowLabels, colLabels, stats, mode, maxV,
   );
 }
 
+function Lightbox({ svgContent, onClose }) {
+  const [scale, setScale] = useState(1);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragging = useRef(false);
+  const lastPos = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleKeyDown = event => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
+  const handleWheel = event => {
+    event.preventDefault();
+    setScale(prev => Math.max(0.5, Math.min(5, prev + (event.deltaY > 0 ? -0.2 : 0.2))));
+  };
+
+  const handleMouseDown = event => {
+    dragging.current = true;
+    setIsDragging(true);
+    lastPos.current = { x: event.clientX, y: event.clientY };
+  };
+
+  const handleMouseMove = event => {
+    if (!dragging.current) return;
+    const dx = event.clientX - lastPos.current.x;
+    const dy = event.clientY - lastPos.current.y;
+    lastPos.current = { x: event.clientX, y: event.clientY };
+    setOffset(prev => ({ x: prev.x + dx, y: prev.y + dy }));
+  };
+
+  const handleMouseUp = () => {
+    dragging.current = false;
+    setIsDragging(false);
+  };
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 1000,
+        background: 'rgba(15, 23, 42, 0.78)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 24,
+        cursor: 'zoom-out',
+      }}
+    >
+      <div
+        onClick={event => event.stopPropagation()}
+        onWheel={handleWheel}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        style={{
+          position: 'relative',
+          width: 'min(94vw, 1400px)',
+          height: 'min(90vh, 900px)',
+          overflow: 'hidden',
+          borderRadius: 14,
+          background: '#fff',
+          padding: 18,
+          boxShadow: '0 24px 80px rgba(15, 23, 42, 0.38)',
+          cursor: isDragging ? 'grabbing' : 'grab',
+        }}
+      >
+        <div
+          style={{
+            transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
+            transformOrigin: 'center center',
+            transition: isDragging ? 'none' : 'transform 100ms ease',
+          }}
+          dangerouslySetInnerHTML={{ __html: svgContent }}
+        />
+        <div style={{
+          position: 'absolute',
+          right: 18,
+          bottom: 18,
+          display: 'flex',
+          gap: 8,
+        }}>
+          <button type="button" onClick={() => setScale(prev => Math.min(5, prev + 0.5))}>放大</button>
+          <button type="button" onClick={() => setScale(prev => Math.max(0.5, prev - 0.5))}>缩小</button>
+          <button
+            type="button"
+            onClick={() => {
+              setScale(1);
+              setOffset({ x: 0, y: 0 });
+            }}
+          >
+            重置
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ====== 主组件 ====== */
 
-function Heatmap({ data }) {
+function Heatmap({ data, featureLabel = '物种' }) {
   const result = data;
+  const resolvedFeatureLabel = result?.featureLabel || featureLabel;
+  const [lightboxSrc, setLightboxSrc] = useState(null);
 
   if (!result) return <div className="placeholder"><p>暂无数据</p></div>;
   if (result.error) return <div className="placeholder"><p>{result.error}</p></div>;
@@ -298,6 +457,13 @@ function Heatmap({ data }) {
     );
   }
 
+  const colOrder = validColumnOrder(result.colOrder, colLabels.length);
+  const orderedStats = colOrder.map(index => stats[index]);
+  const orderedColLabels = colOrder.map(index => colLabels[index]);
+  const orderedAdMatrix = reorderMatrix(adMatrix, colOrder);
+  const orderedNcMatrix = reorderMatrix(ncMatrix, colOrder);
+  const orderedDiffMatrix = reorderMatrix(diffMatrix, colOrder);
+
   return (
     <div style={{ width: '100%', height: '100%', overflow: 'auto', color: '#0f172a' }}>
       {/* 筛选信息 */}
@@ -307,56 +473,63 @@ function Heatmap({ data }) {
         fontSize: 12, color: '#475569',
       }}>
         <span><b style={{ color: '#0f172a' }}>筛选：</b>Wilcoxon p&lt;0.05, |log₂FC|&gt;1</span>
-        <span><b style={{ color: '#0f172a' }}>差异物种：</b>{stats.length}</span>
+        <span><b style={{ color: '#0f172a' }}>差异{resolvedFeatureLabel}：</b>{stats.length}</span>
         <span style={{ color: '#c0392b' }}><b>AD：</b>{adLabels.length} 样本</span>
         <span style={{ color: '#27ae60' }}><b>NC：</b>{ncLabels.length} 样本</span>
+        <span><b style={{ color: '#0f172a' }}>列排序：</b>层次聚类（average linkage）</span>
       </div>
 
-      {/* AD + NC 并排 */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
-        gap: 16,
-        marginBottom: 20,
-        alignItems: 'start',
-      }}>
+      {/* AD → NC → 差异纵向排列，列顺序保持一致 */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         <HeatmapCanvas
           title="AD 组丰度热图"
-          matrix={adMatrix}
+          matrix={orderedAdMatrix}
           rowLabels={adLabels}
-          colLabels={colLabels}
-          stats={stats}
+          colLabels={orderedColLabels}
+          stats={orderedStats}
           mode="abundance"
           maxV={result.maxV}
           maxAbs={result.maxAbs}
-          compact
-          fixedRows={result.pairedRows}
+          chartSubType="AD-abundance"
+          filter={result.filter}
+          onOpen={setLightboxSrc}
         />
         <HeatmapCanvas
           title="NC 组丰度热图"
-          matrix={ncMatrix}
+          matrix={orderedNcMatrix}
           rowLabels={ncLabels}
-          colLabels={colLabels}
-          stats={stats}
+          colLabels={orderedColLabels}
+          stats={orderedStats}
           mode="abundance"
           maxV={result.maxV}
           maxAbs={result.maxAbs}
-          compact
-          fixedRows={result.pairedRows}
+          chartSubType="NC-abundance"
+          filter={result.filter}
+          onOpen={setLightboxSrc}
+        />
+
+        {/* 差异热图 */}
+        <HeatmapCanvas
+          title="差异热图 (AD − NC 平均 log 丰度)"
+          matrix={orderedDiffMatrix}
+          rowLabels={diffLabels}
+          colLabels={orderedColLabels}
+          stats={orderedStats}
+          mode="diff"
+          maxV={result.maxV}
+          maxAbs={result.maxAbs}
+          chartSubType="diff"
+          filter={result.filter}
+          onOpen={setLightboxSrc}
         />
       </div>
 
-      {/* 差异热图 */}
-      <HeatmapCanvas
-        title="差异热图 (AD − NC 平均 log 丰度)"
-        matrix={diffMatrix}
-        rowLabels={diffLabels}
-        colLabels={colLabels}
-        stats={stats}
-        mode="diff"
-        maxV={result.maxV}
-        maxAbs={result.maxAbs}
-      />
+      {lightboxSrc && (
+        <Lightbox
+          svgContent={lightboxSrc}
+          onClose={() => setLightboxSrc(null)}
+        />
+      )}
     </div>
   );
 }

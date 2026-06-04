@@ -6,6 +6,13 @@ STORAGE_ROOT = Path(os.getenv("AD_META_STORAGE_ROOT", BACKEND_ROOT / "storage"))
 RAW_ROOT = STORAGE_ROOT / "raw"
 CACHE_ROOT = STORAGE_ROOT / "cache"
 DB_PATH = Path(os.getenv("AD_META_DB_PATH", STORAGE_ROOT / "ad_meta.sqlite3"))
+DB_ENGINE = os.getenv("AD_META_DB_ENGINE", "sqlite").strip().lower()
+
+MYSQL_HOST = os.getenv("AD_META_MYSQL_HOST", "127.0.0.1")
+MYSQL_PORT = int(os.getenv("AD_META_MYSQL_PORT", "3306"))
+MYSQL_USER = os.getenv("AD_META_MYSQL_USER", "root")
+MYSQL_PASSWORD = os.getenv("AD_META_MYSQL_PASSWORD", "")
+MYSQL_DATABASE = os.getenv("AD_META_MYSQL_DATABASE", "ad_meta")
 
 COMPUTE_VERSION = "2026-06-01-v1"
 
@@ -14,6 +21,8 @@ PUBLIC_CHART_TYPES = {
     "phylum",
     "boxplot",
     "heatmap",
+    "detection",
+    "lda",
     "sunburst",
     "pca",
     "pcoa",

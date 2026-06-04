@@ -3,9 +3,11 @@ import ReactECharts from 'echarts-for-react';
 
 const COLORS = { AD: '#e74c3c', NC: '#2ecc71' };
 
-function BoxPlot({ data }) {
+function BoxPlot({ data, featureLabel = '物种' }) {
   const [selectedSpecies, setSelectedSpecies] = useState([]);
   const [touched, setTouched] = useState(false);
+  const [scaleMode, setScaleMode] = useState('log');
+  const isLogScale = scaleMode === 'log';
 
   const availableSpecies = useMemo(() => {
     if (!data || !Array.isArray(data.items)) return [];
@@ -15,6 +17,12 @@ function BoxPlot({ data }) {
       total: item.total,
       adBox: item.adBox,
       ncBox: item.ncBox,
+      adOutliers: item.adOutliers || [],
+      ncOutliers: item.ncOutliers || [],
+      adLogBox: item.adLogBox || item.adBox,
+      ncLogBox: item.ncLogBox || item.ncBox,
+      adLogOutliers: item.adLogOutliers || [],
+      ncLogOutliers: item.ncLogOutliers || [],
     }));
   }, [data]);
 
@@ -30,33 +38,64 @@ function BoxPlot({ data }) {
 
     const adData = [];
     const ncData = [];
+    const adOutlierData = [];
+    const ncOutlierData = [];
     const categories = [];
 
     for (const item of activeSpecies) {
-      adData.push(item.adBox || [0, 0, 0, 0, 0]);
-      ncData.push(item.ncBox || [0, 0, 0, 0, 0]);
+      const adBox = isLogScale ? item.adLogBox : item.adBox;
+      const ncBox = isLogScale ? item.ncLogBox : item.ncBox;
+      const adOutliers = isLogScale ? item.adLogOutliers : item.adOutliers;
+      const ncOutliers = isLogScale ? item.ncLogOutliers : item.ncOutliers;
+      adData.push(adBox || [0, 0, 0, 0, 0]);
+      ncData.push(ncBox || [0, 0, 0, 0, 0]);
       categories.push(item.short);
+      adOutliers.forEach(value => {
+        adOutlierData.push({
+          value: [item.short, value],
+          species: item.short,
+          group: 'AD',
+        });
+      });
+      ncOutliers.forEach(value => {
+        ncOutlierData.push({
+          value: [item.short, value],
+          species: item.short,
+          group: 'NC',
+        });
+      });
     }
 
     return {
       tooltip: {
         trigger: 'item',
         formatter: (p) => {
+          if (p.seriesType === 'scatter') {
+            return `<b>${p.data.group} 组 — ${p.data.species}</b><br/>
+              尺度: ${isLogScale ? 'log10(丰度 + 1)' : '原始丰度'}<br/>
+              离群点: ${fmtNum(p.data.value[1], isLogScale)}`;
+          }
           const d = p.data;
+          const species = activeSpecies[p.dataIndex];
+          const outlierCount = p.seriesName === 'AD'
+            ? (isLogScale ? species.adLogOutliers.length : species.adOutliers.length)
+            : (isLogScale ? species.ncLogOutliers.length : species.ncOutliers.length);
           return `<b>${p.seriesName} 组 — ${p.name}</b><br/>
-            上限 (Whisker): ${fmtNum(d[4])}<br/>
-            上四分位数 (Q3): ${fmtNum(d[3])}<br/>
-            <b>中位数 (Median): ${fmtNum(d[2])}</b><br/>
-            下四分位数 (Q1): ${fmtNum(d[1])}<br/>
-            下限 (Whisker): ${fmtNum(d[0])}`;
+            尺度: ${isLogScale ? 'log10(丰度 + 1)' : '原始丰度'}<br/>
+            上限 (Whisker): ${fmtNum(d[4], isLogScale)}<br/>
+            上四分位数 (Q3): ${fmtNum(d[3], isLogScale)}<br/>
+            <b>中位数 (Median): ${fmtNum(d[2], isLogScale)}</b><br/>
+            下四分位数 (Q1): ${fmtNum(d[1], isLogScale)}<br/>
+            下限 (Whisker): ${fmtNum(d[0], isLogScale)}<br/>
+            离群点数: ${outlierCount}`;
         },
         backgroundColor: 'rgba(30,41,59,0.9)',
         borderColor: 'transparent',
         textStyle: { color: '#f1f5f9', fontSize: 12 },
         extraCssText: 'border-radius:8px; padding:10px 14px;',
       },
-      legend: { data: ['AD', 'NC'], top: 0, textStyle: { fontSize: 13, color: '#475569' } },
-      grid: { left: 70, right: 30, top: 30, bottom: 60 },
+      legend: { data: ['AD', 'NC', 'AD 离群点', 'NC 离群点'], top: 0, textStyle: { fontSize: 12, color: '#475569' } },
+      grid: { left: 70, right: 30, top: 42, bottom: 60 },
       xAxis: {
         type: 'category',
         data: categories,
@@ -64,9 +103,10 @@ function BoxPlot({ data }) {
       },
       yAxis: {
         type: 'value',
-        name: '丰度',
+        name: isLogScale ? 'log10(丰度 + 1)' : '丰度',
         nameTextStyle: { fontSize: 12, color: '#94a3b8' },
         axisLabel: { fontSize: 11, color: '#94a3b8', formatter: v => {
+          if (isLogScale) return Number(v).toFixed(2);
           if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
           if (v >= 1e3) return (v / 1e3).toFixed(1) + 'K';
           return v.toFixed(1);
@@ -84,9 +124,23 @@ function BoxPlot({ data }) {
           itemStyle: { color: COLORS.NC, borderColor: '#27ae60' },
           boxWidth: [14, 22],
         },
+        {
+          name: 'AD 离群点',
+          type: 'scatter',
+          data: adOutlierData,
+          symbolSize: 7,
+          itemStyle: { color: COLORS.AD, borderColor: '#7f1d1d', borderWidth: 1 },
+        },
+        {
+          name: 'NC 离群点',
+          type: 'scatter',
+          data: ncOutlierData,
+          symbolSize: 7,
+          itemStyle: { color: COLORS.NC, borderColor: '#14532d', borderWidth: 1 },
+        },
       ],
     };
-  }, [activeSpecies]);
+  }, [activeSpecies, isLogScale]);
 
   const toggle = (full) => {
     setTouched(true);
@@ -109,7 +163,36 @@ function BoxPlot({ data }) {
     }}>
       <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', marginBottom: 2 }}>丰度箱线图</div>
       <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 8 }}>
-        选择物种查看丰度分布与离散度 · 默认展示 Top 5 · 已选 {activeSpecies.length} 个
+        默认 log10(丰度 + 1) · 显示离群点 · 可切换原始丰度 · 已选 {activeSpecies.length} 个
+      </div>
+
+      <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+        {[
+          { key: 'log', label: 'log10(丰度 + 1)' },
+          { key: 'raw', label: '原始丰度' },
+        ].map(mode => {
+          const on = scaleMode === mode.key;
+          return (
+            <button
+              key={mode.key}
+              onClick={() => setScaleMode(mode.key)}
+              style={{
+                padding: '3px 10px',
+                borderRadius: 14,
+                border: '1px solid',
+                borderColor: on ? '#0f766e' : '#e2e8f0',
+                background: on ? '#ccfbf1' : '#fff',
+                color: on ? '#0f766e' : '#64748b',
+                cursor: 'pointer',
+                fontSize: 11,
+                fontFamily: 'inherit',
+                fontWeight: on ? 700 : 500,
+              }}
+            >
+              {mode.label}
+            </button>
+          );
+        })}
       </div>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 10 }}>
@@ -144,7 +227,8 @@ function BoxPlot({ data }) {
   );
 }
 
-function fmtNum(v) {
+function fmtNum(v, isLogScale = false) {
+  if (isLogScale) return Number(v).toFixed(4);
   if (v >= 1e6) return (v / 1e6).toFixed(2) + 'M';
   if (v >= 1e3) return (v / 1e3).toFixed(2) + 'K';
   return v.toFixed(2);

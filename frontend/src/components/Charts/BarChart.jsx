@@ -56,7 +56,7 @@ function axisLabelInterval(count) {
   return 63;
 }
 
-function BarChart({ data }) {
+function BarChart({ data, featureLabel = '物种' }) {
   const maxSpecies = Array.isArray(data) ? data.length : 0;
   const [topN, setTopN] = useState(DEFAULT_TOP_N);
   const [topNInput, setTopNInput] = useState(String(DEFAULT_TOP_N));
@@ -112,8 +112,8 @@ function BarChart({ data }) {
       backgroundColor: 'transparent',
 
       title: {
-        text: `Top ${topN} 物种丰富度对比`,
-        subtext: '仅展示 AD / NC 组均值，横轴为物种缩写',
+        text: `Top ${topN} ${featureLabel}丰富度对比`,
+        subtext: `仅展示 AD / NC 组均值，横轴为${featureLabel}标签`,
         left: 24,
         top: 16,
         textStyle: {
@@ -328,12 +328,12 @@ function BarChart({ data }) {
         },
       ],
     };
-  }, [data, topN]);
+  }, [data, topN, featureLabel]);
 
   if (!option) {
     return (
       <div className="placeholder">
-        <p>暂无物种丰度数据</p>
+        <p>暂无{featureLabel}丰度数据</p>
       </div>
     );
   }
@@ -391,7 +391,7 @@ function BarChart({ data }) {
             color: '#64748b',
           }}
         >
-          <span>当前展示前 {topN} 个物种</span>
+          <span>当前展示前 {topN} 个{featureLabel}</span>
           <span>最高可选到全量 {maxSpecies}</span>
         </div>
       </div>

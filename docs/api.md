@@ -39,6 +39,9 @@ Returns all published datasets.
     "description": "Species abundance comparison between AD and NC groups.",
     "sampleCount": 373,
     "speciesCount": 9821,
+    "featureCount": 9821,
+    "featureKind": "taxonomy",
+    "featureLabel": "物种",
     "groupCounts": {
       "AD": 182,
       "NC": 191
@@ -60,6 +63,9 @@ Returns one published dataset.
   "description": "Species abundance comparison between AD and NC groups.",
   "sampleCount": 373,
   "speciesCount": 9821,
+  "featureCount": 9821,
+  "featureKind": "taxonomy",
+  "featureLabel": "物种",
   "groupCounts": {
     "AD": 182,
     "NC": 191
@@ -88,6 +94,9 @@ Returns summary-card data.
   "totalSamples": 373,
   "adSamples": 182,
   "ncSamples": 191,
+  "featureKind": "taxonomy",
+  "featureLabel": "物种",
+  "totalFeatures": 9821,
   "totalSpecies": 9821,
   "groupCounts": {
     "AD": 182,

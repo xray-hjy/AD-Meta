@@ -14,6 +14,13 @@ def _loads(value: str, fallback):
         return fallback
 
 
+def _row_get(row, key: str, fallback=None):
+    try:
+        return row[key]
+    except (KeyError, IndexError):
+        return fallback
+
+
 def _dataset_payload(row, available_charts: list[str] | None = None) -> dict:
     payload = {
         "id": row["id"],
@@ -22,12 +29,35 @@ def _dataset_payload(row, available_charts: list[str] | None = None) -> dict:
         "description": row["description"],
         "sampleCount": row["sample_count"],
         "speciesCount": row["species_count"],
+        "featureCount": _row_get(row, "feature_count", row["species_count"]),
+        "featureKind": _row_get(row, "feature_kind", "taxonomy"),
+        "featureLabel": _row_get(row, "feature_label", "物种"),
         "groupCounts": _loads(row["group_counts_json"], {}),
         "publishedAt": row["published_at"],
     }
     if available_charts is not None:
         payload["availableCharts"] = available_charts
     return payload
+
+
+def _resolve_cache_path(raw_path: str) -> Path:
+    path = Path(raw_path)
+    candidates: list[Path] = []
+
+    if path.is_absolute():
+        candidates.append(path)
+        parts = path.parts
+        for index in range(len(parts) - 1):
+            if parts[index] == "backend" and parts[index + 1] == "storage":
+                candidates.append(BACKEND_ROOT.joinpath(*parts[index + 1 :]))
+                break
+    else:
+        candidates.append(BACKEND_ROOT / path)
+
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return candidates[-1]
 
 
 def list_datasets() -> list[dict]:
@@ -86,9 +116,7 @@ def read_chart(slug: str, chart_type: str):
         if artifact is None:
             return None, "chart"
 
-    path = Path(artifact["cache_path"])
-    if not path.is_absolute():
-        path = BACKEND_ROOT / path
+    path = _resolve_cache_path(artifact["cache_path"])
     try:
         return json.loads(path.read_text(encoding="utf-8")), None
     except OSError:

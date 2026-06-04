@@ -5,14 +5,63 @@ import json
 import shutil
 from pathlib import Path
 
-from app.compute.precompute import precompute_all, write_json
+from app.compute.precompute import precompute_all, prepare_dataframe, write_json
 from app.core.config import CACHE_ROOT, COMPUTE_VERSION, RAW_ROOT
-from app.core.database import connect, init_db, utcnow
+from app.core.database import connect, init_db, is_mysql, utcnow
+from app.services.normalized_import import replace_normalized_dataset
 
 
 def _relative_to_backend(path: Path) -> str:
     backend_root = Path(__file__).resolve().parents[2]
     return str(path.resolve().relative_to(backend_root.resolve()))
+
+
+def _upsert_chart_artifact(
+    conn,
+    dataset_id: int,
+    chart_type: str,
+    cache_path: Path,
+    timestamp: str,
+) -> None:
+    params = (
+        dataset_id,
+        chart_type,
+        _relative_to_backend(cache_path),
+        COMPUTE_VERSION,
+        timestamp,
+        timestamp,
+    )
+    if is_mysql():
+        conn.execute(
+            """
+            INSERT INTO chart_artifacts (
+              dataset_id, chart_type, cache_path, params_hash,
+              compute_version, created_at, updated_at
+            )
+            VALUES (?, ?, ?, '', ?, ?, ?)
+            ON DUPLICATE KEY UPDATE
+              cache_path = VALUES(cache_path),
+              compute_version = VALUES(compute_version),
+              updated_at = VALUES(updated_at)
+            """,
+            params,
+        )
+        return
+
+    conn.execute(
+        """
+        INSERT INTO chart_artifacts (
+          dataset_id, chart_type, cache_path, params_hash,
+          compute_version, created_at, updated_at
+        )
+        VALUES (?, ?, ?, '', ?, ?, ?)
+        ON CONFLICT(dataset_id, chart_type) DO UPDATE SET
+          cache_path = excluded.cache_path,
+          compute_version = excluded.compute_version,
+          updated_at = excluded.updated_at
+        """,
+        params,
+    )
 
 
 def import_dataset(file_path: Path, slug: str, name: str, description: str = "") -> int:
@@ -69,32 +118,15 @@ def import_dataset(file_path: Path, slug: str, name: str, description: str = "")
     try:
         published_at = utcnow()
         summary, artifacts, warnings = precompute_all(raw_path, slug, name, published_at)
+        df, feature_cols, _ = prepare_dataframe(raw_path)
 
         with connect() as conn:
+            replace_normalized_dataset(conn, dataset_id, df, feature_cols)
+
             for chart_type, payload in artifacts.items():
                 cache_path = cache_dir / f"{chart_type}.json"
                 write_json(cache_path, payload)
-                conn.execute(
-                    """
-                    INSERT INTO chart_artifacts (
-                      dataset_id, chart_type, cache_path, params_hash,
-                      compute_version, created_at, updated_at
-                    )
-                    VALUES (?, ?, ?, '', ?, ?, ?)
-                    ON CONFLICT(dataset_id, chart_type) DO UPDATE SET
-                      cache_path = excluded.cache_path,
-                      compute_version = excluded.compute_version,
-                      updated_at = excluded.updated_at
-                    """,
-                    (
-                        dataset_id,
-                        chart_type,
-                        _relative_to_backend(cache_path),
-                        COMPUTE_VERSION,
-                        published_at,
-                        published_at,
-                    ),
-                )
+                _upsert_chart_artifact(conn, dataset_id, chart_type, cache_path, published_at)
 
             conn.execute(
                 """
@@ -102,6 +134,9 @@ def import_dataset(file_path: Path, slug: str, name: str, description: str = "")
                 SET status = 'published',
                     sample_count = ?,
                     species_count = ?,
+                    feature_count = ?,
+                    feature_kind = ?,
+                    feature_label = ?,
                     group_counts_json = ?,
                     import_warnings_json = ?,
                     updated_at = ?,
@@ -111,6 +146,9 @@ def import_dataset(file_path: Path, slug: str, name: str, description: str = "")
                 (
                     summary["totalSamples"],
                     summary["totalSpecies"],
+                    summary.get("totalFeatures", summary["totalSpecies"]),
+                    summary.get("featureKind", "taxonomy"),
+                    summary.get("featureLabel", "物种"),
                     json.dumps(summary["groupCounts"], ensure_ascii=False),
                     json.dumps(warnings, ensure_ascii=False),
                     published_at,

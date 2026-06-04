@@ -6,19 +6,30 @@ import BarChart from './components/Charts/BarChart';
 import PhylumChart from './components/Charts/PhylumChart';
 import BoxPlot from './components/Charts/BoxPlot';
 import Heatmap from './components/Charts/Heatmap';
+import DetectionHeatmap from './components/Charts/DetectionHeatmap';
+import KoLdaBarChart from './components/Charts/KoLdaBarChart';
 import SunburstChart from './components/Charts/SunburstChart';
 import PCAPlot from './components/Charts/PCAPlot';
 import PCoAPlot from './components/Charts/PCoAPlot';
 
-const TABS = [
-  { key: 'species',  label: '丰度对比',   subtitle: 'Top N 物种 AD vs NC' },
-  { key: 'phylum',   label: '门级组成',   subtitle: '各门相对丰度占比' },
-  { key: 'boxplot',  label: '丰度箱线图', subtitle: '目标物种分布与离散度' },
-  { key: 'heatmap',  label: '丰度热图',   subtitle: '差异物种聚类分析' },
-  { key: 'sunburst', label: '分类旭日图', subtitle: '门→纲→属层级占比' },
-  { key: 'pca',      label: 'β多样性 PCA', subtitle: '样本聚类趋势' },
-  { key: 'pcoa',     label: 'β多样性 PCoA', subtitle: '主坐标分析距离矩阵' },
-];
+function getTabs(summary) {
+  const featureLabel = summary?.featureLabel || '物种';
+  const isKo = summary?.featureKind === 'ko';
+
+  const tabs = [
+    { key: 'species',  label: '丰度对比',   subtitle: `Top N ${featureLabel} AD vs NC` },
+    { key: 'phylum',   label: isKo ? 'KO 功能组成' : '门级组成', subtitle: isKo ? 'Top KO 相对丰度占比' : '各门相对丰度占比' },
+    ...(isKo ? [] : [{ key: 'boxplot', label: '丰度箱线图', subtitle: `目标${featureLabel}分布与离散度` }]),
+    ...(isKo ? [] : [{ key: 'heatmap', label: '丰度热图', subtitle: `差异${featureLabel}聚类分析` }]),
+    ...(isKo ? [{ key: 'detection', label: 'KO 检出率热图', subtitle: 'AD/NC 检出率与检出样本数' }] : []),
+    ...(isKo ? [{ key: 'lda', label: 'KO 功能 LDA 值柱状图', subtitle: '显著差异 KO 的 LDA 效应强度' }] : []),
+    ...(isKo ? [] : [{ key: 'sunburst', label: '分类旭日图', subtitle: '门→纲→属层级占比' }]),
+    ...(isKo ? [] : [{ key: 'pca', label: 'β多样性 PCA', subtitle: '样本聚类趋势' }]),
+    ...(isKo ? [] : [{ key: 'pcoa', label: 'β多样性 PCoA', subtitle: '主坐标分析距离矩阵' }]),
+  ];
+
+  return tabs;
+}
 
 function App() {
   const [datasets, setDatasets] = useState([]);
@@ -35,6 +46,9 @@ function App() {
   const [chartLoading, setChartLoading] = useState(false);
   const [error, setError] = useState(null);
   const [chartError, setChartError] = useState(null);
+  const featureLabel = summary?.featureLabel || '物种';
+  const featureKind = summary?.featureKind || 'taxonomy';
+  const tabs = getTabs(summary);
 
   useEffect(() => {
     let cancelled = false;
@@ -69,6 +83,7 @@ function App() {
     async function loadSummary() {
       setSummaryLoading(true);
       setError(null);
+      setSummary(null);
       try {
         const result = await fetchJson(`/api/datasets/${activeDataset}/summary`);
         if (!cancelled) setSummary(result);
@@ -100,7 +115,8 @@ function App() {
         data: null,
       });
       try {
-        const result = await fetchJson(`/api/datasets/${requestedDataset}/charts/${requestedTab}`);
+        const chartUrl = `/api/datasets/${requestedDataset}/charts/${requestedTab}`;
+        const result = await fetchJson(chartUrl);
         if (!cancelled) {
           setChartPayload({
             datasetSlug: requestedDataset,
@@ -159,19 +175,23 @@ function App() {
 
     switch (activeTab) {
       case 'species':
-        return <BarChart data={chartData} />;
+        return <BarChart data={chartData} featureLabel={featureLabel} />;
       case 'phylum':
         return <PhylumChart data={chartData} />;
       case 'boxplot':
-        return <BoxPlot data={chartData} />;
+        return <BoxPlot data={chartData} featureLabel={featureLabel} />;
       case 'heatmap':
-        return <Heatmap data={chartData} />;
+        return <Heatmap data={chartData} featureLabel={featureLabel} />;
+      case 'detection':
+        return <DetectionHeatmap data={chartData} />;
+      case 'lda':
+        return <KoLdaBarChart data={chartData} />;
       case 'sunburst':
-        return <SunburstChart data={chartData} title={summary?.datasetName} />;
+        return <SunburstChart data={chartData} title={summary?.datasetName} featureKind={featureKind} />;
       case 'pca':
-        return <PCAPlot data={chartData} />;
+        return <PCAPlot data={chartData} featureKind={featureKind} featureLabel={featureLabel} />;
       case 'pcoa':
-        return <PCoAPlot data={chartData} />;
+        return <PCoAPlot data={chartData} featureKind={featureKind} featureLabel={featureLabel} />;
       default:
         return null;
     }
@@ -213,7 +233,7 @@ function App() {
           <div className="sidebar-section">
             <h3 className="sidebar-heading">可视化图表</h3>
             <nav className="nav-list">
-              {TABS.map(t => (
+              {tabs.map(t => (
                 <button
                   key={t.key}
                   className={`nav-item ${activeTab === t.key ? 'nav-item--active' : ''}`}

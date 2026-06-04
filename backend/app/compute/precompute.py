@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
@@ -11,6 +12,7 @@ import pandas as pd
 from scipy.cluster.hierarchy import leaves_list, linkage
 from scipy.spatial.distance import pdist, squareform
 from scipy.stats import mannwhitneyu
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
@@ -18,6 +20,21 @@ from .taxonomy import get_level, short_name, taxonomy_chain
 
 AD = "AD"
 NC = "NC"
+
+KO_RE = re.compile(r"^K\d{5}$")
+
+FEATURE_META = {
+    "taxonomy": {
+        "label": "物种",
+        "compositionLabel": "门级组成",
+        "sunburstLabel": "分类旭日图",
+    },
+    "ko": {
+        "label": "KO",
+        "compositionLabel": "KO 功能组成",
+        "sunburstLabel": "KO 旭日图",
+    },
+}
 
 
 def read_table(path: Path) -> pd.DataFrame:
@@ -60,18 +77,30 @@ def prepare_dataframe(path: Path) -> tuple[pd.DataFrame, list[str], list[str]]:
     df.columns = [str(col).strip() for col in df.columns]
 
     sample_col = "sample_id" if "sample_id" in df.columns else "Sample" if "Sample" in df.columns else None
-    required = {"Group"}
-    missing = sorted(required - set(df.columns))
+    group_col = "Group" if "Group" in df.columns else "label" if "label" in df.columns else None
+    missing = []
+    if group_col is None:
+        missing.append("Group or label")
     if sample_col is None:
         missing.append("sample_id or Sample")
     if missing:
         raise ValueError(f"Missing required column(s): {', '.join(missing)}")
 
-    species_cols = [col for col in df.columns if col.startswith("k__")]
+    taxonomy_cols = [col for col in df.columns if col.startswith("k__")]
+    ko_cols = [col for col in df.columns if KO_RE.fullmatch(col)]
+    species_cols = taxonomy_cols or ko_cols
     if not species_cols:
-        raise ValueError("No species abundance columns found. Expected columns starting with k__.")
+        raise ValueError("No abundance feature columns found. Expected columns starting with k__ or KO columns like K00001.")
 
-    groups = df["Group"].astype(str).str.strip().str.upper()
+    feature_kind = "taxonomy" if taxonomy_cols else "ko"
+    df.attrs["feature_kind"] = feature_kind
+    df.attrs["feature_label"] = FEATURE_META[feature_kind]["label"]
+    df.attrs["composition_label"] = FEATURE_META[feature_kind]["compositionLabel"]
+    df.attrs["sunburst_label"] = FEATURE_META[feature_kind]["sunburstLabel"]
+
+    groups = df[group_col].astype(str).str.strip().str.upper()
+    if set(groups.dropna()) <= {"0", "1"}:
+        groups = groups.map({"1": AD, "0": NC})
     df["Group"] = groups
 
     if AD not in set(groups) or NC not in set(groups):
@@ -83,6 +112,7 @@ def prepare_dataframe(path: Path) -> tuple[pd.DataFrame, list[str], list[str]]:
         warnings.append(f"Converted {non_numeric} empty or non-numeric abundance cells to 0.")
     abundance = abundance.fillna(0).clip(lower=0)
     df[species_cols] = abundance
+    df = df.copy()
     df["Sample"] = df[sample_col].astype(str).str.strip()
 
     return df, species_cols, warnings
@@ -94,25 +124,47 @@ def _group_frames(df: pd.DataFrame, species_cols: list[str]) -> tuple[pd.DataFra
     return ad, nc
 
 
-def _box_values(values: np.ndarray) -> list[float]:
+def _box_summary(values: np.ndarray) -> dict[str, list[float]]:
     values = np.sort(values[np.isfinite(values)])
     if values.size == 0:
-        return [0, 0, 0, 0, 0]
+        return {"box": [0, 0, 0, 0, 0], "outliers": []}
     q1, median, q3 = np.percentile(values, [25, 50, 75])
     iqr = q3 - q1
-    lower = max(float(values[0]), float(q1 - 1.5 * iqr))
-    upper = min(float(values[-1]), float(q3 + 1.5 * iqr))
-    return [lower, float(q1), float(median), float(q3), upper]
+    lower_fence = q1 - 1.5 * iqr
+    upper_fence = q3 + 1.5 * iqr
+    inlier_mask = (values >= lower_fence) & (values <= upper_fence)
+    inliers = values[inlier_mask]
+    outliers = values[~inlier_mask]
+    if inliers.size == 0:
+        inliers = values
+        outliers = np.array([], dtype=float)
+    return {
+        "box": [float(inliers[0]), float(q1), float(median), float(q3), float(inliers[-1])],
+        "outliers": [float(value) for value in outliers],
+    }
+
+
+def _box_values(values: np.ndarray) -> list[float]:
+    return _box_summary(values)["box"]
+
+
+def _log10_abundance(values: np.ndarray) -> np.ndarray:
+    return np.log10(np.clip(values, 0, None) + 1)
 
 
 def compute_summary(df: pd.DataFrame, species_cols: list[str], slug: str, name: str, published_at: str) -> dict:
     group_counts = df["Group"].value_counts().to_dict()
+    feature_kind = df.attrs.get("feature_kind", "taxonomy")
+    feature_label = df.attrs.get("feature_label", FEATURE_META["taxonomy"]["label"])
     return {
         "datasetSlug": slug,
         "datasetName": name,
+        "featureKind": feature_kind,
+        "featureLabel": feature_label,
         "totalSamples": int(len(df)),
         "adSamples": int(group_counts.get(AD, 0)),
         "ncSamples": int(group_counts.get(NC, 0)),
+        "totalFeatures": int(len(species_cols)),
         "totalSpecies": int(len(species_cols)),
         "groupCounts": {str(k): int(v) for k, v in group_counts.items()},
         "publishedAt": published_at,
@@ -131,7 +183,9 @@ def compute_species(df: pd.DataFrame, species_cols: list[str], top_n: int = 50) 
     return [
         {
             "species": short_name(col),
+            "feature": short_name(col),
             "fullName": col,
+            "featureLabel": df.attrs.get("feature_label", FEATURE_META["taxonomy"]["label"]),
             "adMean": float(ad_mean[col]),
             "adStd": float(ad_std[col]),
             "ncMean": float(nc_mean[col]),
@@ -146,6 +200,21 @@ def compute_phylum(df: pd.DataFrame, species_cols: list[str]) -> list[dict]:
     ad, nc = _group_frames(df, species_cols)
     ad_mean = ad.mean(axis=0)
     nc_mean = nc.mean(axis=0)
+
+    if df.attrs.get("feature_kind") == "ko":
+        total = ad_mean + nc_mean
+        ordered = total.sort_values(ascending=False).head(12).index.tolist()
+        ad_total = float(ad_mean[ordered].sum()) or 1.0
+        nc_total = float(nc_mean[ordered].sum()) or 1.0
+        return [
+            {
+                "phylum": short_name(col),
+                "adRatio": float(ad_mean[col] / ad_total),
+                "ncRatio": float(nc_mean[col] / nc_total),
+            }
+            for col in ordered
+        ]
+
     ad_sum: dict[str, float] = defaultdict(float)
     nc_sum: dict[str, float] = defaultdict(float)
 
@@ -184,13 +253,25 @@ def compute_boxplot(df: pd.DataFrame, species_cols: list[str], top_n: int = 30) 
     items = []
     for item in ranked:
         col = item["fullName"]
+        ad_values = ad[col].to_numpy(dtype=float)
+        nc_values = nc[col].to_numpy(dtype=float)
+        ad_summary = _box_summary(ad_values)
+        nc_summary = _box_summary(nc_values)
+        ad_log_summary = _box_summary(_log10_abundance(ad_values))
+        nc_log_summary = _box_summary(_log10_abundance(nc_values))
         items.append(
             {
                 "fullName": col,
                 "shortName": short_name(col),
                 "total": item["total"],
-                "adBox": _box_values(ad[col].to_numpy(dtype=float)),
-                "ncBox": _box_values(nc[col].to_numpy(dtype=float)),
+                "adBox": ad_summary["box"],
+                "ncBox": nc_summary["box"],
+                "adOutliers": ad_summary["outliers"],
+                "ncOutliers": nc_summary["outliers"],
+                "adLogBox": ad_log_summary["box"],
+                "ncLogBox": nc_log_summary["box"],
+                "adLogOutliers": ad_log_summary["outliers"],
+                "ncLogOutliers": nc_log_summary["outliers"],
             }
         )
     return {"items": items}
@@ -206,7 +287,14 @@ def _cluster_order(matrix: np.ndarray) -> list[int]:
     return leaves_list(linkage(distances, method="average")).astype(int).tolist()
 
 
-def compute_heatmap(df: pd.DataFrame, species_cols: list[str], top_n: int = 30) -> dict:
+def _heatmap_filter(max_features: int, selected_count: int | None = None) -> dict:
+    payload = {"pValueMax": 0.05, "log2FcMinAbs": 1, "topN": max_features, "maxFeatures": max_features}
+    if selected_count is not None:
+        payload["selectedCount"] = selected_count
+    return payload
+
+
+def compute_heatmap(df: pd.DataFrame, species_cols: list[str], top_n: int = 200) -> dict:
     ad, nc = _group_frames(df, species_cols)
     ad_values = ad.to_numpy(dtype=float)
     nc_values = nc.to_numpy(dtype=float)
@@ -245,13 +333,19 @@ def compute_heatmap(df: pd.DataFrame, species_cols: list[str], top_n: int = 30) 
                     "diffLog": float(diff_log[i]),
                 }
             )
-    candidates.sort(key=lambda item: (item["p"], -abs(item["log2FC"])))
-    stats = candidates[:top_n]
+    for item in candidates:
+        item["score"] = -math.log10(item["p"] + 1e-300) * abs(item["log2FC"])
+
+    candidates.sort(key=lambda item: item["score"], reverse=True)
+    max_features = max(1, int(top_n))
+    stats = candidates[: min(len(candidates), max_features)]
 
     if not stats:
+        feature_label = df.attrs.get("feature_label", FEATURE_META["taxonomy"]["label"])
         return {
-            "error": "未筛选到满足 p < 0.05 且 |log2FC| > 1 的差异物种。",
-            "filter": {"pValueMax": 0.05, "log2FcMinAbs": 1, "topN": top_n},
+            "error": f"未筛选到满足 p < 0.05 且 |log2FC| > 1 的差异{feature_label}。",
+            "filter": _heatmap_filter(max_features, 0),
+            "featureLabel": feature_label,
         }
 
     idx = [item["idx"] for item in stats]
@@ -260,9 +354,12 @@ def compute_heatmap(df: pd.DataFrame, species_cols: list[str], top_n: int = 30) 
     ad_order = _cluster_order(ad_mat)
     nc_order = _cluster_order(nc_mat)
     all_values = np.concatenate([ad_mat.ravel(), nc_mat.ravel()])
+    raw_mat = np.concatenate([ad_mat, nc_mat], axis=0)
+    col_order = _cluster_order(raw_mat.T)
 
     return {
-        "filter": {"pValueMax": 0.05, "log2FcMinAbs": 1, "topN": top_n},
+        "filter": _heatmap_filter(max_features, len(stats)),
+        "featureLabel": df.attrs.get("feature_label", FEATURE_META["taxonomy"]["label"]),
         "stats": [{k: v for k, v in item.items() if k != "idx"} for item in stats],
         "colLabels": [item["label"] for item in stats],
         "adMatrix": ad_mat[ad_order, :].tolist(),
@@ -274,6 +371,131 @@ def compute_heatmap(df: pd.DataFrame, species_cols: list[str], top_n: int = 30) 
         "maxV": float(np.max(all_values)) if all_values.size else 1.0,
         "maxAbs": float(max(abs(item["diffLog"]) for item in stats)),
         "pairedRows": int(max(ad_mat.shape[0], nc_mat.shape[0])),
+        "colOrder": col_order,
+    }
+
+
+def compute_detection_heatmap(df: pd.DataFrame, species_cols: list[str], top_n: int = 50) -> dict:
+    ad, nc = _group_frames(df, species_cols)
+    ad_presence = ad.gt(0)
+    nc_presence = nc.gt(0)
+    ad_sample_count = int(len(ad))
+    nc_sample_count = int(len(nc))
+    total_sample_count = ad_sample_count + nc_sample_count
+    max_features = max(1, int(top_n))
+
+    items = []
+    for col in species_cols:
+        ad_detected = int(ad_presence[col].sum())
+        nc_detected = int(nc_presence[col].sum())
+        overall_detected = ad_detected + nc_detected
+        if overall_detected == 0:
+            continue
+
+        ad_rate = ad_detected / ad_sample_count if ad_sample_count else 0.0
+        nc_rate = nc_detected / nc_sample_count if nc_sample_count else 0.0
+        items.append(
+            {
+                "koId": col,
+                "koName": col,
+                "adDetectedSamples": ad_detected,
+                "adDetectionRate": float(ad_rate),
+                "ncDetectedSamples": nc_detected,
+                "ncDetectionRate": float(nc_rate),
+                "rateGap": float(ad_rate - nc_rate),
+                "overallDetectedSamples": overall_detected,
+                "overallDetectionRate": float(overall_detected / total_sample_count) if total_sample_count else 0.0,
+            }
+        )
+
+    items.sort(
+        key=lambda item: (
+            -abs(item["rateGap"]),
+            -max(item["adDetectionRate"], item["ncDetectionRate"]),
+            -item["overallDetectionRate"],
+            item["koId"],
+        )
+    )
+    items = items[:max_features]
+
+    return {
+        "featureLabel": df.attrs.get("feature_label", FEATURE_META["taxonomy"]["label"]),
+        "detectionRule": "abundance > 0",
+        "groups": [
+            {"group": AD, "sampleCount": ad_sample_count},
+            {"group": NC, "sampleCount": nc_sample_count},
+        ],
+        "rowLabels": [AD, NC],
+        "colLabels": [item["koId"] for item in items],
+        "matrix": [
+            [item["adDetectionRate"] for item in items],
+            [item["ncDetectionRate"] for item in items],
+        ],
+        "items": items,
+    }
+
+
+def _univariate_lda_score(values: np.ndarray, labels: np.ndarray) -> float:
+    if len(np.unique(values)) < 2 or len(np.unique(labels)) < 2:
+        return 0.0
+
+    try:
+        model = LinearDiscriminantAnalysis()
+        model.fit(values.reshape(-1, 1), labels)
+    except (ValueError, FloatingPointError):
+        return 0.0
+
+    coef = np.ravel(getattr(model, "coef_", [0.0]))[0]
+    return float(abs(coef)) if np.isfinite(coef) else 0.0
+
+
+def compute_ko_lda(df: pd.DataFrame, species_cols: list[str], top_n: int = 30, p_value_max: float = 0.05) -> dict:
+    ad, nc = _group_frames(df, species_cols)
+    ad_values = ad.to_numpy(dtype=float)
+    nc_values = nc.to_numpy(dtype=float)
+    ad_mean = ad_values.mean(axis=0)
+    nc_mean = nc_values.mean(axis=0)
+    log_values = np.log10(np.concatenate([ad_values, nc_values], axis=0) + 1)
+    labels = np.array([AD] * len(ad_values) + [NC] * len(nc_values))
+    eps = 1e-9
+    max_features = max(1, int(top_n))
+
+    items = []
+    for index, col in enumerate(species_cols):
+        try:
+            p_value = mannwhitneyu(ad_values[:, index], nc_values[:, index], alternative="two-sided").pvalue
+        except ValueError:
+            p_value = 1.0
+
+        p_value = float(p_value) if np.isfinite(p_value) else 1.0
+        if p_value >= p_value_max:
+            continue
+
+        mean_ad = float(ad_mean[index])
+        mean_nc = float(nc_mean[index])
+        lda_score = _univariate_lda_score(log_values[:, index], labels)
+        log2fc = float(np.log2((mean_ad + eps) / (mean_nc + eps)))
+        enriched_group = AD if mean_ad >= mean_nc else NC
+        items.append(
+            {
+                "koId": col,
+                "koName": col,
+                "enrichedGroup": enriched_group,
+                "ldaScore": lda_score,
+                "pValue": p_value,
+                "log2FC": log2fc,
+                "meanAD": mean_ad,
+                "meanNC": mean_nc,
+            }
+        )
+
+    items.sort(key=lambda item: (-item["ldaScore"], item["pValue"], item["koId"]))
+
+    return {
+        "featureLabel": df.attrs.get("feature_label", FEATURE_META["ko"]["label"]),
+        "method": "Mann-Whitney U + univariate LDA on log10(abundance + 1)",
+        "filter": {"pValueMax": p_value_max, "topN": max_features},
+        "items": items[:max_features],
     }
 
 
@@ -283,6 +505,49 @@ def _sum_tree_values(node: dict) -> float:
         return float(node.get("value", 0))
     node["value"] = sum(_sum_tree_values(child) for child in children)
     return float(node["value"])
+
+
+SUNBURST_PRUNE_RULES = {
+    "phylum": {"limit": 6, "min_ratio": 0.02, "other": "Other phyla"},
+    "class": {"limit": 4, "min_ratio": 0.05, "other": "Other classes"},
+    "genus": {"limit": 4, "min_ratio": 0.05, "other": "Other genera"},
+    "species": {"limit": 3, "min_ratio": 0.08, "other": "Other species"},
+}
+
+
+def _prune_taxonomy_children(children: list[dict], rank: str, parent_total: float) -> list[dict]:
+    if not children:
+        return []
+
+    rule = SUNBURST_PRUNE_RULES[rank]
+    children.sort(key=lambda item: item.get("value", 0), reverse=True)
+    parent_total = parent_total or sum(float(child.get("value", 0)) for child in children) or 1.0
+
+    visible = []
+    hidden = []
+    for index, child in enumerate(children):
+        value = float(child.get("value", 0))
+        ratio = value / parent_total
+        child["ratio"] = ratio
+        keep = index < rule["limit"] and (ratio >= rule["min_ratio"] or index == 0)
+        if keep:
+            visible.append(child)
+        else:
+            hidden.append(child)
+
+    hidden_value = sum(float(child.get("value", 0)) for child in hidden)
+    if hidden_value > 0:
+        visible.append(
+            {
+                "name": rule["other"],
+                "rank": rank,
+                "value": hidden_value,
+                "ratio": hidden_value / parent_total,
+                "mergedCount": len(hidden),
+            }
+        )
+
+    return visible
 
 
 def _prune_children(children: list[dict], limit: int, other_name: str) -> list[dict]:
@@ -299,6 +564,20 @@ def _prune_children(children: list[dict], limit: int, other_name: str) -> list[d
 
 def compute_sunburst(df: pd.DataFrame, species_cols: list[str]) -> list[dict]:
     totals = df[species_cols].sum(axis=0)
+
+    if df.attrs.get("feature_kind") == "ko":
+        children = [
+            {"name": short_name(col), "value": float(totals[col])}
+            for col in totals.sort_values(ascending=False).head(40).index
+            if float(totals[col]) > 0
+        ]
+        root = {
+            "name": "KO Features",
+            "children": _prune_children(children, 24, "Other"),
+        }
+        _sum_tree_values(root)
+        return [root]
+
     tree: dict[str, dict] = {}
 
     for col in species_cols:
@@ -311,25 +590,31 @@ def compute_sunburst(df: pd.DataFrame, species_cols: list[str]) -> list[dict]:
         genus = chain["genus"]
         species = chain["species"]
 
-        p_node = tree.setdefault(phylum, {"name": phylum, "children": {}})
-        c_node = p_node["children"].setdefault(cls, {"name": cls, "children": {}})
-        g_node = c_node["children"].setdefault(genus, {"name": genus, "children": {}})
-        s_node = g_node["children"].setdefault(species, {"name": species, "value": 0.0})
+        p_node = tree.setdefault(phylum, {"name": phylum, "rank": "phylum", "children": {}})
+        c_node = p_node["children"].setdefault(cls, {"name": cls, "rank": "class", "children": {}})
+        g_node = c_node["children"].setdefault(genus, {"name": genus, "rank": "genus", "children": {}})
+        s_node = g_node["children"].setdefault(species, {"name": species, "rank": "species", "value": 0.0})
         s_node["value"] += value
 
     def materialize(node: dict, depth: int = 0) -> dict:
         children_map = node.get("children")
         if not children_map:
-            return {"name": node["name"], "value": node.get("value", 0.0)}
+            return {"name": node["name"], "rank": node.get("rank", "species"), "value": node.get("value", 0.0)}
+
         children = [materialize(child, depth + 1) for child in children_map.values()]
-        limit = 6 if depth == 0 else 5
-        children = _prune_children(children, limit, "Other")
-        materialized = {"name": node["name"], "children": children}
-        _sum_tree_values(materialized)
+        value = sum(float(child.get("value", 0)) for child in children)
+        child_rank = children[0].get("rank", "species")
+        children = _prune_taxonomy_children(children, child_rank, value)
+        materialized = {
+            "name": node["name"],
+            "rank": node.get("rank", "phylum"),
+            "value": value,
+            "children": children,
+        }
         return materialized
 
     roots = [materialize(node, 0) for node in tree.values()]
-    roots = _prune_children(roots, 6, "Other")
+    roots = _prune_taxonomy_children(roots, "phylum", sum(float(root.get("value", 0)) for root in roots))
     return roots
 
 
@@ -389,6 +674,8 @@ def compute_pca(df: pd.DataFrame, species_cols: list[str], top_n: int = 50) -> d
     ]
     return {
         "method": "PCA",
+        "featureLabel": df.attrs.get("feature_label", FEATURE_META["taxonomy"]["label"]),
+        "featureCount": len(ranked),
         "speciesCount": len(ranked),
         "variance": model.explained_variance_ratio_.tolist(),
         "points": points,
@@ -446,6 +733,8 @@ def compute_pcoa(df: pd.DataFrame, species_cols: list[str], top_n: int = 500) ->
         return {
             "method": "PCoA",
             "distance": "Bray-Curtis",
+            "featureLabel": df.attrs.get("feature_label", FEATURE_META["taxonomy"]["label"]),
+            "featureCount": len(ranked),
             "speciesCount": len(ranked),
             "variance": [],
             "points": [],
@@ -493,6 +782,8 @@ def compute_pcoa(df: pd.DataFrame, species_cols: list[str], top_n: int = 500) ->
     return {
         "method": "PCoA",
         "distance": "Bray-Curtis",
+        "featureLabel": df.attrs.get("feature_label", FEATURE_META["taxonomy"]["label"]),
+        "featureCount": len(ranked),
         "speciesCount": len(ranked),
         "variance": variance,
         "points": points,
@@ -508,10 +799,14 @@ def precompute_all(path: Path, slug: str, name: str, published_at: str) -> tuple
         "summary": summary,
         "species": compute_species(df, species_cols),
         "phylum": compute_phylum(df, species_cols),
-        "boxplot": compute_boxplot(df, species_cols),
-        "heatmap": compute_heatmap(df, species_cols),
-        "sunburst": compute_sunburst(df, species_cols),
-        "pca": compute_pca(df, species_cols),
-        "pcoa": compute_pcoa(df, species_cols),
     }
+    if summary.get("featureKind") == "ko":
+        artifacts["detection"] = compute_detection_heatmap(df, species_cols)
+        artifacts["lda"] = compute_ko_lda(df, species_cols)
+    else:
+        artifacts["boxplot"] = compute_boxplot(df, species_cols)
+        artifacts["sunburst"] = compute_sunburst(df, species_cols)
+        artifacts["pca"] = compute_pca(df, species_cols)
+        artifacts["pcoa"] = compute_pcoa(df, species_cols)
+        artifacts["heatmap"] = compute_heatmap(df, species_cols)
     return summary, artifacts, warnings
