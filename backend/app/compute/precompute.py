@@ -459,6 +459,7 @@ def compute_ko_lda(df: pd.DataFrame, species_cols: list[str], top_n: int = 30, p
     labels = np.array([AD] * len(ad_values) + [NC] * len(nc_values))
     eps = 1e-9
     max_features = max(1, int(top_n))
+    per_group_top_n = max(1, max_features // 2)
 
     items = []
     for index, col in enumerate(species_cols):
@@ -489,13 +490,31 @@ def compute_ko_lda(df: pd.DataFrame, species_cols: list[str], top_n: int = 30, p
             }
         )
 
-    items.sort(key=lambda item: (-item["ldaScore"], item["pValue"], item["koId"]))
+    ad_items = [item for item in items if item["enrichedGroup"] == AD]
+    nc_items = [item for item in items if item["enrichedGroup"] == NC]
+    sort_key = lambda item: (-item["ldaScore"], item["pValue"], item["koId"])
+    ad_items.sort(key=sort_key)
+    nc_items.sort(key=sort_key)
+    selected_items = (ad_items[:per_group_top_n] + nc_items[:per_group_top_n])[:max_features]
 
     return {
         "featureLabel": df.attrs.get("feature_label", FEATURE_META["ko"]["label"]),
         "method": "Mann-Whitney U + univariate LDA on log10(abundance + 1)",
-        "filter": {"pValueMax": p_value_max, "topN": max_features},
-        "items": items[:max_features],
+        "filter": {
+            "pValueMax": p_value_max,
+            "topN": max_features,
+            "selectionMode": "balanced_significant_by_group",
+            "perGroupTopN": per_group_top_n,
+        },
+        "summary": {
+            "significantCount": len(items),
+            "adEnrichedCount": len(ad_items),
+            "ncEnrichedCount": len(nc_items),
+            "displayedCount": len(selected_items),
+            "adDisplayedCount": sum(1 for item in selected_items if item["enrichedGroup"] == AD),
+            "ncDisplayedCount": sum(1 for item in selected_items if item["enrichedGroup"] == NC),
+        },
+        "items": selected_items,
     }
 
 

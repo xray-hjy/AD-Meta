@@ -25,6 +25,33 @@ function compactNumber(value) {
 function KoLdaBarChart({ data }) {
   const items = useMemo(() => (Array.isArray(data?.items) ? data.items : []), [data?.items]);
   const filter = data?.filter || {};
+  const summary = useMemo(() => {
+    const fallback = items.reduce(
+      (acc, item) => {
+        const group = item.enrichedGroup === 'NC' ? 'NC' : 'AD';
+        acc.significantCount += 1;
+        acc.displayedCount += 1;
+        if (group === 'AD') {
+          acc.adEnrichedCount += 1;
+          acc.adDisplayedCount += 1;
+        } else {
+          acc.ncEnrichedCount += 1;
+          acc.ncDisplayedCount += 1;
+        }
+        return acc;
+      },
+      {
+        significantCount: 0,
+        adEnrichedCount: 0,
+        ncEnrichedCount: 0,
+        displayedCount: 0,
+        adDisplayedCount: 0,
+        ncDisplayedCount: 0,
+      }
+    );
+
+    return { ...fallback, ...(data?.summary || {}) };
+  }, [data?.summary, items]);
 
   const option = useMemo(() => {
     if (!items.length) return null;
@@ -40,6 +67,8 @@ function KoLdaBarChart({ data }) {
       meanAD: Number(item.meanAD || 0),
       meanNC: Number(item.meanNC || 0),
     }));
+    const maxAbsScore = Math.max(...chartItems.map(item => Math.abs(item.ldaScore)), 1);
+    const axisLimit = Number((maxAbsScore * 1.12).toFixed(2));
 
     return {
       animation: false,
@@ -51,10 +80,11 @@ function KoLdaBarChart({ data }) {
         extraCssText: 'border-radius:8px; padding:10px 14px;',
         formatter(params) {
           const point = params.data || {};
+          const ldaScore = Number(point.ldaScore ?? Math.abs(point.value || 0));
           return `
             <b>${point.koName || point.koId || ''}</b><br/>
             富集组: ${point.groupLabel || ''}<br/>
-            LDA 值: ${formatNumber(point.value)}<br/>
+            LDA 值: ${formatNumber(ldaScore)}<br/>
             p 值: ${formatNumber(point.pValue)}<br/>
             log2FC: ${formatNumber(point.log2FC)}<br/>
             AD 均值: ${compactNumber(point.meanAD)}<br/>
@@ -71,10 +101,17 @@ function KoLdaBarChart({ data }) {
       },
       xAxis: {
         type: 'value',
-        name: 'LDA score',
+        name: 'NC 富集 ← LDA score → AD 富集',
         nameLocation: 'middle',
         nameGap: 28,
-        axisLabel: { color: '#64748b' },
+        min: -axisLimit,
+        max: axisLimit,
+        axisLabel: {
+          color: '#64748b',
+          formatter(value) {
+            return formatNumber(Math.abs(value), 1);
+          },
+        },
         axisLine: { lineStyle: { color: '#cbd5e1' } },
         splitLine: { lineStyle: { color: '#e2e8f0', type: 'dashed' } },
       },
@@ -95,7 +132,8 @@ function KoLdaBarChart({ data }) {
           type: 'bar',
           barMaxWidth: 18,
           data: chartItems.map(item => ({
-            value: item.ldaScore,
+            value: item.enrichedGroup === 'NC' ? -item.ldaScore : item.ldaScore,
+            ldaScore: item.ldaScore,
             koId: item.koId,
             koName: item.koName,
             enrichedGroup: item.enrichedGroup,
@@ -106,7 +144,10 @@ function KoLdaBarChart({ data }) {
             meanNC: item.meanNC,
             itemStyle: {
               color: GROUP_COLORS[item.enrichedGroup],
-              borderRadius: [0, 5, 5, 0],
+              borderRadius: item.enrichedGroup === 'NC' ? [5, 0, 0, 5] : [0, 5, 5, 0],
+            },
+            label: {
+              position: item.enrichedGroup === 'NC' ? 'left' : 'right',
             },
           })),
           label: {
@@ -115,7 +156,8 @@ function KoLdaBarChart({ data }) {
             color: '#334155',
             fontSize: 10,
             formatter(params) {
-              return formatNumber(params.value, 2);
+              const point = params.data || {};
+              return formatNumber(point.ldaScore ?? Math.abs(params.value), 2);
             },
           },
         },
@@ -153,11 +195,14 @@ function KoLdaBarChart({ data }) {
         fontSize: 12,
       }}>
         <span><b style={{ color: '#0f172a' }}>P &lt; </b>{filter.pValueMax ?? 0.05}</span>
-        <span><b style={{ color: '#0f172a' }}>Top {filter.topN ?? 30} KO</b></span>
+        <span><b style={{ color: '#0f172a' }}>显著 KO: </b>{summary.significantCount}</span>
+        <span><b style={{ color: GROUP_COLORS.AD }}>AD 富集: </b>{summary.adEnrichedCount}</span>
+        <span><b style={{ color: GROUP_COLORS.NC }}>NC 富集: </b>{summary.ncEnrichedCount}</span>
+        <span><b style={{ color: '#0f172a' }}>展示 AD Top {summary.adDisplayedCount} + NC Top {summary.ncDisplayedCount}</b></span>
         <span><b style={{ color: '#0f172a' }}>LEfSe 风格 LDA</b></span>
       </div>
       <div style={{ color: '#64748b', fontSize: 12 }}>
-        横向柱表示显著差异 KO 的 LDA 效应强度，颜色表示 AD 或 NC 富集。
+        横向柱表示显著差异 KO 的 LDA 效应强度，NC 富集向左，AD 富集向右。
       </div>
       <div style={{ flex: 1, minHeight: 460 }}>
         <ReactECharts option={option} style={{ width: '100%', height: Math.max(460, items.length * 26 + 120) }} />

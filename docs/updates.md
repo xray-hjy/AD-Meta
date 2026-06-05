@@ -2,47 +2,65 @@
 
 ## 对比基准
 
-- 生成时间：2026-06-05 15:50:45（Asia/Shanghai）
+- 生成时间：2026-06-05 17:31:36（Asia/Shanghai）
 - 远程仓库：`git@github.com:xray-hjy/AD-Meta.git`
-- GitHub `main` 基准提交：`9764c3bd8648556fb6a4f778733059d755b8ce67`
-- 基准版本说明：`feat: add KO analytics and chart updates`
-- 当前本地状态：基于 GitHub 最新 `main`，包含尚未推送的前端性能优化、组成图卡片和测试更新。
+- GitHub `main` 基准提交：`66871269300d6927c603ad801c4498572b8fe3ce`
+- 基准版本说明：`feat: improve heatmap performance and composition summaries`
+- 当前本地状态：基于 GitHub 最新 `main`，包含尚未推送的 KO LDA 展示优化、分类组成图交互增强、导入兼容修复和文档整理。
 - 数据策略：真实数据、缓存和 SQLite 数据库仍保存在 `backend/storage`，继续被 `.gitignore` 排除，不上传到 GitHub。
 
 ## 核心功能更新
 
-- 物种丰度热图由大量 SVG 单元格重构为 Canvas 绘制，显著减少 DOM 节点数量，改善点击放大、拖拽和缩放时的卡顿。
-- 热图放大预览改为 Canvas 高清快照生成的图片，不再复制大型 SVG DOM；导出图片继续使用 Canvas 输出 PNG。
-- 热图预览滚轮缩放改为鼠标指针锚点缩放，鼠标停在哪里就围绕哪里放大或缩小，交互更接近地图/图片查看器。
-- `门级组成` 和 `KO 功能组成` 增加图表顶部摘要卡片，展示当前项数、AD 最高、NC 最高和最大组间差异。
-- 组成图卡片复用现有 `phylum` payload，不改后端接口、不改缓存结构，taxonomy 与 KO 数据集都能适配。
+- KO LDA 图从全局 Top 30 改为显著性优先的分组平衡展示：AD 显著 KO 最多 15 个，NC 显著 KO 最多 15 个。
+- KO LDA 图改为左右发散柱状图：NC 富集向左，AD 富集向右；tooltip 和标签仍显示正数 LDA 值。
+- LDA payload 新增 `filter.selectionMode/perGroupTopN` 和 `summary`，用于解释显著 KO 总数、AD/NC 富集数量和当前展示数量。
+- 分类旭日图新增右上角 `切换` 按钮，可在旭日图和矩形树图之间切换，并使用 ECharts `universalTransition` 实现平滑过渡。
+- 旭日图保留圆角扇区、明亮分类色板和智能标签；矩形树图增加极细白色边框、顶部避让标题、hover 闪烁收敛处理。
+- 导入命令支持从已有 `backend/storage/raw/.../raw.csv` 原位重新预计算，避免源文件和目标 raw 文件相同时触发 `SameFileError`。
 
 ## 前端更新
 
-- `Heatmap` 保留原有 AD/NC/diff 三图结构和颜色含义，但将主体渲染迁移到单个 Canvas 面板。
-- 热图 tooltip 改为基于鼠标坐标反推当前行列，避免为每个单元格绑定 DOM 事件。
-- 热图 lightbox 的拖拽和缩放使用 `requestAnimationFrame` 更新 transform，减少 React 重渲染压力。
-- `PhylumChart` 新增 feature-aware 文案：taxonomy 显示 `门级组成概览`，KO 显示 `KO 功能组成概览`。
-- `App` 在渲染组成图时向 `PhylumChart` 传入 `featureKind` 和 `featureLabel`，用于区分 KO 与 taxonomy 文案。
+- `KoLdaBarChart` 增加旧 payload 回退逻辑：如果后端缓存没有 `summary`，前端会从 `items` 计算展示数量。
+- `SunburstChart` 现在同时支持 `sunburst` 和 `treemap` 两种视图，共用同一份层级数据和同一个 ECharts series id。
+- 矩形树图配置为 `roam: false`、`nodeClick: undefined`、`breadcrumb.show: false`，保持只读展示。
+- 为减少矩形树图右下角 hover 闪烁，`universalTransition` 只在点击切换后的短时间内开启，tooltip 设置为不拦截鼠标事件。
+
+## 后端与 API 更新
+
+- `compute_ko_lda` 先计算所有 `p < 0.05` 的显著 KO，再按 AD/NC 分组排序并各取最多 15 个。
+- AD/NC 组内排序规则保持为 `ldaScore desc -> pValue asc -> koId asc`；任一组不足 15 个时不使用不显著 KO 或另一组额外 KO 凑数。
+- `docs/api.md` 新增 `/api/datasets/{slug}/charts/lda` 契约，说明分组平衡选择、summary 字段和 items 字段。
+- `import_dataset` 增加同文件保护，当导入源已经是目标 raw 文件时跳过 copy，直接重新预计算。
+
+## 文档更新
+
+- 新增 `README.md`，作为项目文档入口，说明当前架构、主要文档和数据分发方式。
+- `docs/code-reference.md` 重命名为 `docs/legacy-frontend-code-reference.md`，标注为旧版前端直读 Excel 的历史参考，不作为当前开发依据。
+- 更新日志默认以 GitHub 当前最新 `main` 为基准，记录本地待推送版本相对远程的新增变化。
 
 ## 测试与验证
 
-- 新增 `PhylumChart` 测试，覆盖 taxonomy/KO 两类组成图摘要卡片、AD/NC 最高项和最大组间差异方向。
-- 更新 `App` 测试，验证 KO 组成图能收到 `featureKind: ko` 和 `featureLabel: KO`。
-- 更新 `Heatmap` 测试，覆盖 Canvas 渲染、tooltip 命中、图片 lightbox、按钮缩放、重置和鼠标锚点滚轮缩放。
+- 新增/更新后端测试覆盖：
+  - KO LDA 按 AD/NC 分组各取最多 15 个。
+  - AD 组不足 15 个时不回填不显著 KO 或额外 NC KO。
+  - LDA `filter` 与 `summary` 字段正确。
+  - 从已有 raw 文件原位重新导入不会触发 `SameFileError`。
+- 新增/更新前端测试覆盖：
+  - AD LDA 柱为正值，NC LDA 柱为负值。
+  - LDA 摘要条显示显著 KO、AD/NC 富集数和当前展示数。
+  - 旧 LDA payload 缺少 `summary` 时仍可回退渲染。
 - 本次推送前固定验证命令：
+  - `cd backend && .venv/bin/python -m unittest tests.test_precompute tests.test_dataset_service tests.test_heatmap_api tests.test_import_dataset -v`
   - `CI=1 npm --prefix frontend test -- --runInBand --watch=false`
   - `npm --prefix frontend run build`
 
 ## 数据与协作说明
 
-- GitHub 仓库只保存源码、测试和文档，不保存真实实验数据。
-- 需要让同事看到同样效果时，请通过硬盘单独拷贝整个 `backend/storage` 目录。
-- 当前本地 `backend/storage` 包含 `ad_meta.sqlite3`、`raw/` 原始数据和 `cache/` 图表缓存；这些文件均被 `.gitignore` 排除。
-- 同事 clone 项目后，将 `backend/storage` 放回同一路径即可复用当前数据集和图表缓存。
+- 本地已重新预计算 `ad-nc-ko-abundance` 的 LDA 缓存，当前缓存展示结果为 `AD 7 + NC 15`。
+- `backend/storage` 仍被 `.gitignore` 排除，重新生成的缓存、SQLite 数据库和原始数据不会进入 GitHub。
+- 同事需要查看同样数据效果时，继续通过硬盘拷贝整个 `backend/storage` 目录。
 
 ## 注意事项
 
-- 本次更新只涉及前端图表性能、组成图摘要卡片、相关测试和更新日志。
-- KO 分析、检出率热图、LDA 图、箱线图增强等功能已包含在 GitHub 当前基准提交 `9764c3b` 中，本日志不再重复记录旧版本差异。
-- 推送前需确认 `backend/storage`、依赖目录、构建产物和 Python 缓存没有进入暂存区。
+- 本次推送包含源码、测试和文档，不包含真实数据、缓存、构建产物或依赖目录。
+- 推送前需确认 `backend/storage`、`frontend/build`、`frontend/node_modules`、`backend/.venv`、`__pycache__` 和 `.DS_Store` 没有进入暂存区。

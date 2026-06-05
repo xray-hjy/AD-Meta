@@ -77,7 +77,12 @@ def import_dataset(file_path: Path, slug: str, name: str, description: str = "")
     raw_dir.mkdir(parents=True, exist_ok=True)
     cache_dir.mkdir(parents=True, exist_ok=True)
     raw_path = raw_dir / f"raw.{file_type}"
-    shutil.copy2(source, raw_path)
+    try:
+        same_raw_file = raw_path.exists() and source.samefile(raw_path)
+    except OSError:
+        same_raw_file = False
+    if not same_raw_file:
+        shutil.copy2(source, raw_path)
 
     with connect() as conn:
         existing = conn.execute("SELECT id FROM datasets WHERE slug = ?", (slug,)).fetchone()

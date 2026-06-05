@@ -201,6 +201,56 @@ the full abundance matrix.
 }
 ```
 
+## GET /api/datasets/{slug}/charts/lda
+
+Returns KO-only LDA marker data. The backend first keeps significant KO
+features with `p < pValueMax`, then displays up to `perGroupTopN` AD-enriched
+and up to `perGroupTopN` NC-enriched KO features. It does not add
+non-significant KO features to force equal group counts.
+
+```json
+{
+  "featureLabel": "KO",
+  "method": "Mann-Whitney U + univariate LDA on log10(abundance + 1)",
+  "filter": {
+    "pValueMax": 0.05,
+    "topN": 30,
+    "selectionMode": "balanced_significant_by_group",
+    "perGroupTopN": 15
+  },
+  "summary": {
+    "significantCount": 230,
+    "adEnrichedCount": 7,
+    "ncEnrichedCount": 223,
+    "displayedCount": 22,
+    "adDisplayedCount": 7,
+    "ncDisplayedCount": 15
+  },
+  "items": [
+    {
+      "koId": "K17398",
+      "koName": "K17398",
+      "enrichedGroup": "AD",
+      "ldaScore": 0.523,
+      "pValue": 0.0063,
+      "log2FC": 1.321,
+      "meanAD": 151.43,
+      "meanNC": 60.62
+    },
+    {
+      "koId": "K03686",
+      "koName": "K03686",
+      "enrichedGroup": "NC",
+      "ldaScore": 4.151,
+      "pValue": 0.0081,
+      "log2FC": -0.142,
+      "meanAD": 3468.28,
+      "meanNC": 3826.6
+    }
+  ]
+}
+```
+
 ## GET /api/datasets/{slug}/charts/sunburst
 
 Returns an ECharts-compatible taxonomy tree.

@@ -420,27 +420,52 @@ class KoLdaPrecomputeTests(unittest.TestCase):
             SimpleNamespace(pvalue=0.5),
         ]
 
-        with patch("app.compute.precompute.mannwhitneyu", side_effect=p_values):
-            payload = compute_ko_lda(self._lda_df(), ["K00001", "K00002", "K00003", "K00004"], top_n=3)
+        with patch("app.compute.precompute.mannwhitneyu", side_effect=p_values), patch(
+            "app.compute.precompute._univariate_lda_score",
+            side_effect=[4.0, 3.0, 5.0, 0.0],
+        ):
+            payload = compute_ko_lda(self._lda_df(), ["K00001", "K00002", "K00003", "K00004"], top_n=4)
 
         self.assertEqual(payload["featureLabel"], "KO")
         self.assertEqual(payload["method"], "Mann-Whitney U + univariate LDA on log10(abundance + 1)")
-        self.assertEqual(payload["filter"], {"pValueMax": 0.05, "topN": 3})
-        self.assertEqual([item["koId"] for item in payload["items"]], ["K00003", "K00001", "K00002"])
+        self.assertEqual(
+            payload["filter"],
+            {
+                "pValueMax": 0.05,
+                "topN": 4,
+                "selectionMode": "balanced_significant_by_group",
+                "perGroupTopN": 2,
+            },
+        )
+        self.assertEqual(
+            payload["summary"],
+            {
+                "significantCount": 3,
+                "adEnrichedCount": 2,
+                "ncEnrichedCount": 1,
+                "displayedCount": 3,
+                "adDisplayedCount": 2,
+                "ncDisplayedCount": 1,
+            },
+        )
+        self.assertEqual([item["koId"] for item in payload["items"]], ["K00001", "K00002", "K00003"])
         self.assertNotIn("K00004", [item["koId"] for item in payload["items"]])
 
-        first = payload["items"][0]
-        self.assertEqual(first["koName"], "K00003")
-        self.assertEqual(first["enrichedGroup"], "NC")
-        self.assertGreater(first["ldaScore"], 0)
-        self.assertEqual(first["pValue"], 0.001)
-        self.assertLess(first["log2FC"], 0)
-        self.assertLess(first["meanAD"], first["meanNC"])
-
-        ad_item = payload["items"][1]
+        ad_item = payload["items"][0]
+        self.assertEqual(ad_item["koName"], "K00001")
         self.assertEqual(ad_item["enrichedGroup"], "AD")
+        self.assertGreater(ad_item["ldaScore"], 0)
+        self.assertEqual(ad_item["pValue"], 0.01)
         self.assertGreater(ad_item["log2FC"], 0)
         self.assertGreater(ad_item["meanAD"], ad_item["meanNC"])
+
+        nc_item = payload["items"][2]
+        self.assertEqual(nc_item["koName"], "K00003")
+        self.assertEqual(nc_item["enrichedGroup"], "NC")
+        self.assertGreater(nc_item["ldaScore"], 0)
+        self.assertEqual(nc_item["pValue"], 0.001)
+        self.assertLess(nc_item["log2FC"], 0)
+        self.assertLess(nc_item["meanAD"], nc_item["meanNC"])
 
     def test_ko_lda_tie_breaks_by_ko_id_after_score_and_p_value(self) -> None:
         p_values = [
@@ -450,10 +475,32 @@ class KoLdaPrecomputeTests(unittest.TestCase):
             SimpleNamespace(pvalue=0.5),
         ]
 
-        with patch("app.compute.precompute.mannwhitneyu", side_effect=p_values):
-            payload = compute_ko_lda(self._lda_df(), ["K00001", "K00002", "K00003", "K00004"], top_n=3)
+        with patch("app.compute.precompute.mannwhitneyu", side_effect=p_values), patch(
+            "app.compute.precompute._univariate_lda_score",
+            side_effect=[4.0, 4.0, 4.0, 0.0],
+        ):
+            payload = compute_ko_lda(self._lda_df(), ["K00001", "K00002", "K00003", "K00004"], top_n=4)
 
-        self.assertEqual([item["koId"] for item in payload["items"][:2]], ["K00001", "K00003"])
+        self.assertEqual([item["koId"] for item in payload["items"]], ["K00001", "K00002", "K00003"])
+
+    def test_ko_lda_does_not_backfill_when_one_group_has_fewer_significant_items(self) -> None:
+        p_values = [
+            SimpleNamespace(pvalue=0.01),
+            SimpleNamespace(pvalue=0.001),
+            SimpleNamespace(pvalue=0.002),
+            SimpleNamespace(pvalue=0.003),
+        ]
+
+        with patch("app.compute.precompute.mannwhitneyu", side_effect=p_values), patch(
+            "app.compute.precompute._univariate_lda_score",
+            side_effect=[5.0, 4.0, 3.0, 2.0],
+        ):
+            payload = compute_ko_lda(self._lda_df(), ["K00001", "K00003", "K00003", "K00003"], top_n=4)
+
+        self.assertEqual([item["enrichedGroup"] for item in payload["items"]], ["AD", "NC", "NC"])
+        self.assertEqual(payload["summary"]["displayedCount"], 3)
+        self.assertEqual(payload["summary"]["adDisplayedCount"], 1)
+        self.assertEqual(payload["summary"]["ncDisplayedCount"], 2)
 
 
 if __name__ == "__main__":
