@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import App from './App';
 import { fetchJson } from './api/client';
 
@@ -16,9 +16,13 @@ jest.mock('./components/Charts/BarChart', () => () => {
   return React.createElement('div', { 'data-testid': 'bar-chart' });
 });
 
-jest.mock('./components/Charts/PhylumChart', () => () => {
+jest.mock('./components/Charts/PhylumChart', () => ({ featureKind, featureLabel }) => {
   const React = require('react');
-  return React.createElement('div', { 'data-testid': 'phylum-chart' });
+  return React.createElement('div', {
+    'data-testid': 'phylum-chart',
+    'data-feature-kind': featureKind,
+    'data-feature-label': featureLabel,
+  });
 });
 
 jest.mock('./components/Charts/BoxPlot', () => () => {
@@ -123,4 +127,30 @@ test('does not show KO LDA tab for taxonomy datasets', async () => {
   });
 
   expect(screen.queryByText('KO 功能 LDA 值柱状图')).toBeNull();
+});
+
+test('passes feature metadata to the phylum composition chart', async () => {
+  render(<App />);
+
+  await waitFor(() => {
+    expect(screen.getByText('KO 功能组成')).toBeTruthy();
+  });
+
+  fetchJson.mockImplementation(async url => {
+    if (url === '/api/datasets') return datasets;
+    const summaryMatch = url.match(/^\/api\/datasets\/([^/]+)\/summary$/);
+    if (summaryMatch) return summaries[summaryMatch[1]];
+    if (/^\/api\/datasets\/[^/]+\/charts\/phylum$/.test(url)) return [];
+    if (/^\/api\/datasets\/[^/]+\/charts\/species$/.test(url)) return [];
+    throw new Error(`Unexpected URL: ${url}`);
+  });
+
+  fireEvent.click(screen.getByText('KO 功能组成'));
+
+  await waitFor(() => {
+    expect(screen.getByTestId('phylum-chart')).toBeTruthy();
+  });
+
+  expect(screen.getByTestId('phylum-chart').getAttribute('data-feature-kind')).toBe('ko');
+  expect(screen.getByTestId('phylum-chart').getAttribute('data-feature-label')).toBe('KO');
 });

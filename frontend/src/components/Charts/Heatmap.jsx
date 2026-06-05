@@ -1,9 +1,14 @@
-import { useRef, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import useTooltip from '../../hooks/useTooltip';
 
 const ABUNDANCE_COLORS = ['#ffffcc', '#ffeda0', '#fed976', '#feb24c', '#fd8d3c', '#fc4e2a', '#e31a1c', '#bd0026', '#800026'];
 const DIFF_COLORS = ['#2166ac', '#67a9cf', '#f7f7f7', '#ef8a62', '#b2182b'];
+const DEFAULT_DIFF_LABELS = ['AD - NC'];
+const MAX_RENDER_SCALE = 1.5;
+const SNAPSHOT_SCALE = 2;
+const MIN_LIGHTBOX_SCALE = 0.5;
+const MAX_LIGHTBOX_SCALE = 5;
 
 /* ====== 工具函数 ====== */
 
@@ -29,10 +34,6 @@ function sanitizeFilename(name) {
     .replace(/\s+/g, '_');
 }
 
-function svgToDataUrl(svgText) {
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgText)}`;
-}
-
 function validColumnOrder(order, cols) {
   if (!Array.isArray(order) || order.length !== cols) {
     return Array.from({ length: cols }, (_, index) => index);
@@ -54,10 +55,18 @@ function dateStamp() {
   return new Date().toISOString().slice(0, 10).replace(/-/g, '');
 }
 
+function getRenderScale(scale = window.devicePixelRatio || 1) {
+  return Math.max(1, Math.min(MAX_RENDER_SCALE, scale));
+}
+
+function clampLightboxScale(scale) {
+  return Math.max(MIN_LIGHTBOX_SCALE, Math.min(MAX_LIGHTBOX_SCALE, scale));
+}
+
 /* ====== 布局参数 ====== */
 
-const COMPACT = { cellW: 14, left: 60, top: 44, right: 44, bottom: 30, colFont: 6, rowFont: 7, labelStep: 1 };
-const NORMAL  = { cellW: 26, left: 105, top: 56, right: 56, bottom: 40, colFont: 8, rowFont: 9, labelStep: 1 };
+const COMPACT = { cellW: 14, left: 60, top: 44, right: 44, bottom: 30, colFont: 6, rowFont: 7 };
+const NORMAL  = { cellW: 26, left: 105, top: 56, right: 56, bottom: 40, colFont: 8, rowFont: 9 };
 
 function cellHeight(rows) {
   if (rows <= 1) return 24;
@@ -67,9 +76,182 @@ function cellHeight(rows) {
   return 10;
 }
 
-/* ====== D3 渲染子组件 ====== */
+function buildLayout({ rows, cols, compact, fixedRows }) {
+  const L = compact ? COMPACT : NORMAL;
+  const layoutRows = fixedRows ? Math.max(rows, fixedRows) : rows;
+  const ch = compact ? cellHeight(layoutRows) : cellHeight(rows);
+  const gridW = cols * L.cellW;
+  const gridH = rows * ch;
+  const totalW = L.left + gridW + L.right;
+  const totalH = L.top + layoutRows * ch + L.bottom;
+  const labelEvery = Math.max(1, Math.ceil(rows / (compact ? 18 : 28)));
+  return { L, layoutRows, ch, gridW, gridH, totalW, totalH, labelEvery };
+}
 
-function HeatmapCanvas({
+function makeColorScale(mode, maxV, maxAbs) {
+  if (mode === 'diff') {
+    return d3.scaleSequential(d3.interpolateRdBu).domain([maxAbs || 1, -(maxAbs || 1)]);
+  }
+  return d3.scaleSequential(d3.interpolateYlOrRd).domain([0.15, maxV || 1]);
+}
+
+function canvasPoint(event, canvas, layout) {
+  const rect = canvas.getBoundingClientRect();
+  if (!rect.width || !rect.height) return null;
+  return {
+    x: (event.clientX - rect.left) * (layout.totalW / rect.width),
+    y: (event.clientY - rect.top) * (layout.totalH / rect.height),
+  };
+}
+
+function heatmapHitTest(point, layout, rows, cols) {
+  if (!point) return null;
+  const gridX = point.x - layout.L.left;
+  const gridY = point.y - layout.L.top;
+  if (gridX < 0 || gridY < 0 || gridX >= layout.gridW || gridY >= layout.gridH) {
+    return null;
+  }
+  const j = Math.floor(gridX / layout.L.cellW);
+  const i = Math.floor(gridY / layout.ch);
+  return i >= 0 && i < rows && j >= 0 && j < cols ? { i, j } : null;
+}
+
+function drawLine(ctx, x1, y1, x2, y2, color = '#cbd5e1', width = 0.8) {
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.stroke();
+}
+
+function drawHeatmap(canvas, params, renderScale = getRenderScale(), options = {}) {
+  const {
+    matrix,
+    rowLabels,
+    colLabels,
+    mode,
+    maxV,
+    maxAbs,
+    filter,
+    layout,
+  } = params;
+
+  const { L, ch, gridW, gridH, totalW, totalH, labelEvery } = layout;
+  const rows = matrix.length;
+  const cols = colLabels.length;
+  const pixelRatio = Math.max(1, renderScale);
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  canvas.width = Math.max(1, Math.ceil(totalW * pixelRatio));
+  canvas.height = Math.max(1, Math.ceil(totalH * pixelRatio));
+  ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+  ctx.clearRect(0, 0, totalW, totalH);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, totalW, totalH);
+
+  const colorScale = makeColorScale(mode, maxV, maxAbs);
+
+  ctx.save();
+  ctx.translate(L.left, L.top);
+
+  for (let i = 0; i < rows; i += 1) {
+    const row = matrix[i];
+    const y = i * ch;
+    for (let j = 0; j < cols; j += 1) {
+      const v = row[j];
+      ctx.fillStyle = v > 0 || mode === 'diff' ? colorScale(v) : '#ffffe0';
+      ctx.fillRect(
+        j * L.cellW,
+        y,
+        Math.max(0.5, L.cellW - 0.4),
+        Math.max(0.5, ch - 0.4)
+      );
+    }
+  }
+
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'right';
+  ctx.fillStyle = '#64748b';
+  ctx.font = `${L.rowFont}px sans-serif`;
+  rowLabels.forEach((label, i) => {
+    if (rows > 1 && i % labelEvery !== 0) {
+      const isLast = i === rows - 1;
+      if (!isLast || (i % labelEvery) < 2) return;
+    }
+    ctx.fillText(label, -6, i * ch + ch / 2);
+  });
+
+  ctx.strokeStyle = '#94a3b8';
+  ctx.lineWidth = 0.5;
+  ctx.fillStyle = '#334155';
+  ctx.font = `${L.colFont}px sans-serif`;
+  colLabels.forEach((label, j) => {
+    const cx = j * L.cellW + L.cellW / 2;
+    drawLine(ctx, cx, -2, cx, 1, '#94a3b8', 0.5);
+    ctx.save();
+    ctx.translate(cx, -5);
+    ctx.rotate(-65 * Math.PI / 180);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, 0, 0);
+    ctx.restore();
+  });
+
+  drawLine(ctx, 0, 0, gridW, 0);
+  drawLine(ctx, -1, 0, -1, gridH);
+  ctx.restore();
+
+  const legX = L.left + gridW + 10;
+  const legY = L.top;
+  const legH = Math.min(140, gridH);
+  const legW = 10;
+  const stops = mode === 'diff' ? DIFF_COLORS : ABUNDANCE_COLORS;
+  const nStops = stops.length;
+
+  for (let i = 0; i < nStops; i += 1) {
+    ctx.fillStyle = stops[i];
+    ctx.fillRect(legX, legY + (legH / nStops) * (nStops - 1 - i), legW, legH / nStops);
+  }
+
+  ctx.font = '7px sans-serif';
+  ctx.fillStyle = '#94a3b8';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  const tickCount = 4;
+  for (let i = 0; i <= tickCount; i += 1) {
+    const t = i / tickCount;
+    const val = mode === 'diff' ? maxAbs * (1 - 2 * t) : maxV * (1 - t);
+    const y = legY + t * legH;
+    drawLine(ctx, legX + legW, y, legX + legW + 4, y, '#94a3b8', 0.6);
+    ctx.fillText(val >= 1000 ? `${(val / 1000).toFixed(1)}k` : fmt(val, 1), legX + legW + 6, y);
+  }
+
+  if (mode === 'diff') {
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#b2182b';
+    ctx.fillText('AD↑', legX + legW / 2, legY - 4);
+    ctx.fillStyle = '#2166ac';
+    ctx.fillText('NC↓', legX + legW / 2, legY + legH + 12);
+  }
+
+  if (options.includeNote) {
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '7px sans-serif';
+    ctx.fillText(
+      `筛选: Wilcoxon p<${filter?.pValueMax ?? 0.05}, |log₂FC|>${filter?.log2FcMinAbs ?? 1} | 行列聚类: 层次聚类(average) | 数据: log₁₀(丰度+1)`,
+      totalW / 2,
+      totalH - 6
+    );
+  }
+}
+
+/* ====== Canvas 渲染子组件 ====== */
+
+const HeatmapCanvas = memo(function HeatmapCanvas({
   title,
   matrix,
   rowLabels,
@@ -84,65 +266,42 @@ function HeatmapCanvas({
   compact,
   fixedRows,
 }) {
-  const svgRef = useRef();
+  const canvasRef = useRef(null);
   const { Tooltip, show, move, hide } = useTooltip();
   const [exporting, setExporting] = useState(false);
-  const L = compact ? COMPACT : NORMAL;
   const rows = matrix.length;
   const cols = colLabels.length;
-  // 统一单元格尺寸：AD/NC 取较大行数计算 cellHeight，保证两图列宽对齐
-  const layoutRows = fixedRows ? Math.max(rows, fixedRows) : rows;
-  const ch = compact ? cellHeight(layoutRows) : cellHeight(rows);
-  // 网格只画实际数据行数，viewBox 高度统一用 layoutRows，保证两图 SVG 尺寸一致
-  const gridW = cols * L.cellW;
-  const gridH = rows * ch;
-  const totalW = L.left + gridW + L.right;
-  const totalH = L.top + layoutRows * ch + L.bottom;
-  const labelEvery = Math.max(1, Math.ceil(rows / (compact ? 18 : 28)));
 
-  const handleExport = async () => {
-    if (!svgRef.current || exporting) return;
+  const layout = useMemo(
+    () => buildLayout({ rows, cols, compact, fixedRows }),
+    [rows, cols, compact, fixedRows]
+  );
+
+  const drawParams = useMemo(() => ({
+    matrix,
+    rowLabels,
+    colLabels,
+    stats,
+    mode,
+    maxV,
+    maxAbs,
+    filter,
+    layout,
+  }), [matrix, rowLabels, colLabels, stats, mode, maxV, maxAbs, filter, layout]);
+
+  const createSnapshot = useCallback((scale = SNAPSHOT_SCALE, includeNote = false) => {
+    const canvas = document.createElement('canvas');
+    drawHeatmap(canvas, drawParams, scale, { includeNote });
+    return canvas.toDataURL('image/png');
+  }, [drawParams]);
+
+  const handleExport = useCallback(() => {
+    if (exporting) return;
 
     setExporting(true);
     try {
-      const svgNode = svgRef.current;
-      const clonedSvg = svgNode.cloneNode(true);
-      clonedSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-      clonedSvg.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
-
-      const serializer = new XMLSerializer();
-      const doc = clonedSvg.ownerDocument || document;
-      const note = doc.createElementNS('http://www.w3.org/2000/svg', 'text');
-      note.setAttribute('x', totalW / 2);
-      note.setAttribute('y', totalH - 6);
-      note.setAttribute('text-anchor', 'middle');
-      note.setAttribute('fill', '#94a3b8');
-      note.setAttribute('font-size', 7);
-      note.textContent = `筛选: Wilcoxon p<${filter?.pValueMax ?? 0.05}, |log₂FC|>${filter?.log2FcMinAbs ?? 1} | 行列聚类: 层次聚类(average) | 数据: log₁₀(丰度+1)`;
-      clonedSvg.appendChild(note);
-
-      const svgText = serializer.serializeToString(clonedSvg);
-      const img = new Image();
-
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-        img.src = svgToDataUrl(svgText);
-      });
-
-      const scale = 2;
-      const canvas = document.createElement('canvas');
-      canvas.width = totalW * scale;
-      canvas.height = totalH * scale;
-
-      const ctx = canvas.getContext('2d');
-      ctx.scale(scale, scale);
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, totalW, totalH);
-      ctx.drawImage(img, 0, 0, totalW, totalH);
-
       const link = document.createElement('a');
-      link.href = canvas.toDataURL('image/png');
+      link.href = createSnapshot(SNAPSHOT_SCALE, true);
       const filterStr = `p${filter?.pValueMax ?? 0.05}-log2FC${filter?.log2FcMinAbs ?? 1}`;
       const filename = `heatmap_${chartSubType}_${filterStr}_${dateStamp()}.png`;
       link.download = `${sanitizeFilename(filename)}.png`;
@@ -152,124 +311,42 @@ function HeatmapCanvas({
     } finally {
       setExporting(false);
     }
-  };
+  }, [chartSubType, createSnapshot, exporting, filter]);
 
   useEffect(() => {
-    const svg = d3.select(svgRef.current);
-    svg.selectAll('*').remove();
-    svg.attr('viewBox', `0 0 ${totalW} ${totalH}`);
+    if (!canvasRef.current) return;
+    drawHeatmap(canvasRef.current, drawParams);
+  }, [drawParams]);
 
-    const g = svg.append('g').attr('transform', `translate(${L.left},${L.top})`);
-
-    // 色阶
-    const colorScale = mode === 'diff'
-      ? d3.scaleSequential(d3.interpolateRdBu).domain([maxAbs, -maxAbs])
-      : d3.scaleSequential(d3.interpolateYlOrRd).domain([0.15, maxV || 1]);
-
-    // 单元格
-    g.selectAll('rect')
-      .data(matrix.flatMap((row, i) => row.map((v, j) => ({ i, j, v }))))
-      .join('rect')
-      .attr('x', d => d.j * L.cellW)
-      .attr('y', d => d.i * ch)
-      .attr('width', L.cellW)
-      .attr('height', ch)
-      .attr('fill', d => d.v > 0 || mode === 'diff' ? colorScale(d.v) : '#ffffe0')
-      .attr('stroke', '#fff')
-      .attr('stroke-width', 0.4)
-      .on('mouseenter', (event, d) => {
-        const stat = stats[d.j];
-        const tax = formatTaxonomy(stat.fullName);
-        const lines = [tax, `p = ${formatP(stat.p)}`, `log2FC = ${fmt(stat.log2FC, 3)}`];
-        if (mode === 'diff') lines.push(`AD−NC = ${fmt(d.v, 4)}`);
-        else lines.push(`样本: ${rowLabels[d.i]}`, `log10(丰度+1) = ${fmt(d.v, 4)}`);
-        show(lines.join('<br/>'));
-        move(event);
-      })
-      .on('mousemove', event => { move(event); })
-      .on('mouseleave', () => { hide(); });
-
-    // 行标签：按步长间隔显示，末行仅在间隔≥2时额外显示（避免与前一个标签重叠）
-    rowLabels.forEach((label, i) => {
-      if (rows > 1 && i % labelEvery !== 0) {
-        const isLast = i === rows - 1;
-        if (!isLast || (i % labelEvery) < 2) return;
-      }
-      g.append('text')
-        .attr('x', -6).attr('y', i * ch + ch / 2 + 3)
-        .attr('text-anchor', 'end')
-        .attr('fill', '#64748b')
-        .attr('font-size', L.rowFont)
-        .text(label);
-    });
-
-    // 列标签：只在非重叠位置显示，其余用刻度线标记
-    colLabels.forEach((label, j) => {
-      const cx = j * L.cellW + L.cellW / 2;
-      const stat = stats[j];
-      // 每个列顶部画一条短刻度线
-      g.append('line')
-        .attr('x1', cx).attr('x2', cx)
-        .attr('y1', -2).attr('y2', 1)
-        .attr('stroke', '#94a3b8').attr('stroke-width', 0.5);
-      g.append('text')
-        .attr('x', cx)
-        .attr('y', -5)
-        .attr('transform', `rotate(-65, ${cx}, -5)`)
-        .attr('text-anchor', 'start')
-        .attr('fill', '#334155')
-        .attr('font-size', L.colFont)
-        .style('cursor', 'default')
-        .text(label)
-        .on('mouseenter', (event) => {
-          show(`${formatTaxonomy(stat.fullName)}<br/>p = ${formatP(stat.p)}<br/>log2FC = ${fmt(stat.log2FC, 3)}`);
-          move(event);
-        })
-        .on('mousemove', event => { move(event); })
-        .on('mouseleave', () => { hide(); });
-    });
-
-    // 列标签底部横线
-    g.append('line')
-      .attr('x1', 0).attr('x2', gridW).attr('y1', 0).attr('y2', 0)
-      .attr('stroke', '#cbd5e1').attr('stroke-width', 0.8);
-
-    // 左侧竖线
-    g.append('line')
-      .attr('x1', -1).attr('x2', -1).attr('y1', 0).attr('y2', gridH)
-      .attr('stroke', '#cbd5e1').attr('stroke-width', 0.8);
-
-    // 图例
-    const legX = gridW + 10;
-    const legH = Math.min(140, gridH);
-    const legW = 10;
-    const legG = svg.append('g').attr('transform', `translate(${L.left + legX},${L.top})`);
-
-    const stops = mode === 'diff' ? DIFF_COLORS : ABUNDANCE_COLORS;
-    const nStops = stops.length;
-    for (let i = 0; i < nStops; i++) {
-      legG.append('rect')
-        .attr('x', 0).attr('y', (legH / nStops) * (nStops - 1 - i))
-        .attr('width', legW).attr('height', legH / nStops)
-        .attr('fill', stops[i]);
+  const handleMouseMove = useCallback((event) => {
+    if (!canvasRef.current) return;
+    const point = canvasPoint(event, canvasRef.current, layout);
+    const hit = heatmapHitTest(point, layout, rows, cols);
+    if (!hit) {
+      hide();
+      return;
     }
 
-    const tickCount = 4;
-    for (let i = 0; i <= tickCount; i++) {
-      const t = i / tickCount;
-      const val = mode === 'diff' ? maxAbs * (1 - 2 * t) : maxV * (1 - t);
-      const y = t * legH;
-      legG.append('line').attr('x1', legW).attr('x2', legW + 4).attr('y1', y).attr('y2', y).attr('stroke', '#94a3b8').attr('stroke-width', 0.6);
-      legG.append('text').attr('x', legW + 6).attr('y', y + 3).attr('fill', '#94a3b8').attr('font-size', 7)
-        .text(val >= 1000 ? (val / 1000).toFixed(1) + 'k' : fmt(val, 1));
-    }
-
+    const value = matrix[hit.i][hit.j];
+    const stat = stats[hit.j];
+    const tax = formatTaxonomy(stat.fullName);
+    const lines = [tax, `p = ${formatP(stat.p)}`, `log2FC = ${fmt(stat.log2FC, 3)}`];
     if (mode === 'diff') {
-      legG.append('text').attr('x', legW / 2).attr('y', -4).attr('text-anchor', 'middle').attr('fill', '#b2182b').attr('font-size', 7).text('AD↑');
-      legG.append('text').attr('x', legW / 2).attr('y', legH + 12).attr('text-anchor', 'middle').attr('fill', '#2166ac').attr('font-size', 7).text('NC↓');
+      lines.push(`AD−NC = ${fmt(value, 4)}`);
+    } else {
+      lines.push(`样本: ${rowLabels[hit.i]}`, `log10(丰度+1) = ${fmt(value, 4)}`);
     }
+    show(lines.join('<br/>'));
+    move(event);
+  }, [cols, hide, layout, matrix, mode, move, rowLabels, rows, show, stats]);
 
-  }, [matrix, rowLabels, colLabels, stats, mode, maxV, maxAbs, compact, fixedRows, totalW, totalH, L, ch, gridW, gridH, labelEvery, rows, show, move, hide]);
+  const handleOpen = useCallback(() => {
+    if (!onOpen) return;
+    onOpen({
+      src: createSnapshot(SNAPSHOT_SCALE),
+      title,
+    });
+  }, [createSnapshot, onOpen, title]);
 
   return (
     <section style={{
@@ -311,39 +388,100 @@ function HeatmapCanvas({
         {mode === 'diff' ? '红色=AD高 蓝色=NC高' : '颜色越深 log丰度越高'} · 点击热图可放大
       </div>
       <div
-        onClick={() => {
-          if (svgRef.current && onOpen) onOpen(svgRef.current.outerHTML);
-        }}
+        onClick={handleOpen}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={hide}
         style={{ position: 'relative', width: '100%', overflowX: 'auto', cursor: onOpen ? 'zoom-in' : 'default' }}
       >
-        <svg ref={svgRef} style={{ display: 'block', width: '100%', height: 'auto' }} />
+        <canvas
+          ref={canvasRef}
+          aria-label={title}
+          style={{ display: 'block', width: '100%', height: 'auto' }}
+        />
         <Tooltip />
       </div>
     </section>
   );
-}
+});
 
-function Lightbox({ svgContent, onClose }) {
-  const [scale, setScale] = useState(1);
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
+function Lightbox({ image, onClose }) {
+  const contentRef = useRef(null);
+  const viewportRef = useRef(null);
   const dragging = useRef(false);
   const lastPos = useRef({ x: 0, y: 0 });
+  const transform = useRef({ x: 0, y: 0, scale: 1 });
+  const frame = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const applyTransform = useCallback(() => {
+    frame.current = null;
+    if (!contentRef.current) return;
+    const { x, y, scale } = transform.current;
+    contentRef.current.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+  }, []);
+
+  const scheduleTransform = useCallback(() => {
+    if (frame.current) return;
+    frame.current = window.requestAnimationFrame
+      ? window.requestAnimationFrame(applyTransform)
+      : window.setTimeout(applyTransform, 16);
+  }, [applyTransform]);
+
+  const setScaleBy = useCallback((delta) => {
+    transform.current.scale = clampLightboxScale(transform.current.scale + delta);
+    scheduleTransform();
+  }, [scheduleTransform]);
+
+  const zoomAt = useCallback((delta, clientX, clientY) => {
+    const previous = transform.current;
+    const nextScale = clampLightboxScale(previous.scale + delta);
+    if (nextScale === previous.scale) return;
+
+    const rect = viewportRef.current?.getBoundingClientRect();
+    if (!rect) {
+      transform.current.scale = nextScale;
+      scheduleTransform();
+      return;
+    }
+
+    const anchorX = clientX - rect.left - rect.width / 2;
+    const anchorY = clientY - rect.top - rect.height / 2;
+    const ratio = nextScale / previous.scale;
+
+    transform.current = {
+      scale: nextScale,
+      x: anchorX - (anchorX - previous.x) * ratio,
+      y: anchorY - (anchorY - previous.y) * ratio,
+    };
+    scheduleTransform();
+  }, [scheduleTransform]);
+
+  const resetTransform = useCallback(() => {
+    transform.current = { x: 0, y: 0, scale: 1 };
+    scheduleTransform();
+  }, [scheduleTransform]);
 
   useEffect(() => {
     const handleKeyDown = event => {
       if (event.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      if (frame.current) {
+        const cancel = window.cancelAnimationFrame || window.clearTimeout;
+        cancel(frame.current);
+      }
+    };
   }, [onClose]);
 
   const handleWheel = event => {
     event.preventDefault();
-    setScale(prev => Math.max(0.5, Math.min(5, prev + (event.deltaY > 0 ? -0.2 : 0.2))));
+    zoomAt(event.deltaY > 0 ? -0.2 : 0.2, event.clientX, event.clientY);
   };
 
   const handleMouseDown = event => {
+    event.preventDefault();
     dragging.current = true;
     setIsDragging(true);
     lastPos.current = { x: event.clientX, y: event.clientY };
@@ -354,7 +492,9 @@ function Lightbox({ svgContent, onClose }) {
     const dx = event.clientX - lastPos.current.x;
     const dy = event.clientY - lastPos.current.y;
     lastPos.current = { x: event.clientX, y: event.clientY };
-    setOffset(prev => ({ x: prev.x + dx, y: prev.y + dy }));
+    transform.current.x += dx;
+    transform.current.y += dy;
+    scheduleTransform();
   };
 
   const handleMouseUp = () => {
@@ -378,6 +518,7 @@ function Lightbox({ svgContent, onClose }) {
       }}
     >
       <div
+        ref={viewportRef}
         onClick={event => event.stopPropagation()}
         onWheel={handleWheel}
         onMouseDown={handleMouseDown}
@@ -397,13 +538,32 @@ function Lightbox({ svgContent, onClose }) {
         }}
       >
         <div
+          ref={contentRef}
           style={{
-            transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
+            transform: 'translate(0px, 0px) scale(1)',
             transformOrigin: 'center center',
             transition: isDragging ? 'none' : 'transform 100ms ease',
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
-          dangerouslySetInnerHTML={{ __html: svgContent }}
-        />
+        >
+          <img
+            src={image.src}
+            alt={`${image.title} 放大预览`}
+            draggable={false}
+            onDragStart={event => event.preventDefault()}
+            style={{
+              maxWidth: '100%',
+              maxHeight: '100%',
+              objectFit: 'contain',
+              userSelect: 'none',
+              pointerEvents: 'none',
+            }}
+          />
+        </div>
         <div style={{
           position: 'absolute',
           right: 18,
@@ -411,17 +571,9 @@ function Lightbox({ svgContent, onClose }) {
           display: 'flex',
           gap: 8,
         }}>
-          <button type="button" onClick={() => setScale(prev => Math.min(5, prev + 0.5))}>放大</button>
-          <button type="button" onClick={() => setScale(prev => Math.max(0.5, prev - 0.5))}>缩小</button>
-          <button
-            type="button"
-            onClick={() => {
-              setScale(1);
-              setOffset({ x: 0, y: 0 });
-            }}
-          >
-            重置
-          </button>
+          <button type="button" onClick={() => setScaleBy(0.5)}>放大</button>
+          <button type="button" onClick={() => setScaleBy(-0.5)}>缩小</button>
+          <button type="button" onClick={resetTransform}>重置</button>
         </div>
       </div>
     </div>
@@ -433,10 +585,7 @@ function Lightbox({ svgContent, onClose }) {
 function Heatmap({ data, featureLabel = '物种' }) {
   const result = data;
   const resolvedFeatureLabel = result?.featureLabel || featureLabel;
-  const [lightboxSrc, setLightboxSrc] = useState(null);
-
-  if (!result) return <div className="placeholder"><p>暂无数据</p></div>;
-  if (result.error) return <div className="placeholder"><p>{result.error}</p></div>;
+  const [lightboxImage, setLightboxImage] = useState(null);
 
   const stats = Array.isArray(result?.stats) ? result.stats : null;
   const adMatrix = Array.isArray(result?.adMatrix) ? result.adMatrix : null;
@@ -445,9 +594,36 @@ function Heatmap({ data, featureLabel = '物种' }) {
   const adLabels = Array.isArray(result?.adLabels) ? result.adLabels : null;
   const ncLabels = Array.isArray(result?.ncLabels) ? result.ncLabels : null;
   const colLabels = Array.isArray(result?.colLabels) ? result.colLabels : null;
-  const diffLabels = Array.isArray(result?.diffLabels) ? result.diffLabels : ['AD - NC'];
+  const diffLabels = Array.isArray(result?.diffLabels) ? result.diffLabels : DEFAULT_DIFF_LABELS;
 
-  if (!stats || !adMatrix || !ncMatrix || !diffMatrix || !adLabels || !ncLabels || !colLabels) {
+  const colOrder = useMemo(
+    () => validColumnOrder(result?.colOrder, colLabels?.length ?? 0),
+    [result?.colOrder, colLabels]
+  );
+
+  const orderedData = useMemo(() => {
+    if (!stats || !adMatrix || !ncMatrix || !diffMatrix || !colLabels) return null;
+    return {
+      stats: colOrder.map(index => stats[index]),
+      colLabels: colOrder.map(index => colLabels[index]),
+      adMatrix: reorderMatrix(adMatrix, colOrder),
+      ncMatrix: reorderMatrix(ncMatrix, colOrder),
+      diffMatrix: reorderMatrix(diffMatrix, colOrder),
+    };
+  }, [adMatrix, colLabels, colOrder, diffMatrix, ncMatrix, stats]);
+
+  const handleOpen = useCallback((image) => {
+    setLightboxImage(image);
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setLightboxImage(null);
+  }, []);
+
+  if (!result) return <div className="placeholder"><p>暂无数据</p></div>;
+  if (result.error) return <div className="placeholder"><p>{result.error}</p></div>;
+
+  if (!stats || !adMatrix || !ncMatrix || !diffMatrix || !adLabels || !ncLabels || !colLabels || !orderedData) {
     return (
       <div className="placeholder placeholder--error">
         <span className="placeholder-icon">&#9888;</span>
@@ -456,13 +632,6 @@ function Heatmap({ data, featureLabel = '物种' }) {
       </div>
     );
   }
-
-  const colOrder = validColumnOrder(result.colOrder, colLabels.length);
-  const orderedStats = colOrder.map(index => stats[index]);
-  const orderedColLabels = colOrder.map(index => colLabels[index]);
-  const orderedAdMatrix = reorderMatrix(adMatrix, colOrder);
-  const orderedNcMatrix = reorderMatrix(ncMatrix, colOrder);
-  const orderedDiffMatrix = reorderMatrix(diffMatrix, colOrder);
 
   return (
     <div style={{ width: '100%', height: '100%', overflow: 'auto', color: '#0f172a' }}>
@@ -483,51 +652,51 @@ function Heatmap({ data, featureLabel = '物种' }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         <HeatmapCanvas
           title="AD 组丰度热图"
-          matrix={orderedAdMatrix}
+          matrix={orderedData.adMatrix}
           rowLabels={adLabels}
-          colLabels={orderedColLabels}
-          stats={orderedStats}
+          colLabels={orderedData.colLabels}
+          stats={orderedData.stats}
           mode="abundance"
           maxV={result.maxV}
           maxAbs={result.maxAbs}
           chartSubType="AD-abundance"
           filter={result.filter}
-          onOpen={setLightboxSrc}
+          onOpen={handleOpen}
         />
         <HeatmapCanvas
           title="NC 组丰度热图"
-          matrix={orderedNcMatrix}
+          matrix={orderedData.ncMatrix}
           rowLabels={ncLabels}
-          colLabels={orderedColLabels}
-          stats={orderedStats}
+          colLabels={orderedData.colLabels}
+          stats={orderedData.stats}
           mode="abundance"
           maxV={result.maxV}
           maxAbs={result.maxAbs}
           chartSubType="NC-abundance"
           filter={result.filter}
-          onOpen={setLightboxSrc}
+          onOpen={handleOpen}
         />
 
         {/* 差异热图 */}
         <HeatmapCanvas
           title="差异热图 (AD − NC 平均 log 丰度)"
-          matrix={orderedDiffMatrix}
+          matrix={orderedData.diffMatrix}
           rowLabels={diffLabels}
-          colLabels={orderedColLabels}
-          stats={orderedStats}
+          colLabels={orderedData.colLabels}
+          stats={orderedData.stats}
           mode="diff"
           maxV={result.maxV}
           maxAbs={result.maxAbs}
           chartSubType="diff"
           filter={result.filter}
-          onOpen={setLightboxSrc}
+          onOpen={handleOpen}
         />
       </div>
 
-      {lightboxSrc && (
+      {lightboxImage && (
         <Lightbox
-          svgContent={lightboxSrc}
-          onClose={() => setLightboxSrc(null)}
+          image={lightboxImage}
+          onClose={handleClose}
         />
       )}
     </div>

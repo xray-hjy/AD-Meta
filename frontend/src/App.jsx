@@ -177,7 +177,7 @@ function App() {
       case 'species':
         return <BarChart data={chartData} featureLabel={featureLabel} />;
       case 'phylum':
-        return <PhylumChart data={chartData} />;
+        return <PhylumChart data={chartData} featureKind={featureKind} featureLabel={featureLabel} />;
       case 'boxplot':
         return <BoxPlot data={chartData} featureLabel={featureLabel} />;
       case 'heatmap':
