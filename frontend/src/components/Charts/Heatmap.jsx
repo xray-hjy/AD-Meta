@@ -9,6 +9,7 @@ const MAX_RENDER_SCALE = 1.5;
 const SNAPSHOT_SCALE = 2;
 const MIN_LIGHTBOX_SCALE = 0.5;
 const MAX_LIGHTBOX_SCALE = 5;
+const GROUP_COLORS = { AD: '#c0392b', NC: '#27ae60' };
 
 /* ====== 工具函数 ====== */
 
@@ -51,6 +52,38 @@ function reorderMatrix(matrix, order) {
   return matrix.map(row => order.map(index => row[index]));
 }
 
+function validDendrogram(dendrogram) {
+  return dendrogram && Array.isArray(dendrogram.merges);
+}
+
+export function buildCombinedHeatmapData(result, orderedData) {
+  const baseMatrix = [...orderedData.adMatrix, ...orderedData.ncMatrix];
+  const baseLabels = [...result.adLabels, ...result.ncLabels];
+  const baseGroups = [
+    ...result.adLabels.map(() => 'AD'),
+    ...result.ncLabels.map(() => 'NC'),
+  ];
+  const rowOrder = validColumnOrder(result.combinedRowOrder, baseMatrix.length);
+  const hasRowOrder = Array.isArray(result.combinedRowOrder)
+    && rowOrder.every((value, index) => value === result.combinedRowOrder[index]);
+  const rowDendrogram = result.dendrograms?.rows;
+  const columnDendrogram = result.dendrograms?.columns;
+
+  if (!hasRowOrder || !validDendrogram(rowDendrogram) || !validDendrogram(columnDendrogram)) {
+    return null;
+  }
+
+  return {
+    matrix: rowOrder.map(index => baseMatrix[index]),
+    rowLabels: rowOrder.map(index => baseLabels[index]),
+    rowGroups: rowOrder.map(index => baseGroups[index]),
+    rowLeafOrder: rowOrder,
+    columnLeafOrder: validColumnOrder(result.colOrder, orderedData.colLabels.length),
+    rowDendrogram,
+    columnDendrogram,
+  };
+}
+
 function dateStamp() {
   return new Date().toISOString().slice(0, 10).replace(/-/g, '');
 }
@@ -67,6 +100,26 @@ function clampLightboxScale(scale) {
 
 const COMPACT = { cellW: 14, left: 60, top: 44, right: 44, bottom: 30, colFont: 6, rowFont: 7 };
 const NORMAL  = { cellW: 26, left: 105, top: 56, right: 56, bottom: 40, colFont: 8, rowFont: 9 };
+const DENDRO_LAYOUT = {
+  compact: {
+    left: 108,
+    rowTreeGap: 4,
+    rowTreeWidth: 56,
+    legendGap: 10,
+    legendWidth: 40,
+    columnTreeGap: 4,
+    columnTreeHeight: 42,
+  },
+  normal: {
+    left: 150,
+    rowTreeGap: 6,
+    rowTreeWidth: 66,
+    legendGap: 12,
+    legendWidth: 44,
+    columnTreeGap: 6,
+    columnTreeHeight: 50,
+  },
+};
 
 function cellHeight(rows) {
   if (rows <= 1) return 24;
@@ -76,8 +129,22 @@ function cellHeight(rows) {
   return 10;
 }
 
-function buildLayout({ rows, cols, compact, fixedRows }) {
-  const L = compact ? COMPACT : NORMAL;
+export function buildHeatmapLayout({ rows, cols, compact, fixedRows, showDendrograms }) {
+  const base = compact ? COMPACT : NORMAL;
+  const dendroSpec = compact ? DENDRO_LAYOUT.compact : DENDRO_LAYOUT.normal;
+  const L = showDendrograms
+    ? {
+        ...base,
+        left: dendroSpec.left,
+        right: dendroSpec.rowTreeGap
+          + dendroSpec.rowTreeWidth
+          + dendroSpec.legendGap
+          + dendroSpec.legendWidth,
+        bottom: dendroSpec.columnTreeGap
+          + dendroSpec.columnTreeHeight
+          + base.bottom,
+      }
+    : base;
   const layoutRows = fixedRows ? Math.max(rows, fixedRows) : rows;
   const ch = compact ? cellHeight(layoutRows) : cellHeight(rows);
   const gridW = cols * L.cellW;
@@ -85,7 +152,30 @@ function buildLayout({ rows, cols, compact, fixedRows }) {
   const totalW = L.left + gridW + L.right;
   const totalH = L.top + layoutRows * ch + L.bottom;
   const labelEvery = Math.max(1, Math.ceil(rows / (compact ? 18 : 28)));
-  return { L, layoutRows, ch, gridW, gridH, totalW, totalH, labelEvery };
+  const dendro = showDendrograms
+    ? {
+        rowTreeLeft: L.left + gridW + dendroSpec.rowTreeGap,
+        rowTreeRight: L.left + gridW + dendroSpec.rowTreeGap + dendroSpec.rowTreeWidth,
+        columnTreeTop: L.top + gridH + dendroSpec.columnTreeGap,
+        columnTreeBottom: L.top + gridH + dendroSpec.columnTreeGap + dendroSpec.columnTreeHeight,
+      }
+    : null;
+  const legendX = showDendrograms
+    ? dendro.rowTreeRight + dendroSpec.legendGap
+    : L.left + gridW + 10;
+
+  return {
+    L,
+    layoutRows,
+    ch,
+    gridW,
+    gridH,
+    totalW,
+    totalH,
+    labelEvery,
+    dendro,
+    legendX,
+  };
 }
 
 function makeColorScale(mode, maxV, maxAbs) {
@@ -125,6 +215,68 @@ function drawLine(ctx, x1, y1, x2, y2, color = '#cbd5e1', width = 0.8) {
   ctx.stroke();
 }
 
+function drawRowDendrogram(ctx, dendrogram, leafOrder, layout) {
+  const merges = dendrogram?.merges;
+  if (!Array.isArray(merges) || merges.length === 0) return;
+  const { L, ch, dendro } = layout;
+  const maxDistance = Math.max(...merges.map(merge => Number(merge[2]) || 0), 1e-12);
+  const treeWidth = dendro.rowTreeRight - dendro.rowTreeLeft;
+  const nodes = new Map();
+
+  leafOrder.forEach((leafId, position) => {
+    nodes.set(leafId, {
+      x: dendro.rowTreeLeft,
+      y: L.top + position * ch + ch / 2,
+    });
+  });
+
+  merges.forEach((merge, index) => {
+    const left = nodes.get(Number(merge[0]));
+    const right = nodes.get(Number(merge[1]));
+    if (!left || !right) return;
+    const distance = Math.max(0, Number(merge[2]) || 0);
+    const parent = {
+      x: dendro.rowTreeLeft + (distance / maxDistance) * treeWidth,
+      y: (left.y + right.y) / 2,
+    };
+    drawLine(ctx, left.x, left.y, parent.x, left.y, '#64748b', 0.7);
+    drawLine(ctx, right.x, right.y, parent.x, right.y, '#64748b', 0.7);
+    drawLine(ctx, parent.x, left.y, parent.x, right.y, '#64748b', 0.7);
+    nodes.set(leafOrder.length + index, parent);
+  });
+}
+
+function drawColumnDendrogram(ctx, dendrogram, leafOrder, layout) {
+  const merges = dendrogram?.merges;
+  if (!Array.isArray(merges) || merges.length === 0) return;
+  const { L, dendro } = layout;
+  const maxDistance = Math.max(...merges.map(merge => Number(merge[2]) || 0), 1e-12);
+  const treeHeight = dendro.columnTreeBottom - dendro.columnTreeTop;
+  const nodes = new Map();
+
+  leafOrder.forEach((leafId, position) => {
+    nodes.set(leafId, {
+      x: L.left + position * L.cellW + L.cellW / 2,
+      y: dendro.columnTreeTop,
+    });
+  });
+
+  merges.forEach((merge, index) => {
+    const left = nodes.get(Number(merge[0]));
+    const right = nodes.get(Number(merge[1]));
+    if (!left || !right) return;
+    const distance = Math.max(0, Number(merge[2]) || 0);
+    const parent = {
+      x: (left.x + right.x) / 2,
+      y: dendro.columnTreeTop + (distance / maxDistance) * treeHeight,
+    };
+    drawLine(ctx, left.x, left.y, left.x, parent.y, '#64748b', 0.7);
+    drawLine(ctx, right.x, right.y, right.x, parent.y, '#64748b', 0.7);
+    drawLine(ctx, left.x, parent.y, right.x, parent.y, '#64748b', 0.7);
+    nodes.set(leafOrder.length + index, parent);
+  });
+}
+
 function drawHeatmap(canvas, params, renderScale = getRenderScale(), options = {}) {
   const {
     matrix,
@@ -135,11 +287,17 @@ function drawHeatmap(canvas, params, renderScale = getRenderScale(), options = {
     maxAbs,
     filter,
     layout,
+    rowGroups,
+    rowDendrogram,
+    columnDendrogram,
+    rowLeafOrder,
+    columnLeafOrder,
   } = params;
 
   const { L, ch, gridW, gridH, totalW, totalH, labelEvery } = layout;
   const rows = matrix.length;
   const cols = colLabels.length;
+  const showDendrograms = Boolean(rowDendrogram && columnDendrogram);
   const pixelRatio = Math.max(1, renderScale);
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
@@ -171,6 +329,13 @@ function drawHeatmap(canvas, params, renderScale = getRenderScale(), options = {
     }
   }
 
+  if (showDendrograms && Array.isArray(rowGroups)) {
+    rowGroups.forEach((group, i) => {
+      ctx.fillStyle = GROUP_COLORS[group] || '#94a3b8';
+      ctx.fillRect(-12, i * ch, 7, Math.max(0.5, ch - 0.4));
+    });
+  }
+
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'right';
   ctx.fillStyle = '#64748b';
@@ -180,7 +345,7 @@ function drawHeatmap(canvas, params, renderScale = getRenderScale(), options = {
       const isLast = i === rows - 1;
       if (!isLast || (i % labelEvery) < 2) return;
     }
-    ctx.fillText(label, -6, i * ch + ch / 2);
+    ctx.fillText(label, showDendrograms ? -18 : -6, i * ch + ch / 2);
   });
 
   ctx.strokeStyle = '#94a3b8';
@@ -203,7 +368,12 @@ function drawHeatmap(canvas, params, renderScale = getRenderScale(), options = {
   drawLine(ctx, -1, 0, -1, gridH);
   ctx.restore();
 
-  const legX = L.left + gridW + 10;
+  if (showDendrograms) {
+    drawRowDendrogram(ctx, rowDendrogram, rowLeafOrder, layout);
+    drawColumnDendrogram(ctx, columnDendrogram, columnLeafOrder, layout);
+  }
+
+  const legX = layout.legendX;
   const legY = L.top;
   const legH = Math.min(140, gridH);
   const legW = 10;
@@ -265,16 +435,22 @@ const HeatmapCanvas = memo(function HeatmapCanvas({
   onOpen,
   compact,
   fixedRows,
+  rowGroups,
+  rowDendrogram,
+  columnDendrogram,
+  rowLeafOrder,
+  columnLeafOrder,
 }) {
   const canvasRef = useRef(null);
   const { Tooltip, show, move, hide } = useTooltip();
   const [exporting, setExporting] = useState(false);
   const rows = matrix.length;
   const cols = colLabels.length;
+  const showDendrograms = Boolean(rowDendrogram && columnDendrogram);
 
   const layout = useMemo(
-    () => buildLayout({ rows, cols, compact, fixedRows }),
-    [rows, cols, compact, fixedRows]
+    () => buildHeatmapLayout({ rows, cols, compact, fixedRows, showDendrograms }),
+    [rows, cols, compact, fixedRows, showDendrograms]
   );
 
   const drawParams = useMemo(() => ({
@@ -287,7 +463,12 @@ const HeatmapCanvas = memo(function HeatmapCanvas({
     maxAbs,
     filter,
     layout,
-  }), [matrix, rowLabels, colLabels, stats, mode, maxV, maxAbs, filter, layout]);
+    rowGroups,
+    rowDendrogram,
+    columnDendrogram,
+    rowLeafOrder,
+    columnLeafOrder,
+  }), [matrix, rowLabels, colLabels, stats, mode, maxV, maxAbs, filter, layout, rowGroups, rowDendrogram, columnDendrogram, rowLeafOrder, columnLeafOrder]);
 
   const createSnapshot = useCallback((scale = SNAPSHOT_SCALE, includeNote = false) => {
     const canvas = document.createElement('canvas');
@@ -335,10 +516,11 @@ const HeatmapCanvas = memo(function HeatmapCanvas({
       lines.push(`AD−NC = ${fmt(value, 4)}`);
     } else {
       lines.push(`样本: ${rowLabels[hit.i]}`, `log10(丰度+1) = ${fmt(value, 4)}`);
+      if (rowGroups?.[hit.i]) lines.push(`分组: ${rowGroups[hit.i]}`);
     }
     show(lines.join('<br/>'));
     move(event);
-  }, [cols, hide, layout, matrix, mode, move, rowLabels, rows, show, stats]);
+  }, [cols, hide, layout, matrix, mode, move, rowGroups, rowLabels, rows, show, stats]);
 
   const handleOpen = useCallback(() => {
     if (!onOpen) return;
@@ -385,7 +567,11 @@ const HeatmapCanvas = memo(function HeatmapCanvas({
         </button>
       </div>
       <div style={{ fontSize: compact ? 10 : 11, color: '#94a3b8', marginBottom: 6 }}>
-        {mode === 'diff' ? '红色=AD高 蓝色=NC高' : '颜色越深 log丰度越高'} · 点击热图可放大
+        {mode === 'diff'
+          ? '红色=AD高 蓝色=NC高'
+          : showDendrograms
+            ? '颜色越深 log丰度越高 · 分组条：红色=AD 绿色=NC'
+            : '颜色越深 log丰度越高'} · 点击热图可放大
       </div>
       <div
         onClick={handleOpen}
@@ -396,6 +582,11 @@ const HeatmapCanvas = memo(function HeatmapCanvas({
         <canvas
           ref={canvasRef}
           aria-label={title}
+          data-row-dendrogram={showDendrograms ? 'true' : undefined}
+          data-column-dendrogram={showDendrograms ? 'true' : undefined}
+          data-row-dendrogram-position={showDendrograms ? 'right' : undefined}
+          data-column-dendrogram-position={showDendrograms ? 'bottom' : undefined}
+          data-row-groups={Array.isArray(rowGroups) ? rowGroups.join(',') : undefined}
           style={{ display: 'block', width: '100%', height: 'auto' }}
         />
         <Tooltip />
@@ -612,6 +803,11 @@ function Heatmap({ data, featureLabel = '物种' }) {
     };
   }, [adMatrix, colLabels, colOrder, diffMatrix, ncMatrix, stats]);
 
+  const combinedData = useMemo(() => {
+    if (!orderedData || !adLabels || !ncLabels) return null;
+    return buildCombinedHeatmapData(result, orderedData);
+  }, [adLabels, ncLabels, orderedData, result]);
+
   const handleOpen = useCallback((image) => {
     setLightboxImage(image);
   }, []);
@@ -648,7 +844,7 @@ function Heatmap({ data, featureLabel = '物种' }) {
         <span><b style={{ color: '#0f172a' }}>列排序：</b>层次聚类（average linkage）</span>
       </div>
 
-      {/* AD → NC → 差异纵向排列，列顺序保持一致 */}
+      {/* AD → NC → 合并 → 差异纵向排列，列顺序保持一致 */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         <HeatmapCanvas
           title="AD 组丰度热图"
@@ -676,6 +872,43 @@ function Heatmap({ data, featureLabel = '物种' }) {
           filter={result.filter}
           onOpen={handleOpen}
         />
+
+        {combinedData ? (
+          <HeatmapCanvas
+            title="AD + NC 合并丰度热图（层次聚类）"
+            matrix={combinedData.matrix}
+            rowLabels={combinedData.rowLabels}
+            rowGroups={combinedData.rowGroups}
+            colLabels={orderedData.colLabels}
+            stats={orderedData.stats}
+            mode="abundance"
+            maxV={result.maxV}
+            maxAbs={result.maxAbs}
+            chartSubType="AD-NC-combined-abundance"
+            filter={result.filter}
+            onOpen={handleOpen}
+            compact
+            rowDendrogram={combinedData.rowDendrogram}
+            columnDendrogram={combinedData.columnDendrogram}
+            rowLeafOrder={combinedData.rowLeafOrder}
+            columnLeafOrder={combinedData.columnLeafOrder}
+          />
+        ) : (
+          <section style={{
+            padding: 16,
+            border: '1px dashed #cbd5e1',
+            borderRadius: 14,
+            background: '#f8fafc',
+            color: '#475569',
+          }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
+              合并聚类热图需要重新预计算数据
+            </div>
+            <div style={{ marginTop: 4, fontSize: 12 }}>
+              当前缓存缺少共同聚类树信息；原有 AD、NC 和差异热图仍可正常查看。
+            </div>
+          </section>
+        )}
 
         {/* 差异热图 */}
         <HeatmapCanvas

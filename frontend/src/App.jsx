@@ -205,7 +205,7 @@ function App() {
       </header>
 
       <div className="app-body">
-        <aside className="sidebar">
+        <aside className="sidebar" data-scroll-region="sidebar">
           <div className="sidebar-section">
             <h3 className="sidebar-heading">数据集</h3>
             <select
@@ -247,7 +247,7 @@ function App() {
           </div>
         </aside>
 
-        <main className="main-content" key={activeTab}>
+        <main className="main-content" data-scroll-region="main" key={activeTab}>
           {renderChart()}
         </main>
       </div>

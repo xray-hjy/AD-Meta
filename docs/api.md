@@ -195,11 +195,30 @@ the full abundance matrix.
   "ncLabels": ["S002"],
   "diffMatrix": [[0.48]],
   "diffLabels": ["AD - NC"],
+  "colOrder": [0],
+  "combinedRowOrder": [0, 1],
+  "dendrograms": {
+    "metric": "euclidean",
+    "linkage": "average",
+    "rows": {
+      "merges": [[0, 1, 1.25, 2]]
+    },
+    "columns": {
+      "merges": []
+    }
+  },
   "maxV": 3.2,
   "maxAbs": 0.8,
   "pairedRows": 191
 }
 ```
+
+`combinedRowOrder` indexes the rows of `adMatrix` followed by `ncMatrix`.
+The row dendrogram leaf ids use that same combined row index. Column
+dendrogram leaf ids index the un-reordered `stats` and `colLabels` arrays;
+`colOrder` supplies their displayed leaf order. Each merge has SciPy linkage
+shape `[leftNodeId, rightNodeId, distance, leafCount]`. Empty merges are valid
+for a single leaf or a degenerate matrix with no finite clustering distance.
 
 ## GET /api/datasets/{slug}/charts/lda
 

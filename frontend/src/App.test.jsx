@@ -129,6 +129,17 @@ test('does not show KO LDA tab for taxonomy datasets', async () => {
   expect(screen.queryByText('KO 功能 LDA 值柱状图')).toBeNull();
 });
 
+test('separates the desktop sidebar and main content into independent scroll regions', async () => {
+  render(<App />);
+
+  await waitFor(() => {
+    expect(screen.getByText('KO 功能组成')).toBeTruthy();
+  });
+
+  expect(document.querySelector('aside.sidebar')?.getAttribute('data-scroll-region')).toBe('sidebar');
+  expect(document.querySelector('main.main-content')?.getAttribute('data-scroll-region')).toBe('main');
+});
+
 test('passes feature metadata to the phylum composition chart', async () => {
   render(<App />);
 

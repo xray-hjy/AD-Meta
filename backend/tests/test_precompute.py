@@ -6,10 +6,12 @@ from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 from unittest.mock import patch
 
+import numpy as np
 import pandas as pd
 
 from app.compute.precompute import (
     _box_values,
+    _hierarchical_cluster,
     compute_boxplot,
     compute_detection_heatmap,
     compute_heatmap,
@@ -228,6 +230,40 @@ class HeatmapPrecomputeTests(unittest.TestCase):
         self.assertNotIn("clusterLabels", heatmap)
         self.assertNotIn("clusterOrder", heatmap)
         self.assertNotIn("rawMatrix", heatmap)
+
+    def test_heatmap_caches_joint_row_and_column_dendrograms(self) -> None:
+        df = pd.DataFrame(
+            {
+                "Group": ["AD", "AD", "AD", "AD", "NC", "NC", "NC", "NC"],
+                "Sample": ["AD1", "AD2", "AD3", "AD4", "NC1", "NC2", "NC3", "NC4"],
+                "k__Bacteria|p__A|c__A|g__A|s__A": [50, 52, 51, 53, 1, 1, 1, 1],
+                "k__Bacteria|p__B|c__B|g__B|s__B": [48, 50, 49, 51, 1, 1, 1, 1],
+                "k__Bacteria|p__C|c__C|g__C|s__C": [1, 1, 1, 1, 60, 62, 61, 63],
+                "k__Bacteria|p__D|c__D|g__D|s__D": [1, 1, 1, 1, 58, 60, 59, 61],
+            }
+        )
+        species_cols = [col for col in df.columns if col.startswith("k__")]
+
+        heatmap = compute_heatmap(df, species_cols)
+
+        sample_count = len(heatmap["adLabels"]) + len(heatmap["ncLabels"])
+        feature_count = len(heatmap["stats"])
+        self.assertEqual(sorted(heatmap["combinedRowOrder"]), list(range(sample_count)))
+        self.assertEqual(heatmap["dendrograms"]["metric"], "euclidean")
+        self.assertEqual(heatmap["dendrograms"]["linkage"], "average")
+        self.assertEqual(len(heatmap["dendrograms"]["rows"]["merges"]), sample_count - 1)
+        self.assertEqual(len(heatmap["dendrograms"]["columns"]["merges"]), feature_count - 1)
+        self.assertEqual(sorted(heatmap["colOrder"]), list(range(feature_count)))
+
+    def test_hierarchical_cluster_degrades_for_small_or_identical_matrices(self) -> None:
+        single = _hierarchical_cluster(np.array([[1.0, 2.0]]))
+        pair = _hierarchical_cluster(np.array([[0.0, 0.0], [2.0, 2.0]]))
+        identical = _hierarchical_cluster(np.ones((3, 2)))
+
+        self.assertEqual(single, {"order": [0], "merges": []})
+        self.assertEqual(sorted(pair["order"]), [0, 1])
+        self.assertEqual(len(pair["merges"]), 1)
+        self.assertEqual(identical, {"order": [0, 1, 2], "merges": []})
 
 
 class BoxplotPrecomputeTests(unittest.TestCase):

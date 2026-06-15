@@ -277,14 +277,26 @@ def compute_boxplot(df: pd.DataFrame, species_cols: list[str], top_n: int = 30) 
     return {"items": items}
 
 
-def _cluster_order(matrix: np.ndarray) -> list[int]:
+def _hierarchical_cluster(matrix: np.ndarray) -> dict[str, list]:
     n = matrix.shape[0]
-    if n <= 2:
-        return list(range(n))
+    if n <= 1:
+        return {"order": list(range(n)), "merges": []}
     distances = pdist(matrix, metric="euclidean")
     if not np.isfinite(distances).all() or np.allclose(distances, 0):
-        return list(range(n))
-    return leaves_list(linkage(distances, method="average")).astype(int).tolist()
+        return {"order": list(range(n)), "merges": []}
+    tree = linkage(distances, method="average")
+    merges = [
+        [int(left), int(right), float(distance), int(count)]
+        for left, right, distance, count in tree
+    ]
+    return {
+        "order": leaves_list(tree).astype(int).tolist(),
+        "merges": merges,
+    }
+
+
+def _cluster_order(matrix: np.ndarray) -> list[int]:
+    return _hierarchical_cluster(matrix)["order"]
 
 
 def _heatmap_filter(max_features: int, selected_count: int | None = None) -> dict:
@@ -355,15 +367,18 @@ def compute_heatmap(df: pd.DataFrame, species_cols: list[str], top_n: int = 200)
     nc_order = _cluster_order(nc_mat)
     all_values = np.concatenate([ad_mat.ravel(), nc_mat.ravel()])
     raw_mat = np.concatenate([ad_mat, nc_mat], axis=0)
-    col_order = _cluster_order(raw_mat.T)
+    ordered_ad_mat = ad_mat[ad_order, :]
+    ordered_nc_mat = nc_mat[nc_order, :]
+    combined_cluster = _hierarchical_cluster(np.concatenate([ordered_ad_mat, ordered_nc_mat], axis=0))
+    column_cluster = _hierarchical_cluster(raw_mat.T)
 
     return {
         "filter": _heatmap_filter(max_features, len(stats)),
         "featureLabel": df.attrs.get("feature_label", FEATURE_META["taxonomy"]["label"]),
         "stats": [{k: v for k, v in item.items() if k != "idx"} for item in stats],
         "colLabels": [item["label"] for item in stats],
-        "adMatrix": ad_mat[ad_order, :].tolist(),
-        "ncMatrix": nc_mat[nc_order, :].tolist(),
+        "adMatrix": ordered_ad_mat.tolist(),
+        "ncMatrix": ordered_nc_mat.tolist(),
         "adLabels": df.loc[df["Group"] == AD, "Sample"].iloc[ad_order].tolist(),
         "ncLabels": df.loc[df["Group"] == NC, "Sample"].iloc[nc_order].tolist(),
         "diffMatrix": [[item["diffLog"] for item in stats]],
@@ -371,7 +386,14 @@ def compute_heatmap(df: pd.DataFrame, species_cols: list[str], top_n: int = 200)
         "maxV": float(np.max(all_values)) if all_values.size else 1.0,
         "maxAbs": float(max(abs(item["diffLog"]) for item in stats)),
         "pairedRows": int(max(ad_mat.shape[0], nc_mat.shape[0])),
-        "colOrder": col_order,
+        "combinedRowOrder": combined_cluster["order"],
+        "colOrder": column_cluster["order"],
+        "dendrograms": {
+            "metric": "euclidean",
+            "linkage": "average",
+            "rows": {"merges": combined_cluster["merges"]},
+            "columns": {"merges": column_cluster["merges"]},
+        },
     }
 
 

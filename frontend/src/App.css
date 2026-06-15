@@ -1,8 +1,11 @@
 /* ===== App Layout ===== */
 .app {
+  height: 100vh;
+  height: 100dvh;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 /* ===== Header ===== */
@@ -44,6 +47,7 @@
   flex: 1;
   display: flex;
   min-height: 0;
+  overflow: hidden;
 }
 
 /* ===== Sidebar ===== */
@@ -213,7 +217,16 @@
 
 /* ===== Responsive ===== */
 @media (max-width: 768px) {
-  .app-body { flex-direction: column; }
+  .app {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
+  .app-body {
+    flex-direction: column;
+    overflow: visible;
+  }
 
   .sidebar {
     width: 100%;
@@ -241,5 +254,8 @@
     border-radius: 6px;
   }
 
-  .main-content { padding: 12px; }
+  .main-content {
+    padding: 12px;
+    overflow: visible;
+  }
 }
