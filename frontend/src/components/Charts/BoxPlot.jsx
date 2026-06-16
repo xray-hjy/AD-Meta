@@ -19,10 +19,14 @@ function BoxPlot({ data, featureLabel = '物种' }) {
       ncBox: item.ncBox,
       adOutliers: item.adOutliers || [],
       ncOutliers: item.ncOutliers || [],
+      adOutlierPoints: normalizeOutlierPoints(item.adOutlierPoints, item.adOutliers),
+      ncOutlierPoints: normalizeOutlierPoints(item.ncOutlierPoints, item.ncOutliers),
       adLogBox: item.adLogBox || item.adBox,
       ncLogBox: item.ncLogBox || item.ncBox,
       adLogOutliers: item.adLogOutliers || [],
       ncLogOutliers: item.ncLogOutliers || [],
+      adLogOutlierPoints: normalizeOutlierPoints(item.adLogOutlierPoints, item.adLogOutliers),
+      ncLogOutlierPoints: normalizeOutlierPoints(item.ncLogOutlierPoints, item.ncLogOutliers),
     }));
   }, [data]);
 
@@ -45,23 +49,25 @@ function BoxPlot({ data, featureLabel = '物种' }) {
     for (const item of activeSpecies) {
       const adBox = isLogScale ? item.adLogBox : item.adBox;
       const ncBox = isLogScale ? item.ncLogBox : item.ncBox;
-      const adOutliers = isLogScale ? item.adLogOutliers : item.adOutliers;
-      const ncOutliers = isLogScale ? item.ncLogOutliers : item.ncOutliers;
+      const adOutlierPoints = isLogScale ? item.adLogOutlierPoints : item.adOutlierPoints;
+      const ncOutlierPoints = isLogScale ? item.ncLogOutlierPoints : item.ncOutlierPoints;
       adData.push(adBox || [0, 0, 0, 0, 0]);
       ncData.push(ncBox || [0, 0, 0, 0, 0]);
       categories.push(item.short);
-      adOutliers.forEach(value => {
+      adOutlierPoints.forEach(point => {
         adOutlierData.push({
-          value: [item.short, value],
+          value: [item.short, point.value],
           species: item.short,
           group: 'AD',
+          sample: point.sample,
         });
       });
-      ncOutliers.forEach(value => {
+      ncOutlierPoints.forEach(point => {
         ncOutlierData.push({
-          value: [item.short, value],
+          value: [item.short, point.value],
           species: item.short,
           group: 'NC',
+          sample: point.sample,
         });
       });
     }
@@ -73,6 +79,7 @@ function BoxPlot({ data, featureLabel = '物种' }) {
           if (p.seriesType === 'scatter') {
             return `<b>${p.data.group} 组 — ${p.data.species}</b><br/>
               尺度: ${isLogScale ? 'log10(丰度 + 1)' : '原始丰度'}<br/>
+              样本编号: ${p.data.sample || '未知'}<br/>
               离群点: ${fmtNum(p.data.value[1], isLogScale)}`;
           }
           const d = p.data;
@@ -225,6 +232,20 @@ function BoxPlot({ data, featureLabel = '物种' }) {
       </div>
     </section>
   );
+}
+
+function normalizeOutlierPoints(points, values) {
+  if (Array.isArray(points)) {
+    return points.map(point => ({
+      sample: point?.sample ? String(point.sample) : null,
+      value: Number(point?.value ?? 0),
+    }));
+  }
+  if (!Array.isArray(values)) return [];
+  return values.map(value => ({
+    sample: null,
+    value: Number(value),
+  }));
 }
 
 function fmtNum(v, isLogScale = false) {

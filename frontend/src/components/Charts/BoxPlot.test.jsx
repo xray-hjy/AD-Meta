@@ -2,11 +2,21 @@ import { fireEvent, render, screen } from '@testing-library/react';
 
 jest.mock('echarts-for-react', () => ({
   __esModule: true,
-  default: ({ option }) => (
-    <div data-testid="boxplot-chart">
-      {JSON.stringify(option)}
-    </div>
-  ),
+  default: ({ option }) => {
+    const firstOutlier = option?.series?.[2]?.data?.[0];
+    const tooltip = option?.tooltip?.formatter?.({
+      seriesType: 'scatter',
+      data: firstOutlier,
+    }) || '';
+    return (
+      <div>
+        <div data-testid="boxplot-outlier-tooltip">{tooltip}</div>
+        <div data-testid="boxplot-chart">
+          {JSON.stringify(option)}
+        </div>
+      </div>
+    );
+  },
 }));
 
 import BoxPlot from './BoxPlot';
@@ -21,10 +31,20 @@ const boxplotData = {
       ncBox: [1, 1, 1, 1, 1],
       adOutliers: [0, 100],
       ncOutliers: [],
+      adOutlierPoints: [
+        { sample: 'AD0', value: 0 },
+        { sample: 'AD5', value: 100 },
+      ],
+      ncOutlierPoints: [],
       adLogBox: [1, 1.04, 1.06, 1.1, 1.14],
       ncLogBox: [0.3, 0.3, 0.3, 0.3, 0.3],
       adLogOutliers: [0, 2.0043],
       ncLogOutliers: [],
+      adLogOutlierPoints: [
+        { sample: 'AD0', value: 0 },
+        { sample: 'AD5', value: 2.0043 },
+      ],
+      ncLogOutlierPoints: [],
     },
   ],
 };
@@ -46,7 +66,10 @@ test('defaults to log scale and renders outlier scatter series', () => {
   expect(option.series[0].data[0]).toEqual([1, 1.04, 1.06, 1.1, 1.14]);
   expect(option.series[2].type).toBe('scatter');
   expect(option.series[2].data[0].value).toEqual(['Target_species', 0]);
+  expect(option.series[2].data[0].sample).toBe('AD0');
   expect(option.series[2].data[1].value).toEqual(['Target_species', 2.0043]);
+  expect(option.series[2].data[1].sample).toBe('AD5');
+  expect(screen.getByTestId('boxplot-outlier-tooltip').textContent).toContain('样本编号: AD0');
 });
 
 test('switches to raw abundance boxes and raw outliers', () => {
@@ -58,5 +81,8 @@ test('switches to raw abundance boxes and raw outliers', () => {
   expect(option.yAxis.name).toBe('丰度');
   expect(option.series[0].data[0]).toEqual([10, 10.25, 11.5, 12.75, 13]);
   expect(option.series[2].data[0].value).toEqual(['Target_species', 0]);
+  expect(option.series[2].data[0].sample).toBe('AD0');
   expect(option.series[2].data[1].value).toEqual(['Target_species', 100]);
+  expect(option.series[2].data[1].sample).toBe('AD5');
+  expect(screen.getByTestId('boxplot-outlier-tooltip').textContent).toContain('样本编号: AD0');
 });

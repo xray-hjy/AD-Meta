@@ -124,10 +124,19 @@ def _group_frames(df: pd.DataFrame, species_cols: list[str]) -> tuple[pd.DataFra
     return ad, nc
 
 
-def _box_summary(values: np.ndarray) -> dict[str, list[float]]:
-    values = np.sort(values[np.isfinite(values)])
+def _box_summary(values: np.ndarray, samples: list[str] | np.ndarray | None = None) -> dict[str, list[Any]]:
+    values = np.asarray(values, dtype=float)
+    finite_mask = np.isfinite(values)
+    values = values[finite_mask]
+    sample_values: np.ndarray | None = None
+    if samples is not None:
+        sample_values = np.asarray(samples, dtype=object)[finite_mask]
+    order = np.argsort(values, kind="stable")
+    values = values[order]
+    if sample_values is not None:
+        sample_values = sample_values[order]
     if values.size == 0:
-        return {"box": [0, 0, 0, 0, 0], "outliers": []}
+        return {"box": [0, 0, 0, 0, 0], "outliers": [], "outlierPoints": []}
     q1, median, q3 = np.percentile(values, [25, 50, 75])
     iqr = q3 - q1
     lower_fence = q1 - 1.5 * iqr
@@ -135,12 +144,18 @@ def _box_summary(values: np.ndarray) -> dict[str, list[float]]:
     inlier_mask = (values >= lower_fence) & (values <= upper_fence)
     inliers = values[inlier_mask]
     outliers = values[~inlier_mask]
+    outlier_samples = sample_values[~inlier_mask] if sample_values is not None else []
     if inliers.size == 0:
         inliers = values
         outliers = np.array([], dtype=float)
+        outlier_samples = []
     return {
         "box": [float(inliers[0]), float(q1), float(median), float(q3), float(inliers[-1])],
         "outliers": [float(value) for value in outliers],
+        "outlierPoints": [
+            {"sample": str(sample), "value": float(value)}
+            for sample, value in zip(outlier_samples, outliers, strict=False)
+        ],
     }
 
 
@@ -250,15 +265,17 @@ def compute_phylum(df: pd.DataFrame, species_cols: list[str]) -> list[dict]:
 def compute_boxplot(df: pd.DataFrame, species_cols: list[str], top_n: int = 30) -> dict:
     ranked = compute_species(df, species_cols, top_n=top_n)
     ad, nc = _group_frames(df, species_cols)
+    ad_samples = df.loc[df["Group"] == AD, "Sample"].astype(str).to_numpy()
+    nc_samples = df.loc[df["Group"] == NC, "Sample"].astype(str).to_numpy()
     items = []
     for item in ranked:
         col = item["fullName"]
         ad_values = ad[col].to_numpy(dtype=float)
         nc_values = nc[col].to_numpy(dtype=float)
-        ad_summary = _box_summary(ad_values)
-        nc_summary = _box_summary(nc_values)
-        ad_log_summary = _box_summary(_log10_abundance(ad_values))
-        nc_log_summary = _box_summary(_log10_abundance(nc_values))
+        ad_summary = _box_summary(ad_values, ad_samples)
+        nc_summary = _box_summary(nc_values, nc_samples)
+        ad_log_summary = _box_summary(_log10_abundance(ad_values), ad_samples)
+        nc_log_summary = _box_summary(_log10_abundance(nc_values), nc_samples)
         items.append(
             {
                 "fullName": col,
@@ -268,10 +285,14 @@ def compute_boxplot(df: pd.DataFrame, species_cols: list[str], top_n: int = 30) 
                 "ncBox": nc_summary["box"],
                 "adOutliers": ad_summary["outliers"],
                 "ncOutliers": nc_summary["outliers"],
+                "adOutlierPoints": ad_summary["outlierPoints"],
+                "ncOutlierPoints": nc_summary["outlierPoints"],
                 "adLogBox": ad_log_summary["box"],
                 "ncLogBox": nc_log_summary["box"],
                 "adLogOutliers": ad_log_summary["outliers"],
                 "ncLogOutliers": nc_log_summary["outliers"],
+                "adLogOutlierPoints": ad_log_summary["outlierPoints"],
+                "ncLogOutlierPoints": nc_log_summary["outlierPoints"],
             }
         )
     return {"items": items}

@@ -290,12 +290,21 @@ class BoxplotPrecomputeTests(unittest.TestCase):
         self.assertEqual(item["adBox"], [10.0, 10.25, 11.5, 12.75, 13.0])
         self.assertEqual(item["adOutliers"], [0.0, 100.0])
         self.assertEqual(item["ncOutliers"], [])
+        self.assertEqual(
+            item["adOutlierPoints"],
+            [{"sample": "AD0", "value": 0.0}, {"sample": "AD5", "value": 100.0}],
+        )
+        self.assertEqual(item["ncOutlierPoints"], [])
 
         self.assertIn("adLogBox", item)
         self.assertIn("ncLogBox", item)
         self.assertEqual(item["adLogOutliers"][0], 0.0)
         self.assertAlmostEqual(item["adLogOutliers"][1], 2.0043213737826426)
         self.assertEqual(item["ncLogOutliers"], [])
+        self.assertEqual(item["adLogOutlierPoints"][0], {"sample": "AD0", "value": 0.0})
+        self.assertEqual(item["adLogOutlierPoints"][1]["sample"], "AD5")
+        self.assertAlmostEqual(item["adLogOutlierPoints"][1]["value"], 2.0043213737826426)
+        self.assertEqual(item["ncLogOutlierPoints"], [])
         self.assertEqual(item["ncLogBox"], [0.3010299956639812] * 5)
 
 

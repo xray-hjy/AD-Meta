@@ -156,13 +156,24 @@ Returns precomputed boxplot values for Top 30 species.
       "shortName": "Bacteroides_fragilis",
       "total": 200.5,
       "adBox": [0.1, 3.2, 5.1, 8.9, 15.0],
-      "ncBox": [0.0, 1.8, 3.3, 6.5, 12.1]
+      "ncBox": [0.0, 1.8, 3.3, 6.5, 12.1],
+      "adOutliers": [20.2],
+      "ncOutliers": [],
+      "adOutlierPoints": [{ "sample": "AD1", "value": 20.2 }],
+      "ncOutlierPoints": [],
+      "adLogOutliers": [1.3263],
+      "ncLogOutliers": [],
+      "adLogOutlierPoints": [{ "sample": "AD1", "value": 1.3263 }],
+      "ncLogOutlierPoints": []
     }
   ]
 }
 ```
 
 Box value order is `[lowerWhisker, q1, median, q3, upperWhisker]`.
+The numeric `*Outliers` arrays are retained for compatibility. New
+`*OutlierPoints` arrays pair each outlier value with the normalized sample
+identifier used in tooltips.
 
 ## GET /api/datasets/{slug}/charts/heatmap
 
