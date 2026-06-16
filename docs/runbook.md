@@ -17,6 +17,17 @@ cd frontend
 npm install
 ```
 
+Rebuild local storage from the tracked raw datasets:
+
+```bash
+npm run bootstrap:storage
+```
+
+This reads `backend/storage_manifest.json`, imports each file under
+`backend/storage/raw/**`, creates `backend/storage/ad_meta.sqlite3`, and writes
+chart JSON under `backend/storage/cache/`. The raw files are tracked in git;
+SQLite and cache files are local runtime artifacts and are intentionally ignored.
+
 Start both services from the project root:
 
 ```bash
@@ -45,7 +56,18 @@ For another API host, set `REACT_APP_API_BASE_URL`.
 
 ## Import A Dataset
 
-Run the import command from `backend/`:
+Use the bootstrap command for a fresh clone or when you want to rebuild every
+public dataset from the tracked raw files:
+
+```bash
+npm run bootstrap:storage
+```
+
+To add or refresh one dataset manually, run the import command from `backend/`.
+After adding a public raw file that should be reproducible for collaborators,
+also update `backend/storage_manifest.json`.
+
+Example:
 
 ```bash
 mkdir -p storage/raw/incoming
@@ -66,7 +88,8 @@ precomputes all chart JSON files, and marks the dataset as published.
 The preferred sample identifier column is `sample_id`; legacy files with
 `Sample` are still accepted.
 
-Generated files are stored under `backend/storage/`, which is ignored by git.
+Generated SQLite and chart cache files are stored under `backend/storage/` and
+ignored by git. Only `backend/storage/raw/**` should be committed.
 
 The import command also writes normalized long-table records:
 

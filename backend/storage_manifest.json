@@ -1,0 +1,16 @@
+{
+  "datasets": [
+    {
+      "slug": "ad-nc-species",
+      "name": "AD vs NC Species Abundance",
+      "description": "Species abundance comparison between AD and NC groups.",
+      "file": "storage/raw/ad-nc-species/raw.xlsx"
+    },
+    {
+      "slug": "ad-nc-ko-abundance",
+      "name": "AD vs NC KO Abundance",
+      "description": "KO abundance comparison between AD and NC groups.",
+      "file": "storage/raw/ad-nc-ko-abundance/raw.csv"
+    }
+  ]
+}
