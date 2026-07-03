@@ -22,6 +22,32 @@ from app.compute.precompute import (
 )
 
 
+class ComputeModuleLayoutTests(unittest.TestCase):
+    def test_chart_functions_are_available_from_split_modules_and_precompute(self) -> None:
+        from app.compute.charts.boxplot import compute_boxplot as split_compute_boxplot
+        from app.compute.charts.detection import compute_detection_heatmap as split_compute_detection_heatmap
+        from app.compute.charts.heatmap import compute_heatmap as split_compute_heatmap
+        from app.compute.charts.lda import compute_ko_lda as split_compute_ko_lda
+        from app.compute.charts.phylum import compute_phylum as split_compute_phylum
+        from app.compute.charts.species import compute_species as split_compute_species
+        from app.compute.charts.sunburst import compute_sunburst as split_compute_sunburst
+        from app.compute.charts.ordination import compute_pca as split_compute_pca
+        from app.compute.charts.ordination import compute_pcoa as split_compute_pcoa
+        from app.compute.charts.summary import compute_summary as split_compute_summary
+        from app.compute.precompute import compute_pca, compute_pcoa, compute_phylum, compute_species, compute_summary
+
+        self.assertIs(compute_boxplot, split_compute_boxplot)
+        self.assertIs(compute_detection_heatmap, split_compute_detection_heatmap)
+        self.assertIs(compute_heatmap, split_compute_heatmap)
+        self.assertIs(compute_ko_lda, split_compute_ko_lda)
+        self.assertIs(compute_phylum, split_compute_phylum)
+        self.assertIs(compute_species, split_compute_species)
+        self.assertIs(compute_sunburst, split_compute_sunburst)
+        self.assertIs(compute_pca, split_compute_pca)
+        self.assertIs(compute_pcoa, split_compute_pcoa)
+        self.assertIs(compute_summary, split_compute_summary)
+
+
 class KoAbundancePrecomputeTests(unittest.TestCase):
     def test_prepares_ko_table_with_label_group_column(self) -> None:
         with TemporaryDirectory() as tmpdir:
@@ -188,7 +214,7 @@ class HeatmapPrecomputeTests(unittest.TestCase):
         ]
         p_values = [SimpleNamespace(pvalue=0.001), SimpleNamespace(pvalue=0.02)]
 
-        with patch("app.compute.precompute.mannwhitneyu", side_effect=p_values):
+        with patch("app.compute.charts.heatmap.mannwhitneyu", side_effect=p_values):
             heatmap = compute_heatmap(df, species_cols)
 
         self.assertEqual(heatmap["stats"][0]["fullName"], species_cols[1])
@@ -465,8 +491,8 @@ class KoLdaPrecomputeTests(unittest.TestCase):
             SimpleNamespace(pvalue=0.5),
         ]
 
-        with patch("app.compute.precompute.mannwhitneyu", side_effect=p_values), patch(
-            "app.compute.precompute._univariate_lda_score",
+        with patch("app.compute.charts.lda.mannwhitneyu", side_effect=p_values), patch(
+            "app.compute.charts.lda._univariate_lda_score",
             side_effect=[4.0, 3.0, 5.0, 0.0],
         ):
             payload = compute_ko_lda(self._lda_df(), ["K00001", "K00002", "K00003", "K00004"], top_n=4)
@@ -520,8 +546,8 @@ class KoLdaPrecomputeTests(unittest.TestCase):
             SimpleNamespace(pvalue=0.5),
         ]
 
-        with patch("app.compute.precompute.mannwhitneyu", side_effect=p_values), patch(
-            "app.compute.precompute._univariate_lda_score",
+        with patch("app.compute.charts.lda.mannwhitneyu", side_effect=p_values), patch(
+            "app.compute.charts.lda._univariate_lda_score",
             side_effect=[4.0, 4.0, 4.0, 0.0],
         ):
             payload = compute_ko_lda(self._lda_df(), ["K00001", "K00002", "K00003", "K00004"], top_n=4)
@@ -536,8 +562,8 @@ class KoLdaPrecomputeTests(unittest.TestCase):
             SimpleNamespace(pvalue=0.003),
         ]
 
-        with patch("app.compute.precompute.mannwhitneyu", side_effect=p_values), patch(
-            "app.compute.precompute._univariate_lda_score",
+        with patch("app.compute.charts.lda.mannwhitneyu", side_effect=p_values), patch(
+            "app.compute.charts.lda._univariate_lda_score",
             side_effect=[5.0, 4.0, 3.0, 2.0],
         ):
             payload = compute_ko_lda(self._lda_df(), ["K00001", "K00003", "K00003", "K00003"], top_n=4)

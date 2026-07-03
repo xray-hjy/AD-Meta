@@ -98,6 +98,45 @@ The import command also writes normalized long-table records:
 - Species abundance stores non-zero values only; KO abundance keeps all values.
 - Chart JSON remains precomputed under `backend/storage/cache/` for fast public API reads.
 
+## Maintaining Chart Compute Modules
+
+Chart calculation code is split by chart type under
+`backend/app/compute/charts/`. When changing one visualization, edit the
+matching module first:
+
+- `species.py`: abundance comparison.
+- `phylum.py`: phylum-level or KO composition.
+- `boxplot.py`: abundance boxplots.
+- `heatmap.py`: differential abundance heatmap and dendrogram metadata.
+- `detection.py`: KO detection-rate heatmap.
+- `lda.py`: KO LDA marker chart.
+- `sunburst.py`: taxonomy hierarchy payload.
+- `ordination.py`: PCA and PCoA payloads.
+- `summary.py`: summary-card payload.
+
+Shared import and serialization helpers live in `backend/app/compute/io.py`.
+Input table normalization lives in `backend/app/compute/table.py`. Shared AD/NC
+constants and feature metadata live in `backend/app/compute/common.py`.
+Taxonomy naming helpers remain in `backend/app/compute/taxonomy.py` because
+multiple charts use the same species naming rules.
+
+After changing chart calculation logic, rebuild local cache JSON:
+
+```bash
+npm run bootstrap:storage
+```
+
+Then run the backend regression tests:
+
+```bash
+cd backend
+.venv/bin/python -m unittest tests.test_precompute tests.test_dataset_service tests.test_heatmap_api tests.test_import_dataset tests.test_bootstrap_storage tests.test_normalized_import -v
+```
+
+If a response shape changes, update `docs/api.md`, frontend chart code, and
+tests in the same change. Pure internal refactors should keep API payloads and
+`COMPUTE_VERSION` unchanged.
+
 ## Database Mode
 
 SQLite remains the default local development database:

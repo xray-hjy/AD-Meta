@@ -1,5 +1,14 @@
 # AD-Meta 最新更新日志
 
+## 2026-07-03：后端图表计算模块拆分
+
+- 将 `backend/app/compute/precompute.py` 从集中式主计算文件拆分为轻量调度器。
+- 新增 `backend/app/compute/charts/`，按图表类型维护丰度对比、组成图、箱线图、热图、KO 检出率、KO LDA、旭日图、PCA/PCoA 和 summary 计算逻辑。
+- 新增 `common.py`、`io.py`、`table.py`，分别承载共享常量、读写/JSON 序列化、输入表标准化。
+- `taxonomy.py` 继续作为共享分类名称处理工具，保留 `get_level`、`short_name`、`taxonomy_chain`，不按图表重复拆分。
+- `precompute.py` 保留原有函数名导出，兼容现有导入路径；HTTP API、缓存 JSON 字段、数据库结构和前端调用方式不变。
+- 本次为纯内部重构，不提升 `COMPUTE_VERSION`，现有缓存不需要强制重建。
+
 ## 2026-06-15：AD/NC 合并聚类热图
 
 - 保留原有 AD、NC 和差异热图，在两个分组热图下新增一张 AD/NC 全样本合并热图。
