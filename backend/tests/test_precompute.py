@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -9,6 +10,10 @@ from unittest.mock import patch
 import numpy as np
 import pandas as pd
 
+from app.compute.charts.taxonomy.projections import (
+    SANKEY_COLUMN_BUDGETS,
+    compute_taxonomy_sankey_projection,
+)
 from app.compute.precompute import (
     _box_values,
     _hierarchical_cluster,
@@ -208,6 +213,105 @@ class TaxonomySunburstPrecomputeTests(unittest.TestCase):
         other = next(child for child in class_children if child["name"] == "Other classes")
         self.assertEqual(other["mergedCount"], 2)
         self.assertAlmostEqual(sum(float(child["value"]) for child in class_children), float(phylum["value"]))
+
+
+class TaxonomySankeyProjectionTests(unittest.TestCase):
+    def _dense_tree(self) -> list[dict]:
+        phyla = []
+        for phylum_index in range(15):
+            classes = []
+            for class_index in range(6):
+                genera = []
+                for genus_index in range(5):
+                    species = []
+                    for species_index in range(4):
+                        value = float(
+                            10_000
+                            - phylum_index * 300
+                            - class_index * 40
+                            - genus_index * 6
+                            - species_index
+                        )
+                        species.append(
+                            {
+                                "name": f"Species_{phylum_index}_{class_index}_{genus_index}_{species_index}",
+                                "rank": "species",
+                                "value": value,
+                            }
+                        )
+                    species.append(
+                        {
+                            "name": "Other species",
+                            "rank": "species",
+                            "value": 3.0,
+                            "mergedCount": 3,
+                        }
+                    )
+                    genus_value = sum(item["value"] for item in species)
+                    genera.append(
+                        {
+                            "name": f"Genus_{phylum_index}_{class_index}_{genus_index}",
+                            "rank": "genus",
+                            "value": genus_value,
+                            "children": species,
+                        }
+                    )
+                class_value = sum(item["value"] for item in genera)
+                classes.append(
+                    {
+                        "name": f"Class_{phylum_index}_{class_index}",
+                        "rank": "class",
+                        "value": class_value,
+                        "children": genera,
+                    }
+                )
+            phylum_value = sum(item["value"] for item in classes)
+            phyla.append(
+                {
+                    "name": f"Phylum_{phylum_index}",
+                    "rank": "phylum",
+                    "value": phylum_value,
+                    "children": classes,
+                }
+            )
+        return phyla
+
+    def test_bounds_dense_projection_and_preserves_flow_totals(self) -> None:
+        tree = self._dense_tree()
+        original = copy.deepcopy(tree)
+
+        payload = compute_taxonomy_sankey_projection(tree)
+        repeated = compute_taxonomy_sankey_projection(tree)
+
+        self.assertEqual(tree, original)
+        self.assertEqual(payload, repeated)
+        self.assertLessEqual(len(payload["nodes"]), sum(SANKEY_COLUMN_BUDGETS.values()))
+
+        depth_counts = {
+            depth: sum(1 for node in payload["nodes"] if node["depth"] == depth)
+            for depth in SANKEY_COLUMN_BUDGETS
+        }
+        for depth, budget in SANKEY_COLUMN_BUDGETS.items():
+            self.assertLessEqual(depth_counts[depth], budget)
+
+        node_values = {node["name"]: float(node["value"]) for node in payload["nodes"]}
+        outgoing: dict[str, float] = {}
+        child_labels: dict[str, list[str]] = {}
+        node_labels = {node["name"]: node["label"] for node in payload["nodes"]}
+        for link in payload["links"]:
+            outgoing[link["source"]] = outgoing.get(link["source"], 0.0) + float(link["value"])
+            child_labels.setdefault(link["source"], []).append(node_labels[link["target"]])
+
+        for node_id, value in outgoing.items():
+            self.assertAlmostEqual(value, node_values[node_id])
+        for labels in child_labels.values():
+            self.assertLessEqual(sum(label.startswith("Other ") for label in labels), 1)
+
+        root_total = sum(node["value"] for node in payload["nodes"] if node["depth"] == 0)
+        self.assertAlmostEqual(root_total, sum(item["value"] for item in tree))
+        aggregates = [node for node in payload["nodes"] if node["label"].startswith("Other ")]
+        self.assertTrue(aggregates)
+        self.assertTrue(all(node["mergedCount"] > 0 for node in aggregates))
 
 
 class HeatmapPrecomputeTests(unittest.TestCase):

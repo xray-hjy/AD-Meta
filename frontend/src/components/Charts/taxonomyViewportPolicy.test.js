@@ -2,6 +2,7 @@ import {
   getTaxonomyViewportPolicy,
   resolveSankeyCanvasConstraints,
   resolveSankeyCanvasHeight,
+  resolveSankeyDevicePixelRatio,
   resolveTreemapCanvasSize,
 } from './taxonomyViewportPolicy';
 
@@ -29,5 +30,12 @@ test('describes sankey width limits without guessing the browser content box', (
 
 test('sankey canvas fills the card before it grows for dense data', () => {
   expect(resolveSankeyCanvasHeight({ naturalHeight: 900, viewportHeight: 1180 })).toBe(1180);
-  expect(resolveSankeyCanvasHeight({ naturalHeight: 4800, viewportHeight: 1180 })).toBe(4800);
+  expect(resolveSankeyCanvasHeight({ naturalHeight: 4800, viewportHeight: 1180 })).toBe(3040);
+  expect(resolveSankeyCanvasHeight({ naturalHeight: 900, viewportHeight: 5000 })).toBe(3040);
+});
+
+test('caps sankey device pixel ratio without reducing standard displays', () => {
+  expect(resolveSankeyDevicePixelRatio(2)).toBe(1.5);
+  expect(resolveSankeyDevicePixelRatio(1)).toBe(1);
+  expect(resolveSankeyDevicePixelRatio(0)).toBe(1);
 });

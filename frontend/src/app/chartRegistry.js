@@ -110,7 +110,7 @@ export const CHART_REGISTRY = {
     navLabel: '桑基图',
     navSubtitle: '层级流向与占比',
     title: '分类层级桑基图',
-    subtitle: ({ summary }) => `${summary?.datasetName || '当前数据集'}；门、纲、属、物种层级流向与丰度权重`,
+    subtitle: ({ summary }) => `${summary?.datasetName || '当前数据集'}；门、纲、属、物种层级流向与丰度权重；低丰度分类已合并为 Other`,
     availableFor: ['taxonomy'],
     component: TaxonomyChart,
     dataKey: 'taxonomy_sankey',

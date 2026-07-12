@@ -4,6 +4,8 @@ export const TAXONOMY_VIEWPORT_POLICY = Object.freeze({
   sankey: {
     minHeight: 640,
     maxHeight: 1320,
+    maxCanvasHeight: 3040,
+    maxDevicePixelRatio: 1.5,
     leftInset: 112,
     rightInset: 216,
     verticalInset: 40,
@@ -44,5 +46,16 @@ export function resolveSankeyCanvasConstraints({ naturalWidth, maxDepth }) {
 export function resolveSankeyCanvasHeight({ naturalHeight, viewportHeight }) {
   const policy = TAXONOMY_VIEWPORT_POLICY.sankey;
   const visibleHeight = Math.max(policy.minHeight, Number(viewportHeight) || 0);
-  return Math.max(visibleHeight, Number(naturalHeight) || 0);
+  const boundedNaturalHeight = Math.min(
+    policy.maxCanvasHeight,
+    Math.max(0, Number(naturalHeight) || 0)
+  );
+  return Math.min(policy.maxCanvasHeight, Math.max(visibleHeight, boundedNaturalHeight));
+}
+
+export function resolveSankeyDevicePixelRatio(devicePixelRatio) {
+  const policy = TAXONOMY_VIEWPORT_POLICY.sankey;
+  const ratio = Number(devicePixelRatio);
+  if (!Number.isFinite(ratio) || ratio <= 0) return 1;
+  return Math.min(policy.maxDevicePixelRatio, ratio);
 }

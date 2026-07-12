@@ -35,6 +35,8 @@ This reads `backend/storage_manifest.json`, imports each file under
 `backend/storage/raw/**`, creates `backend/storage/ad_meta.sqlite3`, and writes
 chart JSON under `backend/storage/cache/`. The raw files are tracked in git;
 SQLite and cache files are local runtime artifacts and are intentionally ignored.
+Run this command again after pulling changes that update `COMPUTE_VERSION` or
+chart precomputation logic; otherwise the API may continue serving stale payloads.
 
 On macOS/Linux, start both services from the project root:
 

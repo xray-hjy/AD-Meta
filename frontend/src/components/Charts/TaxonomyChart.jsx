@@ -5,6 +5,7 @@ import useAvailableViewport from '../../hooks/useAvailableViewport';
 import {
   getTaxonomyViewportPolicy,
   resolveSankeyCanvasConstraints,
+  resolveSankeyDevicePixelRatio,
   resolveSankeyCanvasHeight,
   resolveTreemapCanvasSize,
 } from './taxonomyViewportPolicy';
@@ -29,8 +30,14 @@ const SANKEY_LEVELS = [
   { color: '#A855F7' },
   { color: '#EC4899' },
 ];
-const SANKEY_LABEL_ROW_HEIGHT = 21;
-const SANKEY_VERTICAL_PADDING = 180;
+const SANKEY_LABEL_ROW_HEIGHT = 18;
+const SANKEY_VERTICAL_PADDING = 160;
+const SANKEY_ECHARTS_OPTS = Object.freeze({
+  renderer: 'canvas',
+  devicePixelRatio: resolveSankeyDevicePixelRatio(
+    typeof window === 'undefined' ? 1 : window.devicePixelRatio
+  ),
+});
 const PHYLUM_MERGE_RATIO = 0.01;
 const SUNBURST_MERGED_PHYLA = 'Others';
 const SUNBURST_MERGED_PHYLA_COLOR = '#94a3b8';
@@ -790,6 +797,7 @@ function TaxonomyChart({ data, mode = 'sunburst' }) {
       const sankeyPolicy = getTaxonomyViewportPolicy('sankey');
       return {
         ...baseOption,
+        animation: false,
         tooltip: {
           ...baseOption.tooltip,
           triggerOn: 'mousemove',
@@ -797,7 +805,12 @@ function TaxonomyChart({ data, mode = 'sunburst' }) {
             if (params.dataType === 'edge') {
               return `丰度流向: ${formatValue(params.value)}`;
             }
-            return `<b>${params.data?.label || params.name}</b><br/>丰度: ${formatValue(params.data?.value)}`;
+            const mergedCount = Number(params.data?.mergedCount || 0);
+            return [
+              `<b>${params.data?.label || params.name}</b>`,
+              `丰度: ${formatValue(params.data?.value)}`,
+              mergedCount > 0 ? `合并小分类: ${mergedCount}` : null,
+            ].filter(Boolean).join('<br/>');
           },
         },
         series: [
@@ -811,7 +824,7 @@ function TaxonomyChart({ data, mode = 'sunburst' }) {
             bottom: sankeyPolicy.verticalInset,
             nodeWidth: 16,
             nodeGap: sankeyData.nodeGap,
-            layoutIterations: 64,
+            layoutIterations: 16,
             draggable: false,
             emphasis: { focus: 'adjacency' },
             label: {
@@ -1030,6 +1043,8 @@ function TaxonomyChart({ data, mode = 'sunburst' }) {
             key={mode}
             className="taxonomy-chart-surface taxonomy-chart-surface--sankey"
             option={option}
+            opts={SANKEY_ECHARTS_OPTS}
+            autoResize={false}
             onChartReady={chart => {
               sankeyInstanceRef.current = chart;
               window.requestAnimationFrame(() => resizeChartToContainer(chart));

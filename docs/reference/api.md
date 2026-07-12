@@ -323,6 +323,11 @@ new frontend code must request `taxonomy`.
 
 Returns the Sankey projection derived from the canonical taxonomy hierarchy.
 This is a chart-specific projection, not a second taxonomy data source.
+The projection preserves abundance totals while merging low-abundance siblings
+into `Other` nodes. `mergedCount` reports how many classifications are represented
+by an aggregate node. Column budgets are 12 phyla, 32 classes, 96 genera, and
+160 species, including aggregate nodes; the complete projection contains at most
+300 nodes.
 
 ```json
 {
@@ -335,6 +340,7 @@ This is a chart-specific projection, not a second taxonomy data source.
       "rank": "phylum",
       "depth": 0,
       "value": 1000,
+      "mergedCount": 0,
       "itemStyle": { "color": "#3B82F6" }
     }
   ],
