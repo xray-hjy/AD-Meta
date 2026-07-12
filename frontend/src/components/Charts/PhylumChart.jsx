@@ -1,11 +1,14 @@
-import { useRef, useEffect } from 'react';
-import * as d3 from 'd3';
+import { useMemo } from 'react';
+import ReactECharts from 'echarts-for-react';
+import ChartViewport from './ChartViewport';
 
-const MARGIN = { top: 10, right: 40, bottom: 30, left: 100 };
-const AD_COLOR = '#e74c3c';
-const NC_COLOR = '#2ecc71';
+const COLORS = {
+  AD: '#e74c3c',
+  NC: '#2ecc71',
+};
+
 const BAR_HEIGHT = 22;
-const GAP = 6;
+const ROW_GAP = 6;
 
 function formatPercent(value) {
   const number = Number(value) || 0;
@@ -24,7 +27,12 @@ function topBy(data, key) {
   }, null);
 }
 
-function buildSummaryCards(data, isKo) {
+function abbreviateLabel(label) {
+  const text = String(label || 'Unknown');
+  return text.length > 18 ? `${text.slice(0, 17)}...` : text;
+}
+
+function buildSummaryItems(data, isKo) {
   const adTop = topBy(data, 'adRatio');
   const ncTop = topBy(data, 'ncRatio');
   const gapTop = data.reduce((best, item) => {
@@ -38,216 +46,191 @@ function buildSummaryCards(data, isKo) {
   const itemLabel = isKo ? 'KO' : '门';
 
   return [
-    {
-      label: '展示项数',
-      value: `${data.length} 项`,
-      hint: isKo ? 'Top KO 功能' : 'Top 门类组成',
-      tone: '#2563eb',
-    },
-    {
-      label: 'AD 最高',
-      value: adTop?.phylum || 'NA',
-      hint: `${formatPercent(adTop?.adRatio)} · ${itemLabel}`,
-      tone: AD_COLOR,
-    },
-    {
-      label: 'NC 最高',
-      value: ncTop?.phylum || 'NA',
-      hint: `${formatPercent(ncTop?.ncRatio)} · ${itemLabel}`,
-      tone: NC_COLOR,
-    },
-    {
-      label: '最大组间差异',
-      value: gapTop?.phylum || 'NA',
-      hint: `${gapDirection} ${formatPointGap(gapTop?.gap)}`,
-      tone: '#f97316',
-    },
+    { label: '展示项', value: `${data.length} 项`, hint: isKo ? 'Top KO 功能' : 'Top 门级组成' },
+    { label: 'AD 最高', value: adTop?.phylum || 'NA', hint: `${formatPercent(adTop?.adRatio)} · ${itemLabel}`, tone: COLORS.AD },
+    { label: 'NC 最高', value: ncTop?.phylum || 'NA', hint: `${formatPercent(ncTop?.ncRatio)} · ${itemLabel}`, tone: COLORS.NC },
+    { label: '最大组间差异', value: gapTop?.phylum || 'NA', hint: `${gapDirection} ${formatPointGap(gapTop?.gap)}` },
   ];
 }
 
 function PhylumChart({ data, featureKind = 'taxonomy', featureLabel = '物种' }) {
-  const svgRef = useRef();
   const isKo = featureKind === 'ko';
-  const title = isKo ? 'KO 功能组成概览' : '门级组成概览';
-  const cards = data && data.length ? buildSummaryCards(data, isKo) : [];
+  const summaryItems = data && data.length ? buildSummaryItems(data, isKo) : [];
 
-  useEffect(() => {
-    if (!data || data.length === 0) return;
+  const option = useMemo(() => {
+    if (!Array.isArray(data) || data.length === 0) return null;
 
-    const svg = d3.select(svgRef.current);
-    svg.selectAll('*').remove();
+    const chartData = data.map(item => ({
+      label: item.phylum || item.feature || 'Unknown',
+      shortLabel: abbreviateLabel(item.phylum || item.feature),
+      adRatio: Math.max(0, Number(item.adRatio) || 0),
+      ncRatio: Math.max(0, Number(item.ncRatio) || 0),
+    }));
 
-    const width = svgRef.current.clientWidth || 760;
-    const rows = data.length;
-    const height = MARGIN.top + rows * (BAR_HEIGHT * 2 + GAP) + MARGIN.bottom + 20;
+    return {
+      backgroundColor: 'transparent',
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: 'shadow',
+          shadowStyle: { color: 'rgba(148, 163, 184, 0.08)' },
+          label: { show: true, backgroundColor: '#475569' },
+        },
+        backgroundColor: 'rgba(15,23,42,0.96)',
+        borderColor: 'transparent',
+        textStyle: { color: '#f8fafc', fontSize: 12, lineHeight: 18 },
+        extraCssText: 'border-radius:10px; padding:12px 14px;',
+        formatter(params) {
+          const index = params?.[0]?.dataIndex ?? 0;
+          const item = chartData[index];
+          if (!item) return '';
 
-    svg.attr('viewBox', `0 0 ${width} ${height}`);
-
-    const x = d3.scaleLinear()
-      .domain([0, 1])
-      .range([MARGIN.left, width - MARGIN.right]);
-
-    const g = svg.append('g');
-
-    // Grid
-    g.append('g')
-      .attr('class', 'grid')
-      .call(d3.axisBottom(x).ticks(5).tickSize(-(height - MARGIN.top - MARGIN.bottom)).tickFormat(''))
-      .call(g => g.select('.domain').remove())
-      .call(g => g.selectAll('.tick line').attr('stroke', '#e2e8f0').attr('stroke-dasharray', '3,3'));
-
-    // X axis
-    g.append('g')
-      .attr('transform', `translate(0,${height - MARGIN.bottom + 8})`)
-      .call(d3.axisBottom(x).ticks(5).tickFormat(d3.format('.0%')))
-      .call(g => g.select('.domain').attr('stroke', '#cbd5e1'))
-      .call(g => g.selectAll('.tick text').attr('fill', '#94a3b8').attr('font-size', 11));
-
-    // Y labels
-    g.append('g')
-      .attr('transform', `translate(${MARGIN.left - 8},0)`)
-      .selectAll('text')
-      .data(data)
-      .join('text')
-      .attr('y', (_, i) => MARGIN.top + i * (BAR_HEIGHT * 2 + GAP) + BAR_HEIGHT + 4)
-      .attr('text-anchor', 'end')
-      .attr('fill', '#475569')
-      .attr('font-size', 12)
-      .attr('font-family', 'inherit')
-      .text(d => d.phylum);
-
-    // Bars — AD
-    g.selectAll('.pbar-ad')
-      .data(data)
-      .join('rect')
-      .attr('class', 'pbar-ad')
-      .attr('x', x(0))
-      .attr('y', (_, i) => MARGIN.top + i * (BAR_HEIGHT * 2 + GAP))
-      .attr('width', d => x(d.adRatio) - x(0))
-      .attr('height', BAR_HEIGHT)
-      .attr('fill', AD_COLOR)
-      .attr('rx', 2);
-
-    // Bars — NC
-    g.selectAll('.pbar-nc')
-      .data(data)
-      .join('rect')
-      .attr('class', 'pbar-nc')
-      .attr('x', x(0))
-      .attr('y', (_, i) => MARGIN.top + i * (BAR_HEIGHT * 2 + GAP) + BAR_HEIGHT)
-      .attr('width', d => x(d.ncRatio) - x(0))
-      .attr('height', BAR_HEIGHT)
-      .attr('fill', NC_COLOR)
-      .attr('rx', 2);
-
-    // Value labels at right end of bars
-    g.selectAll('.val-ad')
-      .data(data)
-      .join('text')
-      .attr('x', d => x(d.adRatio) + 4)
-      .attr('y', (_, i) => MARGIN.top + i * (BAR_HEIGHT * 2 + GAP) + BAR_HEIGHT - 6)
-      .attr('text-anchor', 'start')
-      .attr('fill', '#1e40af')
-      .attr('font-size', 10)
-      .attr('font-weight', 600)
-      .text(d => (d.adRatio * 100).toFixed(1) + '%');
-
-    g.selectAll('.val-nc')
-      .data(data)
-      .join('text')
-      .attr('x', d => x(d.ncRatio) + 4)
-      .attr('y', (_, i) => MARGIN.top + i * (BAR_HEIGHT * 2 + GAP) + BAR_HEIGHT * 2 - 6)
-      .attr('text-anchor', 'start')
-      .attr('fill', '#1e40af')
-      .attr('font-size', 10)
-      .attr('font-weight', 600)
-      .text(d => (d.ncRatio * 100).toFixed(1) + '%');
-
-    // Legend
-    const legend = svg.append('g')
-      .attr('transform', `translate(${width - 100}, ${MARGIN.top})`);
-
-    [
-      { label: 'AD 组', color: AD_COLOR },
-      { label: 'NC 组', color: NC_COLOR },
-    ].forEach((item, i) => {
-      const lg = legend.append('g').attr('transform', `translate(0, ${i * 22})`);
-      lg.append('rect')
-        .attr('width', 12).attr('height', 12)
-        .attr('rx', 2).attr('fill', item.color);
-      lg.append('text')
-        .attr('x', 18).attr('y', 10)
-        .attr('fill', '#475569').attr('font-size', 12)
-        .text(item.label);
-    });
-
+          const lines = [`<b>${item.label}</b>`, '<br/>'];
+          params.forEach(entry => {
+            lines.push(`${entry.marker}${entry.seriesName}: ${formatPercent(entry.value)}`);
+          });
+          return lines.join('<br/>');
+        },
+      },
+      legend: {
+        data: ['AD 组', 'NC 组'],
+        top: 8,
+        right: 24,
+        itemGap: 18,
+        itemWidth: 14,
+        itemHeight: 14,
+        textStyle: { color: '#475569', fontSize: 12 },
+      },
+      grid: {
+        top: 52,
+        left: 116,
+        right: 92,
+        bottom: 42,
+        containLabel: false,
+      },
+      xAxis: [
+        {
+          type: 'value',
+          min: 0,
+          max: 1,
+          name: '平均占比',
+          nameLocation: 'middle',
+          nameGap: 30,
+          nameTextStyle: { color: '#64748b', fontSize: 12 },
+          axisLine: { show: false },
+          axisTick: { show: false },
+          axisLabel: {
+            color: '#94a3b8',
+            fontSize: 11,
+            formatter(value) {
+              return `${Math.round(Number(value) * 100)}%`;
+            },
+          },
+          splitLine: { lineStyle: { color: '#e7edf5', type: 'dashed' } },
+        },
+      ],
+      yAxis: [
+        {
+          type: 'category',
+          inverse: true,
+          data: chartData.map(item => item.shortLabel),
+          axisTick: { show: false },
+          axisLine: { show: false },
+          axisLabel: {
+            color: '#475569',
+            fontSize: 12,
+            fontWeight: 500,
+            margin: 12,
+          },
+        },
+      ],
+      series: [
+        {
+          name: 'AD 组',
+          type: 'bar',
+          barWidth: BAR_HEIGHT,
+          barGap: '0%',
+          barCategoryGap: `${ROW_GAP}px`,
+          itemStyle: { color: COLORS.AD, borderRadius: [0, 6, 6, 0] },
+          label: {
+            show: true,
+            position: 'right',
+            color: '#64748b',
+            fontSize: 10,
+            fontWeight: 700,
+            formatter(params) {
+              return formatPercent(params.value);
+            },
+          },
+          emphasis: {
+            itemStyle: {
+              color: COLORS.AD,
+              shadowBlur: 10,
+              shadowColor: 'rgba(231, 76, 60, 0.24)',
+            },
+            label: { color: '#0f172a' },
+          },
+          data: chartData.map(item => item.adRatio),
+        },
+        {
+          name: 'NC 组',
+          type: 'bar',
+          barWidth: BAR_HEIGHT,
+          barGap: '0%',
+          barCategoryGap: `${ROW_GAP}px`,
+          itemStyle: { color: COLORS.NC, borderRadius: [0, 6, 6, 0] },
+          label: {
+            show: true,
+            position: 'right',
+            color: '#64748b',
+            fontSize: 10,
+            fontWeight: 700,
+            formatter(params) {
+              return formatPercent(params.value);
+            },
+          },
+          emphasis: {
+            itemStyle: {
+              color: COLORS.NC,
+              shadowBlur: 10,
+              shadowColor: 'rgba(46, 204, 113, 0.24)',
+            },
+            label: { color: '#0f172a' },
+          },
+          data: chartData.map(item => item.ncRatio),
+        },
+      ],
+    };
   }, [data]);
 
-  if (!data || data.length === 0) {
+  if (!option) {
     return <div className="placeholder"><p>{isKo ? '暂无 KO 功能组成数据' : '暂无门级组成数据'}</p></div>;
   }
 
-  return (
-    <section style={{
-      padding: '14px 16px',
-      border: '1px solid #e2e8f0',
-      borderRadius: 12,
-      background: '#fff',
-      boxSizing: 'border-box',
-    }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, marginBottom: 12 }}>
-        <div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>{title}</div>
-          <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
-            基于 AD/NC 平均丰度占比 · {isKo ? `展示 ${featureLabel} 功能项` : '按门水平汇总'}
-          </div>
-        </div>
-      </div>
+  const chartHeight = Math.max(360, data.length * (BAR_HEIGHT * 2 + ROW_GAP) + 96);
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-        gap: 10,
-        marginBottom: 14,
-      }}>
-        {cards.map(card => (
-          <div
-            key={card.label}
-            style={{
-              position: 'relative',
-              overflow: 'hidden',
-              padding: '10px 12px',
-              border: '1px solid #e2e8f0',
-              borderRadius: 12,
-              background: '#f8fafc',
-              minHeight: 72,
-            }}
-          >
-            <div style={{
-              position: 'absolute',
-              inset: '0 auto 0 0',
-              width: 4,
-              background: card.tone,
-            }} />
-            <div style={{ fontSize: 11, color: '#64748b', marginBottom: 5 }}>{card.label}</div>
-            <div style={{
-              fontSize: 16,
-              lineHeight: 1.2,
-              fontWeight: 800,
-              color: '#0f172a',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }} title={card.value}>
-              {card.value}
-            </div>
-            <div style={{ fontSize: 11, color: card.tone, marginTop: 5, fontWeight: 700 }}>{card.hint}</div>
-          </div>
+  return (
+    <div className="chart-plain">
+      <div className="chart-stat-strip chart-stat-strip--compact">
+        {summaryItems.map(item => (
+          <span className="chart-stat-item" key={item.label}>
+            <b style={{ color: item.tone || undefined }}>{item.label}</b>
+            <span className="chart-stat-value" title={item.value}>{item.value}</span>
+            <span>{item.hint}</span>
+          </span>
         ))}
       </div>
 
-      <svg ref={svgRef} style={{ width: '100%', height: 'auto', display: 'block' }} />
-    </section>
+      <ChartViewport variant="data" minHeight={480} preferredHeight={chartHeight}>
+        <ReactECharts
+          option={option}
+          opts={{ renderer: 'svg' }}
+          notMerge
+          lazyUpdate
+          style={{ width: '100%', height: '100%' }}
+        />
+      </ChartViewport>
+    </div>
   );
 }
 

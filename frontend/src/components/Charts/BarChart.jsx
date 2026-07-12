@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import ReactECharts from 'echarts-for-react';
+import ChartViewport from './ChartViewport';
 
 const COLORS = {
-  AD: '#d66a58',
-  NC: '#5aa88d',
+  AD: '#e74c3c',
+  NC: '#2ecc71',
 };
 const DEFAULT_TOP_N = 20;
 
@@ -16,7 +17,7 @@ function formatTaxonomy(fullName) {
     .join('<br/>');
 }
 
-function abbreviateSpeciesName(label) {
+function abbreviateFeatureName(label) {
   if (!label) return 'Unknown';
 
   const normalized = String(label).replace(/\s+/g, '_');
@@ -25,11 +26,11 @@ function abbreviateSpeciesName(label) {
   if (parts.length >= 2) {
     const genus = parts[0];
     const species = parts.slice(1).join('_');
-    const shortSpecies = species.length > 12 ? `${species.slice(0, 11)}…` : species;
+    const shortSpecies = species.length > 12 ? `${species.slice(0, 11)}...` : species;
     return `${genus.charAt(0)}. ${shortSpecies}`;
   }
 
-  return normalized.length > 14 ? `${normalized.slice(0, 13)}…` : normalized;
+  return normalized.length > 14 ? `${normalized.slice(0, 13)}...` : normalized;
 }
 
 function compactNumber(value) {
@@ -57,19 +58,19 @@ function axisLabelInterval(count) {
 }
 
 function BarChart({ data, featureLabel = '物种' }) {
-  const maxSpecies = Array.isArray(data) ? data.length : 0;
+  const maxFeatures = Array.isArray(data) ? data.length : 0;
   const [topN, setTopN] = useState(DEFAULT_TOP_N);
   const [topNInput, setTopNInput] = useState(String(DEFAULT_TOP_N));
 
   useEffect(() => {
-    if (maxSpecies <= 0) return;
-    const nextTopN = clampTopN(Math.min(DEFAULT_TOP_N, maxSpecies), maxSpecies);
+    if (maxFeatures <= 0) return;
+    const nextTopN = clampTopN(Math.min(DEFAULT_TOP_N, maxFeatures), maxFeatures);
     setTopN(nextTopN);
     setTopNInput(String(nextTopN));
-  }, [maxSpecies]);
+  }, [maxFeatures]);
 
   const handleTopNChange = (nextValue) => {
-    const clamped = clampTopN(nextValue, maxSpecies);
+    const clamped = clampTopN(nextValue, maxFeatures);
     setTopN(clamped);
     setTopNInput(String(clamped));
   };
@@ -84,7 +85,7 @@ function BarChart({ data, featureLabel = '物种' }) {
     const parsed = Number(value);
     if (!Number.isFinite(parsed)) return;
 
-    const clamped = clampTopN(parsed, maxSpecies);
+    const clamped = clampTopN(parsed, maxFeatures);
     setTopN(clamped);
     setTopNInput(String(clamped));
   };
@@ -98,7 +99,7 @@ function BarChart({ data, featureLabel = '物种' }) {
 
     const chartData = data.slice(0, topN).map(item => ({
       ...item,
-      shortLabel: abbreviateSpeciesName(item.species),
+      shortLabel: abbreviateFeatureName(item.species || item.feature),
       adMean: Math.max(0, item.adMean || 0),
       ncMean: Math.max(0, item.ncMean || 0),
     }));
@@ -110,43 +111,16 @@ function BarChart({ data, featureLabel = '物种' }) {
 
     return {
       backgroundColor: 'transparent',
-
-      title: {
-        text: `Top ${topN} ${featureLabel}丰富度对比`,
-        subtext: `仅展示 AD / NC 组均值，横轴为${featureLabel}标签`,
-        left: 24,
-        top: 16,
-        textStyle: {
-          color: '#0f172a',
-          fontSize: 18,
-          fontWeight: 700,
-        },
-        subtextStyle: {
-          color: '#64748b',
-          fontSize: 12,
-          lineHeight: 18,
-        },
-      },
-
       tooltip: {
         trigger: 'axis',
         axisPointer: {
           type: 'shadow',
-          shadowStyle: {
-            color: 'rgba(148, 163, 184, 0.08)',
-          },
-          label: {
-            show: true,
-            backgroundColor: '#475569',
-          },
+          shadowStyle: { color: 'rgba(148, 163, 184, 0.08)' },
+          label: { show: true, backgroundColor: '#475569' },
         },
         backgroundColor: 'rgba(15,23,42,0.96)',
         borderColor: 'transparent',
-        textStyle: {
-          color: '#f8fafc',
-          fontSize: 12,
-          lineHeight: 18,
-        },
+        textStyle: { color: '#f8fafc', fontSize: 12, lineHeight: 18 },
         extraCssText: 'border-radius:10px; padding:12px 14px;',
         formatter(params) {
           const index = params?.[0]?.dataIndex ?? 0;
@@ -154,34 +128,25 @@ function BarChart({ data, featureLabel = '物种' }) {
           if (!item) return '';
 
           const lines = [
-            `<b>${item.species}</b>`,
+            `<b>${item.species || item.feature}</b>`,
             item.fullName ? formatTaxonomy(item.fullName) : '',
             '<br/>',
           ];
 
           params.forEach(entry => {
-            lines.push(
-              `${entry.marker}${entry.seriesName}: ${compactNumber(entry.value)}`
-            );
+            lines.push(`${entry.marker}${entry.seriesName}: ${compactNumber(entry.value)}`);
           });
 
           return lines.join('<br/>');
         },
       },
-
       toolbox: {
         show: true,
         right: 18,
-        top: 18,
+        top: 4,
         itemSize: 16,
-        iconStyle: {
-          borderColor: '#94a3b8',
-        },
-        emphasis: {
-          iconStyle: {
-            borderColor: '#475569',
-          },
-        },
+        iconStyle: { borderColor: '#94a3b8' },
+        emphasis: { iconStyle: { borderColor: '#475569' } },
         feature: {
           dataView: { show: true, readOnly: true },
           magicType: { show: true, type: ['line', 'bar'] },
@@ -189,43 +154,28 @@ function BarChart({ data, featureLabel = '物种' }) {
           saveAsImage: { show: true },
         },
       },
-
       legend: {
         data: ['AD 均值', 'NC 均值'],
-        top: 22,
+        top: 8,
         right: 180,
         itemGap: 18,
         itemWidth: 14,
         itemHeight: 14,
-        textStyle: {
-          color: '#475569',
-          fontSize: 12,
-        },
+        textStyle: { color: '#475569', fontSize: 12 },
       },
-
       grid: {
-        top: 108,
+        top: 62,
         left: 76,
         right: 92,
         bottom: 148,
         containLabel: false,
       },
-
       xAxis: [
         {
           type: 'category',
           data: chartData.map(item => item.shortLabel),
-          axisTick: {
-            alignWithLabel: true,
-            lineStyle: {
-              color: '#cbd5e1',
-            },
-          },
-          axisLine: {
-            lineStyle: {
-              color: '#cbd5e1',
-            },
-          },
+          axisTick: { alignWithLabel: true, lineStyle: { color: '#cbd5e1' } },
+          axisLine: { lineStyle: { color: '#cbd5e1' } },
           axisLabel: {
             interval: labelInterval,
             rotate: 38,
@@ -235,23 +185,15 @@ function BarChart({ data, featureLabel = '物种' }) {
           },
         },
       ],
-
       yAxis: [
         {
           type: 'value',
           name: '平均丰度',
           nameLocation: 'middle',
           nameGap: 58,
-          nameTextStyle: {
-            color: '#64748b',
-            fontSize: 12,
-          },
-          axisLine: {
-            show: false,
-          },
-          axisTick: {
-            show: false,
-          },
+          nameTextStyle: { color: '#64748b', fontSize: 12 },
+          axisLine: { show: false },
+          axisTick: { show: false },
           axisLabel: {
             color: '#94a3b8',
             fontSize: 11,
@@ -259,15 +201,9 @@ function BarChart({ data, featureLabel = '物种' }) {
               return compactNumber(value);
             },
           },
-          splitLine: {
-            lineStyle: {
-              color: '#e7edf5',
-              type: 'dashed',
-            },
-          },
+          splitLine: { lineStyle: { color: '#e7edf5', type: 'dashed' } },
         },
       ],
-
       dataZoom: [
         {
           show: chartData.length > 10,
@@ -276,59 +212,34 @@ function BarChart({ data, featureLabel = '物种' }) {
           height: 18,
           bottom: 74,
           borderColor: '#dbe3ee',
-          fillerColor: 'rgba(196, 135, 92, 0.14)',
+          fillerColor: 'rgba(37, 99, 235, 0.12)',
           backgroundColor: 'rgba(241, 245, 249, 0.9)',
-          handleStyle: {
-            color: '#c4875c',
-          },
-          moveHandleStyle: {
-            color: '#c4875c',
-          },
-          textStyle: {
-            color: '#94a3b8',
-          },
+          handleStyle: { color: '#2563eb' },
+          moveHandleStyle: { color: '#2563eb' },
+          textStyle: { color: '#94a3b8' },
         },
-        {
-          type: 'inside',
-          start,
-          end: 100,
-        },
+        { type: 'inside', start, end: 100 },
       ],
-
       series: [
         {
           name: 'AD 均值',
           type: 'bar',
           barMaxWidth: 26,
-          itemStyle: {
-            color: COLORS.AD,
-            borderRadius: [7, 7, 0, 0],
-          },
-          emphasis: {
-            itemStyle: {
-              color: '#c55e4d',
-            },
-          },
+          itemStyle: { color: COLORS.AD, borderRadius: [7, 7, 0, 0] },
+          emphasis: { itemStyle: { color: COLORS.AD } },
           data: chartData.map(item => item.adMean),
         },
         {
           name: 'NC 均值',
           type: 'bar',
           barMaxWidth: 26,
-          itemStyle: {
-            color: COLORS.NC,
-            borderRadius: [7, 7, 0, 0],
-          },
-          emphasis: {
-            itemStyle: {
-              color: '#4e9a80',
-            },
-          },
+          itemStyle: { color: COLORS.NC, borderRadius: [7, 7, 0, 0] },
+          emphasis: { itemStyle: { color: COLORS.NC } },
           data: chartData.map(item => item.ncMean),
         },
       ],
     };
-  }, [data, topN, featureLabel]);
+  }, [data, topN]);
 
   if (!option) {
     return (
@@ -339,83 +250,50 @@ function BarChart({ data, featureLabel = '物种' }) {
   }
 
   return (
-    <section
-      style={{
-        width: '100%',
-        padding: '8px 10px 16px',
-        border: '1px solid #e2e8f0',
-        borderRadius: 18,
-        background: 'linear-gradient(180deg, #ffffff 0%, #fafaf8 100%)',
-        boxSizing: 'border-box',
-      }}
-    >
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1fr) 96px',
-          gap: 12,
-          alignItems: 'center',
-          padding: '8px 10px 14px',
-          marginBottom: 4,
-          borderBottom: '1px solid rgba(226, 232, 240, 0.8)',
-        }}
-      >
-        <input
-          type="range"
-          min={1}
-          max={Math.max(1, maxSpecies)}
-          step={1}
-          value={topN}
-          onChange={(event) => handleTopNChange(Number(event.target.value))}
-        />
-
-        <input
-          type="number"
-          min={1}
-          max={Math.max(1, maxSpecies)}
-          step={1}
-          value={topNInput}
-          onChange={handleInputChange}
-          onBlur={handleInputBlur}
-          style={numberInputStyle}
-        />
-
-        <div
-          style={{
-            gridColumn: '1 / -1',
-            display: 'flex',
-            justifyContent: 'space-between',
-            gap: 12,
-            flexWrap: 'wrap',
-            fontSize: 12,
-            color: '#64748b',
-          }}
-        >
-          <span>当前展示前 {topN} 个{featureLabel}</span>
-          <span>最高可选到全量 {maxSpecies}</span>
+    <div className="chart-plain">
+      <div className="chart-toolbar chart-toolbar--bar">
+        <div className="chart-toolbar__control">
+          <label htmlFor="bar-top-n">展示数量</label>
+          <input
+            id="bar-top-n"
+            type="range"
+            min={1}
+            max={Math.max(1, maxFeatures)}
+            step={1}
+            value={topN}
+            onChange={(event) => handleTopNChange(Number(event.target.value))}
+          />
+          <input
+            className="chart-number-input"
+            type="number"
+            aria-label="展示数量"
+            min={1}
+            max={Math.max(1, maxFeatures)}
+            step={1}
+            value={topNInput}
+            onChange={handleInputChange}
+            onBlur={handleInputBlur}
+          />
         </div>
+        <p className="chart-toolbar__summary">前 {topN} 个{featureLabel} · 全量 {maxFeatures}</p>
       </div>
 
-      <ReactECharts
-        option={option}
-        opts={{ renderer: 'svg' }}
-        notMerge
-        lazyUpdate
-        style={{ height: 660 }}
-      />
-    </section>
+      <ChartViewport
+        variant="data"
+        minHeight={520}
+        preferredHeight={Math.min(700, 500 + topN * 7)}
+        maxHeight={700}
+      >
+        <ReactECharts
+          option={option}
+          opts={{ renderer: 'svg' }}
+          notMerge
+          lazyUpdate
+          style={{ width: '100%', height: '100%' }}
+        />
+      </ChartViewport>
+    </div>
   );
 }
-
-const numberInputStyle = {
-  width: '100%',
-  padding: '7px 10px',
-  border: '1px solid #cbd5e1',
-  borderRadius: 8,
-  fontSize: 13,
-  color: '#0f172a',
-  background: '#fff',
-  fontFamily: 'inherit',
-};
 
 export default BarChart;

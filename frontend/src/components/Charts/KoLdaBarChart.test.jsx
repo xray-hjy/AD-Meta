@@ -66,7 +66,7 @@ test('renders KO LDA balanced summary and chart payload', () => {
   expect(document.body.textContent).toContain('AD 富集: 7');
   expect(document.body.textContent).toContain('NC 富集: 223');
   expect(document.body.textContent).toContain('展示 AD Top 7 + NC Top 15');
-  expect(document.body.textContent).toContain('LEfSe 风格 LDA');
+  expect(document.body.textContent).not.toContain('LEfSe 风格 LDA');
 
   const chart = screen.getByTestId('ko-lda-chart');
   expect(chart.textContent).toContain('K00001');
@@ -86,10 +86,10 @@ test('builds a diverging horizontal bar chart with AD positive and NC negative',
   expect(option.series[0].type).toBe('bar');
   expect(option.series[0].data[0].value).toBe(4.25);
   expect(option.series[0].data[0].ldaScore).toBe(4.25);
-  expect(option.series[0].data[0].itemStyle.color).toBe('#d66a58');
+  expect(option.series[0].data[0].itemStyle.color).toBe('#e74c3c');
   expect(option.series[0].data[1].value).toBe(-3.5);
   expect(option.series[0].data[1].ldaScore).toBe(3.5);
-  expect(option.series[0].data[1].itemStyle.color).toBe('#5aa88d');
+  expect(option.series[0].data[1].itemStyle.color).toBe('#2ecc71');
   expect(screen.getByTestId('ko-lda-tooltip').textContent).toContain('LDA 值: 4.2500');
 });
 

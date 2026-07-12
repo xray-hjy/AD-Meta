@@ -6,11 +6,6 @@ jest.mock('./api/client', () => ({
   fetchJson: jest.fn(),
 }));
 
-jest.mock('./components/StatsCards', () => () => {
-  const React = require('react');
-  return React.createElement('div', { 'data-testid': 'stats-cards' });
-});
-
 jest.mock('./components/Charts/BarChart', () => () => {
   const React = require('react');
   return React.createElement('div', { 'data-testid': 'bar-chart' });
@@ -43,11 +38,11 @@ jest.mock('./components/Charts/DetectionHeatmap', () => () => {
 jest.mock('./components/Charts/KoLdaBarChart', () => () => {
   const React = require('react');
   return React.createElement('div', { 'data-testid': 'lda-chart' });
-}, { virtual: true });
+});
 
-jest.mock('./components/Charts/SunburstChart', () => () => {
+jest.mock('./components/Charts/TaxonomyChart', () => () => {
   const React = require('react');
-  return React.createElement('div', { 'data-testid': 'sunburst-chart' });
+  return React.createElement('div', { 'data-testid': 'taxonomy-chart' });
 });
 
 jest.mock('./components/Charts/PCAPlot', () => () => {
@@ -64,12 +59,17 @@ let datasets;
 let summaries;
 
 beforeEach(() => {
+  window.history.pushState({}, '', '/analysis/abundance');
   datasets = [{ slug: 'ad-nc-ko-abundance', name: 'AD vs NC KO Abundance' }];
   summaries = {
     'ad-nc-ko-abundance': {
       datasetName: 'AD vs NC KO Abundance',
       featureKind: 'ko',
       featureLabel: 'KO',
+      totalSamples: 4,
+      adSamples: 2,
+      ncSamples: 2,
+      totalFeatures: 3,
     },
   };
 
@@ -99,13 +99,13 @@ test('shows the four supported chart tabs for KO datasets', async () => {
     expect(screen.getByText('KO 检出率热图')).toBeTruthy();
   });
 
-  expect(screen.getByText('丰度对比')).toBeTruthy();
+  expect(screen.getAllByText('丰度对比').length).toBeGreaterThan(0);
   expect(screen.getByText('KO 功能组成')).toBeTruthy();
   expect(screen.getByText('KO 检出率热图')).toBeTruthy();
-  expect(screen.getByText('KO 功能 LDA 值柱状图')).toBeTruthy();
-  expect(screen.queryByText('丰度热图')).toBeNull();
+  expect(screen.getByText('KO LDA')).toBeTruthy();
+  expect(screen.queryByText('差异热图')).toBeNull();
   expect(screen.queryByText('丰度箱线图')).toBeNull();
-  expect(screen.queryByText('KO 旭日图')).toBeNull();
+  expect(screen.queryByText('分类层级图')).toBeNull();
   expect(screen.queryByText('KO PCA')).toBeNull();
   expect(screen.queryByText('KO PCoA')).toBeNull();
 });
@@ -117,16 +117,20 @@ test('does not show KO LDA tab for taxonomy datasets', async () => {
       datasetName: 'AD vs NC Species',
       featureKind: 'taxonomy',
       featureLabel: '物种',
+      totalSamples: 4,
+      adSamples: 2,
+      ncSamples: 2,
+      totalFeatures: 3,
     },
   };
 
   render(<App />);
 
   await waitFor(() => {
-    expect(screen.getByText('丰度热图')).toBeTruthy();
+    expect(screen.getByText('差异热图')).toBeTruthy();
   });
 
-  expect(screen.queryByText('KO 功能 LDA 值柱状图')).toBeNull();
+  expect(screen.queryByText('KO LDA')).toBeNull();
 });
 
 test('separates the desktop sidebar and main content into independent scroll regions', async () => {

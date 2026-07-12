@@ -41,7 +41,7 @@ function axisBounds(points, ellipses) {
   };
 }
 
-function OrdinationChart({ data, title, subtitle, footer }) {
+function OrdinationChart({ data, footer }) {
   const option = useMemo(() => {
     const points = Array.isArray(data?.points) ? data.points : [];
     const ellipses = Array.isArray(data?.ellipses) ? data.ellipses : [];
@@ -89,14 +89,6 @@ function OrdinationChart({ data, title, subtitle, footer }) {
 
     return {
       animation: false,
-      title: {
-        text: title,
-        subtext: subtitle,
-        left: 20,
-        top: 12,
-        textStyle: { color: '#0f172a', fontSize: 18, fontWeight: 700 },
-        subtextStyle: { color: '#64748b', fontSize: 12 },
-      },
       tooltip: {
         trigger: 'item',
         formatter(params) {
@@ -117,11 +109,11 @@ function OrdinationChart({ data, title, subtitle, footer }) {
       legend: {
         data: groups,
         right: 18,
-        top: 56,
-        orient: 'vertical',
+        top: 18,
+        orient: 'horizontal',
         textStyle: { fontSize: 13, color: '#475569' },
       },
-      grid: { left: 68, right: 96, top: 86, bottom: 72 },
+      grid: { left: 72, right: 42, top: 62, bottom: 78 },
       dataZoom: [
         { type: 'inside', xAxisIndex: 0, filterMode: 'none' },
         { type: 'inside', yAxisIndex: 0, filterMode: 'none' },
@@ -150,38 +142,21 @@ function OrdinationChart({ data, title, subtitle, footer }) {
       },
       series: [...ellipseSeries, ...scatterSeries],
     };
-  }, [data, title, subtitle]);
+  }, [data]);
 
   if (!option) {
     return <div className="placeholder"><p>暂无降维分析数据</p></div>;
   }
 
   return (
-    <section style={{
-      height: '100%',
-      minHeight: 520,
-      background: '#fff',
-      border: '1px solid #e2e8f0',
-      borderRadius: 10,
-      padding: 10,
-      boxSizing: 'border-box',
-      display: 'flex',
-      flexDirection: 'column',
-    }}>
-      <div style={{ flex: 1, minHeight: 420 }}>
-        <ReactECharts option={option} style={{ width: '100%', height: '100%' }} />
-      </div>
-      {footer ? (
-        <div style={{
-          borderTop: '1px solid #e2e8f0',
-          padding: '8px 12px 2px',
-          color: '#475569',
-          fontSize: 12,
-        }}>
-          {footer}
+    <div className="chart-plain chart-plain--ordination">
+      <div className="ordination-chart-surface">
+        <div className="ordination-chart-canvas">
+          <ReactECharts option={option} style={{ width: '100%', height: '100%' }} />
         </div>
-      ) : null}
-    </section>
+        {footer ? <div className="chart-plain__footer">{footer}</div> : null}
+      </div>
+    </div>
   );
 }
 

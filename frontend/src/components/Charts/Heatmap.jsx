@@ -9,7 +9,7 @@ const MAX_RENDER_SCALE = 1.5;
 const SNAPSHOT_SCALE = 2;
 const MIN_LIGHTBOX_SCALE = 0.5;
 const MAX_LIGHTBOX_SCALE = 5;
-const GROUP_COLORS = { AD: '#c0392b', NC: '#27ae60' };
+const GROUP_COLORS = { AD: '#e74c3c', NC: '#2ecc71' };
 
 /* ====== 工具函数 ====== */
 
@@ -531,14 +531,7 @@ const HeatmapCanvas = memo(function HeatmapCanvas({
   }, [createSnapshot, onOpen, title]);
 
   return (
-    <section style={{
-      padding: compact ? 12 : 16,
-      border: '1px solid #e2e8f0',
-      borderRadius: 14,
-      background: '#fff',
-      minWidth: 0,
-      boxSizing: 'border-box',
-    }}>
+    <section className={`heatmap-panel ${compact ? 'heatmap-panel--compact' : ''}`}>
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -830,17 +823,12 @@ function Heatmap({ data, featureLabel = '物种' }) {
   }
 
   return (
-    <div style={{ width: '100%', height: '100%', overflow: 'auto', color: '#0f172a' }}>
+    <div className="chart-plain chart-plain--document">
       {/* 筛选信息 */}
-      <div style={{
-        display: 'flex', flexWrap: 'wrap', gap: 14, alignItems: 'center', marginBottom: 14,
-        padding: '8px 14px', borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0',
-        fontSize: 12, color: '#475569',
-      }}>
-        <span><b style={{ color: '#0f172a' }}>筛选：</b>Wilcoxon p&lt;0.05, |log₂FC|&gt;1</span>
+      <div className="chart-info-strip">
         <span><b style={{ color: '#0f172a' }}>差异{resolvedFeatureLabel}：</b>{stats.length}</span>
-        <span style={{ color: '#c0392b' }}><b>AD：</b>{adLabels.length} 样本</span>
-        <span style={{ color: '#27ae60' }}><b>NC：</b>{ncLabels.length} 样本</span>
+        <span style={{ color: GROUP_COLORS.AD }}><b>AD：</b>{adLabels.length} 样本</span>
+        <span style={{ color: GROUP_COLORS.NC }}><b>NC：</b>{ncLabels.length} 样本</span>
         <span><b style={{ color: '#0f172a' }}>列排序：</b>层次聚类（average linkage）</span>
       </div>
 
@@ -894,13 +882,7 @@ function Heatmap({ data, featureLabel = '物种' }) {
             columnLeafOrder={combinedData.columnLeafOrder}
           />
         ) : (
-          <section style={{
-            padding: 16,
-            border: '1px dashed #cbd5e1',
-            borderRadius: 14,
-            background: '#f8fafc',
-            color: '#475569',
-          }}>
+          <section className="chart-notice">
             <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
               合并聚类热图需要重新预计算数据
             </div>

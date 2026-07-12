@@ -23,7 +23,8 @@ PUBLIC_CHART_TYPES = {
     "heatmap",
     "detection",
     "lda",
-    "sunburst",
+    "taxonomy",
+    "taxonomy_sankey",
     "pca",
     "pcoa",
 }

@@ -1,0 +1,7 @@
+export default function EmptyState({ message = '暂无数据' }) {
+  return (
+    <div className="state-view">
+      <p>{message}</p>
+    </div>
+  );
+}
