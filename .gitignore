@@ -20,6 +20,8 @@ backend/storage/*
 
 # misc
 .DS_Store
+._*
+frontend/.tmp/
 .env.local
 .env.development.local
 .env.test.local
