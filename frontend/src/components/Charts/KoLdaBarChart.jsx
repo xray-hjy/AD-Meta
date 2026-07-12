@@ -1,10 +1,9 @@
 import { useMemo } from 'react';
 import ReactECharts from 'echarts-for-react';
-import ChartViewport from './ChartViewport';
 
 const GROUP_COLORS = {
-  AD: '#e74c3c',
-  NC: '#2ecc71',
+  AD: '#d66a58',
+  NC: '#5aa88d',
 };
 
 function formatNumber(value, digits = 4) {
@@ -93,7 +92,13 @@ function KoLdaBarChart({ data }) {
           `;
         },
       },
-      grid: { top: 24, left: 92, right: 48, bottom: 40, containLabel: true },
+      grid: {
+        top: 24,
+        left: 92,
+        right: 48,
+        bottom: 40,
+        containLabel: true,
+      },
       xAxis: {
         type: 'value',
         name: 'NC 富集 ← LDA score → AD 富集',
@@ -114,7 +119,11 @@ function KoLdaBarChart({ data }) {
         type: 'category',
         data: chartItems.map(item => item.koId),
         inverse: true,
-        axisLabel: { color: '#334155', fontSize: 11, fontWeight: 600 },
+        axisLabel: {
+          color: '#334155',
+          fontSize: 11,
+          fontWeight: 600,
+        },
         axisLine: { lineStyle: { color: '#cbd5e1' } },
       },
       series: [
@@ -137,7 +146,9 @@ function KoLdaBarChart({ data }) {
               color: GROUP_COLORS[item.enrichedGroup],
               borderRadius: item.enrichedGroup === 'NC' ? [5, 0, 0, 5] : [0, 5, 5, 0],
             },
-            label: { position: item.enrichedGroup === 'NC' ? 'left' : 'right' },
+            label: {
+              position: item.enrichedGroup === 'NC' ? 'left' : 'right',
+            },
           })),
           label: {
             show: true,
@@ -159,22 +170,44 @@ function KoLdaBarChart({ data }) {
   }
 
   return (
-    <div className="chart-plain">
-      <div className="chart-stat-strip chart-stat-strip--compact">
-        <span><b>P &lt;</b> {filter.pValueMax ?? 0.05}</span>
-        <span><b>显著 KO:</b> {summary.significantCount}</span>
-        <span><b style={{ color: GROUP_COLORS.AD }}>AD 富集:</b> {summary.adEnrichedCount}</span>
-        <span><b style={{ color: GROUP_COLORS.NC }}>NC 富集:</b> {summary.ncEnrichedCount}</span>
-        <span><b>展示 AD Top {summary.adDisplayedCount} + NC Top {summary.ncDisplayedCount}</b></span>
+    <section style={{
+      height: '100%',
+      minHeight: 560,
+      background: '#fff',
+      border: '1px solid #e2e8f0',
+      borderRadius: 10,
+      padding: 16,
+      boxSizing: 'border-box',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 14,
+    }}>
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 12,
+        alignItems: 'center',
+        padding: '10px 14px',
+        borderRadius: 10,
+        background: '#f8fafc',
+        border: '1px solid #e2e8f0',
+        color: '#475569',
+        fontSize: 12,
+      }}>
+        <span><b style={{ color: '#0f172a' }}>P &lt; </b>{filter.pValueMax ?? 0.05}</span>
+        <span><b style={{ color: '#0f172a' }}>显著 KO: </b>{summary.significantCount}</span>
+        <span><b style={{ color: GROUP_COLORS.AD }}>AD 富集: </b>{summary.adEnrichedCount}</span>
+        <span><b style={{ color: GROUP_COLORS.NC }}>NC 富集: </b>{summary.ncEnrichedCount}</span>
+        <span><b style={{ color: '#0f172a' }}>展示 AD Top {summary.adDisplayedCount} + NC Top {summary.ncDisplayedCount}</b></span>
+        <span><b style={{ color: '#0f172a' }}>LEfSe 风格 LDA</b></span>
       </div>
-      <ChartViewport
-        variant="data"
-        minHeight={520}
-        preferredHeight={Math.max(520, items.length * 26 + 120)}
-      >
-        <ReactECharts option={option} style={{ width: '100%', height: '100%' }} />
-      </ChartViewport>
-    </div>
+      <div style={{ color: '#64748b', fontSize: 12 }}>
+        横向柱表示显著差异 KO 的 LDA 效应强度，NC 富集向左，AD 富集向右。
+      </div>
+      <div style={{ flex: 1, minHeight: 460 }}>
+        <ReactECharts option={option} style={{ width: '100%', height: Math.max(460, items.length * 26 + 120) }} />
+      </div>
+    </section>
   );
 }
 

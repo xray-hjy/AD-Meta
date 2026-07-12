@@ -56,7 +56,7 @@ def prepare_dataframe(path: Path) -> tuple[pd.DataFrame, list[str], list[str]]:
     df.attrs["feature_kind"] = feature_kind
     df.attrs["feature_label"] = FEATURE_META[feature_kind]["label"]
     df.attrs["composition_label"] = FEATURE_META[feature_kind]["compositionLabel"]
-    df.attrs["taxonomy_label"] = FEATURE_META[feature_kind]["taxonomyLabel"]
+    df.attrs["sunburst_label"] = FEATURE_META[feature_kind]["sunburstLabel"]
 
     # 二分类 label 文件里可能用 1/0 表示 AD/NC，这里统一成字符串分组名。
     groups = df[group_col].astype(str).str.strip().str.upper()

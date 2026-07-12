@@ -1,41 +1,30 @@
 # AD-Meta
 
-AD-Meta 是面向阿尔茨海默病（AD）与肠道菌群宏基因组数据的可视化分析平台。项目采用 React 前端与 FastAPI 后端分离架构，后端预计算图表数据，前端通过只读 API 渲染物种丰度、KO 功能和分类层级等分析结果。
-
-本仓库不包含原始测序数据处理和 MAG 分析脚本。项目背景、数据来源及与生物信息分析流程的边界见 [项目说明](docs/project-overview.md)。
-
-## 目录结构
-
-```text
-admeta/
-├── backend/              FastAPI、数据导入、预计算与缓存
-├── frontend/             React 应用、页面骨架与 ECharts 可视化
-├── docs/                 项目说明、架构、参考和开发记录
-├── docker-compose.yml    容器化运行编排
-└── package.json          根目录开发与数据重建命令
-```
+AD-Meta 是用于 AD/NC 宏基因组数据分析展示的前后端项目。当前架构为后端预计算图表数据，前端通过 API 读取缓存结果进行可视化渲染。图表计算代码已按图表类型模块化到 `backend/app/compute/charts/`，便于单独维护某一种图表算法。
 
 ## 文档入口
 
-完整索引见 [docs/README.md](docs/README.md)。
+- `docs/runbook.md`：本地启动、数据导入、运行和部署流程。
+- `docs/api.md`：当前后端 API 与图表 payload 契约。
+- `docs/database.md`：数据库表结构与导入规则。
+- `docs/updates.md`：当前版本相对 GitHub 历史版本的更新日志。
+- `docs/legacy-frontend-code-reference.md`：旧版前端直读 Excel 的代码说明，仅作历史参考，不作为当前开发依据。
 
-- [项目背景与边界](docs/project-overview.md)
-- [系统架构与扩展约定](docs/architecture.md)
-- [本地运行与数据导入](docs/guides/runbook.md)
-- [API 契约](docs/reference/api.md)
-- [数据库契约](docs/reference/database.md)
-- [开发记录](docs/development/updates.md)
+## 数据说明
 
-## 本地启动
+原始公开数据位于 `backend/storage/raw/**`，会随 Git 提交。SQLite 数据库
+`backend/storage/ad_meta.sqlite3` 和图表缓存 `backend/storage/cache/**` 不进入 Git，
+由原始数据重建。
 
-安装依赖并根据 `backend/storage_manifest.json` 重建本地数据库与图表缓存后，在 macOS/Linux 项目根目录运行：
+clone 项目并安装依赖后，运行：
+
+```bash
+npm run bootstrap:storage
+```
+
+该命令会读取 `backend/storage_manifest.json`，重新导入 raw 数据并生成本地
+SQLite 与图表缓存。之后运行：
 
 ```bash
 npm run dev
 ```
-
-- 前端：`http://127.0.0.1:3000`
-- 后端：`http://127.0.0.1:8000`
-- API 文档：`http://127.0.0.1:8000/docs`
-
-Windows 下使用两个终端分别启动后端与前端，具体命令见 [运行手册](docs/guides/runbook.md)。

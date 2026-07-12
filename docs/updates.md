@@ -1,17 +1,5 @@
 # AD-Meta 最新更新日志
 
-> 本轮完整版本说明见 [2026-07-12 更新日志](2026-07-12-release-notes.md)。
-
-## 2026-07-12：项目文档与架构说明整理
-
-- 新增 `docs/project-overview.md`，记录 AD/NC 肠道宏基因组研究背景、数据来源、当前生信流程进度和仓库边界。
-- 新增 `docs/architecture.md`，明确后端预计算、统一分类层级树、图表 projection、前端骨架和后续扩展规则。
-- 新增 `docs/README.md` 作为统一文档索引。
-- 将运行手册归入 `docs/guides/`，API 与数据库契约归入 `docs/reference/`，本轮更新和调查记录归入 `docs/development/`。
-- 删除旧版前端直读 Excel 的历史参考，避免后续开发误用已经废弃的架构。
-- 补充 Windows PowerShell 启动命令，并把正式分类层级接口更新为 `taxonomy` 与 `taxonomy_sankey`。
-- 新增 `docs/development/taxonomy-visualization-development.md`，系统记录旭日图、矩形树图、桑基图和放射树图的数据、交互、标签与响应式优化。
-
 ## 2026-07-03：后端图表计算模块拆分
 
 - 将 `backend/app/compute/precompute.py` 从集中式主计算文件拆分为轻量调度器。
@@ -59,13 +47,13 @@
 
 - `compute_ko_lda` 先计算所有 `p < 0.05` 的显著 KO，再按 AD/NC 分组排序并各取最多 15 个。
 - AD/NC 组内排序规则保持为 `ldaScore desc -> pValue asc -> koId asc`；任一组不足 15 个时不使用不显著 KO 或另一组额外 KO 凑数。
-- `docs/reference/api.md` 新增 `/api/datasets/{slug}/charts/lda` 契约，说明分组平衡选择、summary 字段和 items 字段。
+- `docs/api.md` 新增 `/api/datasets/{slug}/charts/lda` 契约，说明分组平衡选择、summary 字段和 items 字段。
 - `import_dataset` 增加同文件保护，当导入源已经是目标 raw 文件时跳过 copy，直接重新预计算。
 
 ## 文档更新
 
 - 新增 `README.md`，作为项目文档入口，说明当前架构、主要文档和数据分发方式。
-- 旧版前端直读 Excel 的历史参考已在文档重组中移除，当前开发以 React、API 和预计算缓存架构为准。
+- `docs/code-reference.md` 重命名为 `docs/legacy-frontend-code-reference.md`，标注为旧版前端直读 Excel 的历史参考，不作为当前开发依据。
 - 更新日志默认以 GitHub 当前最新 `main` 为基准，记录本地待推送版本相对远程的新增变化。
 
 ## 测试与验证

@@ -286,11 +286,9 @@ non-significant KO features to force equal group counts.
 }
 ```
 
-## GET /api/datasets/{slug}/charts/taxonomy
+## GET /api/datasets/{slug}/charts/sunburst
 
-Returns the canonical taxonomy hierarchy used by the sunburst, treemap, and
-radial-tree views. `sunburst` and `taxonomy_tree` remain compatibility aliases;
-new frontend code must request `taxonomy`.
+Returns an ECharts-compatible taxonomy tree.
 
 ```json
 [
@@ -317,42 +315,6 @@ new frontend code must request `taxonomy`.
     ]
   }
 ]
-```
-
-## GET /api/datasets/{slug}/charts/taxonomy_sankey
-
-Returns the Sankey projection derived from the canonical taxonomy hierarchy.
-This is a chart-specific projection, not a second taxonomy data source.
-
-```json
-{
-  "kind": "taxonomy_sankey",
-  "source": "taxonomy",
-  "nodes": [
-    {
-      "name": "0:0:Bacteroidota",
-      "label": "Bacteroidota",
-      "rank": "phylum",
-      "depth": 0,
-      "value": 1000,
-      "itemStyle": { "color": "#3B82F6" }
-    }
-  ],
-  "links": [
-    {
-      "source": "0:0:Bacteroidota",
-      "target": "0:0:Bacteroidota/1:0:Bacteroidia",
-      "value": 900
-    }
-  ],
-  "layout": {
-    "width": 2200,
-    "height": 1180,
-    "nodeGap": 10,
-    "maxDepth": 3,
-    "maxColumnCount": 40
-  }
-}
 ```
 
 ## GET /api/datasets/{slug}/charts/pca

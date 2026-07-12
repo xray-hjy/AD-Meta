@@ -22,13 +22,12 @@ from .charts.ordination import _confidence_ellipses, _permanova, compute_pca, co
 from .charts.phylum import compute_phylum
 from .charts.species import compute_species
 from .charts.summary import compute_summary
-from .charts.taxonomy import (
-    TAXONOMY_TREE_PRUNE_RULES,
+from .charts.sunburst import (
+    SUNBURST_PRUNE_RULES,
+    _prune_children,
+    _prune_taxonomy_children,
     _sum_tree_values,
     compute_sunburst,
-    compute_taxonomy_hierarchy,
-    compute_taxonomy_sankey_projection,
-    compute_taxonomy_tree,
 )
 from .common import AD, NC, FEATURE_META, KO_RE, group_frames
 from .io import jsonable as _jsonable
@@ -76,10 +75,7 @@ def precompute_all(path: Path, slug: str, name: str, published_at: str) -> tuple
         artifacts["lda"] = compute_ko_lda(df, species_cols)
     else:
         artifacts["boxplot"] = compute_boxplot(df, species_cols)
-        taxonomy_hierarchy = compute_taxonomy_hierarchy(df, species_cols)
-        artifacts["taxonomy"] = taxonomy_hierarchy
-        artifacts["sunburst"] = taxonomy_hierarchy
-        artifacts["taxonomy_sankey"] = compute_taxonomy_sankey_projection(taxonomy_hierarchy)
+        artifacts["sunburst"] = compute_sunburst(df, species_cols)
         artifacts["pca"] = compute_pca(df, species_cols)
         artifacts["pcoa"] = compute_pcoa(df, species_cols)
         artifacts["heatmap"] = compute_heatmap(df, species_cols)
@@ -91,7 +87,7 @@ __all__ = [
     "NC",
     "KO_RE",
     "FEATURE_META",
-    "TAXONOMY_TREE_PRUNE_RULES",
+    "SUNBURST_PRUNE_RULES",
     "_box_summary",
     "_box_values",
     "_cluster_order",
@@ -101,6 +97,8 @@ __all__ = [
     "_hierarchical_cluster",
     "_jsonable",
     "_permanova",
+    "_prune_children",
+    "_prune_taxonomy_children",
     "_sum_tree_values",
     "_univariate_lda_score",
     "compute_boxplot",
@@ -113,9 +111,6 @@ __all__ = [
     "compute_species",
     "compute_summary",
     "compute_sunburst",
-    "compute_taxonomy_hierarchy",
-    "compute_taxonomy_sankey_projection",
-    "compute_taxonomy_tree",
     "precompute_all",
     "prepare_dataframe",
     "read_table",

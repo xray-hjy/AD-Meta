@@ -2,20 +2,12 @@
 
 ## Local Development
 
-Create the backend virtual environment once. On macOS/Linux:
+Create the backend virtual environment once:
 
 ```bash
 cd backend
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
-```
-
-On Windows PowerShell:
-
-```powershell
-cd backend
-py -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
 Install frontend dependencies once:
@@ -36,30 +28,14 @@ This reads `backend/storage_manifest.json`, imports each file under
 chart JSON under `backend/storage/cache/`. The raw files are tracked in git;
 SQLite and cache files are local runtime artifacts and are intentionally ignored.
 
-On macOS/Linux, start both services from the project root:
+Start both services from the project root:
 
 ```bash
 npm run dev
 ```
 
-On Windows PowerShell, start the backend and frontend in two terminals:
-
-```powershell
-# Terminal 1
-cd backend
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
-
-# Terminal 2
-cd frontend
-$env:BROWSER='none'
-$env:HOST='127.0.0.1'
-$env:PORT='3000'
-npm start
-```
-
 The site is available at `http://127.0.0.1:3000`. The backend API is
-available at `http://127.0.0.1:8000`, and its OpenAPI page is at
-`http://127.0.0.1:8000/docs`.
+available at `http://127.0.0.1:8000`.
 
 Start the backend:
 
@@ -134,8 +110,7 @@ matching module first:
 - `heatmap.py`: differential abundance heatmap and dendrogram metadata.
 - `detection.py`: KO detection-rate heatmap.
 - `lda.py`: KO LDA marker chart.
-- `taxonomy/`: canonical taxonomy hierarchy, pruning, colors, and chart projections.
-- `sunburst.py` and `taxonomy_hierarchy.py`: thin compatibility imports for historical code paths; new taxonomy work belongs in `taxonomy/`.
+- `sunburst.py`: taxonomy hierarchy payload.
 - `ordination.py`: PCA and PCoA payloads.
 - `summary.py`: summary-card payload.
 
@@ -158,7 +133,7 @@ cd backend
 .venv/bin/python -m unittest tests.test_precompute tests.test_dataset_service tests.test_heatmap_api tests.test_import_dataset tests.test_bootstrap_storage tests.test_normalized_import -v
 ```
 
-If a response shape changes, update `docs/reference/api.md`, frontend chart code, and
+If a response shape changes, update `docs/api.md`, frontend chart code, and
 tests in the same change. Pure internal refactors should keep API payloads and
 `COMPUTE_VERSION` unchanged.
 
@@ -193,7 +168,7 @@ export AD_META_MYSQL_DATABASE=ad_meta
 `init_db()` creates the MySQL tables on startup/import. The schema keeps the
 six scientific tables from the ER plan and adds application support tables for
 dataset switching, chart caches, import jobs, KO annotations, and reference
-study de-duplication. See `docs/reference/database.md` for the table-level contract.
+study de-duplication. See `docs/database.md` for the table-level contract.
 
 ## Production-Style Docker Run
 
@@ -212,5 +187,5 @@ The frontend container serves static files through Nginx. Requests under
 
 ## Public Data Contract
 
-Keep `docs/reference/api.md` updated whenever an API response changes. Frontend mock data,
+Keep `docs/api.md` updated whenever an API response changes. Frontend mock data,
 backend responses, and chart components should all follow that document.

@@ -1,20 +1,7 @@
 import { useMemo, useState } from 'react';
 import ReactECharts from 'echarts-for-react';
-import ChartViewport from './ChartViewport';
 
 const COLORS = { AD: '#e74c3c', NC: '#2ecc71' };
-const BOX_FILLS = {
-  AD: 'rgba(231, 76, 60, 0.24)',
-  NC: 'rgba(46, 204, 113, 0.24)',
-};
-
-function boxStyle(group) {
-  return {
-    color: BOX_FILLS[group],
-    borderColor: COLORS[group],
-    borderWidth: 2,
-  };
-}
 
 function BoxPlot({ data, featureLabel = '物种' }) {
   const [selectedSpecies, setSelectedSpecies] = useState([]);
@@ -90,7 +77,7 @@ function BoxPlot({ data, featureLabel = '物种' }) {
         trigger: 'item',
         formatter: (p) => {
           if (p.seriesType === 'scatter') {
-            return `<b>${p.data.group} 组 - ${p.data.species}</b><br/>
+            return `<b>${p.data.group} 组 — ${p.data.species}</b><br/>
               尺度: ${isLogScale ? 'log10(丰度 + 1)' : '原始丰度'}<br/>
               样本编号: ${p.data.sample || '未知'}<br/>
               离群点: ${fmtNum(p.data.value[1], isLogScale)}`;
@@ -100,13 +87,13 @@ function BoxPlot({ data, featureLabel = '物种' }) {
           const outlierCount = p.seriesName === 'AD'
             ? (isLogScale ? species.adLogOutliers.length : species.adOutliers.length)
             : (isLogScale ? species.ncLogOutliers.length : species.ncOutliers.length);
-          return `<b>${p.seriesName} 组 - ${p.name}</b><br/>
+          return `<b>${p.seriesName} 组 — ${p.name}</b><br/>
             尺度: ${isLogScale ? 'log10(丰度 + 1)' : '原始丰度'}<br/>
-            上限: ${fmtNum(d[4], isLogScale)}<br/>
-            Q3: ${fmtNum(d[3], isLogScale)}<br/>
-            <b>中位数: ${fmtNum(d[2], isLogScale)}</b><br/>
-            Q1: ${fmtNum(d[1], isLogScale)}<br/>
-            下限: ${fmtNum(d[0], isLogScale)}<br/>
+            上限 (Whisker): ${fmtNum(d[4], isLogScale)}<br/>
+            上四分位数 (Q3): ${fmtNum(d[3], isLogScale)}<br/>
+            <b>中位数 (Median): ${fmtNum(d[2], isLogScale)}</b><br/>
+            下四分位数 (Q1): ${fmtNum(d[1], isLogScale)}<br/>
+            下限 (Whisker): ${fmtNum(d[0], isLogScale)}<br/>
             离群点数: ${outlierCount}`;
         },
         backgroundColor: 'rgba(30,41,59,0.9)',
@@ -114,11 +101,7 @@ function BoxPlot({ data, featureLabel = '物种' }) {
         textStyle: { color: '#f1f5f9', fontSize: 12 },
         extraCssText: 'border-radius:8px; padding:10px 14px;',
       },
-      legend: {
-        data: ['AD', 'NC', 'AD 离群点', 'NC 离群点'],
-        top: 0,
-        textStyle: { fontSize: 12, color: '#475569' },
-      },
+      legend: { data: ['AD', 'NC', 'AD 离群点', 'NC 离群点'], top: 0, textStyle: { fontSize: 12, color: '#475569' } },
       grid: { left: 70, right: 30, top: 42, bottom: 60 },
       xAxis: {
         type: 'category',
@@ -129,33 +112,23 @@ function BoxPlot({ data, featureLabel = '物种' }) {
         type: 'value',
         name: isLogScale ? 'log10(丰度 + 1)' : '丰度',
         nameTextStyle: { fontSize: 12, color: '#94a3b8' },
-        axisLabel: {
-          fontSize: 11,
-          color: '#94a3b8',
-          formatter: v => {
-            if (isLogScale) return Number(v).toFixed(2);
-            if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
-            if (v >= 1e3) return (v / 1e3).toFixed(1) + 'K';
-            return v.toFixed(1);
-          },
-        },
+        axisLabel: { fontSize: 11, color: '#94a3b8', formatter: v => {
+          if (isLogScale) return Number(v).toFixed(2);
+          if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
+          if (v >= 1e3) return (v / 1e3).toFixed(1) + 'K';
+          return v.toFixed(1);
+        }},
         splitLine: { lineStyle: { color: '#f1f5f9' } },
       },
       series: [
         {
-          name: 'AD',
-          type: 'boxplot',
-          data: adData,
-          itemStyle: boxStyle('AD'),
-          emphasis: { itemStyle: boxStyle('AD') },
+          name: 'AD', type: 'boxplot', data: adData,
+          itemStyle: { color: COLORS.AD, borderColor: '#c0392b' },
           boxWidth: [14, 22],
         },
         {
-          name: 'NC',
-          type: 'boxplot',
-          data: ncData,
-          itemStyle: boxStyle('NC'),
-          emphasis: { itemStyle: boxStyle('NC') },
+          name: 'NC', type: 'boxplot', data: ncData,
+          itemStyle: { color: COLORS.NC, borderColor: '#27ae60' },
           boxWidth: [14, 22],
         },
         {
@@ -163,14 +136,14 @@ function BoxPlot({ data, featureLabel = '物种' }) {
           type: 'scatter',
           data: adOutlierData,
           symbolSize: 7,
-          itemStyle: { color: COLORS.AD, borderColor: COLORS.AD, borderWidth: 1 },
+          itemStyle: { color: COLORS.AD, borderColor: '#7f1d1d', borderWidth: 1 },
         },
         {
           name: 'NC 离群点',
           type: 'scatter',
           data: ncOutlierData,
           symbolSize: 7,
-          itemStyle: { color: COLORS.NC, borderColor: COLORS.NC, borderWidth: 1 },
+          itemStyle: { color: COLORS.NC, borderColor: '#14532d', borderWidth: 1 },
         },
       ],
     };
@@ -184,35 +157,65 @@ function BoxPlot({ data, featureLabel = '物种' }) {
   };
 
   return (
-    <div className="chart-plain">
-      <div className="chart-control-strip">
-        <span>默认 log10(丰度 + 1)</span>
-        <span>显示离群点</span>
-        <span>已选 {activeSpecies.length} 个{featureLabel}</span>
+    <section style={{
+      padding: '12px 16px',
+      border: '1px solid #e2e8f0',
+      borderRadius: 10,
+      background: '#fff',
+      boxSizing: 'border-box',
+      display: 'flex',
+      flexDirection: 'column',
+      maxWidth: 900,
+      margin: '0 auto',
+    }}>
+      <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', marginBottom: 2 }}>丰度箱线图</div>
+      <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 8 }}>
+        默认 log10(丰度 + 1) · 显示离群点 · 可切换原始丰度 · 已选 {activeSpecies.length} 个
+      </div>
+
+      <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
         {[
           { key: 'log', label: 'log10(丰度 + 1)' },
           { key: 'raw', label: '原始丰度' },
-        ].map(mode => (
-          <button
-            key={mode.key}
-            type="button"
-            className={`chart-chip ${scaleMode === mode.key ? 'chart-chip--active' : ''}`}
-            onClick={() => setScaleMode(mode.key)}
-          >
-            {mode.label}
-          </button>
-        ))}
+        ].map(mode => {
+          const on = scaleMode === mode.key;
+          return (
+            <button
+              key={mode.key}
+              onClick={() => setScaleMode(mode.key)}
+              style={{
+                padding: '3px 10px',
+                borderRadius: 14,
+                border: '1px solid',
+                borderColor: on ? '#0f766e' : '#e2e8f0',
+                background: on ? '#ccfbf1' : '#fff',
+                color: on ? '#0f766e' : '#64748b',
+                cursor: 'pointer',
+                fontSize: 11,
+                fontFamily: 'inherit',
+                fontWeight: on ? 700 : 500,
+              }}
+            >
+              {mode.label}
+            </button>
+          );
+        })}
       </div>
 
-      <div className="chart-chip-list">
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 10 }}>
         {availableSpecies.map(s => {
           const on = activeSpecies.some(item => item.full === s.full);
           return (
             <button
               key={s.full}
-              type="button"
-              className={`chart-chip ${on ? 'chart-chip--active' : ''}`}
               onClick={() => toggle(s.full)}
+              style={{
+                padding: '2px 8px', borderRadius: 12, border: '1px solid',
+                borderColor: on ? '#4f46e5' : '#e2e8f0',
+                background: on ? '#eef2ff' : '#fff',
+                color: on ? '#4f46e5' : '#64748b',
+                cursor: 'pointer', fontSize: 11, fontFamily: 'inherit',
+              }}
             >
               {s.short}
             </button>
@@ -220,22 +223,14 @@ function BoxPlot({ data, featureLabel = '物种' }) {
         })}
       </div>
 
-      {option ? (
-        <ChartViewport
-          variant="data"
-          minHeight={480}
-          preferredHeight={Math.max(480, activeSpecies.length * 48 + 120)}
-        >
-          <ReactECharts
-            option={option}
-            opts={{ renderer: 'svg' }}
-            style={{ width: '100%', height: '100%' }}
-          />
-        </ChartViewport>
-      ) : (
-        <div className="placeholder"><p>暂无数据</p></div>
-      )}
-    </div>
+      <div style={{ flex: 1, minHeight: 0 }}>
+        {option ? (
+          <ReactECharts option={option} opts={{ renderer: 'svg' }} style={{ height: Math.max(280, Math.min(460, activeSpecies.length * 48 + 60)) }} />
+        ) : (
+          <div className="placeholder"><p>暂无数据</p></div>
+        )}
+      </div>
+    </section>
   );
 }
 

@@ -53,7 +53,7 @@ const detectionData = {
 test('renders KO detection heatmap summary and chart payload', () => {
   render(<DetectionHeatmap data={detectionData} />);
 
-  expect(document.body.textContent).not.toContain('检出规则: 丰度 > 0');
+  expect(document.body.textContent).toContain('检出规则: 丰度 > 0');
   expect(document.body.textContent).toContain('AD 样本数: 122');
   expect(document.body.textContent).toContain('NC 样本数: 63');
   expect(document.body.textContent).toContain('Top 50 KO');
