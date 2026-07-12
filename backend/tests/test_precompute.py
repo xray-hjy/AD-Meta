@@ -34,7 +34,17 @@ class ComputeModuleLayoutTests(unittest.TestCase):
         from app.compute.charts.ordination import compute_pca as split_compute_pca
         from app.compute.charts.ordination import compute_pcoa as split_compute_pcoa
         from app.compute.charts.summary import compute_summary as split_compute_summary
-        from app.compute.precompute import compute_pca, compute_pcoa, compute_phylum, compute_species, compute_summary
+        from app.compute.charts.taxonomy import compute_taxonomy_hierarchy as split_compute_taxonomy_hierarchy
+        from app.compute.charts.taxonomy import compute_taxonomy_sankey_projection as split_compute_taxonomy_sankey_projection
+        from app.compute.precompute import (
+            compute_pca,
+            compute_pcoa,
+            compute_phylum,
+            compute_species,
+            compute_summary,
+            compute_taxonomy_hierarchy,
+            compute_taxonomy_sankey_projection,
+        )
 
         self.assertIs(compute_boxplot, split_compute_boxplot)
         self.assertIs(compute_detection_heatmap, split_compute_detection_heatmap)
@@ -43,6 +53,8 @@ class ComputeModuleLayoutTests(unittest.TestCase):
         self.assertIs(compute_phylum, split_compute_phylum)
         self.assertIs(compute_species, split_compute_species)
         self.assertIs(compute_sunburst, split_compute_sunburst)
+        self.assertIs(compute_taxonomy_hierarchy, split_compute_taxonomy_hierarchy)
+        self.assertIs(compute_taxonomy_sankey_projection, split_compute_taxonomy_sankey_projection)
         self.assertIs(compute_pca, split_compute_pca)
         self.assertIs(compute_pcoa, split_compute_pcoa)
         self.assertIs(compute_summary, split_compute_summary)
@@ -168,7 +180,7 @@ class TaxonomySunburstPrecomputeTests(unittest.TestCase):
     def test_limits_class_children_and_keeps_major_classes_visible(self) -> None:
         class_features = [
             f"k__Bacteria|p__Firmicutes|c__Class_{index}|g__Genus_{index}|s__Species_{index}"
-            for index in range(1, 7)
+            for index in range(1, 15)
         ]
         with TemporaryDirectory() as tmpdir:
             path = Path(tmpdir) / "species.csv"
@@ -176,8 +188,8 @@ class TaxonomySunburstPrecomputeTests(unittest.TestCase):
                 "\n".join(
                     [
                         ",".join(["sample_id", "Group", *class_features]),
-                        "AD001,AD,100,90,80,70,60,50",
-                        "NC001,NC,0,0,0,0,0,0",
+                        "AD001,AD,100,90,80,70,60,50,40,30,20,10,9,8,7,6",
+                        "NC001,NC,0,0,0,0,0,0,0,0,0,0,0,0,0,0",
                     ]
                 ),
                 encoding="utf-8",
@@ -190,8 +202,8 @@ class TaxonomySunburstPrecomputeTests(unittest.TestCase):
         class_children = phylum["children"]
         class_names = [child["name"] for child in class_children]
 
-        self.assertLessEqual(len(class_children), 5)
-        self.assertEqual(class_names[:4], ["Class_1", "Class_2", "Class_3", "Class_4"])
+        self.assertLessEqual(len(class_children), 13)
+        self.assertEqual(class_names[:12], [f"Class_{index}" for index in range(1, 13)])
         self.assertIn("Other classes", class_names)
         other = next(child for child in class_children if child["name"] == "Other classes")
         self.assertEqual(other["mergedCount"], 2)
@@ -459,12 +471,18 @@ class DetectionHeatmapPrecomputeTests(unittest.TestCase):
         self.assertNotIn("pcoa", ko_artifacts)
         self.assertEqual(set(ko_artifacts), {"summary", "species", "phylum", "detection", "lda"})
         self.assertIn("boxplot", taxonomy_artifacts)
+        self.assertIn("taxonomy", taxonomy_artifacts)
+        self.assertIn("taxonomy_sankey", taxonomy_artifacts)
         self.assertIn("sunburst", taxonomy_artifacts)
         self.assertIn("pca", taxonomy_artifacts)
         self.assertIn("pcoa", taxonomy_artifacts)
         self.assertIn("heatmap", taxonomy_artifacts)
         self.assertNotIn("detection", taxonomy_artifacts)
         self.assertNotIn("lda", taxonomy_artifacts)
+        self.assertEqual(taxonomy_artifacts["taxonomy_sankey"]["kind"], "taxonomy_sankey")
+        self.assertGreater(len(taxonomy_artifacts["taxonomy_sankey"]["nodes"]), 0)
+        self.assertGreater(len(taxonomy_artifacts["taxonomy_sankey"]["links"]), 0)
+        self.assertIn("height", taxonomy_artifacts["taxonomy_sankey"]["layout"])
 
 
 class KoLdaPrecomputeTests(unittest.TestCase):

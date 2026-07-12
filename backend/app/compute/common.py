@@ -24,12 +24,12 @@ FEATURE_META = {
     "taxonomy": {
         "label": "物种",
         "compositionLabel": "门级组成",
-        "sunburstLabel": "分类旭日图",
+        "taxonomyLabel": "分类层级图",
     },
     "ko": {
         "label": "KO",
         "compositionLabel": "KO 功能组成",
-        "sunburstLabel": "KO 旭日图",
+        "taxonomyLabel": "KO 层级图",
     },
 }
 
