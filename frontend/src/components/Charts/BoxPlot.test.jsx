@@ -64,6 +64,11 @@ test('defaults to log scale and renders outlier scatter series', () => {
   expect(option.yAxis.name).toBe('log10(丰度 + 1)');
   expect(option.series[0].type).toBe('boxplot');
   expect(option.series[0].data[0]).toEqual([1, 1.04, 1.06, 1.1, 1.14]);
+  expect(option.series[0].itemStyle.color).toBe('rgba(231, 76, 60, 0.24)');
+  expect(option.series[0].itemStyle.borderColor).toBe('#e74c3c');
+  expect(option.series[0].itemStyle.borderWidth).toBe(2);
+  expect(option.series[0].emphasis.itemStyle).toEqual(option.series[0].itemStyle);
+  expect(option.series[1].itemStyle.color).toBe('rgba(46, 204, 113, 0.24)');
   expect(option.series[2].type).toBe('scatter');
   expect(option.series[2].data[0].value).toEqual(['Target_species', 0]);
   expect(option.series[2].data[0].sample).toBe('AD0');
