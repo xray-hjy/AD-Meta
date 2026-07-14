@@ -7,6 +7,7 @@ import KoLdaBarChart from '../components/Charts/KoLdaBarChart';
 import TaxonomyChart from '../components/Charts/TaxonomyChart';
 import PCAPlot from '../components/Charts/PCAPlot';
 import PCoAPlot from '../components/Charts/PCoAPlot';
+import { getAnalysisDataForFeatureKind } from './analysisDomains';
 
 const TAXONOMY_GROUP = {
   key: 'taxonomyHierarchy',
@@ -24,6 +25,10 @@ function resolvedFeatureCount(context) {
     || context.summary?.totalFeatures
     || context.summary?.totalSpecies
     || 0;
+}
+
+function resolvedAnalysisDataLabel(context) {
+  return getAnalysisDataForFeatureKind(context.featureKind).label;
 }
 
 export const CHART_REGISTRY = {
@@ -86,7 +91,7 @@ export const CHART_REGISTRY = {
     navLabel: '旭日图',
     navSubtitle: '环形层级占比',
     title: '分类层级旭日图',
-    subtitle: ({ summary }) => `${summary?.datasetName || '当前数据集'}；门、纲、属、物种层级占比`,
+    subtitle: context => `${resolvedAnalysisDataLabel(context)}；门、纲、属、物种层级占比`,
     availableFor: ['taxonomy'],
     component: TaxonomyChart,
     dataKey: 'taxonomy',
@@ -98,7 +103,7 @@ export const CHART_REGISTRY = {
     navLabel: '矩形树图',
     navSubtitle: '矩形面积层级占比',
     title: '分类层级矩形树图',
-    subtitle: ({ summary }) => `${summary?.datasetName || '当前数据集'}；用面积呈现门、纲、属、物种层级占比`,
+    subtitle: context => `${resolvedAnalysisDataLabel(context)}；用面积呈现门、纲、属、物种层级占比`,
     availableFor: ['taxonomy'],
     component: TaxonomyChart,
     dataKey: 'taxonomy',
@@ -110,7 +115,7 @@ export const CHART_REGISTRY = {
     navLabel: '桑基图',
     navSubtitle: '层级流向与占比',
     title: '分类层级桑基图',
-    subtitle: ({ summary }) => `${summary?.datasetName || '当前数据集'}；门、纲、属、物种层级流向与丰度权重；低丰度分类已合并为 Other`,
+    subtitle: context => `${resolvedAnalysisDataLabel(context)}；门、纲、属、物种层级流向与丰度权重；低丰度分类已合并为 Other`,
     availableFor: ['taxonomy'],
     component: TaxonomyChart,
     dataKey: 'taxonomy_sankey',
@@ -122,7 +127,7 @@ export const CHART_REGISTRY = {
     navLabel: '放射树图',
     navSubtitle: '层级关系与分支结构',
     title: '分类层级放射树图',
-    subtitle: ({ summary }) => `${summary?.datasetName || '当前数据集'}；展示门、纲、属、物种的放射状父子层级结构`,
+    subtitle: context => `${resolvedAnalysisDataLabel(context)}；展示门、纲、属、物种的放射状父子层级结构`,
     availableFor: ['taxonomy'],
     component: TaxonomyChart,
     dataKey: 'taxonomy',

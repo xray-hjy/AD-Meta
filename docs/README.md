@@ -15,10 +15,13 @@
 
 - [API 契约](reference/api.md)：公开只读接口与图表 payload。
 - [数据库契约](reference/database.md)：科学数据表、应用支撑表和导入约束。
+- [AD 宏基因组生物信息分析流程摘要](reference/bioinformatics-analysis-workflow.md)：从 Raw FASTQ 到物种、KO 和未来 MAG 分析结果的上游流程。
+- [生物信息流程与分析数据接入](reference/bioinformatics-analysis-data.md)：分析数据接入边界、科学表述和未来 MAG 扩展约定。
 
 ## 开发记录
 
 - [综合更新日志](development/updates.md)
+- [2026-07-14 开发更新日志](development/2026-07-14-development-update.md)
 - [2026-07-12 更新日志](development/2026-07-12-release-notes.md)
 - [前端 UI 重构记录](development/frontend-ui-refactor-update.md)
 - [分类层级可视化开发与优化记录](development/taxonomy-visualization-development.md)

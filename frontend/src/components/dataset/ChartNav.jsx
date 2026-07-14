@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { getNavigationSections } from '../../app/analysisDomains';
 
 function groupCharts(charts) {
   const groups = [];
@@ -28,13 +29,6 @@ function groupCharts(charts) {
   return groups;
 }
 
-const NAV_SECTIONS = [
-  { key: 'composition', label: '丰度与组成', charts: ['species', 'phylum'] },
-  { key: 'difference', label: '分布与差异', charts: ['boxplot', 'heatmap', 'detection', 'lda'] },
-  { key: 'hierarchy', label: '分类层级', charts: ['taxonomyHierarchy'] },
-  { key: 'ordination', label: '多样性分析', charts: ['pca', 'pcoa'] },
-];
-
 function sectionEntries(groupedCharts, section) {
   return groupedCharts.filter(entry => {
     const key = entry.type === 'group' ? entry.key : entry.chart.key;
@@ -42,8 +36,9 @@ function sectionEntries(groupedCharts, section) {
   });
 }
 
-export default function ChartNav({ charts, activeChart, onChange }) {
+export default function ChartNav({ charts, activeChart, featureKind, onChange }) {
   const groupedCharts = useMemo(() => groupCharts(charts), [charts]);
+  const navigationSections = useMemo(() => getNavigationSections(featureKind), [featureKind]);
   const activeGroup = groupedCharts.find(group =>
     group.type === 'group' && group.children.some(child => child.key === activeChart)
   );
@@ -120,7 +115,7 @@ export default function ChartNav({ charts, activeChart, onChange }) {
 
   return (
     <nav className="nav-list" aria-label="图表导航">
-      {NAV_SECTIONS.map(section => {
+      {navigationSections.map(section => {
         const entries = sectionEntries(groupedCharts, section);
         if (entries.length === 0) return null;
         return (

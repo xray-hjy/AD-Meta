@@ -51,6 +51,11 @@ function App() {
   const datasetsState = useDatasets();
   const [activeDataset, setActiveDataset] = useState('');
 
+  function changeDataset(slug) {
+    setActiveDataset(slug);
+    setActiveChart('species');
+  }
+
   useEffect(() => {
     if (!activeDataset && datasetsState.data.length > 0) {
       setActiveDataset(datasetsState.data[0].slug);
@@ -78,7 +83,7 @@ function App() {
 
   let mainContent = null;
   if (!activeDataset && !datasetsState.loading && datasetsState.data.length === 0) {
-    mainContent = <EmptyState message="暂无已发布数据集" />;
+    mainContent = <EmptyState message="暂无已发布分析数据" />;
   } else if (error && !loading) {
     mainContent = <ErrorState message={error} />;
   } else {
@@ -100,21 +105,20 @@ function App() {
     <AppShell
       topbar={
         <TopBar
-          datasetName={summaryState.data?.datasetName}
           featureKind={summaryState.data?.featureKind}
+          summary={summaryState.data}
           datasets={datasetsState.data}
           activeDataset={activeDataset}
-          onDatasetChange={slug => {
-            setActiveDataset(slug);
-            setActiveChart('species');
-          }}
+          onDatasetChange={changeDataset}
         />
       }
       sidebar={
         <Sidebar
           summary={summaryState.data}
+          datasets={datasetsState.data}
           charts={charts}
           activeChart={activeChart}
+          onDatasetChange={changeDataset}
           onChartChange={setActiveChart}
         />
       }
