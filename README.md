@@ -30,14 +30,31 @@ admeta/
 
 ## 本地启动
 
-安装依赖并根据 `backend/storage_manifest.json` 重建本地数据库与图表缓存后，在 macOS/Linux 项目根目录运行：
+后端默认使用本机 MySQL。连接参数保存在被 Git 忽略的 `.env` 中。首次转换时运行：
 
 ```bash
-npm run dev
+npm run migrate:sqlite-to-mysql
+```
+
+上面的迁移命令会把已有的 `backend/storage/ad_meta.sqlite3` 完整复制到空的
+MySQL 数据库。新克隆、没有旧 SQLite 文件时，改用 `npm run bootstrap:storage`
+从受版本管理的原始表格重建数据。
+
+然后分别启动后端和前端：
+
+```bash
+# 终端 1
+npm run dev:backend
+
+# 终端 2
+npm run dev:frontend
 ```
 
 - 前端：`http://127.0.0.1:3000`
 - 后端：`http://127.0.0.1:8000`
 - API 文档：`http://127.0.0.1:8000/docs`
+
+MySQL 本地连接参数模板见 [`.env.example`](.env.example)，完整步骤见
+[本地运行与数据导入](docs/guides/runbook.md)。
 
 Windows 下使用两个终端分别启动后端与前端，具体命令见 [运行手册](docs/guides/runbook.md)。

@@ -4,6 +4,12 @@ services:
       context: ./backend
     environment:
       AD_META_STORAGE_ROOT: /app/storage
+      AD_META_DB_ENGINE: ${AD_META_DB_ENGINE:-mysql}
+      AD_META_MYSQL_HOST: host.docker.internal
+      AD_META_MYSQL_PORT: ${AD_META_MYSQL_PORT:-3306}
+      AD_META_MYSQL_USER: ${AD_META_MYSQL_USER:-root}
+      AD_META_MYSQL_PASSWORD: ${AD_META_MYSQL_PASSWORD:-}
+      AD_META_MYSQL_DATABASE: ${AD_META_MYSQL_DATABASE:-ad_meta}
     volumes:
       - ./backend/storage:/app/storage
     expose:

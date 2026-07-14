@@ -10,7 +10,7 @@
 数据校验与标准化
     ↓ backend/app/compute
 统计结果与图表 projection 预计算
-    ↓ SQLite/MySQL + JSON cache
+    ↓ MySQL + JSON cache
 FastAPI 只读接口
     ↓
 React 页面骨架 + ECharts 可视化

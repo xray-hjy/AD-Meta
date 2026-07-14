@@ -23,6 +23,7 @@ backend/storage/*
 ._*
 frontend/.tmp/
 .env.local
+.env
 .env.development.local
 .env.test.local
 .env.production.local

@@ -1,12 +1,18 @@
 from pathlib import Path
 import os
 
+from dotenv import load_dotenv
+
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
+load_dotenv(BACKEND_ROOT.parent / ".env")
+
 STORAGE_ROOT = Path(os.getenv("AD_META_STORAGE_ROOT", BACKEND_ROOT / "storage"))
 RAW_ROOT = STORAGE_ROOT / "raw"
 CACHE_ROOT = STORAGE_ROOT / "cache"
 DB_PATH = Path(os.getenv("AD_META_DB_PATH", STORAGE_ROOT / "ad_meta.sqlite3"))
-DB_ENGINE = os.getenv("AD_META_DB_ENGINE", "sqlite").strip().lower()
+DB_ENGINE = os.getenv("AD_META_DB_ENGINE", "mysql").strip().lower()
+if DB_ENGINE not in {"mysql", "sqlite"}:
+    raise RuntimeError("AD_META_DB_ENGINE must be either 'mysql' or 'sqlite'.")
 
 MYSQL_HOST = os.getenv("AD_META_MYSQL_HOST", "127.0.0.1")
 MYSQL_PORT = int(os.getenv("AD_META_MYSQL_PORT", "3306"))

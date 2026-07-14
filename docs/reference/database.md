@@ -1,7 +1,8 @@
 # AD-Meta Database Contract
 
-The backend supports SQLite for local development and MySQL 8.0+ for the
-normalized production-style schema. MySQL uses InnoDB and `utf8mb4`.
+The locally installed MySQL 8.0+ server is the default application database. Tables use InnoDB and
+`utf8mb4`. SQLite is retained only as a legacy migration source and as a fast,
+isolated backend for unit tests.
 
 ## Core Scientific Tables
 

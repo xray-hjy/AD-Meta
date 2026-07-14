@@ -25,26 +25,47 @@ cd frontend
 npm install
 ```
 
-Rebuild local storage from the tracked raw datasets:
+Make sure the locally installed MySQL server is running, then verify it:
+
+```bash
+mysqladmin ping -h 127.0.0.1 -P 3306 -uroot -p
+```
+
+Copy `.env.example` to `.env` and set the local MySQL password. The backend
+loads this file automatically, and `.env` is ignored by git.
+
+For this checkout, migrate the existing SQLite data once into the empty MySQL
+database:
+
+```bash
+npm run migrate:sqlite-to-mysql
+```
+
+The migration preserves primary keys and foreign-key relationships and refuses
+to write when any target application table already contains data. If this is a
+fresh clone without `backend/storage/ad_meta.sqlite3`, rebuild MySQL from the
+tracked raw datasets instead:
 
 ```bash
 npm run bootstrap:storage
 ```
 
 This reads `backend/storage_manifest.json`, imports each file under
-`backend/storage/raw/**`, creates `backend/storage/ad_meta.sqlite3`, and writes
-chart JSON under `backend/storage/cache/`. The raw files are tracked in git;
-SQLite and cache files are local runtime artifacts and are intentionally ignored.
-Run this command again after pulling changes that update `COMPUTE_VERSION` or
-chart precomputation logic; otherwise the API may continue serving stale payloads.
+`backend/storage/raw/**`, writes normalized records to MySQL, and writes chart
+JSON under `backend/storage/cache/`. Run it again after pulling changes that
+update `COMPUTE_VERSION` or chart precomputation logic.
 
-On macOS/Linux, start both services from the project root:
+Start the backend and frontend in two terminals:
 
 ```bash
-npm run dev
+# Terminal 1
+npm run dev:backend
+
+# Terminal 2
+npm run dev:frontend
 ```
 
-On Windows PowerShell, start the backend and frontend in two terminals:
+On Windows PowerShell, use:
 
 ```powershell
 # Terminal 1
@@ -114,8 +135,9 @@ precomputes all chart JSON files, and marks the dataset as published.
 The preferred sample identifier column is `sample_id`; legacy files with
 `Sample` are still accepted.
 
-Generated SQLite and chart cache files are stored under `backend/storage/` and
-ignored by git. Only `backend/storage/raw/**` should be committed.
+Generated chart cache files are stored under `backend/storage/` and ignored by
+git. Database records are stored by the locally installed MySQL server. Only
+`backend/storage/raw/**` should be committed.
 
 The import command also writes normalized long-table records:
 
@@ -157,7 +179,7 @@ Then run the backend regression tests:
 
 ```bash
 cd backend
-.venv/bin/python -m unittest tests.test_precompute tests.test_dataset_service tests.test_heatmap_api tests.test_import_dataset tests.test_bootstrap_storage tests.test_normalized_import -v
+AD_META_DB_ENGINE=sqlite .venv/bin/python -m unittest tests.test_precompute tests.test_dataset_service tests.test_heatmap_api tests.test_import_dataset tests.test_bootstrap_storage tests.test_normalized_import -v
 ```
 
 If a response shape changes, update `docs/reference/api.md`, frontend chart code, and
@@ -166,14 +188,19 @@ tests in the same change. Pure internal refactors should keep API payloads and
 
 ## Database Mode
 
-SQLite remains the default local development database:
+MySQL is the default for local development, Docker, and production-style runs.
+The built-in defaults match the MySQL service in `docker-compose.yml`:
 
 ```bash
-export AD_META_DB_ENGINE=sqlite
-export AD_META_DB_PATH=storage/ad_meta.sqlite3
+export AD_META_DB_ENGINE=mysql
+export AD_META_MYSQL_HOST=127.0.0.1
+export AD_META_MYSQL_PORT=3306
+export AD_META_MYSQL_USER=root
+export AD_META_MYSQL_PASSWORD='your-local-password'
+export AD_META_MYSQL_DATABASE=ad_meta
 ```
 
-To use MySQL 8.0+, create the database first:
+For an externally managed MySQL 8.0+ server, create the database first:
 
 ```sql
 CREATE DATABASE ad_meta
@@ -181,23 +208,23 @@ CREATE DATABASE ad_meta
   COLLATE utf8mb4_0900_ai_ci;
 ```
 
-Then configure the backend before starting the API or running imports:
-
-```bash
-export AD_META_DB_ENGINE=mysql
-export AD_META_MYSQL_HOST=127.0.0.1
-export AD_META_MYSQL_PORT=3306
-export AD_META_MYSQL_USER=root
-export AD_META_MYSQL_PASSWORD='your-password'
-export AD_META_MYSQL_DATABASE=ad_meta
-```
-
 `init_db()` creates the MySQL tables on startup/import. The schema keeps the
 six scientific tables from the ER plan and adds application support tables for
 dataset switching, chart caches, import jobs, KO annotations, and reference
 study de-duplication. See `docs/reference/database.md` for the table-level contract.
 
+SQLite can still be selected explicitly for isolated tests or migration checks:
+
+```bash
+export AD_META_DB_ENGINE=sqlite
+export AD_META_DB_PATH=storage/ad_meta.sqlite3
+```
+
 ## Production-Style Docker Run
+
+The Compose backend connects to the host-installed MySQL through
+`host.docker.internal`; it does not start another MySQL container. Make sure
+the MySQL credentials are present in the root `.env` file first.
 
 ```bash
 docker compose up --build
