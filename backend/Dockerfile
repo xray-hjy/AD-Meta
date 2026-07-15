@@ -13,7 +13,14 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
-RUN mkdir -p storage/raw storage/cache
+COPY alembic.ini ./alembic.ini
+COPY alembic ./alembic
+RUN groupadd --gid 10001 admeta \
+  && useradd --uid 10001 --gid admeta --create-home admeta \
+  && mkdir -p storage/raw storage/cache storage/staging \
+  && chown -R admeta:admeta /app
+
+USER admeta
 
 EXPOSE 8000
 

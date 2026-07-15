@@ -1,34 +1,15 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { listDatasets } from '../api/datasets';
 
 export default function useDatasets() {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const reload = useCallback(() => {
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
-      setError(null);
-      try {
-        const result = await listDatasets();
-        if (!cancelled) setData(Array.isArray(result) ? result : []);
-      } catch (err) {
-        if (!cancelled) setError(err.message);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => reload(), [reload]);
-
-  return { data, loading, error, reload };
+  const query = useQuery({
+    queryKey: ['datasets'],
+    queryFn: ({ signal }) => listDatasets({ signal }),
+  });
+  return {
+    data: Array.isArray(query.data) ? query.data : [],
+    loading: query.isPending,
+    error: query.error?.message || null,
+    reload: query.refetch,
+  };
 }

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './CartesianEChart';
 
 const GROUP_COLORS = {
   AD: '#e74c3c',

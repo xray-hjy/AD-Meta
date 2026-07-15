@@ -1,59 +1,36 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { vi } from 'vitest';
 import App from './App';
 import { fetchJson } from './api/client';
+import { queryClient } from './api/queryClient';
 
-jest.mock('./api/client', () => ({
-  fetchJson: jest.fn(),
+vi.mock('./api/client', () => ({
+  fetchJson: vi.fn(),
 }));
 
-jest.mock('./components/Charts/BarChart', () => () => {
-  const React = require('react');
-  return React.createElement('div', { 'data-testid': 'bar-chart' });
-});
+vi.mock('./components/Charts/BarChart', () => ({
+  default: () => <div data-testid="bar-chart" />,
+}));
 
-jest.mock('./components/Charts/PhylumChart', () => ({ featureKind, featureLabel }) => {
-  const React = require('react');
-  return React.createElement('div', {
-    'data-testid': 'phylum-chart',
-    'data-feature-kind': featureKind,
-    'data-feature-label': featureLabel,
-  });
-});
+vi.mock('./components/Charts/PhylumChart', () => ({
+  default: ({ featureKind, featureLabel }) => (
+    <div data-testid="phylum-chart" data-feature-kind={featureKind} data-feature-label={featureLabel} />
+  ),
+}));
 
-jest.mock('./components/Charts/BoxPlot', () => () => {
-  const React = require('react');
-  return React.createElement('div', { 'data-testid': 'boxplot-chart' });
-});
+vi.mock('./components/Charts/BoxPlot', () => ({ default: () => <div data-testid="boxplot-chart" /> }));
 
-jest.mock('./components/Charts/Heatmap', () => () => {
-  const React = require('react');
-  return React.createElement('div', { 'data-testid': 'heatmap-chart' });
-});
+vi.mock('./components/Charts/Heatmap', () => ({ default: () => <div data-testid="heatmap-chart" /> }));
 
-jest.mock('./components/Charts/DetectionHeatmap', () => () => {
-  const React = require('react');
-  return React.createElement('div', { 'data-testid': 'detection-chart' });
-});
+vi.mock('./components/Charts/DetectionHeatmap', () => ({ default: () => <div data-testid="detection-chart" /> }));
 
-jest.mock('./components/Charts/KoLdaBarChart', () => () => {
-  const React = require('react');
-  return React.createElement('div', { 'data-testid': 'lda-chart' });
-});
+vi.mock('./components/Charts/KoLdaBarChart', () => ({ default: () => <div data-testid="lda-chart" /> }));
 
-jest.mock('./components/Charts/TaxonomyChart', () => () => {
-  const React = require('react');
-  return React.createElement('div', { 'data-testid': 'taxonomy-chart' });
-});
+vi.mock('./components/Charts/TaxonomyChart', () => ({ default: () => <div data-testid="taxonomy-chart" /> }));
 
-jest.mock('./components/Charts/PCAPlot', () => () => {
-  const React = require('react');
-  return React.createElement('div', { 'data-testid': 'pca-chart' });
-});
+vi.mock('./components/Charts/PCAPlot', () => ({ default: () => <div data-testid="pca-chart" /> }));
 
-jest.mock('./components/Charts/PCoAPlot', () => () => {
-  const React = require('react');
-  return React.createElement('div', { 'data-testid': 'pcoa-chart' });
-});
+vi.mock('./components/Charts/PCoAPlot', () => ({ default: () => <div data-testid="pcoa-chart" /> }));
 
 let datasets;
 let summaries;
@@ -94,6 +71,7 @@ beforeEach(() => {
 
 afterEach(() => {
   fetchJson.mockReset();
+  queryClient.clear();
 });
 
 test('shows the four supported chart tabs for KO datasets', async () => {
@@ -106,7 +84,7 @@ test('shows the four supported chart tabs for KO datasets', async () => {
   expect(screen.getAllByText('丰度对比').length).toBeGreaterThan(0);
   expect(screen.getByText('KO 功能组成')).toBeTruthy();
   expect(screen.getByText('KO 检出率热图')).toBeTruthy();
-  expect(screen.getByText('KO LDA')).toBeTruthy();
+  expect(screen.getByText('KO 差异特征')).toBeTruthy();
   expect(screen.queryByText('差异热图')).toBeNull();
   expect(screen.queryByText('丰度箱线图')).toBeNull();
   expect(screen.queryByText('分类层级图')).toBeNull();
@@ -127,7 +105,7 @@ test('describes imported matrices as analysis data with an explicit sample scope
   expect(screen.queryByText('预计算数据')).toBeNull();
 });
 
-test('does not show KO LDA tab for taxonomy datasets', async () => {
+test('does not show KO differential tab for taxonomy datasets', async () => {
   datasets = [{
     slug: 'ad-nc-species',
     name: 'AD vs NC Species',
@@ -151,7 +129,7 @@ test('does not show KO LDA tab for taxonomy datasets', async () => {
     expect(screen.getByText('差异热图')).toBeTruthy();
   });
 
-  expect(screen.queryByText('KO LDA')).toBeNull();
+  expect(screen.queryByText('KO 差异特征')).toBeNull();
 });
 
 test('separates the desktop sidebar and main content into independent scroll regions', async () => {
@@ -200,4 +178,29 @@ test('passes feature metadata to the phylum composition chart', async () => {
 
   expect(screen.getByTestId('phylum-chart').getAttribute('data-feature-kind')).toBe('ko');
   expect(screen.getByTestId('phylum-chart').getAttribute('data-feature-label')).toBe('KO');
+});
+
+test('restores dataset and chart selection from a shareable deep link', async () => {
+  window.history.pushState(
+    {},
+    '',
+    '/analysis/abundance?dataset=ad-nc-ko-abundance&chart=differential_ko'
+  );
+  summaries['ad-nc-ko-abundance'].availableArtifacts = [
+    'species',
+    'phylum',
+    'detection',
+    'differential_ko',
+  ];
+  fetchJson.mockImplementation(async url => {
+    if (url === '/api/datasets') return datasets;
+    if (url.endsWith('/summary')) return summaries['ad-nc-ko-abundance'];
+    if (url.endsWith('/charts/differential_ko')) return { items: [] };
+    throw new Error(`Unexpected URL: ${url}`);
+  });
+
+  render(<App />);
+  await waitFor(() => expect(screen.getByTestId('lda-chart')).toBeTruthy());
+  expect(new URLSearchParams(window.location.search).get('dataset')).toBe('ad-nc-ko-abundance');
+  expect(new URLSearchParams(window.location.search).get('chart')).toBe('differential_ko');
 });

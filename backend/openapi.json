@@ -1,0 +1,830 @@
+{
+  "components": {
+    "schemas": {
+      "ChartArtifactResponse": {
+        "additionalProperties": true,
+        "properties": {
+          "inferenceLevel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inferencelevel"
+          },
+          "items": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Items"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method"
+          },
+          "modelFormula": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modelformula"
+          },
+          "stats": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stats"
+          }
+        },
+        "title": "ChartArtifactResponse",
+        "type": "object"
+      },
+      "DatasetResponse": {
+        "properties": {
+          "analysisStatus": {
+            "default": "exploratory_only",
+            "title": "Analysisstatus",
+            "type": "string"
+          },
+          "availableArtifacts": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Availableartifacts"
+          },
+          "availableCharts": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "deprecated": true,
+            "title": "Availablecharts"
+          },
+          "currentRevision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currentrevision"
+          },
+          "description": {
+            "default": "",
+            "title": "Description",
+            "type": "string"
+          },
+          "featureCount": {
+            "default": 0,
+            "title": "Featurecount",
+            "type": "integer"
+          },
+          "featureKind": {
+            "default": "taxonomy",
+            "title": "Featurekind",
+            "type": "string"
+          },
+          "featureLabel": {
+            "default": "物种",
+            "title": "Featurelabel",
+            "type": "string"
+          },
+          "groupCounts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Groupcounts",
+            "type": "object"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/ProvenanceResponse"
+          },
+          "publishedAt": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publishedat"
+          },
+          "sampleCount": {
+            "default": 0,
+            "title": "Samplecount",
+            "type": "integer"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "speciesCount": {
+            "default": 0,
+            "title": "Speciescount",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name"
+        ],
+        "title": "DatasetResponse",
+        "type": "object"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "requestId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requestid"
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "title": "ErrorResponse",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "ProvenanceResponse": {
+        "additionalProperties": true,
+        "properties": {
+          "abundanceScale": {
+            "default": "unknown",
+            "title": "Abundancescale",
+            "type": "string"
+          },
+          "computeVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Computeversion"
+          },
+          "covariates": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Covariates",
+            "type": "array"
+          },
+          "generatedAt": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generatedat"
+          },
+          "groupMapping": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Groupmapping",
+            "type": "object"
+          },
+          "missingValuePolicy": {
+            "default": "error",
+            "title": "Missingvaluepolicy",
+            "type": "string"
+          },
+          "normalization": {
+            "default": "unknown",
+            "title": "Normalization",
+            "type": "string"
+          },
+          "parametersHash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parametershash"
+          },
+          "revision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revision"
+          },
+          "sourceFileSize": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourcefilesize"
+          },
+          "sourceSha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourcesha256"
+          }
+        },
+        "title": "ProvenanceResponse",
+        "type": "object"
+      },
+      "SummaryResponse": {
+        "additionalProperties": true,
+        "properties": {
+          "analysisStatus": {
+            "default": "exploratory_only",
+            "title": "Analysisstatus",
+            "type": "string"
+          },
+          "availableArtifacts": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Availableartifacts",
+            "type": "array"
+          },
+          "currentRevision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currentrevision"
+          },
+          "datasetName": {
+            "title": "Datasetname",
+            "type": "string"
+          },
+          "datasetSlug": {
+            "title": "Datasetslug",
+            "type": "string"
+          },
+          "featureKind": {
+            "default": "taxonomy",
+            "title": "Featurekind",
+            "type": "string"
+          },
+          "featureLabel": {
+            "default": "物种",
+            "title": "Featurelabel",
+            "type": "string"
+          },
+          "groupCounts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Groupcounts",
+            "type": "object"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/ProvenanceResponse"
+          },
+          "totalFeatures": {
+            "default": 0,
+            "title": "Totalfeatures",
+            "type": "integer"
+          },
+          "totalSamples": {
+            "title": "Totalsamples",
+            "type": "integer"
+          },
+          "totalSpecies": {
+            "default": 0,
+            "title": "Totalspecies",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "datasetSlug",
+          "datasetName",
+          "totalSamples"
+        ],
+        "title": "SummaryResponse",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "AD-Meta API",
+    "version": "0.2.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/datasets": {
+      "get": {
+        "operationId": "datasets_api_datasets_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DatasetResponse"
+                  },
+                  "title": "Response Datasets Api Datasets Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Datasets",
+        "tags": [
+          "datasets"
+        ]
+      }
+    },
+    "/api/datasets/{slug}": {
+      "get": {
+        "operationId": "dataset_api_datasets__slug__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Dataset",
+        "tags": [
+          "datasets"
+        ]
+      }
+    },
+    "/api/datasets/{slug}/charts/{chart_type}": {
+      "get": {
+        "operationId": "chart_api_datasets__slug__charts__chart_type__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "chart_type",
+            "required": true,
+            "schema": {
+              "title": "Chart Type",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ChartArtifactResponse"
+                    },
+                    {
+                      "items": {
+                        "additionalProperties": true,
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  ],
+                  "title": "Response Chart Api Datasets  Slug  Charts  Chart Type  Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Chart",
+        "tags": [
+          "datasets"
+        ]
+      }
+    },
+    "/api/datasets/{slug}/revisions/{revision_key}/charts/{chart_type}": {
+      "get": {
+        "operationId": "revision_chart_api_datasets__slug__revisions__revision_key__charts__chart_type__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "revision_key",
+            "required": true,
+            "schema": {
+              "title": "Revision Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "chart_type",
+            "required": true,
+            "schema": {
+              "title": "Chart Type",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ChartArtifactResponse"
+                    },
+                    {
+                      "items": {
+                        "additionalProperties": true,
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  ],
+                  "title": "Response Revision Chart Api Datasets  Slug  Revisions  Revision Key  Charts  Chart Type  Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Revision Chart",
+        "tags": [
+          "datasets"
+        ]
+      }
+    },
+    "/api/datasets/{slug}/summary": {
+      "get": {
+        "operationId": "summary_api_datasets__slug__summary_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SummaryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Summary",
+        "tags": [
+          "datasets"
+        ]
+      }
+    },
+    "/api/health": {
+      "get": {
+        "operationId": "health_compatibility_api_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health Compatibility"
+      }
+    },
+    "/api/health/live": {
+      "get": {
+        "operationId": "live_api_health_live_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Live"
+      }
+    },
+    "/api/health/ready": {
+      "get": {
+        "operationId": "ready_api_health_ready_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Ready"
+      }
+    }
+  }
+}

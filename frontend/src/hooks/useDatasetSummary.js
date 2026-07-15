@@ -1,42 +1,18 @@
-import { useCallback, useEffect, useState } from 'react';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { getDatasetSummary } from '../api/datasets';
 
 export default function useDatasetSummary(slug) {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const reload = useCallback(() => {
-    if (!slug) {
-      setData(null);
-      setLoading(false);
-      setError(null);
-      return () => {};
-    }
-
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
-      setError(null);
-      setData(null);
-      try {
-        const result = await getDatasetSummary(slug);
-        if (!cancelled) setData(result);
-      } catch (err) {
-        if (!cancelled) setError(err.message);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [slug]);
-
-  useEffect(() => reload(), [reload]);
-
-  return { data, loading, error, reload };
+  const query = useQuery({
+    queryKey: ['dataset-summary', slug],
+    queryFn: ({ signal }) => getDatasetSummary(slug, { signal }),
+    enabled: Boolean(slug),
+    placeholderData: keepPreviousData,
+  });
+  return {
+    data: query.data || null,
+    loading: Boolean(slug) && query.isPending,
+    fetching: query.isFetching,
+    error: query.error?.message || null,
+    reload: query.refetch,
+  };
 }

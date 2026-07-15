@@ -1,25 +1,115 @@
 services:
+  mysql:
+    image: mysql:8.4.5
+    environment:
+      MYSQL_DATABASE: ${AD_META_MYSQL_DATABASE:-ad_meta}
+      MYSQL_USER: ${AD_META_MYSQL_USER:-ad_meta}
+      MYSQL_PASSWORD: ${AD_META_MYSQL_PASSWORD:-ad_meta-local-only}
+      MYSQL_ROOT_PASSWORD: ${AD_META_MYSQL_ROOT_PASSWORD:-root-local-only}
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci"]
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u$${MYSQL_USER} -p$${MYSQL_PASSWORD} --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  stats-worker:
+    build:
+      context: ./stats-worker
+    expose:
+      - "8001"
+    read_only: true
+    tmpfs:
+      - /tmp:size=1g
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
   backend:
     build:
       context: ./backend
     environment:
+      AD_META_ENVIRONMENT: production
       AD_META_STORAGE_ROOT: /app/storage
-      AD_META_DB_ENGINE: ${AD_META_DB_ENGINE:-mysql}
-      AD_META_MYSQL_HOST: host.docker.internal
-      AD_META_MYSQL_PORT: ${AD_META_MYSQL_PORT:-3306}
-      AD_META_MYSQL_USER: ${AD_META_MYSQL_USER:-root}
-      AD_META_MYSQL_PASSWORD: ${AD_META_MYSQL_PASSWORD:-}
+      AD_META_DB_ENGINE: mysql
+      AD_META_MYSQL_HOST: mysql
+      AD_META_MYSQL_PORT: 3306
+      AD_META_MYSQL_USER: ${AD_META_MYSQL_USER:-ad_meta}
+      AD_META_MYSQL_PASSWORD: ${AD_META_MYSQL_PASSWORD:-ad_meta-local-only}
       AD_META_MYSQL_DATABASE: ${AD_META_MYSQL_DATABASE:-ad_meta}
+      AD_META_STATS_WORKER_URL: http://stats-worker:8001
     volumes:
-      - ./backend/storage:/app/storage
+      - ./backend/storage/raw:/app/storage/raw:ro
+      - cache_data:/app/storage/cache
+      - staging_data:/app/storage/staging
+    read_only: true
+    tmpfs:
+      - /tmp:size=256m
+    depends_on:
+      mysql:
+        condition: service_healthy
+      stats-worker:
+        condition: service_healthy
     expose:
       - "8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health/ready', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     ports:
-      - "8080:80"
+      - "8080:8080"
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://127.0.0.1:8080/"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  backend-external:
+    profiles: ["external-mysql"]
+    build:
+      context: ./backend
+    environment:
+      AD_META_ENVIRONMENT: production
+      AD_META_STORAGE_ROOT: /app/storage
+      AD_META_DB_ENGINE: mysql
+      AD_META_MYSQL_HOST: ${AD_META_MYSQL_HOST:-host.docker.internal}
+      AD_META_MYSQL_PORT: ${AD_META_MYSQL_PORT:-3306}
+      AD_META_MYSQL_USER: ${AD_META_MYSQL_USER:-ad_meta}
+      AD_META_MYSQL_PASSWORD: ${AD_META_MYSQL_PASSWORD:-}
+      AD_META_MYSQL_DATABASE: ${AD_META_MYSQL_DATABASE:-ad_meta}
+      AD_META_STATS_WORKER_URL: http://stats-worker:8001
+    volumes:
+      - ./backend/storage/raw:/app/storage/raw:ro
+      - cache_data:/app/storage/cache
+      - staging_data:/app/storage/staging
+    read_only: true
+    tmpfs:
+      - /tmp:size=256m
+    depends_on:
+      stats-worker:
+        condition: service_healthy
+
+volumes:
+  mysql_data:
+  cache_data:
+  staging_data:

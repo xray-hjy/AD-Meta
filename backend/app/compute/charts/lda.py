@@ -1,8 +1,9 @@
-"""KO LDA 柱状图数据计算。
+"""Exploratory KO differential-feature computation.
 
-该模块只用于 KO 功能数据。流程是先用 Mann-Whitney U 检验筛出显著 KO，
-再用单变量 LDA 衡量每个 KO 对 AD/NC 分组的区分强度，最后按 AD 富集和
-NC 富集分别取 Top 项，供前端画左右发散柱状图。
+The historical module name is kept for import compatibility.  The previous
+single-feature LinearDiscriminantAnalysis coefficient was not a LEfSe score and
+has been replaced by FDR-adjusted Mann-Whitney tests plus rank-biserial effect
+sizes.  New callers should use :func:`compute_ko_differential`.
 """
 
 from __future__ import annotations
@@ -10,104 +11,104 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 from scipy.stats import mannwhitneyu
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 
-from app.compute.common import AD, NC, FEATURE_META, group_frames
+from app.compute.common import AD, FEATURE_META, NC, group_frames
+from app.compute.statistics import benjamini_hochberg, rank_biserial_from_u
 
 
 def _univariate_lda_score(values: np.ndarray, labels: np.ndarray) -> float:
-    """计算一个 KO 特征的单变量 LDA 强度。
+    """Compatibility shim for historical imports; no longer used for results."""
 
-    输入是一列 log 后丰度和对应 AD/NC 标签。返回绝对系数作为效应强度；
-    如果该特征没有变化或模型无法拟合，返回 0，避免单个 KO 影响整批导入。
-    """
-
-    if len(np.unique(values)) < 2 or len(np.unique(labels)) < 2:
-        return 0.0
-
-    try:
-        model = LinearDiscriminantAnalysis()
-        model.fit(values.reshape(-1, 1), labels)
-    except (ValueError, FloatingPointError):
-        return 0.0
-
-    coef = np.ravel(getattr(model, "coef_", [0.0]))[0]
-    return float(abs(coef)) if np.isfinite(coef) else 0.0
+    del values, labels
+    return 0.0
 
 
-def compute_ko_lda(df: pd.DataFrame, species_cols: list[str], top_n: int = 30, p_value_max: float = 0.05) -> dict:
-    """生成 KO LDA 图 payload。
-
-    筛选和排序规则：
-    - 每个 KO 先做 Mann-Whitney U 检验。
-    - 只保留 `p < p_value_max` 的显著 KO。
-    - 根据 AD/NC 组均值判断富集方向。
-    - 每组按 `ldaScore desc -> pValue asc -> koId asc` 排序。
-    """
+def compute_ko_differential(
+    df: pd.DataFrame,
+    species_cols: list[str],
+    top_n: int = 30,
+    q_value_max: float = 0.05,
+    prevalence_min: float = 0.1,
+) -> dict:
+    """Generate an FDR-controlled exploratory KO differential payload."""
 
     ad, nc = group_frames(df, species_cols)
     ad_values = ad.to_numpy(dtype=float)
     nc_values = nc.to_numpy(dtype=float)
     ad_mean = ad_values.mean(axis=0)
     nc_mean = nc_values.mean(axis=0)
-    log_values = np.log10(np.concatenate([ad_values, nc_values], axis=0) + 1)
-    labels = np.array([AD] * len(ad_values) + [NC] * len(nc_values))
+    all_values = np.concatenate([ad_values, nc_values], axis=0)
     eps = 1e-9
     max_features = max(1, int(top_n))
     per_group_top_n = max(1, max_features // 2)
 
-    items = []
+    tested: list[dict] = []
     for index, col in enumerate(species_cols):
-        # 非参数检验负责显著性筛选；无法检验时按不显著处理。
+        prevalence = float(np.mean(all_values[:, index] > 0)) if len(all_values) else 0.0
+        if prevalence < prevalence_min:
+            continue
         try:
-            p_value = mannwhitneyu(ad_values[:, index], nc_values[:, index], alternative="two-sided").pvalue
+            result = mannwhitneyu(ad_values[:, index], nc_values[:, index], alternative="two-sided")
+            p_value = float(result.pvalue) if np.isfinite(result.pvalue) else 1.0
+            effect_size = rank_biserial_from_u(
+                getattr(result, "statistic", float("nan")),
+                len(ad_values),
+                len(nc_values),
+            )
         except ValueError:
             p_value = 1.0
+            effect_size = 0.0
 
-        # 不显著 KO 不进入候选池，也不会为了凑满左右两边数量而回填。
-        p_value = float(p_value) if np.isfinite(p_value) else 1.0
-        if p_value >= p_value_max:
-            continue
-
-        # LDA 用 log 后丰度，log2FC 用原始组均值加极小值避免除零。
         mean_ad = float(ad_mean[index])
         mean_nc = float(nc_mean[index])
-        lda_score = _univariate_lda_score(log_values[:, index], labels)
-        log2fc = float(np.log2((mean_ad + eps) / (mean_nc + eps)))
-        enriched_group = AD if mean_ad >= mean_nc else NC
-        items.append(
+        tested.append(
             {
                 "koId": col,
                 "koName": col,
-                "enrichedGroup": enriched_group,
-                "ldaScore": lda_score,
                 "pValue": p_value,
-                "log2FC": log2fc,
+                "effectSize": effect_size,
+                "effectMetric": "rank_biserial_correlation",
+                "log2FC": float(np.log2((mean_ad + eps) / (mean_nc + eps))),
                 "meanAD": mean_ad,
                 "meanNC": mean_nc,
+                "prevalence": prevalence,
             }
         )
 
-    ad_items = [item for item in items if item["enrichedGroup"] == AD]
-    nc_items = [item for item in items if item["enrichedGroup"] == NC]
+    q_values = benjamini_hochberg([item["pValue"] for item in tested])
+    for item, q_value in zip(tested, q_values, strict=True):
+        item["qValue"] = float(q_value)
+        item["enrichedGroup"] = AD if item["effectSize"] >= 0 else NC
+        # One-version compatibility field.  It is the absolute rank-biserial
+        # effect, not an LDA score, and new clients must use effectSize.
+        item["ldaScore"] = abs(float(item["effectSize"]))
 
-    # 两组独立排序和截断，保证 AD/NC 富集项展示更平衡。
-    sort_key = lambda item: (-item["ldaScore"], item["pValue"], item["koId"])
+    significant = [item for item in tested if item["qValue"] < q_value_max]
+    ad_items = [item for item in significant if item["enrichedGroup"] == AD]
+    nc_items = [item for item in significant if item["enrichedGroup"] == NC]
+    def sort_key(item):
+        return (-abs(item["effectSize"]), item["qValue"], item["koId"])
     ad_items.sort(key=sort_key)
     nc_items.sort(key=sort_key)
     selected_items = (ad_items[:per_group_top_n] + nc_items[:per_group_top_n])[:max_features]
 
     return {
         "featureLabel": df.attrs.get("feature_label", FEATURE_META["ko"]["label"]),
-        "method": "Mann-Whitney U + univariate LDA on log10(abundance + 1)",
+        "method": "Mann-Whitney U with Benjamini-Hochberg FDR",
+        "inferenceLevel": "exploratory_fdr",
+        "modelFormula": "Group",
         "filter": {
-            "pValueMax": p_value_max,
+            "qValueMax": q_value_max,
+            "pValueMax": 0.05,
+            "prevalenceMin": prevalence_min,
             "topN": max_features,
-            "selectionMode": "balanced_significant_by_group",
+            "selectionMode": "balanced_fdr_significant_by_group",
             "perGroupTopN": per_group_top_n,
+            "multipleTesting": "Benjamini-Hochberg",
         },
         "summary": {
-            "significantCount": len(items),
+            "testedCount": len(tested),
+            "significantCount": len(significant),
             "adEnrichedCount": len(ad_items),
             "ncEnrichedCount": len(nc_items),
             "displayedCount": len(selected_items),
@@ -115,4 +116,25 @@ def compute_ko_lda(df: pd.DataFrame, species_cols: list[str], top_n: int = 30, p
             "ncDisplayedCount": sum(1 for item in selected_items if item["enrichedGroup"] == NC),
         },
         "items": selected_items,
+        "deprecations": {
+            "artifact": "lda",
+            "replacement": "differential_ko",
+            "legacyFields": ["ldaScore"],
+        },
     }
+
+
+def compute_ko_lda(
+    df: pd.DataFrame,
+    species_cols: list[str],
+    top_n: int = 30,
+    p_value_max: float = 0.05,
+) -> dict:
+    """Compatibility alias for the historical public function."""
+
+    return compute_ko_differential(
+        df,
+        species_cols,
+        top_n=top_n,
+        q_value_max=p_value_max,
+    )

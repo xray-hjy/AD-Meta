@@ -9,11 +9,16 @@ backend/.venv
 
 # testing
 /coverage
+/.coverage
+/test-results
 frontend/coverage
+backend/.coverage
+frontend/output/playwright
 
 # production
 /build
 frontend/build
+frontend/dist
 backend/storage/*
 !backend/storage/raw/
 !backend/storage/raw/**

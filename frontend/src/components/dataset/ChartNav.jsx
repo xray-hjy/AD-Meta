@@ -36,7 +36,7 @@ function sectionEntries(groupedCharts, section) {
   });
 }
 
-export default function ChartNav({ charts, activeChart, featureKind, onChange }) {
+export default function ChartNav({ charts, activeChart, featureKind, onChange, onPrefetch }) {
   const groupedCharts = useMemo(() => groupCharts(charts), [charts]);
   const navigationSections = useMemo(() => getNavigationSections(featureKind), [featureKind]);
   const activeGroup = groupedCharts.find(group =>
@@ -72,6 +72,8 @@ export default function ChartNav({ charts, activeChart, featureKind, onChange })
               type="button"
               className={`nav-item ${activeChart === chart.key ? 'nav-item--active' : ''}`}
               onClick={() => onChange(chart.key)}
+              onMouseEnter={() => onPrefetch?.(chart.key)}
+              onFocus={() => onPrefetch?.(chart.key)}
             >
               <span className="nav-item-label">{chart.label}</span>
               <span className="nav-item-hint">{chart.subtitle}</span>
@@ -102,6 +104,8 @@ export default function ChartNav({ charts, activeChart, featureKind, onChange })
                     type="button"
                     className={`nav-item nav-item--child ${activeChart === chart.key ? 'nav-item--active' : ''}`}
                     onClick={() => onChange(chart.key)}
+                    onMouseEnter={() => onPrefetch?.(chart.key)}
+                    onFocus={() => onPrefetch?.(chart.key)}
                   >
                     <span className="nav-item-label">{chart.label}</span>
                     <span className="nav-item-hint">{chart.subtitle}</span>

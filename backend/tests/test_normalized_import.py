@@ -67,8 +67,8 @@ class NormalizedImportTests(unittest.TestCase):
                 "\n".join(
                     [
                         "sample_id,label,K00001,K00003",
-                        "S001,1,10,0",
-                        "S002,0,2,8",
+                        "S001,AD,10,0",
+                        "S002,NC,2,8",
                     ]
                 ),
                 encoding="utf-8",

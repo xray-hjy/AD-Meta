@@ -85,7 +85,7 @@ def compute_pca(df: pd.DataFrame, species_cols: list[str], top_n: int = 50) -> d
             "x": float(coords[i, 0]),
             "y": float(coords[i, 1]),
         }
-        for i, (sample, group) in enumerate(zip(df["Sample"], df["Group"]))
+        for i, (sample, group) in enumerate(zip(df["Sample"], df["Group"], strict=False))
     ]
     return {
         "method": "PCA",
@@ -209,7 +209,7 @@ def compute_pcoa(df: pd.DataFrame, species_cols: list[str], top_n: int = 500) ->
             "x": float(coords[i, 0]),
             "y": float(coords[i, 1]),
         }
-        for i, (sample, group) in enumerate(zip(df["Sample"], df["Group"]))
+        for i, (sample, group) in enumerate(zip(df["Sample"], df["Group"], strict=False))
     ]
     return {
         "method": "PCoA",

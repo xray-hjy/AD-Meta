@@ -7,7 +7,7 @@ Create the backend virtual environment once. On macOS/Linux:
 ```bash
 cd backend
 python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python -m pip install -r requirements-dev.txt
 ```
 
 On Windows PowerShell:
@@ -34,10 +34,11 @@ mysqladmin ping -h 127.0.0.1 -P 3306 -uroot -p
 Copy `.env.example` to `.env` and set the local MySQL password. The backend
 loads this file automatically, and `.env` is ignored by git.
 
-For this checkout, migrate the existing SQLite data once into the empty MySQL
+Upgrade the schema with Alembic, then migrate the existing SQLite data once into the empty MySQL
 database:
 
 ```bash
+npm run migrate
 npm run migrate:sqlite-to-mysql
 ```
 
@@ -98,8 +99,8 @@ cd frontend
 npm start
 ```
 
-The frontend dev build uses `http://127.0.0.1:8000` as the default API base.
-For another API host, set `REACT_APP_API_BASE_URL`.
+Vite proxies `/api` to `http://127.0.0.1:8000` in development. For another API
+host, set `VITE_API_BASE_URL`.
 
 ## Import A Dataset
 
@@ -123,7 +124,9 @@ mkdir -p storage/raw/incoming
   --file storage/raw/incoming/AD_NC_species_abundance.xlsx \
   --slug ad-nc-species \
   --name "AD vs NC Species Abundance" \
-  --description "Species abundance comparison between AD and NC groups."
+  --description "Species abundance comparison between AD and NC groups." \
+  --abundance-scale unknown \
+  --missing-value-policy error
 ```
 
 Put the source `.xlsx`, `.csv`, or `.tsv` file in `storage/raw/incoming/`
@@ -131,7 +134,7 @@ before running the import command. Do not put raw data files under
 `frontend/public/`.
 
 The command reads `.xlsx`, `.csv`, or `.tsv`, validates the wide table format,
-precomputes all chart JSON files, and marks the dataset as published.
+precomputes all chart JSON files, and atomically publishes an immutable revision.
 The preferred sample identifier column is `sample_id`; legacy files with
 `Sample` are still accepted.
 
@@ -157,7 +160,7 @@ matching module first:
 - `boxplot.py`: abundance boxplots.
 - `heatmap.py`: differential abundance heatmap and dendrogram metadata.
 - `detection.py`: KO detection-rate heatmap.
-- `lda.py`: KO LDA marker chart.
+- `lda.py`: compatibility module for exploratory KO differential features (Mann-Whitney U, BH-FDR and rank-biserial effect size); it is not LEfSe/LDA.
 - `taxonomy/`: canonical taxonomy hierarchy, pruning, colors, and chart projections.
 - `sunburst.py` and `taxonomy_hierarchy.py`: thin compatibility imports for historical code paths; new taxonomy work belongs in `taxonomy/`.
 - `ordination.py`: PCA and PCoA payloads.
@@ -181,6 +184,18 @@ Then run the backend regression tests:
 cd backend
 AD_META_DB_ENGINE=sqlite .venv/bin/python -m unittest tests.test_precompute tests.test_dataset_service tests.test_heatmap_api tests.test_import_dataset tests.test_bootstrap_storage tests.test_normalized_import -v
 ```
+
+The root verification and real-browser gates are:
+
+```bash
+npm run verify
+npm --prefix frontend exec -- playwright install chromium
+npm run test:e2e
+```
+
+The E2E command uses a temporary SQLite database and storage root. It covers
+deep links, dataset switching, all four taxonomy modes, heatmap lightbox/export,
+and axe WCAG A/AA checks without modifying the configured MySQL database.
 
 If a response shape changes, update `docs/reference/api.md`, frontend chart code, and
 tests in the same change. Pure internal refactors should keep API payloads and
@@ -208,7 +223,7 @@ CREATE DATABASE ad_meta
   COLLATE utf8mb4_0900_ai_ci;
 ```
 
-`init_db()` creates the MySQL tables on startup/import. The schema keeps the
+Alembic upgrades the MySQL schema during FastAPI lifespan startup. The schema keeps the
 six scientific tables from the ER plan and adds application support tables for
 dataset switching, chart caches, import jobs, KO annotations, and reference
 study de-duplication. See `docs/reference/database.md` for the table-level contract.
@@ -222,9 +237,8 @@ export AD_META_DB_PATH=storage/ad_meta.sqlite3
 
 ## Production-Style Docker Run
 
-The Compose backend connects to the host-installed MySQL through
-`host.docker.internal`; it does not start another MySQL container. Make sure
-the MySQL credentials are present in the root `.env` file first.
+Compose starts a health-checked MySQL 8.4 service and an internal-only R worker by default.
+The backend, worker and Nginx containers run as non-root with read-only root filesystems.
 
 ```bash
 docker compose up --build
@@ -238,6 +252,10 @@ http://localhost:8080
 
 The frontend container serves static files through Nginx. Requests under
 `/api/` are proxied to the backend container.
+
+Use `docker compose --profile external-mysql up backend-external stats-worker`
+for an externally managed MySQL host. Production mode rejects a blank password
+or the MySQL root account.
 
 ## Public Data Contract
 

@@ -1,17 +1,20 @@
 import { fetchJson } from './client';
 
-export function listDatasets() {
-  return fetchJson('/api/datasets');
+/** @typedef {import('./generated').components['schemas']['DatasetResponse']} Dataset */
+/** @typedef {import('./generated').components['schemas']['SummaryResponse']} DatasetSummary */
+
+export function listDatasets(options) {
+  return fetchJson('/api/datasets', options);
 }
 
-export function getDataset(slug) {
-  return fetchJson(`/api/datasets/${slug}`);
+export function getDataset(slug, options) {
+  return fetchJson(`/api/datasets/${slug}`, options);
 }
 
-export function getDatasetSummary(slug) {
-  return fetchJson(`/api/datasets/${slug}/summary`);
+export function getDatasetSummary(slug, options) {
+  return fetchJson(`/api/datasets/${slug}/summary`, options);
 }
 
-export function getChart(slug, chartType) {
-  return fetchJson(`/api/datasets/${slug}/charts/${chartType}`);
+export function getChart(slug, chartType, options) {
+  return fetchJson(`/api/datasets/${slug}/charts/${chartType}`, options);
 }

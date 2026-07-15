@@ -1,13 +1,15 @@
-import BarChart from '../components/Charts/BarChart';
-import PhylumChart from '../components/Charts/PhylumChart';
-import BoxPlot from '../components/Charts/BoxPlot';
-import Heatmap from '../components/Charts/Heatmap';
-import DetectionHeatmap from '../components/Charts/DetectionHeatmap';
-import KoLdaBarChart from '../components/Charts/KoLdaBarChart';
-import TaxonomyChart from '../components/Charts/TaxonomyChart';
-import PCAPlot from '../components/Charts/PCAPlot';
-import PCoAPlot from '../components/Charts/PCoAPlot';
+import { lazy } from 'react';
 import { getAnalysisDataForFeatureKind } from './analysisDomains';
+
+const BarChart = lazy(() => import('../components/Charts/BarChart'));
+const PhylumChart = lazy(() => import('../components/Charts/PhylumChart'));
+const BoxPlot = lazy(() => import('../components/Charts/BoxPlot'));
+const Heatmap = lazy(() => import('../components/Charts/Heatmap'));
+const DetectionHeatmap = lazy(() => import('../components/Charts/DetectionHeatmap'));
+const KoLdaBarChart = lazy(() => import('../components/Charts/KoLdaBarChart'));
+const TaxonomyChart = lazy(() => import('../components/Charts/TaxonomyChart'));
+const PCAPlot = lazy(() => import('../components/Charts/PCAPlot'));
+const PCoAPlot = lazy(() => import('../components/Charts/PCoAPlot'));
 
 const TAXONOMY_GROUP = {
   key: 'taxonomyHierarchy',
@@ -63,7 +65,7 @@ export const CHART_REGISTRY = {
     navLabel: '差异热图',
     navSubtitle: ({ featureLabel }) => `差异${featureLabel}聚类分析`,
     title: '差异丰度热图',
-    subtitle: ({ featureLabel }) => `Wilcoxon p<0.05 且 |log2FC|>1 的差异${featureLabel}；包含 AD、NC、合并聚类与差异视图`,
+    subtitle: ({ featureLabel }) => `Mann-Whitney U、BH-FDR q<0.05 且 |log2FC|>1 的差异${featureLabel}；包含 AD、NC、合并聚类与差异视图`,
     availableFor: ['taxonomy'],
     component: Heatmap,
     layout: 'document',
@@ -77,13 +79,14 @@ export const CHART_REGISTRY = {
     component: DetectionHeatmap,
     layout: 'fit',
   },
-  lda: {
-    navLabel: 'KO LDA',
-    navSubtitle: '显著差异 KO 的 LDA 效应强度',
-    title: 'KO 功能 LDA 值柱状图',
-    subtitle: 'LEfSe 风格差异功能展示；NC 富集向左，AD 富集向右',
+  differential_ko: {
+    navLabel: 'KO 差异特征',
+    navSubtitle: 'FDR 校正后的 KO 组间效应',
+    title: 'KO 差异特征效应图',
+    subtitle: '探索性 Mann-Whitney U + BH-FDR；rank-biserial 效应量，NC 富集向左，AD 富集向右',
     availableFor: ['ko'],
     component: KoLdaBarChart,
+    dataKey: 'differential_ko',
     layout: 'fit',
   },
   sunburst: {
@@ -187,9 +190,16 @@ export function resolveChartMeta(chartType, contextInput = {}) {
   };
 }
 
-export function getAvailableCharts(featureKind = 'taxonomy', featureLabel = '物种') {
+export function getAvailableCharts(featureKind = 'taxonomy', featureLabel = '物种', availableArtifacts) {
+  const actualArtifacts = Array.isArray(availableArtifacts)
+    ? new Set(availableArtifacts.map(key => (key === 'lda' ? 'differential_ko' : key)))
+    : null;
   return Object.entries(CHART_REGISTRY)
-    .filter(([, chart]) => chart.availableFor.includes(featureKind))
+    .filter(([key, chart]) => {
+      if (!chart.availableFor.includes(featureKind)) return false;
+      const requiredArtifact = chart.requiredArtifact || chart.dataKey || key;
+      return actualArtifacts === null || actualArtifacts.has(requiredArtifact);
+    })
     .map(([key]) => resolveChartMeta(key, { featureKind, featureLabel }));
 }
 

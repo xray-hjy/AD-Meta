@@ -21,12 +21,50 @@ class HeatmapApiTests(unittest.TestCase):
             "colOrder": [0, 1, 2, 3],
         }
 
-        with patch("app.api.datasets.read_chart", return_value=(copy.deepcopy(cached_payload), None)):
+        with patch(
+            "app.api.datasets.read_chart_with_metadata",
+            return_value=(copy.deepcopy(cached_payload), None, {"etag": "abc123"}),
+        ):
             response = TestClient(app).get("/api/datasets/demo/charts/heatmap?clusters=3")
 
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertEqual(payload, cached_payload)
+        self.assertEqual(response.headers["etag"], '"abc123"')
+
+    def test_chart_endpoint_honors_if_none_match(self) -> None:
+        with patch(
+            "app.api.datasets.read_chart_with_metadata",
+            return_value=({"items": []}, None, {"etag": "abc123"}),
+        ):
+            response = TestClient(app).get(
+                "/api/datasets/demo/charts/species",
+                headers={"If-None-Match": '"abc123"'},
+            )
+        self.assertEqual(response.status_code, 304)
+        self.assertEqual(response.headers["etag"], '"abc123"')
+
+    def test_chart_endpoint_accepts_top_level_array_artifacts(self) -> None:
+        cached_payload = [{"name": "Bacteroides", "value": 0.42}]
+        with patch(
+            "app.api.datasets.read_chart_with_metadata",
+            return_value=(cached_payload, None, {"etag": "array-etag"}),
+        ):
+            response = TestClient(app).get("/api/datasets/demo/charts/species")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), cached_payload)
+
+    def test_fixed_revision_endpoint_passes_revision_key(self) -> None:
+        with patch(
+            "app.api.datasets.read_chart_with_metadata",
+            return_value=({"items": []}, None, {"etag": "revision-etag"}),
+        ) as reader:
+            response = TestClient(app).get(
+                "/api/datasets/demo/revisions/revision-1/charts/species"
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(reader.call_args.args, ("demo", "species", "revision-1"))
 
     def test_detection_endpoint_reads_detection_cache_for_supported_chart(self) -> None:
         with TemporaryDirectory() as tmpdir:
@@ -81,10 +119,12 @@ class HeatmapApiTests(unittest.TestCase):
                     temp_conn.close()
 
             with patch.object(dataset_service, "BACKEND_ROOT", backend_root), patch.object(
+                dataset_service, "CACHE_ROOT", backend_root / "storage" / "cache"
+            ), patch.object(
                 dataset_service, "connect", temp_connect
-            ), patch.object(dataset_service, "init_db", lambda: None), patch(
-                "app.api.datasets.read_chart",
-                side_effect=dataset_service.read_chart,
+            ), patch(
+                "app.api.datasets.read_chart_with_metadata",
+                side_effect=dataset_service.read_chart_with_metadata,
             ):
                 response = TestClient(app).get("/api/datasets/ad-nc-ko-abundance/charts/detection")
 
@@ -142,10 +182,12 @@ class HeatmapApiTests(unittest.TestCase):
                     temp_conn.close()
 
             with patch.object(dataset_service, "BACKEND_ROOT", backend_root), patch.object(
+                dataset_service, "CACHE_ROOT", backend_root / "storage" / "cache"
+            ), patch.object(
                 dataset_service, "connect", temp_connect
-            ), patch.object(dataset_service, "init_db", lambda: None), patch(
-                "app.api.datasets.read_chart",
-                side_effect=dataset_service.read_chart,
+            ), patch(
+                "app.api.datasets.read_chart_with_metadata",
+                side_effect=dataset_service.read_chart_with_metadata,
             ):
                 response = TestClient(app).get("/api/datasets/ad-nc-ko-abundance/charts/lda")
 

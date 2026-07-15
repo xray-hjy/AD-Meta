@@ -2,17 +2,24 @@ from __future__ import annotations
 
 import re
 import sqlite3
+import threading
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from typing import Iterable
 
+from sqlalchemy import URL, create_engine
+from sqlalchemy.engine import Engine
+
 from .config import (
     DB_ENGINE,
     DB_PATH,
+    MYSQL_CONNECT_TIMEOUT,
     MYSQL_DATABASE,
     MYSQL_HOST,
     MYSQL_PASSWORD,
+    MYSQL_POOL_RECYCLE,
     MYSQL_PORT,
+    MYSQL_READ_TIMEOUT,
     MYSQL_USER,
 )
 
@@ -42,42 +49,105 @@ def _normalize_mysql_params(params: Iterable | None) -> tuple:
     return tuple(_normalize_mysql_param(value) for value in (params or ()))
 
 
-class MySQLConnection:
-    def __init__(self):
-        try:
-            import pymysql
-        except ImportError as exc:
-            raise RuntimeError(
-                "MySQL mode requires PyMySQL. Install backend requirements before using AD_META_DB_ENGINE=mysql."
-            ) from exc
-
-        self._conn = pymysql.connect(
+def database_url() -> URL:
+    if is_mysql():
+        return URL.create(
+            "mysql+pymysql",
+            username=MYSQL_USER,
+            password=MYSQL_PASSWORD,
             host=MYSQL_HOST,
             port=MYSQL_PORT,
-            user=MYSQL_USER,
-            password=MYSQL_PASSWORD,
             database=MYSQL_DATABASE,
-            charset="utf8mb4",
-            autocommit=False,
-            cursorclass=pymysql.cursors.DictCursor,
+            query={"charset": "utf8mb4"},
         )
+    return URL.create("sqlite+pysqlite", database=str(DB_PATH.resolve()))
+
+
+_engine: Engine | None = None
+_engine_key: str | None = None
+_engine_lock = threading.Lock()
+
+
+def get_engine() -> Engine:
+    """Return the process-wide SQLAlchemy engine for the active settings."""
+
+    global _engine, _engine_key
+    url = database_url()
+    key = url.render_as_string(hide_password=False)
+    with _engine_lock:
+        if _engine is not None and _engine_key == key:
+            return _engine
+        if _engine is not None:
+            _engine.dispose()
+        if is_mysql():
+            _engine = create_engine(
+                url,
+                pool_pre_ping=True,
+                pool_recycle=MYSQL_POOL_RECYCLE,
+                connect_args={
+                    "connect_timeout": MYSQL_CONNECT_TIMEOUT,
+                    "read_timeout": MYSQL_READ_TIMEOUT,
+                    "write_timeout": MYSQL_READ_TIMEOUT,
+                },
+            )
+        else:
+            DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+            _engine = create_engine(
+                url,
+                pool_pre_ping=True,
+                connect_args={"check_same_thread": False},
+            )
+        _engine_key = key
+        return _engine
+
+
+def dispose_engine() -> None:
+    global _engine, _engine_key
+    with _engine_lock:
+        if _engine is not None:
+            _engine.dispose()
+        _engine = None
+        _engine_key = None
+
+
+class PooledConnection:
+    """Small DB-API compatibility adapter backed by a SQLAlchemy pool."""
+
+    def __init__(self, raw_connection, *, mysql: bool):
+        self._raw_connection = raw_connection
+        self._conn = raw_connection.driver_connection
+        self._mysql = mysql
+        if not mysql:
+            self._conn.row_factory = sqlite3.Row
+            self._conn.execute("PRAGMA foreign_keys = ON")
 
     def execute(self, sql: str, params: Iterable | None = None):
-        cursor = self._conn.cursor()
-        cursor.execute(_translate_placeholders(sql), _normalize_mysql_params(params))
-        return cursor
+        if self._mysql:
+            from pymysql.cursors import DictCursor
+
+            cursor = self._conn.cursor(DictCursor)
+            cursor.execute(_translate_placeholders(sql), _normalize_mysql_params(params))
+            return cursor
+        return self._conn.execute(sql, tuple(params or ()))
 
     def executemany(self, sql: str, params: Iterable[Iterable]):
-        cursor = self._conn.cursor()
-        cursor.executemany(
-            _translate_placeholders(sql),
-            [_normalize_mysql_params(row) for row in params],
-        )
-        return cursor
+        if self._mysql:
+            from pymysql.cursors import DictCursor
+
+            cursor = self._conn.cursor(DictCursor)
+            cursor.executemany(
+                _translate_placeholders(sql),
+                [_normalize_mysql_params(row) for row in params],
+            )
+            return cursor
+        return self._conn.executemany(sql, params)
 
     def executescript(self, script: str) -> None:
-        for statement in _split_sql_script(script):
-            self.execute(statement)
+        if self._mysql:
+            for statement in _split_sql_script(script):
+                self.execute(statement)
+        else:
+            self._conn.executescript(script)
 
     def commit(self) -> None:
         self._conn.commit()
@@ -86,7 +156,7 @@ class MySQLConnection:
         self._conn.rollback()
 
     def close(self) -> None:
-        self._conn.close()
+        self._raw_connection.close()
 
 
 def _split_sql_script(script: str) -> list[str]:
@@ -118,13 +188,7 @@ def _split_sql_script(script: str) -> list[str]:
 
 @contextmanager
 def connect():
-    if is_mysql():
-        conn = MySQLConnection()
-    else:
-        DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-        conn = sqlite3.connect(DB_PATH)
-        conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA foreign_keys = ON")
+    conn = PooledConnection(get_engine().raw_connection(), mysql=is_mysql())
 
     try:
         yield conn
@@ -156,6 +220,82 @@ CREATE TABLE IF NOT EXISTS datasets (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   published_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS dataset_revisions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  dataset_id INTEGER NOT NULL,
+  revision_key TEXT NOT NULL UNIQUE,
+  status TEXT NOT NULL DEFAULT 'computing',
+  abundance_scale TEXT NOT NULL DEFAULT 'unknown',
+  normalization TEXT NOT NULL DEFAULT 'unknown',
+  missing_value_policy TEXT NOT NULL DEFAULT 'error',
+  covariates_json TEXT NOT NULL DEFAULT '[]',
+  source_json TEXT NOT NULL DEFAULT '{}',
+  source_sha256 TEXT NOT NULL,
+  source_file_size INTEGER NOT NULL,
+  compute_version TEXT NOT NULL,
+  params_hash TEXT NOT NULL,
+  validation_json TEXT NOT NULL DEFAULT '{}',
+  warnings_json TEXT NOT NULL DEFAULT '[]',
+  created_at TEXT NOT NULL,
+  published_at TEXT,
+  error TEXT NOT NULL DEFAULT '',
+  FOREIGN KEY(dataset_id) REFERENCES datasets(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_dataset_revisions_dataset_status ON dataset_revisions(dataset_id, status, id);
+
+CREATE TABLE IF NOT EXISTS revision_chart_artifacts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  revision_id INTEGER NOT NULL,
+  chart_type TEXT NOT NULL,
+  cache_path TEXT NOT NULL,
+  sha256 TEXT NOT NULL,
+  size_bytes INTEGER NOT NULL,
+  created_at TEXT NOT NULL,
+  UNIQUE(revision_id, chart_type),
+  FOREIGN KEY(revision_id) REFERENCES dataset_revisions(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS revision_sample_info (
+  sample_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  revision_id INTEGER NOT NULL,
+  dataset_id INTEGER NOT NULL,
+  sample_code TEXT NOT NULL,
+  phenotype TEXT NOT NULL,
+  seq_platform TEXT NOT NULL DEFAULT '',
+  batch_id TEXT NOT NULL DEFAULT '',
+  data_source TEXT NOT NULL DEFAULT 'self_analysis',
+  UNIQUE(revision_id, sample_code),
+  FOREIGN KEY(revision_id) REFERENCES dataset_revisions(id) ON DELETE CASCADE,
+  FOREIGN KEY(dataset_id) REFERENCES datasets(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS revision_species_abundance (
+  abundance_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  revision_id INTEGER NOT NULL,
+  dataset_id INTEGER NOT NULL,
+  sample_id INTEGER NOT NULL,
+  taxon_id INTEGER NOT NULL,
+  abundance REAL NOT NULL,
+  UNIQUE(revision_id, sample_id, taxon_id),
+  FOREIGN KEY(revision_id) REFERENCES dataset_revisions(id) ON DELETE CASCADE,
+  FOREIGN KEY(sample_id) REFERENCES revision_sample_info(sample_id) ON DELETE CASCADE,
+  FOREIGN KEY(taxon_id) REFERENCES taxon_anno(taxon_id)
+);
+
+CREATE TABLE IF NOT EXISTS revision_ko_abundance (
+  ko_abundance_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  revision_id INTEGER NOT NULL,
+  dataset_id INTEGER NOT NULL,
+  sample_id INTEGER NOT NULL,
+  ko_id TEXT NOT NULL,
+  abundance REAL NOT NULL,
+  UNIQUE(revision_id, sample_id, ko_id),
+  FOREIGN KEY(revision_id) REFERENCES dataset_revisions(id) ON DELETE CASCADE,
+  FOREIGN KEY(sample_id) REFERENCES revision_sample_info(sample_id) ON DELETE CASCADE,
+  FOREIGN KEY(ko_id) REFERENCES ko_anno(ko_id)
 );
 
 CREATE TABLE IF NOT EXISTS chart_artifacts (
@@ -311,6 +451,44 @@ CREATE TABLE IF NOT EXISTS datasets (
   KEY idx_datasets_status_published_at (status, published_at, id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+CREATE TABLE IF NOT EXISTS dataset_revisions (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  dataset_id BIGINT UNSIGNED NOT NULL,
+  revision_key VARCHAR(64) NOT NULL,
+  status VARCHAR(32) NOT NULL DEFAULT 'computing',
+  abundance_scale VARCHAR(32) NOT NULL DEFAULT 'unknown',
+  normalization VARCHAR(64) NOT NULL DEFAULT 'unknown',
+  missing_value_policy VARCHAR(32) NOT NULL DEFAULT 'error',
+  covariates_json JSON NULL,
+  source_json JSON NULL,
+  source_sha256 CHAR(64) NOT NULL,
+  source_file_size BIGINT UNSIGNED NOT NULL,
+  compute_version VARCHAR(64) NOT NULL,
+  params_hash CHAR(64) NOT NULL,
+  validation_json JSON NULL,
+  warnings_json JSON NULL,
+  created_at DATETIME(6) NOT NULL,
+  published_at DATETIME(6) NULL,
+  error LONGTEXT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_dataset_revisions_key (revision_key),
+  KEY idx_dataset_revisions_dataset_status (dataset_id, status, id),
+  CONSTRAINT fk_dataset_revisions_dataset FOREIGN KEY (dataset_id) REFERENCES datasets(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS revision_chart_artifacts (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  revision_id BIGINT UNSIGNED NOT NULL,
+  chart_type VARCHAR(64) NOT NULL,
+  cache_path VARCHAR(1024) NOT NULL,
+  sha256 CHAR(64) NOT NULL,
+  size_bytes BIGINT UNSIGNED NOT NULL,
+  created_at DATETIME(6) NOT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_revision_chart_artifacts (revision_id, chart_type),
+  CONSTRAINT fk_revision_chart_revision FOREIGN KEY (revision_id) REFERENCES dataset_revisions(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 CREATE TABLE IF NOT EXISTS chart_artifacts (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   dataset_id BIGINT UNSIGNED NOT NULL,
@@ -355,6 +533,22 @@ CREATE TABLE IF NOT EXISTS sample_info (
   CONSTRAINT fk_sample_info_dataset FOREIGN KEY (dataset_id) REFERENCES datasets(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+CREATE TABLE IF NOT EXISTS revision_sample_info (
+  sample_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  revision_id BIGINT UNSIGNED NOT NULL,
+  dataset_id BIGINT UNSIGNED NOT NULL,
+  sample_code VARCHAR(128) NOT NULL,
+  phenotype ENUM('AD','NC') NOT NULL,
+  seq_platform VARCHAR(128) NOT NULL DEFAULT '',
+  batch_id VARCHAR(128) NOT NULL DEFAULT '',
+  data_source VARCHAR(128) NOT NULL DEFAULT 'self_analysis',
+  PRIMARY KEY (sample_id),
+  UNIQUE KEY uk_revision_sample_code (revision_id, sample_code),
+  KEY idx_revision_sample_dataset (dataset_id, phenotype),
+  CONSTRAINT fk_revision_sample_revision FOREIGN KEY (revision_id) REFERENCES dataset_revisions(id) ON DELETE CASCADE,
+  CONSTRAINT fk_revision_sample_dataset FOREIGN KEY (dataset_id) REFERENCES datasets(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 CREATE TABLE IF NOT EXISTS taxon_anno (
   taxon_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   kingdom VARCHAR(128) NOT NULL DEFAULT '',
@@ -391,6 +585,21 @@ CREATE TABLE IF NOT EXISTS species_abundance (
   CONSTRAINT fk_species_abundance_taxon FOREIGN KEY (taxon_id) REFERENCES taxon_anno(taxon_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+CREATE TABLE IF NOT EXISTS revision_species_abundance (
+  abundance_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  revision_id BIGINT UNSIGNED NOT NULL,
+  dataset_id BIGINT UNSIGNED NOT NULL,
+  sample_id BIGINT UNSIGNED NOT NULL,
+  taxon_id BIGINT UNSIGNED NOT NULL,
+  abundance DOUBLE NOT NULL,
+  PRIMARY KEY (abundance_id),
+  UNIQUE KEY uk_revision_species_abundance (revision_id, sample_id, taxon_id),
+  KEY idx_revision_species_taxon_dataset (taxon_id, dataset_id),
+  CONSTRAINT fk_revision_species_revision FOREIGN KEY (revision_id) REFERENCES dataset_revisions(id) ON DELETE CASCADE,
+  CONSTRAINT fk_revision_species_sample FOREIGN KEY (sample_id) REFERENCES revision_sample_info(sample_id) ON DELETE CASCADE,
+  CONSTRAINT fk_revision_species_taxon FOREIGN KEY (taxon_id) REFERENCES taxon_anno(taxon_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 CREATE TABLE IF NOT EXISTS ko_anno (
   ko_id VARCHAR(16) NOT NULL,
   ko_name VARCHAR(512) NOT NULL DEFAULT '',
@@ -412,6 +621,21 @@ CREATE TABLE IF NOT EXISTS ko_abundance (
   CONSTRAINT fk_ko_abundance_dataset FOREIGN KEY (dataset_id) REFERENCES datasets(id) ON DELETE CASCADE,
   CONSTRAINT fk_ko_abundance_sample FOREIGN KEY (sample_id) REFERENCES sample_info(sample_id) ON DELETE CASCADE,
   CONSTRAINT fk_ko_abundance_ko FOREIGN KEY (ko_id) REFERENCES ko_anno(ko_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS revision_ko_abundance (
+  ko_abundance_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  revision_id BIGINT UNSIGNED NOT NULL,
+  dataset_id BIGINT UNSIGNED NOT NULL,
+  sample_id BIGINT UNSIGNED NOT NULL,
+  ko_id VARCHAR(16) NOT NULL,
+  abundance DOUBLE NOT NULL,
+  PRIMARY KEY (ko_abundance_id),
+  UNIQUE KEY uk_revision_ko_abundance (revision_id, sample_id, ko_id),
+  KEY idx_revision_ko_dataset (ko_id, dataset_id),
+  CONSTRAINT fk_revision_ko_revision FOREIGN KEY (revision_id) REFERENCES dataset_revisions(id) ON DELETE CASCADE,
+  CONSTRAINT fk_revision_ko_sample FOREIGN KEY (sample_id) REFERENCES revision_sample_info(sample_id) ON DELETE CASCADE,
+  CONSTRAINT fk_revision_ko_annotation FOREIGN KEY (ko_id) REFERENCES ko_anno(ko_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS ref_study (
@@ -463,6 +687,22 @@ def _ensure_sqlite_columns(conn: sqlite3.Connection) -> None:
         "feature_count": "ALTER TABLE datasets ADD COLUMN feature_count INTEGER NOT NULL DEFAULT 0",
         "feature_kind": "ALTER TABLE datasets ADD COLUMN feature_kind TEXT NOT NULL DEFAULT 'taxonomy'",
         "feature_label": "ALTER TABLE datasets ADD COLUMN feature_label TEXT NOT NULL DEFAULT '物种'",
+        "current_revision_id": "ALTER TABLE datasets ADD COLUMN current_revision_id INTEGER",
+        "analysis_status": "ALTER TABLE datasets ADD COLUMN analysis_status TEXT NOT NULL DEFAULT 'exploratory_only'",
+        "provenance_json": "ALTER TABLE datasets ADD COLUMN provenance_json TEXT NOT NULL DEFAULT '{}'",
+    }
+    for column, statement in additions.items():
+        if column not in existing:
+            conn.execute(statement)
+
+
+def _ensure_mysql_columns(conn: PooledConnection) -> None:
+    rows = conn.execute("SHOW COLUMNS FROM datasets").fetchall()
+    existing = {row["Field"] for row in rows}
+    additions = {
+        "current_revision_id": "ALTER TABLE datasets ADD COLUMN current_revision_id BIGINT UNSIGNED NULL",
+        "analysis_status": "ALTER TABLE datasets ADD COLUMN analysis_status VARCHAR(32) NOT NULL DEFAULT 'exploratory_only'",
+        "provenance_json": "ALTER TABLE datasets ADD COLUMN provenance_json JSON NULL",
     }
     for column, statement in additions.items():
         if column not in existing:
@@ -472,7 +712,9 @@ def _ensure_sqlite_columns(conn: sqlite3.Connection) -> None:
 def init_db() -> None:
     with connect() as conn:
         conn.executescript(MYSQL_SCHEMA if is_mysql() else SQLITE_SCHEMA)
-        if not is_mysql():
+        if is_mysql():
+            _ensure_mysql_columns(conn)
+        else:
             _ensure_sqlite_columns(conn)
 
 

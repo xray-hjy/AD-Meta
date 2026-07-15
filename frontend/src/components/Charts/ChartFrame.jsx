@@ -7,13 +7,14 @@ export default function ChartFrame({
   subtitle,
   loading,
   error,
+  onRetry,
   empty,
   layout = 'fit',
   children,
 }) {
   let body = children;
   if (loading) body = <LoadingState />;
-  else if (error) body = <ErrorState message={error} />;
+  else if (error) body = <ErrorState message={error} onRetry={onRetry} />;
   else if (empty) body = <EmptyState message="当前图表暂无可展示数据" />;
 
   return (

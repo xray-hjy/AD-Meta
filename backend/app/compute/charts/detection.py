@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from app.compute.common import AD, NC, FEATURE_META, group_frames
+from app.compute.common import AD, FEATURE_META, NC, group_frames
 
 
 def compute_detection_heatmap(df: pd.DataFrame, species_cols: list[str], top_n: int = 50) -> dict:

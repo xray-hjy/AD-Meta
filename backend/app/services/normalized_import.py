@@ -92,6 +92,28 @@ def _sample_map(conn, dataset_id: int, df: pd.DataFrame) -> dict[str, int]:
     return {str(_row_value(row, "sample_code")): int(_row_value(row, "sample_id")) for row in rows}
 
 
+def _revision_sample_map(conn, revision_id: int, dataset_id: int, df: pd.DataFrame) -> dict[str, int]:
+    sample_rows = [
+        (revision_id, dataset_id, str(row.Sample), _phenotype(row.Group), "self_analysis")
+        for row in df.itertuples(index=False)
+    ]
+    _executemany_chunked(
+        conn,
+        """
+        INSERT INTO revision_sample_info (
+          revision_id, dataset_id, sample_code, phenotype, data_source
+        )
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        sample_rows,
+    )
+    rows = conn.execute(
+        "SELECT sample_id, sample_code FROM revision_sample_info WHERE revision_id = ?",
+        (revision_id,),
+    ).fetchall()
+    return {str(_row_value(row, "sample_code")): int(_row_value(row, "sample_id")) for row in rows}
+
+
 def _ensure_taxa(conn, feature_cols: Sequence[str]) -> dict[str, int]:
     taxon_ids: dict[str, int] = {}
     for full_taxonomy in feature_cols:
@@ -168,7 +190,39 @@ def _ko_rows(
             yield (dataset_id, sample_id, feature, float(abundance))
 
 
-def replace_normalized_dataset(conn, dataset_id: int, df: pd.DataFrame, feature_cols: Sequence[str]) -> None:
+def _revision_species_rows(
+    revision_id: int,
+    dataset_id: int,
+    df: pd.DataFrame,
+    feature_cols: Sequence[str],
+    sample_ids: dict[str, int],
+    taxon_ids: dict[str, int],
+) -> Iterable[tuple[int, int, int, int, float]]:
+    for _, sample_id, taxon_id, abundance in _species_rows(
+        dataset_id, df, feature_cols, sample_ids, taxon_ids
+    ):
+        yield (revision_id, dataset_id, sample_id, taxon_id, abundance)
+
+
+def _revision_ko_rows(
+    revision_id: int,
+    dataset_id: int,
+    df: pd.DataFrame,
+    feature_cols: Sequence[str],
+    sample_ids: dict[str, int],
+) -> Iterable[tuple[int, int, int, str, float]]:
+    for _, sample_id, ko_id, abundance in _ko_rows(dataset_id, df, feature_cols, sample_ids):
+        yield (revision_id, dataset_id, sample_id, ko_id, abundance)
+
+
+def replace_normalized_dataset(
+    conn,
+    dataset_id: int,
+    df: pd.DataFrame,
+    feature_cols: Sequence[str],
+    *,
+    revision_id: int | None = None,
+) -> None:
     """Replace one dataset's normalized long-table records.
 
     Species abundance stores only non-zero values; KO abundance keeps zeros so
@@ -180,6 +234,11 @@ def replace_normalized_dataset(conn, dataset_id: int, df: pd.DataFrame, feature_
     conn.execute("DELETE FROM sample_info WHERE dataset_id = ?", (dataset_id,))
 
     sample_ids = _sample_map(conn, dataset_id, df)
+    revision_sample_ids = (
+        _revision_sample_map(conn, revision_id, dataset_id, df)
+        if revision_id is not None
+        else None
+    )
     feature_kind = str(df.attrs.get("feature_kind", "taxonomy"))
 
     if feature_kind == "ko":
@@ -192,6 +251,23 @@ def replace_normalized_dataset(conn, dataset_id: int, df: pd.DataFrame, feature_
             """,
             _ko_rows(dataset_id, df, feature_cols, sample_ids),
         )
+        if revision_sample_ids is not None and revision_id is not None:
+            _executemany_chunked(
+                conn,
+                """
+                INSERT INTO revision_ko_abundance (
+                  revision_id, dataset_id, sample_id, ko_id, abundance
+                )
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                _revision_ko_rows(
+                    revision_id,
+                    dataset_id,
+                    df,
+                    feature_cols,
+                    revision_sample_ids,
+                ),
+            )
         return
 
     taxon_ids = _ensure_taxa(conn, feature_cols)
@@ -203,3 +279,21 @@ def replace_normalized_dataset(conn, dataset_id: int, df: pd.DataFrame, feature_
         """,
         _species_rows(dataset_id, df, feature_cols, sample_ids, taxon_ids),
     )
+    if revision_sample_ids is not None and revision_id is not None:
+        _executemany_chunked(
+            conn,
+            """
+            INSERT INTO revision_species_abundance (
+              revision_id, dataset_id, sample_id, taxon_id, abundance
+            )
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            _revision_species_rows(
+                revision_id,
+                dataset_id,
+                df,
+                feature_cols,
+                revision_sample_ids,
+                taxon_ids,
+            ),
+        )

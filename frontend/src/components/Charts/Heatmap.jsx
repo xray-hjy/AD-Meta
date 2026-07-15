@@ -1,14 +1,13 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import useTooltip from '../../hooks/useTooltip';
+import HeatmapLightbox from './HeatmapLightbox';
 
 const ABUNDANCE_COLORS = ['#ffffcc', '#ffeda0', '#fed976', '#feb24c', '#fd8d3c', '#fc4e2a', '#e31a1c', '#bd0026', '#800026'];
 const DIFF_COLORS = ['#2166ac', '#67a9cf', '#f7f7f7', '#ef8a62', '#b2182b'];
 const DEFAULT_DIFF_LABELS = ['AD - NC'];
 const MAX_RENDER_SCALE = 1.5;
 const SNAPSHOT_SCALE = 2;
-const MIN_LIGHTBOX_SCALE = 0.5;
-const MAX_LIGHTBOX_SCALE = 5;
 const GROUP_COLORS = { AD: '#e74c3c', NC: '#2ecc71' };
 
 /* ====== 工具函数 ====== */
@@ -90,10 +89,6 @@ function dateStamp() {
 
 function getRenderScale(scale = window.devicePixelRatio || 1) {
   return Math.max(1, Math.min(MAX_RENDER_SCALE, scale));
-}
-
-function clampLightboxScale(scale) {
-  return Math.max(MIN_LIGHTBOX_SCALE, Math.min(MAX_LIGHTBOX_SCALE, scale));
 }
 
 /* ====== 布局参数 ====== */
@@ -412,7 +407,7 @@ function drawHeatmap(canvas, params, renderScale = getRenderScale(), options = {
     ctx.fillStyle = '#94a3b8';
     ctx.font = '7px sans-serif';
     ctx.fillText(
-      `筛选: Wilcoxon p<${filter?.pValueMax ?? 0.05}, |log₂FC|>${filter?.log2FcMinAbs ?? 1} | 行列聚类: 层次聚类(average) | 数据: log₁₀(丰度+1)`,
+      `筛选: Mann-Whitney U + BH-FDR q<${filter?.qValueMax ?? 0.05}, |log₂FC|>${filter?.log2FcMinAbs ?? 1} | 行列聚类: 层次聚类(average) | 数据: log₁₀(丰度+1)`,
       totalW / 2,
       totalH - 6
     );
@@ -420,6 +415,38 @@ function drawHeatmap(canvas, params, renderScale = getRenderScale(), options = {
 }
 
 /* ====== Canvas 渲染子组件 ====== */
+
+function HeatmapDataTable({ title, matrix, rowLabels, colLabels }) {
+  const visibleRows = matrix.slice(0, 25);
+  const visibleColumns = colLabels.slice(0, 20);
+  const truncated = matrix.length > visibleRows.length || colLabels.length > visibleColumns.length;
+  return (
+    <details className="chart-data-table">
+      <summary>查看{title}数据表</summary>
+      <div className="chart-data-table__scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">样本</th>
+              {visibleColumns.map((label, index) => <th scope="col" key={`${label}-${index}`}>{label}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {visibleRows.map((row, rowIndex) => (
+              <tr key={`${rowLabels[rowIndex] || 'row'}-${rowIndex}`}>
+                <th scope="row">{rowLabels[rowIndex] || `行 ${rowIndex + 1}`}</th>
+                {visibleColumns.map((_, colIndex) => (
+                  <td key={colIndex}>{fmt(Number(row[colIndex]), 4)}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {truncated ? <p>为保证页面性能，仅展示前 25 行、20 列。</p> : null}
+      </div>
+    </details>
+  );
+}
 
 const HeatmapCanvas = memo(function HeatmapCanvas({
   title,
@@ -483,7 +510,7 @@ const HeatmapCanvas = memo(function HeatmapCanvas({
     try {
       const link = document.createElement('a');
       link.href = createSnapshot(SNAPSHOT_SCALE, true);
-      const filterStr = `p${filter?.pValueMax ?? 0.05}-log2FC${filter?.log2FcMinAbs ?? 1}`;
+      const filterStr = `q${filter?.qValueMax ?? 0.05}-log2FC${filter?.log2FcMinAbs ?? 1}`;
       const filename = `heatmap_${chartSubType}_${filterStr}_${dateStamp()}.png`;
       link.download = `${sanitizeFilename(filename)}.png`;
       link.click();
@@ -511,7 +538,12 @@ const HeatmapCanvas = memo(function HeatmapCanvas({
     const value = matrix[hit.i][hit.j];
     const stat = stats[hit.j];
     const tax = formatTaxonomy(stat.fullName);
-    const lines = [tax, `p = ${formatP(stat.p)}`, `log2FC = ${fmt(stat.log2FC, 3)}`];
+    const lines = [
+      tax,
+      `q = ${formatP(stat.qValue ?? stat.p)}`,
+      `p = ${formatP(stat.pValue ?? stat.p)}`,
+      `log2FC = ${fmt(stat.log2FC, 3)}`,
+    ];
     if (mode === 'diff') {
       lines.push(`AD−NC = ${fmt(value, 4)}`);
     } else {
@@ -568,12 +600,22 @@ const HeatmapCanvas = memo(function HeatmapCanvas({
       </div>
       <div
         onClick={handleOpen}
+        onKeyDown={event => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            handleOpen();
+          }
+        }}
         onMouseMove={handleMouseMove}
         onMouseLeave={hide}
+        role="button"
+        tabIndex={0}
+        aria-label={`${title}，按回车放大`}
         style={{ position: 'relative', width: '100%', overflowX: 'auto', cursor: onOpen ? 'zoom-in' : 'default' }}
       >
         <canvas
           ref={canvasRef}
+          role="img"
           aria-label={title}
           data-row-dendrogram={showDendrograms ? 'true' : undefined}
           data-column-dendrogram={showDendrograms ? 'true' : undefined}
@@ -584,185 +626,15 @@ const HeatmapCanvas = memo(function HeatmapCanvas({
         />
         <Tooltip />
       </div>
+      <HeatmapDataTable
+        title={title}
+        matrix={matrix}
+        rowLabels={rowLabels}
+        colLabels={colLabels}
+      />
     </section>
   );
 });
-
-function Lightbox({ image, onClose }) {
-  const contentRef = useRef(null);
-  const viewportRef = useRef(null);
-  const dragging = useRef(false);
-  const lastPos = useRef({ x: 0, y: 0 });
-  const transform = useRef({ x: 0, y: 0, scale: 1 });
-  const frame = useRef(null);
-  const [isDragging, setIsDragging] = useState(false);
-
-  const applyTransform = useCallback(() => {
-    frame.current = null;
-    if (!contentRef.current) return;
-    const { x, y, scale } = transform.current;
-    contentRef.current.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
-  }, []);
-
-  const scheduleTransform = useCallback(() => {
-    if (frame.current) return;
-    frame.current = window.requestAnimationFrame
-      ? window.requestAnimationFrame(applyTransform)
-      : window.setTimeout(applyTransform, 16);
-  }, [applyTransform]);
-
-  const setScaleBy = useCallback((delta) => {
-    transform.current.scale = clampLightboxScale(transform.current.scale + delta);
-    scheduleTransform();
-  }, [scheduleTransform]);
-
-  const zoomAt = useCallback((delta, clientX, clientY) => {
-    const previous = transform.current;
-    const nextScale = clampLightboxScale(previous.scale + delta);
-    if (nextScale === previous.scale) return;
-
-    const rect = viewportRef.current?.getBoundingClientRect();
-    if (!rect) {
-      transform.current.scale = nextScale;
-      scheduleTransform();
-      return;
-    }
-
-    const anchorX = clientX - rect.left - rect.width / 2;
-    const anchorY = clientY - rect.top - rect.height / 2;
-    const ratio = nextScale / previous.scale;
-
-    transform.current = {
-      scale: nextScale,
-      x: anchorX - (anchorX - previous.x) * ratio,
-      y: anchorY - (anchorY - previous.y) * ratio,
-    };
-    scheduleTransform();
-  }, [scheduleTransform]);
-
-  const resetTransform = useCallback(() => {
-    transform.current = { x: 0, y: 0, scale: 1 };
-    scheduleTransform();
-  }, [scheduleTransform]);
-
-  useEffect(() => {
-    const handleKeyDown = event => {
-      if (event.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      if (frame.current) {
-        const cancel = window.cancelAnimationFrame || window.clearTimeout;
-        cancel(frame.current);
-      }
-    };
-  }, [onClose]);
-
-  const handleWheel = event => {
-    event.preventDefault();
-    zoomAt(event.deltaY > 0 ? -0.2 : 0.2, event.clientX, event.clientY);
-  };
-
-  const handleMouseDown = event => {
-    event.preventDefault();
-    dragging.current = true;
-    setIsDragging(true);
-    lastPos.current = { x: event.clientX, y: event.clientY };
-  };
-
-  const handleMouseMove = event => {
-    if (!dragging.current) return;
-    const dx = event.clientX - lastPos.current.x;
-    const dy = event.clientY - lastPos.current.y;
-    lastPos.current = { x: event.clientX, y: event.clientY };
-    transform.current.x += dx;
-    transform.current.y += dy;
-    scheduleTransform();
-  };
-
-  const handleMouseUp = () => {
-    dragging.current = false;
-    setIsDragging(false);
-  };
-
-  return (
-    <div
-      onClick={onClose}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 1000,
-        background: 'rgba(15, 23, 42, 0.78)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 24,
-        cursor: 'zoom-out',
-      }}
-    >
-      <div
-        ref={viewportRef}
-        onClick={event => event.stopPropagation()}
-        onWheel={handleWheel}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        style={{
-          position: 'relative',
-          width: 'min(94vw, 1400px)',
-          height: 'min(90vh, 900px)',
-          overflow: 'hidden',
-          borderRadius: 14,
-          background: '#fff',
-          padding: 18,
-          boxShadow: '0 24px 80px rgba(15, 23, 42, 0.38)',
-          cursor: isDragging ? 'grabbing' : 'grab',
-        }}
-      >
-        <div
-          ref={contentRef}
-          style={{
-            transform: 'translate(0px, 0px) scale(1)',
-            transformOrigin: 'center center',
-            transition: isDragging ? 'none' : 'transform 100ms ease',
-            width: '100%',
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <img
-            src={image.src}
-            alt={`${image.title} 放大预览`}
-            draggable={false}
-            onDragStart={event => event.preventDefault()}
-            style={{
-              maxWidth: '100%',
-              maxHeight: '100%',
-              objectFit: 'contain',
-              userSelect: 'none',
-              pointerEvents: 'none',
-            }}
-          />
-        </div>
-        <div style={{
-          position: 'absolute',
-          right: 18,
-          bottom: 18,
-          display: 'flex',
-          gap: 8,
-        }}>
-          <button type="button" onClick={() => setScaleBy(0.5)}>放大</button>
-          <button type="button" onClick={() => setScaleBy(-0.5)}>缩小</button>
-          <button type="button" onClick={resetTransform}>重置</button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 /* ====== 主组件 ====== */
 
@@ -909,7 +781,7 @@ function Heatmap({ data, featureLabel = '物种' }) {
       </div>
 
       {lightboxImage && (
-        <Lightbox
+        <HeatmapLightbox
           image={lightboxImage}
           onClose={handleClose}
         />

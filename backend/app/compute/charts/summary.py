@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from app.compute.common import AD, NC, FEATURE_META
+from app.compute.common import AD, FEATURE_META, NC
 
 
 def compute_summary(df: pd.DataFrame, species_cols: list[str], slug: str, name: str, published_at: str) -> dict:

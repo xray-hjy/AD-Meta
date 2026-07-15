@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import ReactECharts from 'echarts-for-react';
 import TaxonomyViewport from './TaxonomyViewport';
+import {
+  RadialTreeRenderer,
+  SankeyRenderer,
+  SunburstRenderer,
+  TreemapRenderer,
+} from './taxonomy/TaxonomyRenderers';
 import useAvailableViewport from '../../hooks/useAvailableViewport';
 import {
   getTaxonomyViewportPolicy,
@@ -996,86 +1001,42 @@ function TaxonomyChart({ data, mode = 'sunburst' }) {
     <TaxonomyViewport ref={viewportRef} mode={mode} height={viewportSize.height}>
       <div className={className}>
       {mode === 'sunburst' ? (
-        <div className="taxonomy-sunburst-layout">
-          <div className="taxonomy-sunburst-visual">
-            <ReactECharts
-              key={`${mode}-${sunburstView}`}
-              ref={chartRef}
-              className="taxonomy-chart-surface"
-              option={option}
-              onChartReady={handleSunburstReady}
-              onEvents={{
-                click: handleSunburstClick,
-                sunburstRootToNode: handleSunburstRootToNode,
-              }}
-              style={{ width: sunburstLayout.size, height: sunburstLayout.size }}
-            />
-          </div>
-          <div className="taxonomy-phylum-panel">
-            <div className="taxonomy-phylum-panel__header">
-              <span>门级占比</span>
-              <span>真实丰度比例</span>
-            </div>
-            <div className="taxonomy-phylum-list">
-              {(sunburstModel?.legendItems || []).flatMap(item => [
-                renderPhylumLegendRow(item),
-                ...(item.children || []).map(child => renderPhylumLegendRow(child)),
-              ])}
-            </div>
-            {sunburstModel?.mergedPhyla?.length > 0 ? (
-              <div className="taxonomy-phylum-note">
-                旭日图中 &lt;1% 的门级合并为 Others；列表保留真实占比。
-              </div>
-            ) : null}
-          </div>
-        </div>
+        <SunburstRenderer
+          chartRef={chartRef}
+          option={option}
+          size={sunburstLayout.size}
+          view={sunburstView}
+          onReady={handleSunburstReady}
+          onClick={handleSunburstClick}
+          onRootToNode={handleSunburstRootToNode}
+          legendContent={(sunburstModel?.legendItems || []).flatMap(item => [
+            renderPhylumLegendRow(item),
+            ...(item.children || []).map(child => renderPhylumLegendRow(child)),
+          ])}
+          hasMergedPhyla={sunburstModel?.mergedPhyla?.length > 0}
+        />
       ) : mode === 'radialtree' ? (
-        <ReactECharts
-          key={mode}
-          className="taxonomy-chart-surface"
-          option={option}
-          opts={{ renderer: 'svg' }}
-          style={{ width: radialTreeLayout.size, height: radialTreeLayout.size }}
-        />
+        <RadialTreeRenderer option={option} size={radialTreeLayout.size} />
       ) : mode === 'sankey' ? (
-        <div className="taxonomy-sankey-scroll">
-          <ReactECharts
-            key={mode}
-            className="taxonomy-chart-surface taxonomy-chart-surface--sankey"
-            option={option}
-            opts={SANKEY_ECHARTS_OPTS}
-            autoResize={false}
-            onChartReady={chart => {
-              sankeyInstanceRef.current = chart;
-              window.requestAnimationFrame(() => resizeChartToContainer(chart));
-            }}
-            style={{
-              width: `clamp(${sankeyCanvasConstraints.minWidth}px, 100%, ${sankeyCanvasConstraints.maxWidth}px)`,
-              height: sankeyCanvasHeight,
-            }}
-          />
-        </div>
-      ) : mode === 'treemap' ? (
-        <div
-          className="taxonomy-treemap-panel"
-          style={{ width: treemapCanvasSize.width || '100%', height: treemapCanvasSize.height }}
-        >
-          <ReactECharts
-            key={mode}
-            className="taxonomy-chart-surface taxonomy-chart-surface--treemap"
-            option={option}
-            onChartReady={handleTreemapReady}
-            onEvents={{ finished: handleTreemapFinished }}
-            style={{ width: '100%', height: '100%' }}
-          />
-        </div>
-      ) : (
-        <ReactECharts
-          key={mode}
-          className="taxonomy-chart-surface"
+        <SankeyRenderer
           option={option}
-          style={{ width: '100%', height: 760 }}
+          opts={SANKEY_ECHARTS_OPTS}
+          constraints={sankeyCanvasConstraints}
+          height={sankeyCanvasHeight}
+          onReady={chart => {
+            sankeyInstanceRef.current = chart;
+            window.requestAnimationFrame(() => resizeChartToContainer(chart));
+          }}
         />
+      ) : mode === 'treemap' ? (
+        <TreemapRenderer
+          option={option}
+          size={treemapCanvasSize}
+          onReady={handleTreemapReady}
+          onFinished={handleTreemapFinished}
+        />
+      ) : (
+        <RadialTreeRenderer option={option} size={760} />
       )}
       </div>
     </TaxonomyViewport>

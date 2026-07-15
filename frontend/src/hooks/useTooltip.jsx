@@ -1,19 +1,7 @@
 import { useRef, useCallback } from 'react';
 import * as d3 from 'd3';
 
-/**
- * 共享悬浮窗 hook — 所有图表组件统一使用
- *
- * 用法:
- *   const { tooltipRef, Tooltip, show, move, hide } = useTooltip();
- *
- *   // 在 D3 事件中
- *   .on('mouseenter', (event, d) => { show(htmlString); move(event); })
- *   .on('mousemove',  event       => { move(event); })
- *   .on('mouseleave', ()          => { hide(); })
- *
- *   // JSX 中渲染 <Tooltip />
- */
+/** Shared tooltip hook for canvas and D3 chart components. */
 export default function useTooltip() {
   const ref = useRef(null);
 

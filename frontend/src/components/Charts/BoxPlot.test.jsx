@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import { vi } from 'vitest';
 
-jest.mock('echarts-for-react', () => ({
+vi.mock('./CartesianEChart', () => ({
   __esModule: true,
   default: ({ option }) => {
     const firstOutlier = option?.series?.[2]?.data?.[0];

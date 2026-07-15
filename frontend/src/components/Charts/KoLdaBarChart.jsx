@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './CartesianEChart';
 import ChartViewport from './ChartViewport';
 
 const GROUP_COLORS = {
@@ -24,7 +24,7 @@ function compactNumber(value) {
 }
 
 function KoLdaBarChart({ data }) {
-  const items = useMemo(() => (Array.isArray(data?.items) ? data.items : []), [data?.items]);
+  const items = useMemo(() => (Array.isArray(data?.items) ? data.items : []), [data]);
   const filter = data?.filter || {};
   const summary = useMemo(() => {
     const fallback = items.reduce(
@@ -62,13 +62,17 @@ function KoLdaBarChart({ data }) {
       koId: item.koId || item.koName || '',
       koName: item.koName || item.koId || '',
       enrichedGroup: item.enrichedGroup === 'NC' ? 'NC' : 'AD',
-      ldaScore: Number(item.ldaScore || 0),
+      effectSize: Number(
+        item.effectSize
+        ?? ((item.enrichedGroup === 'NC' ? -1 : 1) * Number(item.ldaScore || 0))
+      ),
       pValue: Number(item.pValue || 1),
+      qValue: Number(item.qValue ?? item.pValue ?? 1),
       log2FC: Number(item.log2FC || 0),
       meanAD: Number(item.meanAD || 0),
       meanNC: Number(item.meanNC || 0),
     }));
-    const maxAbsScore = Math.max(...chartItems.map(item => Math.abs(item.ldaScore)), 1);
+    const maxAbsScore = Math.max(...chartItems.map(item => Math.abs(item.effectSize)), 1);
     const axisLimit = Number((maxAbsScore * 1.12).toFixed(2));
 
     return {
@@ -81,12 +85,13 @@ function KoLdaBarChart({ data }) {
         extraCssText: 'border-radius:8px; padding:10px 14px;',
         formatter(params) {
           const point = params.data || {};
-          const ldaScore = Number(point.ldaScore ?? Math.abs(point.value || 0));
+          const effectSize = Number(point.effectSize ?? point.value ?? 0);
           return `
             <b>${point.koName || point.koId || ''}</b><br/>
             富集组: ${point.groupLabel || ''}<br/>
-            LDA 值: ${formatNumber(ldaScore)}<br/>
+            rank-biserial 效应量: ${formatNumber(effectSize)}<br/>
             p 值: ${formatNumber(point.pValue)}<br/>
+            q 值: ${formatNumber(point.qValue)}<br/>
             log2FC: ${formatNumber(point.log2FC)}<br/>
             AD 均值: ${compactNumber(point.meanAD)}<br/>
             NC 均值: ${compactNumber(point.meanNC)}
@@ -96,7 +101,7 @@ function KoLdaBarChart({ data }) {
       grid: { top: 24, left: 92, right: 48, bottom: 40, containLabel: true },
       xAxis: {
         type: 'value',
-        name: 'NC 富集 ← LDA score → AD 富集',
+        name: 'NC 富集 ← rank-biserial effect → AD 富集',
         nameLocation: 'middle',
         nameGap: 28,
         min: -axisLimit,
@@ -119,17 +124,18 @@ function KoLdaBarChart({ data }) {
       },
       series: [
         {
-          name: 'LDA score',
+          name: 'rank-biserial effect',
           type: 'bar',
           barMaxWidth: 18,
           data: chartItems.map(item => ({
-            value: item.enrichedGroup === 'NC' ? -item.ldaScore : item.ldaScore,
-            ldaScore: item.ldaScore,
+            value: item.effectSize,
+            effectSize: item.effectSize,
             koId: item.koId,
             koName: item.koName,
             enrichedGroup: item.enrichedGroup,
             groupLabel: `${item.enrichedGroup} 富集`,
             pValue: item.pValue,
+            qValue: item.qValue,
             log2FC: item.log2FC,
             meanAD: item.meanAD,
             meanNC: item.meanNC,
@@ -146,7 +152,7 @@ function KoLdaBarChart({ data }) {
             fontSize: 10,
             formatter(params) {
               const point = params.data || {};
-              return formatNumber(point.ldaScore ?? Math.abs(params.value), 2);
+              return formatNumber(point.effectSize ?? params.value, 2);
             },
           },
         },
@@ -155,13 +161,18 @@ function KoLdaBarChart({ data }) {
   }, [items]);
 
   if (!option) {
-    return <div className="placeholder"><p>暂无 KO LDA 差异分析数据</p></div>;
+    return (
+      <div className="placeholder">
+        <p>没有 KO 通过 BH-FDR 校正阈值</p>
+        <small>当前结果不会回填未经校正的候选特征。</small>
+      </div>
+    );
   }
 
   return (
     <div className="chart-plain">
       <div className="chart-stat-strip chart-stat-strip--compact">
-        <span><b>P &lt;</b> {filter.pValueMax ?? 0.05}</span>
+        <span><b>Q &lt;</b> {filter.qValueMax ?? 0.05}</span>
         <span><b>显著 KO:</b> {summary.significantCount}</span>
         <span><b style={{ color: GROUP_COLORS.AD }}>AD 富集:</b> {summary.adEnrichedCount}</span>
         <span><b style={{ color: GROUP_COLORS.NC }}>NC 富集:</b> {summary.ncEnrichedCount}</span>

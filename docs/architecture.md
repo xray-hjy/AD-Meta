@@ -9,8 +9,8 @@
     ↓ backend/app/cli
 数据校验与标准化
     ↓ backend/app/compute
-统计结果与图表 projection 预计算
-    ↓ MySQL + JSON cache
+探索性 BH-FDR / R 正式组成型模型
+    ↓ immutable dataset revision + MySQL + JSON cache
 FastAPI 只读接口
     ↓
 React 页面骨架 + ECharts 可视化
@@ -51,11 +51,11 @@ frontend/src/
 ## 数据流
 
 1. 导入命令读取宽表并识别 taxonomy 或 KO 数据集。
-2. 后端写入数据集元数据和标准化长表。
-3. `compute/precompute.py` 调度各领域计算模块生成缓存。
-4. `chart_artifacts` 记录缓存类型、版本和位置。
-5. FastAPI 只读取已发布数据集和预计算缓存。
-6. React hooks 获取数据，`chartRegistry` 决定导航、组件和数据键。
+2. 严格校验样本、分组、尺度、缺失值策略和 manifest 协变量。
+3. `compute/precompute.py` 生成探索性 BH-FDR 结果；已声明尺度且样本量充足时，内网 worker 运行 ANCOM-BC2 或 MaAsLin2。
+4. 新结果写入 staging，校验哈希后原子移动到 revision cache，并在单个事务内切换 `current_revision_id`。
+5. FastAPI 只读取当前已发布 revision；固定 revision URL 可用于复现和回滚。
+6. TanStack Query hooks 获取数据，`availableArtifacts` 与 `chartRegistry` 决定实际可用导航。
 7. 图表组件把 payload 映射为 ECharts option，不重复执行重型统计计算。
 
 ## 扩展约定

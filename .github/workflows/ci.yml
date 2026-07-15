@@ -1,0 +1,131 @@
+name: verify
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend-sqlite:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: pip install -r backend/requirements-dev.txt
+      - run: ruff check app tests
+        working-directory: backend
+      - run: mypy app
+        working-directory: backend
+      - run: python -m app.cli.export_openapi
+        working-directory: backend
+      - run: git diff --exit-code -- openapi.json
+        working-directory: backend
+      - run: pytest --cov=app --cov-report=term-missing
+        working-directory: backend
+        env:
+          AD_META_DB_ENGINE: sqlite
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - run: npm audit --audit-level=high
+        working-directory: frontend
+      - run: npm run openapi:types
+        working-directory: frontend
+      - run: git diff --exit-code -- src/api/generated.ts
+        working-directory: frontend
+      - run: npm run lint
+        working-directory: frontend
+      - run: npm run typecheck
+        working-directory: frontend
+      - run: npm run test:coverage
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend
+
+  browser-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: pip install -r backend/requirements-dev.txt
+      - run: npm ci
+        working-directory: frontend
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - run: python -m app.cli.bootstrap_storage
+        working-directory: backend
+        env:
+          AD_META_DB_ENGINE: sqlite
+          AD_META_DB_PATH: /tmp/ad-meta-e2e.sqlite3
+          AD_META_STORAGE_ROOT: /tmp/ad-meta-e2e-storage
+      - run: npx playwright test
+        working-directory: frontend
+        env:
+          AD_META_DB_ENGINE: sqlite
+          AD_META_DB_PATH: /tmp/ad-meta-e2e.sqlite3
+          AD_META_STORAGE_ROOT: /tmp/ad-meta-e2e-storage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-output
+          path: frontend/output/playwright
+          if-no-files-found: ignore
+          retention-days: 7
+
+  mysql-integration:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4.5
+        env:
+          MYSQL_DATABASE: ad_meta_test
+          MYSQL_USER: ad_meta
+          MYSQL_PASSWORD: test-password
+          MYSQL_ROOT_PASSWORD: root-password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uad_meta -ptest-password --silent"
+          --health-interval=5s --health-timeout=3s --health-retries=20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install -r backend/requirements-dev.txt
+      - run: alembic upgrade head
+        working-directory: backend
+        env:
+          AD_META_DB_ENGINE: mysql
+          AD_META_MYSQL_HOST: 127.0.0.1
+          AD_META_MYSQL_USER: ad_meta
+          AD_META_MYSQL_PASSWORD: test-password
+          AD_META_MYSQL_DATABASE: ad_meta_test
+
+  docker-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose config --quiet
+      - run: docker build -t ad-meta-backend ./backend
+      - run: docker build -t ad-meta-frontend ./frontend
+      - run: docker build -t ad-meta-stats-worker ./stats-worker

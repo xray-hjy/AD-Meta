@@ -71,8 +71,8 @@ class BootstrapStorageTests(unittest.TestCase):
             )
 
             with patch.object(database, "DB_PATH", db_path), patch.object(database, "DB_ENGINE", "sqlite"), patch.object(
-                import_module, "RAW_ROOT", raw_root
-            ), patch.object(import_module, "CACHE_ROOT", cache_root), patch.object(
+                import_module, "CACHE_ROOT", cache_root
+            ), patch.object(
                 import_module, "_relative_to_backend", lambda path: str(path)
             ):
                 results = bootstrap_module.bootstrap_storage(manifest_path, backend_root=temp_root)
@@ -87,11 +87,15 @@ class BootstrapStorageTests(unittest.TestCase):
                 """
             ).fetchall()
             chart_count = raw.execute("SELECT COUNT(*) AS count FROM chart_artifacts").fetchone()["count"]
+            revision_count = raw.execute("SELECT COUNT(*) AS count FROM dataset_revisions").fetchone()["count"]
+            revision_chart_count = raw.execute(
+                "SELECT COUNT(*) AS count FROM revision_chart_artifacts"
+            ).fetchone()["count"]
             sample_count = raw.execute("SELECT COUNT(*) AS count FROM sample_info").fetchone()["count"]
             raw.close()
-            species_boxplot_exists = (cache_root / "ad-nc-species" / "boxplot.json").exists()
-            ko_detection_exists = (cache_root / "ad-nc-ko-abundance" / "detection.json").exists()
-            ko_lda_exists = (cache_root / "ad-nc-ko-abundance" / "lda.json").exists()
+            species_boxplot_exists = any((cache_root / "ad-nc-species").glob("*/boxplot.json"))
+            ko_detection_exists = any((cache_root / "ad-nc-ko-abundance").glob("*/detection.json"))
+            ko_lda_exists = any((cache_root / "ad-nc-ko-abundance").glob("*/lda.json"))
 
         self.assertEqual([result["slug"] for result in results], ["ad-nc-species", "ad-nc-ko-abundance"])
         self.assertEqual(
@@ -114,6 +118,8 @@ class BootstrapStorageTests(unittest.TestCase):
             ],
         )
         self.assertGreaterEqual(chart_count, 12)
+        self.assertEqual(revision_count, 2)
+        self.assertGreaterEqual(revision_chart_count, 12)
         self.assertEqual(sample_count, 8)
         self.assertTrue(species_boxplot_exists)
         self.assertTrue(ko_detection_exists)

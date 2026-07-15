@@ -1,20 +1,23 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { getAvailableCharts } from '../app/chartRegistry';
 
-export default function useActiveChart(summary) {
+export default function useActiveChart(summary, requestedChart, onChartChange) {
   const featureKind = summary?.featureKind || 'taxonomy';
   const featureLabel = summary?.featureLabel || '物种';
   const charts = useMemo(
-    () => getAvailableCharts(featureKind, featureLabel),
-    [featureKind, featureLabel]
+    () => getAvailableCharts(featureKind, featureLabel, summary?.availableArtifacts),
+    [featureKind, featureLabel, summary?.availableArtifacts]
   );
-  const [activeChart, setActiveChart] = useState('species');
+  const fallback = charts[0]?.key || 'species';
+  const activeChart = charts.some(chart => chart.key === requestedChart)
+    ? requestedChart
+    : summary ? fallback : (requestedChart || fallback);
 
   useEffect(() => {
-    if (!charts.some(chart => chart.key === activeChart)) {
-      setActiveChart(charts[0]?.key || 'species');
+    if (summary && activeChart !== requestedChart) {
+      onChartChange(activeChart, { replace: true });
     }
-  }, [activeChart, charts]);
+  }, [activeChart, onChartChange, requestedChart, summary]);
 
-  return { activeChart, setActiveChart, charts };
+  return { activeChart, setActiveChart: onChartChange, charts };
 }

@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
+import { vi } from 'vitest';
 
-jest.mock('echarts-for-react', () => ({
+vi.mock('./HeatmapEChart', () => ({
   __esModule: true,
   default: ({ option }) => (
     <div data-testid="detection-heatmap-chart">

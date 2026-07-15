@@ -1,9 +1,10 @@
 import { render, screen } from '@testing-library/react';
+import { vi } from 'vitest';
 import TaxonomyChart from './TaxonomyChart';
 
-const mockEChartsProps = jest.fn();
+const mockEChartsProps = vi.hoisted(() => vi.fn());
 
-jest.mock('echarts-for-react', () => ({
+vi.mock('./TaxonomyEChart', () => ({
   __esModule: true,
   default: props => {
     const React = require('react');
@@ -12,9 +13,8 @@ jest.mock('echarts-for-react', () => ({
   },
 }));
 
-jest.mock('../../hooks/useAvailableViewport', () => () => ({
-  width: 1228,
-  height: 1180,
+vi.mock('../../hooks/useAvailableViewport', () => ({
+  default: () => ({ width: 1228, height: 1180 }),
 }));
 
 const sankeyPayload = {

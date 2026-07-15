@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import { vi } from 'vitest';
 
-jest.mock('d3', () => ({
+vi.mock('d3', () => ({
   select: node => ({
     style(prop, value) {
       if (node?.style) node.style[prop] = value;
@@ -11,43 +12,43 @@ jest.mock('d3', () => ({
       return this;
     },
   }),
-  scaleSequential: jest.fn(() => {
-    const scale = jest.fn(() => '#cccccc');
-    scale.domain = jest.fn(() => scale);
+  scaleSequential: vi.fn(() => {
+    const scale = vi.fn(() => '#cccccc');
+    scale.domain = vi.fn(() => scale);
     return scale;
   }),
-  interpolateRdBu: jest.fn(),
-  interpolateYlOrRd: jest.fn(),
+  interpolateRdBu: vi.fn(),
+  interpolateYlOrRd: vi.fn(),
 }));
 
 import Heatmap, { buildCombinedHeatmapData, buildHeatmapLayout } from './Heatmap';
 
 const mockContext = {
-  beginPath: jest.fn(),
-  clearRect: jest.fn(),
-  fillRect: jest.fn(),
-  fillText: jest.fn(),
-  lineTo: jest.fn(),
-  moveTo: jest.fn(),
-  restore: jest.fn(),
-  rotate: jest.fn(),
-  save: jest.fn(),
-  setTransform: jest.fn(),
-  stroke: jest.fn(),
-  translate: jest.fn(),
+  beginPath: vi.fn(),
+  clearRect: vi.fn(),
+  fillRect: vi.fn(),
+  fillText: vi.fn(),
+  lineTo: vi.fn(),
+  moveTo: vi.fn(),
+  restore: vi.fn(),
+  rotate: vi.fn(),
+  save: vi.fn(),
+  setTransform: vi.fn(),
+  stroke: vi.fn(),
+  translate: vi.fn(),
 };
 
 beforeAll(() => {
   Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
     configurable: true,
-    value: jest.fn(() => mockContext),
+    value: vi.fn(() => mockContext),
   });
   Object.defineProperty(HTMLCanvasElement.prototype, 'toDataURL', {
     configurable: true,
-    value: jest.fn(() => 'data:image/png;base64,heatmap-preview'),
+    value: vi.fn(() => 'data:image/png;base64,heatmap-preview'),
   });
-  window.requestAnimationFrame = jest.fn(() => 1);
-  window.cancelAnimationFrame = jest.fn();
+  window.requestAnimationFrame = vi.fn(() => 1);
+  window.cancelAnimationFrame = vi.fn();
 });
 
 beforeEach(() => {
@@ -58,11 +59,11 @@ beforeEach(() => {
 });
 
 const heatmapData = {
-  filter: { pValueMax: 0.05, log2FcMinAbs: 1, maxFeatures: 200 },
+  filter: { qValueMax: 0.05, pValueMax: 0.05, log2FcMinAbs: 1, maxFeatures: 200 },
   featureLabel: '物种',
   stats: [
-    { fullName: 'k__Bacteria|p__A|c__A|g__A|s__A', p: 0.01, log2FC: 2 },
-    { fullName: 'k__Bacteria|p__B|c__B|g__B|s__B', p: 0.02, log2FC: -3 },
+    { fullName: 'k__Bacteria|p__A|c__A|g__A|s__A', p: 0.01, pValue: 0.01, qValue: 0.02, log2FC: 2 },
+    { fullName: 'k__Bacteria|p__B|c__B|g__B|s__B', p: 0.02, pValue: 0.02, qValue: 0.03, log2FC: -3 },
   ],
   colLabels: ['A', 'B'],
   adMatrix: [[1, 2]],
@@ -154,7 +155,7 @@ test('shows the clustered sample group in the combined heatmap tooltip', () => {
     compact: true,
     showDendrograms: true,
   });
-  canvas.getBoundingClientRect = jest.fn(() => ({
+  canvas.getBoundingClientRect = vi.fn(() => ({
     left: 0,
     top: 0,
     width: layout.totalW,
@@ -190,7 +191,7 @@ test('shows tooltip content by resolving the hovered canvas cell', () => {
   render(<Heatmap data={heatmapData} featureLabel="物种" />);
 
   const canvas = firstCanvas();
-  canvas.getBoundingClientRect = jest.fn(() => ({
+  canvas.getBoundingClientRect = vi.fn(() => ({
     left: 0,
     top: 0,
     width: 213,
@@ -233,7 +234,7 @@ test('zooms the lightbox around the mouse cursor on wheel', () => {
   const image = screen.getByRole('img', { name: 'AD 组丰度热图 放大预览' });
   const content = image.parentElement;
   const viewport = content.parentElement;
-  viewport.getBoundingClientRect = jest.fn(() => ({
+  viewport.getBoundingClientRect = vi.fn(() => ({
     left: 100,
     top: 50,
     width: 1000,

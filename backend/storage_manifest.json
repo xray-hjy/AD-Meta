@@ -4,13 +4,34 @@
       "slug": "ad-nc-species",
       "name": "AD vs NC Species Abundance",
       "description": "Species abundance comparison between AD and NC groups.",
-      "file": "storage/raw/ad-nc-species/raw.xlsx"
+      "file": "storage/raw/ad-nc-species/raw.xlsx",
+      "abundanceScale": "unknown",
+      "normalization": "unknown",
+      "missingValuePolicy": "zero",
+      "covariates": [],
+      "groupMapping": {},
+      "source": {
+        "kind": "tracked_raw",
+        "inferenceNote": "Scale and 188 missing cells require upstream confirmation."
+      }
     },
     {
       "slug": "ad-nc-ko-abundance",
       "name": "AD vs NC KO Abundance",
       "description": "KO abundance comparison between AD and NC groups.",
-      "file": "storage/raw/ad-nc-ko-abundance/raw.csv"
+      "file": "storage/raw/ad-nc-ko-abundance/raw.csv",
+      "abundanceScale": "unknown",
+      "normalization": "unknown",
+      "missingValuePolicy": "error",
+      "covariates": [],
+      "groupMapping": {
+        "1": "AD",
+        "0": "NC"
+      },
+      "source": {
+        "kind": "tracked_raw",
+        "inferenceNote": "Abundance scale requires upstream confirmation; legacy binary label is explicitly mapped 1=AD and 0=NC."
+      }
     }
   ]
 }

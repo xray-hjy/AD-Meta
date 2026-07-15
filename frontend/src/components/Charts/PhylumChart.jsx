@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './CartesianEChart';
 import ChartViewport from './ChartViewport';
 
 const COLORS = {
@@ -53,7 +53,7 @@ function buildSummaryItems(data, isKo) {
   ];
 }
 
-function PhylumChart({ data, featureKind = 'taxonomy', featureLabel = '物种' }) {
+function PhylumChart({ data, featureKind = 'taxonomy' }) {
   const isKo = featureKind === 'ko';
   const summaryItems = data && data.length ? buildSummaryItems(data, isKo) : [];
 

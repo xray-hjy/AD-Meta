@@ -9,6 +9,7 @@ export default function Sidebar({
   activeChart,
   onDatasetChange,
   onChartChange,
+  onChartPrefetch,
 }) {
   return (
     <aside className="sidebar" data-scroll-region="sidebar">
@@ -39,6 +40,7 @@ export default function Sidebar({
           activeChart={activeChart}
           featureKind={summary?.featureKind}
           onChange={onChartChange}
+          onPrefetch={onChartPrefetch}
         />
       </section>
     </aside>

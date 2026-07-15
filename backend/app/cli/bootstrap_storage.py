@@ -18,7 +18,7 @@ def _required_text(dataset: dict[str, Any], key: str, index: int) -> str:
     return value.strip()
 
 
-def load_manifest(manifest_path: Path = DEFAULT_MANIFEST) -> list[dict[str, str]]:
+def load_manifest(manifest_path: Path = DEFAULT_MANIFEST) -> list[dict[str, Any]]:
     path = manifest_path.expanduser().resolve()
     if not path.exists():
         raise FileNotFoundError(f"Storage manifest not found: {path}")
@@ -28,7 +28,7 @@ def load_manifest(manifest_path: Path = DEFAULT_MANIFEST) -> list[dict[str, str]
     if not isinstance(datasets, list) or not datasets:
         raise ValueError("Storage manifest must include a non-empty 'datasets' list.")
 
-    normalized: list[dict[str, str]] = []
+    normalized: list[dict[str, Any]] = []
     seen_slugs: set[str] = set()
     for index, dataset in enumerate(datasets):
         if not isinstance(dataset, dict):
@@ -45,6 +45,12 @@ def load_manifest(manifest_path: Path = DEFAULT_MANIFEST) -> list[dict[str, str]
                 "name": _required_text(dataset, "name", index),
                 "description": str(dataset.get("description") or "").strip(),
                 "file": _required_text(dataset, "file", index),
+                "abundanceScale": str(dataset.get("abundanceScale") or "unknown").strip(),
+                "normalization": str(dataset.get("normalization") or "unknown").strip(),
+                "missingValuePolicy": str(dataset.get("missingValuePolicy") or "error").strip(),
+                "covariates": list(dataset.get("covariates") or []),
+                "source": dict(dataset.get("source") or {}),
+                "groupMapping": dict(dataset.get("groupMapping") or {}),
             }
         )
 
@@ -77,6 +83,12 @@ def bootstrap_storage(
             dataset["slug"],
             dataset["name"],
             dataset["description"],
+            abundance_scale=dataset["abundanceScale"],
+            normalization=dataset["normalization"],
+            missing_value_policy=dataset["missingValuePolicy"],
+            covariates=dataset["covariates"],
+            source_metadata=dataset["source"],
+            group_mapping=dataset["groupMapping"],
         )
         results.append(
             {

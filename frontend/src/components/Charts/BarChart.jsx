@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './CartesianEChart';
 import ChartViewport from './ChartViewport';
 
 const COLORS = {

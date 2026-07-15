@@ -15,7 +15,8 @@ from scipy.cluster.hierarchy import leaves_list, linkage
 from scipy.spatial.distance import pdist
 from scipy.stats import mannwhitneyu
 
-from app.compute.common import AD, NC, FEATURE_META, group_frames
+from app.compute.common import AD, FEATURE_META, NC, group_frames
+from app.compute.statistics import benjamini_hochberg, rank_biserial_from_u
 from app.compute.taxonomy import short_name
 
 
@@ -49,12 +50,26 @@ def _cluster_order(matrix: np.ndarray) -> list[int]:
     return _hierarchical_cluster(matrix)["order"]
 
 
-def _heatmap_filter(max_features: int, selected_count: int | None = None) -> dict:
+def _heatmap_filter(
+    max_features: int,
+    selected_count: int | None = None,
+    significant_count: int | None = None,
+) -> dict:
     """记录热图筛选条件，随 payload 返回给前端展示/排查。"""
 
-    payload = {"pValueMax": 0.05, "log2FcMinAbs": 1, "topN": max_features, "maxFeatures": max_features}
+    payload = {
+        "qValueMax": 0.05,
+        "pValueMax": 0.05,
+        "log2FcMinAbs": 1,
+        "topN": max_features,
+        "maxFeatures": max_features,
+        "multipleTesting": "Benjamini-Hochberg",
+    }
     if selected_count is not None:
         payload["selectedCount"] = selected_count
+        payload["displayedCount"] = selected_count
+    if significant_count is not None:
+        payload["significantCount"] = significant_count
     return payload
 
 
@@ -62,7 +77,7 @@ def compute_heatmap(df: pd.DataFrame, species_cols: list[str], top_n: int = 200)
     """计算差异特征热图 payload。
 
     筛选规则：
-    - Mann-Whitney U 检验 `p < 0.05`。
+    - Mann-Whitney U 检验并用 Benjamini-Hochberg 校正，要求 `q < 0.05`。
     - 组均值 log2 fold-change 绝对值大于 1。
     - 候选项按 `-log10(p) * abs(log2FC)` 排序，最多保留 `top_n` 个。
     """
@@ -76,13 +91,24 @@ def compute_heatmap(df: pd.DataFrame, species_cols: list[str], top_n: int = 200)
     log2fc = np.log2((ad_mean + eps) / (nc_mean + eps))
 
     p_values = []
+    effect_sizes = []
     for i in range(len(species_cols)):
         # 每个特征独立做两组非参数检验；常数列等异常情况按不显著处理。
         try:
-            p = mannwhitneyu(ad_values[:, i], nc_values[:, i], alternative="two-sided").pvalue
+            result = mannwhitneyu(ad_values[:, i], nc_values[:, i], alternative="two-sided")
+            p = result.pvalue
+            effect = rank_biserial_from_u(
+                getattr(result, "statistic", float("nan")),
+                len(ad_values),
+                len(nc_values),
+            )
         except ValueError:
             p = 1.0
+            effect = 0.0
         p_values.append(float(p) if np.isfinite(p) else 1.0)
+        effect_sizes.append(effect)
+
+    q_values = benjamini_hochberg(p_values)
 
     # 热图使用 log10(abundance + 1)，减少极端丰度值对颜色范围的影响。
     log_ad = np.log10(ad_values + 1)
@@ -94,7 +120,7 @@ def compute_heatmap(df: pd.DataFrame, species_cols: list[str], top_n: int = 200)
     candidates = []
     for i, col in enumerate(species_cols):
         # 只保留同时满足显著性和效应量阈值的差异特征。
-        if p_values[i] < 0.05 and abs(log2fc[i]) > 1:
+        if q_values[i] < 0.05 and abs(log2fc[i]) > 1:
             candidates.append(
                 {
                     "idx": i,
@@ -102,6 +128,10 @@ def compute_heatmap(df: pd.DataFrame, species_cols: list[str], top_n: int = 200)
                     "fullName": col,
                     "label": short_name(col, max_len=10),
                     "p": p_values[i],
+                    "pValue": p_values[i],
+                    "qValue": float(q_values[i]),
+                    "effectSize": float(effect_sizes[i]),
+                    "effectMetric": "rank_biserial_correlation",
                     "log2FC": float(log2fc[i]),
                     "meanAD": float(ad_mean[i]),
                     "meanNC": float(nc_mean[i]),
@@ -110,7 +140,7 @@ def compute_heatmap(df: pd.DataFrame, species_cols: list[str], top_n: int = 200)
             )
     for item in candidates:
         # score 同时考虑显著性和效应量，避免只按 p 值选出变化幅度很小的特征。
-        item["score"] = -math.log10(item["p"] + 1e-300) * abs(item["log2FC"])
+        item["score"] = -math.log10(item["qValue"] + 1e-300) * abs(item["log2FC"])
 
     candidates.sort(key=lambda item: item["score"], reverse=True)
     max_features = max(1, int(top_n))
@@ -120,9 +150,12 @@ def compute_heatmap(df: pd.DataFrame, species_cols: list[str], top_n: int = 200)
         # 无候选特征时返回可解释错误 payload，前端显示空状态而不是崩溃。
         feature_label = df.attrs.get("feature_label", FEATURE_META["taxonomy"]["label"])
         return {
-            "error": f"未筛选到满足 p < 0.05 且 |log2FC| > 1 的差异{feature_label}。",
-            "filter": _heatmap_filter(max_features, 0),
+            "error": f"未筛选到满足 q < 0.05 且 |log2FC| > 1 的差异{feature_label}。",
+            "filter": _heatmap_filter(max_features, 0, 0),
             "featureLabel": feature_label,
+            "method": "Mann-Whitney U with Benjamini-Hochberg FDR",
+            "inferenceLevel": "exploratory_fdr",
+            "stats": [],
         }
 
     # 先分别聚类 AD/NC 矩阵，再基于排序后的合并矩阵生成全样本 dendrogram。
@@ -139,7 +172,9 @@ def compute_heatmap(df: pd.DataFrame, species_cols: list[str], top_n: int = 200)
     column_cluster = _hierarchical_cluster(raw_mat.T)
 
     return {
-        "filter": _heatmap_filter(max_features, len(stats)),
+        "method": "Mann-Whitney U with Benjamini-Hochberg FDR",
+        "inferenceLevel": "exploratory_fdr",
+        "filter": _heatmap_filter(max_features, len(stats), len(candidates)),
         "featureLabel": df.attrs.get("feature_label", FEATURE_META["taxonomy"]["label"]),
         "stats": [{k: v for k, v in item.items() if k != "idx"} for item in stats],
         "colLabels": [item["label"] for item in stats],

@@ -7,6 +7,14 @@
     "dev:frontend": "npm --prefix frontend start",
     "migrate:sqlite-to-mysql": "cd backend && .venv/bin/python -m app.cli.migrate_sqlite_to_mysql",
     "bootstrap:storage": "cd backend && .venv/bin/python -m app.cli.bootstrap_storage",
-    "build": "npm --prefix frontend run build"
+    "migrate": "cd backend && .venv/bin/python -m alembic upgrade head",
+    "openapi": "cd backend && .venv/bin/python -m app.cli.export_openapi && npm --prefix ../frontend run openapi:types",
+    "build": "npm --prefix frontend run build",
+    "test:backend": "cd backend && .venv/bin/python -m pytest",
+    "test:frontend": "npm --prefix frontend test",
+    "test:e2e": "npm --prefix frontend run test:e2e",
+    "lint": "cd backend && .venv/bin/python -m ruff check app tests && npm --prefix ../frontend run lint",
+    "typecheck": "cd backend && .venv/bin/python -m mypy app && npm --prefix ../frontend run typecheck",
+    "verify": "npm run lint && npm run typecheck && npm run test:backend && npm run test:frontend && npm run build"
   }
 }

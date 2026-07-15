@@ -42,7 +42,7 @@ export const ANALYSIS_DOMAINS = [
     ],
     navigationSections: [
       { key: 'composition', label: '功能概览', charts: ['species', 'phylum'] },
-      { key: 'difference', label: '检出与差异', charts: ['detection', 'lda'] },
+      { key: 'difference', label: '检出与差异', charts: ['detection', 'differential_ko'] },
     ],
   },
   {

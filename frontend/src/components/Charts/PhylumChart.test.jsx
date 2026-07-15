@@ -1,9 +1,10 @@
 import { render, screen } from '@testing-library/react';
+import { vi } from 'vitest';
 
 let lastOption;
 let lastStyle;
 
-jest.mock('echarts-for-react', () => ({
+vi.mock('./CartesianEChart', () => ({
   __esModule: true,
   default: ({ option, style }) => {
     lastOption = option;

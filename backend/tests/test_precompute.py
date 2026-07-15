@@ -22,8 +22,8 @@ from app.compute.precompute import (
     compute_heatmap,
     compute_ko_lda,
     compute_sunburst,
-    prepare_dataframe,
     precompute_all,
+    prepare_dataframe,
 )
 
 
@@ -33,14 +33,16 @@ class ComputeModuleLayoutTests(unittest.TestCase):
         from app.compute.charts.detection import compute_detection_heatmap as split_compute_detection_heatmap
         from app.compute.charts.heatmap import compute_heatmap as split_compute_heatmap
         from app.compute.charts.lda import compute_ko_lda as split_compute_ko_lda
-        from app.compute.charts.phylum import compute_phylum as split_compute_phylum
-        from app.compute.charts.species import compute_species as split_compute_species
-        from app.compute.charts.sunburst import compute_sunburst as split_compute_sunburst
         from app.compute.charts.ordination import compute_pca as split_compute_pca
         from app.compute.charts.ordination import compute_pcoa as split_compute_pcoa
+        from app.compute.charts.phylum import compute_phylum as split_compute_phylum
+        from app.compute.charts.species import compute_species as split_compute_species
         from app.compute.charts.summary import compute_summary as split_compute_summary
+        from app.compute.charts.sunburst import compute_sunburst as split_compute_sunburst
         from app.compute.charts.taxonomy import compute_taxonomy_hierarchy as split_compute_taxonomy_hierarchy
-        from app.compute.charts.taxonomy import compute_taxonomy_sankey_projection as split_compute_taxonomy_sankey_projection
+        from app.compute.charts.taxonomy import (
+            compute_taxonomy_sankey_projection as split_compute_taxonomy_sankey_projection,
+        )
         from app.compute.precompute import (
             compute_pca,
             compute_pcoa,
@@ -87,7 +89,7 @@ class KoAbundancePrecomputeTests(unittest.TestCase):
         self.assertEqual(df["Sample"].tolist(), ["AD001", "NC001"])
         self.assertEqual(warnings, [])
 
-    def test_prepares_binary_label_group_column_as_ad_nc(self) -> None:
+    def test_rejects_binary_label_group_column(self) -> None:
         with TemporaryDirectory() as tmpdir:
             path = Path(tmpdir) / "ko.csv"
             path.write_text(
@@ -101,9 +103,8 @@ class KoAbundancePrecomputeTests(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            df, _, _ = prepare_dataframe(path)
-
-        self.assertEqual(df["Group"].tolist(), ["AD", "NC"])
+            with self.assertRaisesRegex(ValueError, "Only AD and NC"):
+                prepare_dataframe(path)
 
     def test_ko_summary_uses_function_feature_metadata(self) -> None:
         with TemporaryDirectory() as tmpdir:
@@ -350,6 +351,8 @@ class HeatmapPrecomputeTests(unittest.TestCase):
 
         self.assertEqual(len(heatmap["stats"]), feature_count)
         self.assertEqual(heatmap["filter"]["maxFeatures"], 200)
+        self.assertEqual(heatmap["filter"]["significantCount"], feature_count)
+        self.assertEqual(heatmap["filter"]["displayedCount"], feature_count)
 
     def test_heatmap_caches_hierarchical_column_order_metadata(self) -> None:
         df = pd.DataFrame(
@@ -567,13 +570,17 @@ class DetectionHeatmapPrecomputeTests(unittest.TestCase):
             )
 
         self.assertIn("detection", ko_artifacts)
+        self.assertIn("differential_ko", ko_artifacts)
         self.assertIn("lda", ko_artifacts)
         self.assertNotIn("heatmap", ko_artifacts)
         self.assertNotIn("boxplot", ko_artifacts)
         self.assertNotIn("sunburst", ko_artifacts)
         self.assertNotIn("pca", ko_artifacts)
         self.assertNotIn("pcoa", ko_artifacts)
-        self.assertEqual(set(ko_artifacts), {"summary", "species", "phylum", "detection", "lda"})
+        self.assertEqual(
+            set(ko_artifacts),
+            {"summary", "species", "phylum", "detection", "differential_ko", "lda"},
+        )
         self.assertIn("boxplot", taxonomy_artifacts)
         self.assertIn("taxonomy", taxonomy_artifacts)
         self.assertIn("taxonomy_sankey", taxonomy_artifacts)
@@ -589,7 +596,7 @@ class DetectionHeatmapPrecomputeTests(unittest.TestCase):
         self.assertIn("height", taxonomy_artifacts["taxonomy_sankey"]["layout"])
 
 
-class KoLdaPrecomputeTests(unittest.TestCase):
+class KoDifferentialPrecomputeTests(unittest.TestCase):
     def _lda_df(self) -> pd.DataFrame:
         df = pd.DataFrame(
             {
@@ -605,34 +612,27 @@ class KoLdaPrecomputeTests(unittest.TestCase):
         df.attrs["feature_label"] = "KO"
         return df
 
-    def test_ko_lda_filters_by_p_value_and_reports_effect_fields(self) -> None:
+    def test_ko_differential_filters_by_q_value_and_reports_effect_fields(self) -> None:
         p_values = [
-            SimpleNamespace(pvalue=0.01),
-            SimpleNamespace(pvalue=0.02),
-            SimpleNamespace(pvalue=0.001),
-            SimpleNamespace(pvalue=0.5),
+            SimpleNamespace(pvalue=0.01, statistic=16),
+            SimpleNamespace(pvalue=0.02, statistic=16),
+            SimpleNamespace(pvalue=0.001, statistic=0),
+            SimpleNamespace(pvalue=0.5, statistic=8),
         ]
 
-        with patch("app.compute.charts.lda.mannwhitneyu", side_effect=p_values), patch(
-            "app.compute.charts.lda._univariate_lda_score",
-            side_effect=[4.0, 3.0, 5.0, 0.0],
-        ):
+        with patch("app.compute.charts.lda.mannwhitneyu", side_effect=p_values):
             payload = compute_ko_lda(self._lda_df(), ["K00001", "K00002", "K00003", "K00004"], top_n=4)
 
         self.assertEqual(payload["featureLabel"], "KO")
-        self.assertEqual(payload["method"], "Mann-Whitney U + univariate LDA on log10(abundance + 1)")
-        self.assertEqual(
-            payload["filter"],
-            {
-                "pValueMax": 0.05,
-                "topN": 4,
-                "selectionMode": "balanced_significant_by_group",
-                "perGroupTopN": 2,
-            },
-        )
+        self.assertEqual(payload["method"], "Mann-Whitney U with Benjamini-Hochberg FDR")
+        self.assertEqual(payload["inferenceLevel"], "exploratory_fdr")
+        self.assertEqual(payload["filter"]["qValueMax"], 0.05)
+        self.assertEqual(payload["filter"]["multipleTesting"], "Benjamini-Hochberg")
+        self.assertEqual(payload["filter"]["selectionMode"], "balanced_fdr_significant_by_group")
         self.assertEqual(
             payload["summary"],
             {
+                "testedCount": 4,
                 "significantCount": 3,
                 "adEnrichedCount": 2,
                 "ncEnrichedCount": 1,
@@ -647,47 +647,43 @@ class KoLdaPrecomputeTests(unittest.TestCase):
         ad_item = payload["items"][0]
         self.assertEqual(ad_item["koName"], "K00001")
         self.assertEqual(ad_item["enrichedGroup"], "AD")
-        self.assertGreater(ad_item["ldaScore"], 0)
+        self.assertEqual(ad_item["effectMetric"], "rank_biserial_correlation")
+        self.assertGreater(ad_item["effectSize"], 0)
         self.assertEqual(ad_item["pValue"], 0.01)
+        self.assertLess(ad_item["qValue"], 0.05)
         self.assertGreater(ad_item["log2FC"], 0)
         self.assertGreater(ad_item["meanAD"], ad_item["meanNC"])
 
         nc_item = payload["items"][2]
         self.assertEqual(nc_item["koName"], "K00003")
         self.assertEqual(nc_item["enrichedGroup"], "NC")
-        self.assertGreater(nc_item["ldaScore"], 0)
+        self.assertLess(nc_item["effectSize"], 0)
         self.assertEqual(nc_item["pValue"], 0.001)
         self.assertLess(nc_item["log2FC"], 0)
         self.assertLess(nc_item["meanAD"], nc_item["meanNC"])
 
-    def test_ko_lda_tie_breaks_by_ko_id_after_score_and_p_value(self) -> None:
+    def test_ko_differential_tie_breaks_by_ko_id_after_effect_and_q_value(self) -> None:
         p_values = [
-            SimpleNamespace(pvalue=0.01),
-            SimpleNamespace(pvalue=0.02),
-            SimpleNamespace(pvalue=0.01),
-            SimpleNamespace(pvalue=0.5),
+            SimpleNamespace(pvalue=0.01, statistic=16),
+            SimpleNamespace(pvalue=0.02, statistic=16),
+            SimpleNamespace(pvalue=0.01, statistic=0),
+            SimpleNamespace(pvalue=0.5, statistic=8),
         ]
 
-        with patch("app.compute.charts.lda.mannwhitneyu", side_effect=p_values), patch(
-            "app.compute.charts.lda._univariate_lda_score",
-            side_effect=[4.0, 4.0, 4.0, 0.0],
-        ):
+        with patch("app.compute.charts.lda.mannwhitneyu", side_effect=p_values):
             payload = compute_ko_lda(self._lda_df(), ["K00001", "K00002", "K00003", "K00004"], top_n=4)
 
         self.assertEqual([item["koId"] for item in payload["items"]], ["K00001", "K00002", "K00003"])
 
-    def test_ko_lda_does_not_backfill_when_one_group_has_fewer_significant_items(self) -> None:
+    def test_ko_differential_does_not_backfill_when_one_group_has_fewer_significant_items(self) -> None:
         p_values = [
-            SimpleNamespace(pvalue=0.01),
-            SimpleNamespace(pvalue=0.001),
-            SimpleNamespace(pvalue=0.002),
-            SimpleNamespace(pvalue=0.003),
+            SimpleNamespace(pvalue=0.01, statistic=16),
+            SimpleNamespace(pvalue=0.001, statistic=0),
+            SimpleNamespace(pvalue=0.002, statistic=0),
+            SimpleNamespace(pvalue=0.003, statistic=0),
         ]
 
-        with patch("app.compute.charts.lda.mannwhitneyu", side_effect=p_values), patch(
-            "app.compute.charts.lda._univariate_lda_score",
-            side_effect=[5.0, 4.0, 3.0, 2.0],
-        ):
+        with patch("app.compute.charts.lda.mannwhitneyu", side_effect=p_values):
             payload = compute_ko_lda(self._lda_df(), ["K00001", "K00003", "K00003", "K00003"], top_n=4)
 
         self.assertEqual([item["enrichedGroup"] for item in payload["items"]], ["AD", "NC", "NC"])
