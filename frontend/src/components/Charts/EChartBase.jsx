@@ -3,6 +3,7 @@ import ReactEChartsCore from 'echarts-for-react/lib/core';
 import * as echarts from 'echarts/core';
 import { AriaComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
+import { useColorVision } from '../../context/ColorVisionContext';
 
 echarts.use([AriaComponent, CanvasRenderer]);
 
@@ -71,21 +72,28 @@ const EChartBase = forwardRef(function EChartBase(
   },
   ref
 ) {
+  const { colorBlindFriendly } = useColorVision();
   const [tableOpen, setTableOpen] = useState(false);
   const accessibleOption = useMemo(() => ({
     ...option,
     aria: {
       enabled: true,
-      decal: { show: true },
+      decal: { show: colorBlindFriendly },
       ...(option?.aria || {}),
     },
-  }), [option]);
+  }), [colorBlindFriendly, option]);
   const tableRows = useMemo(() => chartRowsFromOption(option), [option]);
   const containerStyle = useMemo(() => ({ height: 300, ...style }), [style]);
 
   return (
     <>
-      <div role="img" aria-label={ariaLabel} tabIndex={0} style={containerStyle}>
+      <div
+        role="img"
+        aria-label={ariaLabel}
+        tabIndex={0}
+        style={containerStyle}
+        data-colorblind-friendly={colorBlindFriendly}
+      >
         <ReactEChartsCore
           ref={ref}
           echarts={echarts}

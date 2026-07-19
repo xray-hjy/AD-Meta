@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { vi } from 'vitest';
+import { ColorVisionProvider } from '../../context/ColorVisionContext';
 
 vi.mock('d3', () => ({
   select: node => ({
@@ -21,7 +22,11 @@ vi.mock('d3', () => ({
   interpolateYlOrRd: vi.fn(),
 }));
 
-import Heatmap, { buildCombinedHeatmapData, buildHeatmapLayout } from './Heatmap';
+import Heatmap, {
+  buildCombinedHeatmapData,
+  buildHeatmapLayout,
+  HeatmapDataTable,
+} from './Heatmap';
 
 const mockContext = {
   beginPath: vi.fn(),
@@ -109,6 +114,51 @@ test('renders heatmap panels as canvas instead of SVG rect grids', () => {
   expect(combinedCanvas.dataset.rowDendrogramPosition).toBe('right');
   expect(combinedCanvas.dataset.columnDendrogramPosition).toBe('bottom');
   expect(combinedCanvas.dataset.rowGroups).toBe('NC,AD');
+  expect(
+    [...document.querySelectorAll('canvas')].map(canvas => canvas.dataset.colorblindFriendly)
+  ).toEqual(['false', 'false', 'false', 'false']);
+});
+
+test('keeps all four heatmaps free of texture encoding regardless of the global preference', () => {
+  render(
+    <ColorVisionProvider initialEnabled>
+      <Heatmap data={heatmapData} featureLabel="物种" />
+    </ColorVisionProvider>
+  );
+
+  expect(
+    [...document.querySelectorAll('canvas')].every(
+      canvas => canvas.dataset.colorblindFriendly === 'false'
+    )
+  ).toBe(true);
+  expect(screen.queryByText(/色盲友好纹理已开启/)).toBeNull();
+});
+
+test('limits the difference heatmap table to the first 25 rows and 20 columns', () => {
+  const matrix = Array.from({ length: 30 }, (_, rowIndex) => (
+    Array.from({ length: 24 }, (_, columnIndex) => rowIndex * 100 + columnIndex)
+  ));
+  const rowLabels = Array.from({ length: 30 }, (_, index) => `差异行 ${index + 1}`);
+  const colLabels = Array.from({ length: 24 }, (_, index) => `物种 ${index + 1}`);
+
+  render(
+    <HeatmapDataTable
+      title="差异热图 (AD − NC 平均 log 丰度)"
+      matrix={matrix}
+      rowLabels={rowLabels}
+      colLabels={colLabels}
+    />
+  );
+
+  const details = screen.getByText('查看差异热图 (AD − NC 平均 log 丰度)数据表')
+    .closest('details');
+  expect(details.querySelectorAll('tbody tr')).toHaveLength(25);
+  expect(details.querySelectorAll('thead th')).toHaveLength(21);
+  expect(details.textContent).toContain('差异行 25');
+  expect(details.textContent).not.toContain('差异行 26');
+  expect(details.textContent).toContain('物种 20');
+  expect(details.textContent).not.toContain('物种 21');
+  expect(details.textContent).toContain('仅展示前 25 行、20 列');
 });
 
 test('places combined dendrograms to the right and below the heatmap grid', () => {
@@ -209,6 +259,38 @@ test('shows tooltip content by resolving the hovered canvas cell', () => {
   expect(document.body.textContent).toContain('log10(丰度+1) = 2.0000');
   expect(document.body.textContent).toContain('p = 0.020');
   expect(document.body.textContent).toContain('log2FC = -3.000');
+});
+
+test('positions the difference tooltip above the cursor and inside the viewport', () => {
+  render(<Heatmap data={heatmapData} featureLabel="物种" />);
+
+  const canvas = screen.getByLabelText('差异热图 (AD − NC 平均 log 丰度)');
+  canvas.getBoundingClientRect = vi.fn(() => ({
+    left: 0,
+    top: 500,
+    width: 213,
+    height: 120,
+    right: 213,
+    bottom: 620,
+  }));
+  const tooltip = canvas.parentElement.querySelector('div[style*="position: fixed"]');
+  tooltip.getBoundingClientRect = vi.fn(() => ({
+    left: 0,
+    top: 0,
+    width: 320,
+    height: 140,
+    right: 320,
+    bottom: 140,
+  }));
+
+  fireEvent.mouseMove(canvas, {
+    clientX: 118,
+    clientY: 568,
+  });
+
+  expect(Number.parseFloat(tooltip.style.top)).toBeLessThan(568);
+  expect(Number.parseFloat(tooltip.style.top) + 140).toBeLessThanOrEqual(window.innerHeight - 12);
+  expect(Number.parseFloat(tooltip.style.left)).toBeGreaterThanOrEqual(12);
 });
 
 test('opens a performant image lightbox from a canvas snapshot', () => {

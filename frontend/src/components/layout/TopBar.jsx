@@ -1,4 +1,5 @@
 import { getAnalysisDataForFeatureKind } from '../../app/analysisDomains';
+import { useColorVision } from '../../context/ColorVisionContext';
 import { Link } from 'react-router-dom';
 import DatasetSelect from '../dataset/DatasetSelect';
 
@@ -9,6 +10,7 @@ export default function TopBar({
   activeDataset,
   onDatasetChange,
 }) {
+  const { colorBlindFriendly, setColorBlindFriendly } = useColorVision();
   const currentAnalysisData = getAnalysisDataForFeatureKind(featureKind);
   const sampleScope = summary
     ? `${summary.totalSamples} 样本 · AD ${summary.adSamples} / NC ${summary.ncSamples}`
@@ -19,9 +21,9 @@ export default function TopBar({
       <div className="workspace-branding">
         <Link className="app-title app-title--link" to="/">AD-Meta</Link>
         <span className="workspace-branding__divider" aria-hidden="true" />
-        <div>
-          <p className="workspace-kicker">分析工作区</p>
-          <p className="app-subtitle">群落物种与功能分析</p>
+        <div className="workspace-branding__context">
+          <span className="workspace-kicker">分析工作区</span>
+          <span className="app-subtitle">群落物种与功能分析</span>
         </div>
       </div>
       <div className="topbar-context">
@@ -42,6 +44,20 @@ export default function TopBar({
         >
           {sampleScope}
         </span>
+        <label
+          className={`colorblind-toggle ${colorBlindFriendly ? 'colorblind-toggle--active' : ''}`}
+          title="为所有图表开启斜纹、点阵等辅助纹理"
+        >
+          <input
+            type="checkbox"
+            checked={colorBlindFriendly}
+            onChange={event => setColorBlindFriendly(event.target.checked)}
+          />
+          <span className="colorblind-toggle__track" aria-hidden="true">
+            <span className="colorblind-toggle__thumb" />
+          </span>
+          <span className="colorblind-toggle__label">色盲友好</span>
+        </label>
         <Link className="topbar-home-link" to="/">首页</Link>
       </div>
     </header>

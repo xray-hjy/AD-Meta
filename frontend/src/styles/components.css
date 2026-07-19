@@ -463,6 +463,36 @@
   height: 100%;
 }
 
+.chart-viewport--fit:has(.chart-data-table),
+.chart-viewport--data:has(.chart-data-table) {
+  height: auto;
+}
+
+.chart-viewport--fit .chart-viewport__canvas:has(> .chart-data-table),
+.chart-viewport--data .chart-viewport__canvas:has(> .chart-data-table) {
+  height: auto;
+  display: grid;
+}
+
+.chart-viewport--fit .chart-viewport__canvas:has(> .chart-data-table) {
+  grid-template-rows: clamp(
+    var(--chart-viewport-min-height, 480px),
+    calc(100dvh - 300px),
+    var(--chart-viewport-max-height, 760px)
+  ) auto;
+}
+
+.chart-viewport--data .chart-viewport__canvas:has(> .chart-data-table) {
+  grid-template-rows: max(
+    var(--chart-viewport-min-height, 480px),
+    var(--chart-viewport-preferred-height, 480px)
+  ) auto;
+}
+
+.chart-viewport__canvas > .chart-data-table {
+  height: auto;
+}
+
 .chart-plain--taxonomy,
 .chart-plain--ordination {
   min-height: 620px;

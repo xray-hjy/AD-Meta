@@ -36,6 +36,7 @@ let datasets;
 let summaries;
 
 beforeEach(() => {
+  window.localStorage.clear();
   window.history.pushState({}, '', '/analysis/abundance');
   datasets = [{
     slug: 'ad-nc-ko-abundance',
@@ -103,6 +104,29 @@ test('describes imported matrices as analysis data with an explicit sample scope
   expect(screen.getByText('分析数据')).toBeTruthy();
   expect(screen.getByLabelText('选择分析数据')).toBeTruthy();
   expect(screen.queryByText('预计算数据')).toBeNull();
+});
+
+test('keeps the workspace label and subtitle on the same branding row', async () => {
+  render(<App />);
+
+  const workspaceLabel = await screen.findByText('分析工作区');
+  const subtitle = screen.getByText('群落物种与功能分析');
+
+  expect(workspaceLabel.parentElement).toBe(subtitle.parentElement);
+  expect(workspaceLabel.parentElement).toHaveClass('workspace-branding__context');
+});
+
+test('toggles the global color-blind-friendly chart preference', async () => {
+  render(<App />);
+
+  const toggle = await screen.findByRole('checkbox', { name: '色盲友好' });
+  expect(toggle).toBeChecked();
+
+  fireEvent.click(toggle);
+
+  expect(toggle).not.toBeChecked();
+  expect(window.localStorage.getItem('ad-meta:accessibility:colorblind-v1')).toBe('false');
+  expect(document.documentElement.dataset.colorBlindFriendly).toBe('false');
 });
 
 test('does not show KO differential tab for taxonomy datasets', async () => {

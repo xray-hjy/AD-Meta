@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { vi } from 'vitest';
+import { ColorVisionProvider } from '../../context/ColorVisionContext';
 import TaxonomyChart from './TaxonomyChart';
 
 const mockEChartsProps = vi.hoisted(() => vi.fn());
@@ -54,6 +55,17 @@ const sankeyPayload = {
   },
 };
 
+const sunburstPayload = [
+  {
+    name: 'Bacteroidota',
+    value: 10,
+    children: [
+      { name: 'Bacteroidia', value: 8 },
+      { name: 'Other classes', value: 2 },
+    ],
+  },
+];
+
 beforeEach(() => {
   mockEChartsProps.mockClear();
 });
@@ -69,6 +81,33 @@ test('uses bounded rendering settings for dense sankey projections', () => {
   expect(props.opts.renderer).toBe('canvas');
   expect(props.opts.devicePixelRatio).toBeLessThanOrEqual(1.5);
   expect(props.autoResize).toBe(false);
+  expect(props.option.aria.decal.show).toBe(true);
+  expect(props.option.aria.decal.decals).toHaveLength(3);
+  expect(props.option.hoverLayerThreshold).toBe(1);
+  expect(props.option.series[0].emphasis.focus).toBe('adjacency');
+  expect(props.option.tooltip.transitionDuration).toBe(0);
+});
+
+test('keeps adjacency emphasis and removes only decals when color-blind mode is off', () => {
+  render(
+    <ColorVisionProvider initialEnabled={false}>
+      <TaxonomyChart data={sankeyPayload} mode="sankey" />
+    </ColorVisionProvider>
+  );
+
+  const props = mockEChartsProps.mock.calls.at(-1)[0];
+  expect(props.option.series[0].emphasis.focus).toBe('adjacency');
+  expect(props.option.aria.decal.show).toBe(false);
+});
+
+test('keeps ancestor emphasis and the reusable color-blind palette on the sunburst', () => {
+  render(<TaxonomyChart data={sunburstPayload} mode="sunburst" />);
+
+  const props = mockEChartsProps.mock.calls.at(-1)[0];
+  expect(props.option.hoverLayerThreshold).toBe(1);
+  expect(props.option.series[0].emphasis.focus).toBe('ancestor');
+  expect(props.option.aria.decal.show).toBe(true);
+  expect(props.option.aria.decal.decals).toHaveLength(3);
 });
 
 test('shows merged category counts in sankey tooltips', () => {

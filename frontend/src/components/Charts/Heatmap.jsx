@@ -314,13 +314,11 @@ function drawHeatmap(canvas, params, renderScale = getRenderScale(), options = {
     const y = i * ch;
     for (let j = 0; j < cols; j += 1) {
       const v = row[j];
+      const x = j * L.cellW;
+      const width = Math.max(0.5, L.cellW - 0.4);
+      const height = Math.max(0.5, ch - 0.4);
       ctx.fillStyle = v > 0 || mode === 'diff' ? colorScale(v) : '#ffffe0';
-      ctx.fillRect(
-        j * L.cellW,
-        y,
-        Math.max(0.5, L.cellW - 0.4),
-        Math.max(0.5, ch - 0.4)
-      );
+      ctx.fillRect(x, y, width, height);
     }
   }
 
@@ -376,8 +374,10 @@ function drawHeatmap(canvas, params, renderScale = getRenderScale(), options = {
   const nStops = stops.length;
 
   for (let i = 0; i < nStops; i += 1) {
+    const segmentY = legY + (legH / nStops) * (nStops - 1 - i);
+    const segmentHeight = legH / nStops;
     ctx.fillStyle = stops[i];
-    ctx.fillRect(legX, legY + (legH / nStops) * (nStops - 1 - i), legW, legH / nStops);
+    ctx.fillRect(legX, segmentY, legW, segmentHeight);
   }
 
   ctx.font = '7px sans-serif';
@@ -416,7 +416,7 @@ function drawHeatmap(canvas, params, renderScale = getRenderScale(), options = {
 
 /* ====== Canvas 渲染子组件 ====== */
 
-function HeatmapDataTable({ title, matrix, rowLabels, colLabels }) {
+export function HeatmapDataTable({ title, matrix, rowLabels, colLabels }) {
   const visibleRows = matrix.slice(0, 25);
   const visibleColumns = colLabels.slice(0, 20);
   const truncated = matrix.length > visibleRows.length || colLabels.length > visibleColumns.length;
@@ -596,7 +596,8 @@ const HeatmapCanvas = memo(function HeatmapCanvas({
           ? '红色=AD高 蓝色=NC高'
           : showDendrograms
             ? '颜色越深 log丰度越高 · 分组条：红色=AD 绿色=NC'
-            : '颜色越深 log丰度越高'} · 点击热图可放大
+            : '颜色越深 log丰度越高'}
+        {' · 点击热图可放大'}
       </div>
       <div
         onClick={handleOpen}
@@ -622,6 +623,7 @@ const HeatmapCanvas = memo(function HeatmapCanvas({
           data-row-dendrogram-position={showDendrograms ? 'right' : undefined}
           data-column-dendrogram-position={showDendrograms ? 'bottom' : undefined}
           data-row-groups={Array.isArray(rowGroups) ? rowGroups.join(',') : undefined}
+          data-colorblind-friendly="false"
           style={{ display: 'block', width: '100%', height: 'auto' }}
         />
         <Tooltip />

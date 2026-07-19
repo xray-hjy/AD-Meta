@@ -1,9 +1,16 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
+import { ColorVisionProvider } from '../../context/ColorVisionContext';
 import EChartBase, { chartRowsFromOption } from './EChartBase';
 
 vi.mock('echarts-for-react/lib/core', () => ({
-  default: ({ style }) => <div data-testid="echart" style={style} />,
+  default: ({ option, style }) => (
+    <div
+      data-testid="echart"
+      data-decal-enabled={String(option?.aria?.decal?.show)}
+      style={style}
+    />
+  ),
 }));
 
 describe('chartRowsFromOption', () => {
@@ -44,5 +51,16 @@ describe('chartRowsFromOption', () => {
 
     expect(screen.getByRole('img')).toHaveStyle({ width: '100%', height: '100%' });
     expect(screen.getByTestId('echart')).toHaveStyle({ width: '100%', height: '100%' });
+  });
+
+  test('applies the global color-blind preference to ECharts decals', () => {
+    render(
+      <ColorVisionProvider initialEnabled={false}>
+        <EChartBase option={{ series: [{ data: [1] }] }} />
+      </ColorVisionProvider>
+    );
+
+    expect(screen.getByRole('img')).toHaveAttribute('data-colorblind-friendly', 'false');
+    expect(screen.getByTestId('echart')).toHaveAttribute('data-decal-enabled', 'false');
   });
 });

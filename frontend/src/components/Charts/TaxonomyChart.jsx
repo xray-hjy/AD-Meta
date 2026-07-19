@@ -14,6 +14,7 @@ import {
   resolveSankeyCanvasHeight,
   resolveTreemapCanvasSize,
 } from './taxonomyViewportPolicy';
+import { useColorVision } from '../../context/ColorVisionContext';
 
 const SUNBURST_COLORS = [
   '#3B82F6',
@@ -47,6 +48,29 @@ const PHYLUM_MERGE_RATIO = 0.01;
 const SUNBURST_MERGED_PHYLA = 'Others';
 const SUNBURST_MERGED_PHYLA_COLOR = '#94a3b8';
 const SUNBURST_MERGED_PHYLA_ID = 'taxonomy-merged-others';
+const TAXONOMY_STATIC_DECALS = [
+  {
+    symbol: 'rect',
+    dashArrayX: [1, 0],
+    dashArrayY: [4, 3],
+    rotation: -Math.PI / 4,
+    color: 'rgba(15, 23, 42, 0.28)',
+  },
+  {
+    symbol: 'circle',
+    symbolSize: 1.5,
+    dashArrayX: [[1, 3]],
+    dashArrayY: [2, 4],
+    color: 'rgba(15, 23, 42, 0.3)',
+  },
+  {
+    symbol: 'rect',
+    dashArrayX: [1, 0],
+    dashArrayY: [3, 4],
+    rotation: Math.PI / 4,
+    color: 'rgba(15, 23, 42, 0.26)',
+  },
+];
 
 function resizeChartToContainer(chart) {
   const container = chart?.getDom?.();
@@ -576,6 +600,7 @@ function renderPhylumLegendRow(item) {
 }
 
 function TaxonomyChart({ data, mode = 'sunburst' }) {
+  const { colorBlindFriendly } = useColorVision();
   const chartRef = useRef(null);
   const viewportRef = useRef(null);
   const viewportPolicy = getTaxonomyViewportPolicy(mode);
@@ -684,9 +709,23 @@ function TaxonomyChart({ data, mode = 'sunburst' }) {
     const baseOption = {
       backgroundColor: 'transparent',
       color: SUNBURST_COLORS,
+      // ECharts moves emphasis rendering to a separate Canvas layer instead of
+      // repainting the patterned base hierarchy on every pointer movement.
+      hoverLayerThreshold: 1,
+      aria: {
+        enabled: true,
+        // ECharts' tree-aware ARIA pass assigns one stable pattern to every
+        // branch. A three-item palette avoids generating node-unique textures.
+        decal: {
+          show: colorBlindFriendly,
+          decals: TAXONOMY_STATIC_DECALS,
+        },
+      },
       tooltip: {
         trigger: 'item',
         confine: true,
+        transitionDuration: 0,
+        hideDelay: 0,
         formatter: tooltipHtml,
         backgroundColor: 'rgba(15,23,42,0.96)',
         borderColor: 'transparent',
@@ -937,7 +976,7 @@ function TaxonomyChart({ data, mode = 'sunburst' }) {
         },
       ],
     };
-  }, [mode, radialTreeLayout.labelMargin, sankeyModel, sunburstChartData, sunburstLayout, sunburstView, treeData, treemapData]);
+  }, [colorBlindFriendly, mode, radialTreeLayout.labelMargin, sankeyModel, sunburstChartData, sunburstLayout, sunburstView, treeData, treemapData]);
 
   if (!option) {
     return <div className="placeholder"><p>暂无分类层级数据</p></div>;
