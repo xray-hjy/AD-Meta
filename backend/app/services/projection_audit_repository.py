@@ -13,7 +13,6 @@ from typing import Any
 
 from app.core.database import connect, utcnow
 
-
 AUDIT_SCHEMA_VERSION = "1.1"
 
 

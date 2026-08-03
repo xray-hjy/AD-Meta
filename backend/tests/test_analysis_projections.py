@@ -5,9 +5,10 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
-import pytest
 import pandas as pd
+import pytest
 
+from app.compute.charts.detection import compute_detection_heatmap
 from app.core import database
 from app.core.migrations import upgrade_database
 from app.domain.analysis_scope import (
@@ -16,15 +17,6 @@ from app.domain.analysis_scope import (
     ChartProjectionRequest,
     ProjectionAuditRequest,
 )
-from app.services.chart_projection_service import (
-    RevisionMatrixSnapshot,
-    _compute_composition,
-    _compute_chart_projection,
-    _read_revision_matrix_cache,
-    _write_revision_matrix_cache,
-    project_chart,
-)
-from app.compute.charts.detection import compute_detection_heatmap
 from app.services.analysis_projection_service import (
     AnalysisScopeError,
     _compute_abundance_projection,
@@ -33,6 +25,14 @@ from app.services.analysis_projection_service import (
     project_abundance,
 )
 from app.services.analysis_run_service import sync_analysis_runs_from_manifest
+from app.services.chart_projection_service import (
+    RevisionMatrixSnapshot,
+    _compute_chart_projection,
+    _compute_composition,
+    _read_revision_matrix_cache,
+    _write_revision_matrix_cache,
+    project_chart,
+)
 from app.services.projection_audit_service import (
     ProjectionAuditMismatch,
     get_projection_audit,

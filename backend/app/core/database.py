@@ -12,7 +12,6 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.pool import NullPool
 
 from .analysis_schema import MYSQL_ANALYSIS_SCHEMA, SQLITE_ANALYSIS_SCHEMA
-
 from .config import (
     DB_ENGINE,
     DB_PATH,

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 SQLITE_PROJECTION_AUDIT_SCHEMA = """
 CREATE TABLE IF NOT EXISTS projection_audit_artifacts (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

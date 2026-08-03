@@ -15,11 +15,11 @@ from typing import Any
 
 import pandas as pd
 
-from app.compute.charts.taxonomy.hierarchy import compute_taxonomy_hierarchy
 from app.compute.charts.ko_contribution import (
     compute_relative_series_values,
     rank_relative_contributions,
 )
+from app.compute.charts.taxonomy.hierarchy import compute_taxonomy_hierarchy
 from app.compute.taxonomy import short_name, taxonomy_chain
 from app.core.config import COMPUTE_VERSION
 from app.core.database import connect

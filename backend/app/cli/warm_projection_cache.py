@@ -17,7 +17,6 @@ from app.services.projection_audit_service import (
     projection_audit_sections,
 )
 
-
 PROJECTIONS_BY_FEATURE_KIND = {
     "taxonomy": (
         "composition",

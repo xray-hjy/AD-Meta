@@ -4,7 +4,6 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-
 ScopeMode = Literal["cohort", "group", "subset", "sample"]
 GroupCode = Literal["AD", "NC"]
 

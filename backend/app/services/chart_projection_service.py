@@ -16,12 +16,12 @@ import pandas as pd
 from app.compute.charts.boxplot import _box_summary, _log10_abundance
 from app.compute.charts.detection import compute_detection_heatmap
 from app.compute.charts.heatmap import compute_heatmap
-from app.compute.charts.lda import compute_ko_differential
 from app.compute.charts.ko_contribution import compute_ko_contribution
+from app.compute.charts.lda import compute_ko_differential
 from app.compute.charts.ordination import compute_pca, compute_pcoa
 from app.compute.charts.taxonomy.hierarchy import compute_taxonomy_hierarchy
-from app.compute.charts.taxonomy.pruning import TAXONOMY_TREE_PRUNE_RULES
 from app.compute.charts.taxonomy.projections import compute_taxonomy_sankey_projection
+from app.compute.charts.taxonomy.pruning import TAXONOMY_TREE_PRUNE_RULES
 from app.compute.taxonomy import get_level, short_name
 from app.core import database
 from app.core.config import CACHE_ROOT, COMPUTE_VERSION
@@ -29,15 +29,14 @@ from app.core.database import connect
 from app.domain.analysis_scope import AnalysisScope, ChartProjectionRequest, ProjectionKind
 from app.domain.projection_policy import PROJECTION_POLICIES, ProjectionPolicy
 from app.services.analysis_projection_service import (
-    AnalysisScopeError,
     SERIES_COLORS,
+    AnalysisScopeError,
     _artifact_samples,
     _resolve_artifact,
     _resolve_run,
     _revision_series_sample_ids,
     _select_scope_samples,
 )
-
 
 # Kept as a read-only compatibility view for callers that still inspect the old
 # dictionary shape.  Validation below uses the typed policy objects.
@@ -394,7 +393,7 @@ def _compute_composition(df: pd.DataFrame, features: list[str], scope: AnalysisS
     ordered = sorted(buckets, key=lambda label: (-sum(buckets[label].values()), label))
     keep_count = min(top_n, len(ordered))
     kept = ordered[:keep_count]
-    rows = [{"feature": label, "values": buckets[label]} for label in kept]
+    rows: list[dict[str, Any]] = [{"feature": label, "values": buckets[label]} for label in kept]
     if len(ordered) > keep_count:
         rows.append({
             "feature": "Other",

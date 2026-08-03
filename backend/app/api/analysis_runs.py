@@ -4,14 +4,14 @@ from fastapi import APIRouter, HTTPException, Query
 
 from app.api.models import (
     AbundanceProjectionResponse,
-    ChartProjectionResponse,
     AnalysisRunResponse,
     AnalysisSampleDetailResponse,
     AnalysisSamplePageResponse,
+    ChartProjectionResponse,
     ErrorResponse,
-    ProjectionAuditResponse,
     ProjectionAuditMetadataResponse,
     ProjectionAuditOptionsResponse,
+    ProjectionAuditResponse,
     ProjectionAuditRowsResponse,
 )
 from app.domain.analysis_scope import (
@@ -22,15 +22,6 @@ from app.domain.analysis_scope import (
     ProjectionKind,
     ScopedSampleRequest,
 )
-from app.services.chart_projection_service import project_chart
-from app.services.analysis_run_service import get_analysis_run, list_analysis_runs
-from app.services.projection_audit_service import (
-    ProjectionAuditMismatch,
-    get_projection_audit,
-    get_projection_audit_metadata,
-    get_projection_audit_options,
-    query_projection_audit_rows,
-)
 from app.services.analysis_projection_service import (
     AnalysisArtifactNotFound,
     AnalysisRunNotFound,
@@ -39,6 +30,15 @@ from app.services.analysis_projection_service import (
     list_analysis_samples,
     list_scoped_analysis_samples,
     project_abundance,
+)
+from app.services.analysis_run_service import get_analysis_run, list_analysis_runs
+from app.services.chart_projection_service import project_chart
+from app.services.projection_audit_service import (
+    ProjectionAuditMismatch,
+    get_projection_audit,
+    get_projection_audit_metadata,
+    get_projection_audit_options,
+    query_projection_audit_rows,
 )
 
 router = APIRouter(prefix="/api/analysis-runs", tags=["analysis-runs"])

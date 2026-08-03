@@ -41,7 +41,7 @@ test('deep links restore all taxonomy modes and dataset switching', async ({ pag
     await expect(page.locator('.taxonomy-chart-surface')).toBeVisible();
   }
 
-  await page.getByRole('combobox', { name: '选择分析数据' }).selectOption(KO_DATASET);
+  await page.getByRole('button', { name: '群落功能 切换数据域' }).click();
   await expect(page).toHaveURL(new RegExp(`dataset=${KO_DATASET}.*chart=species`));
   await expect(page.getByRole('heading', { name: /Top N KO丰度对比/ })).toBeVisible();
 });

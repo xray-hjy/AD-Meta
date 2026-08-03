@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 SQLITE_ANALYSIS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS analysis_runs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

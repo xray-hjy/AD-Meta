@@ -19,7 +19,6 @@ from sklearn.preprocessing import StandardScaler
 
 from app.compute.common import FEATURE_META
 
-
 PCOA_FILTER_PRESETS = {
     "unfiltered": {"minimumRelativeAbundance": 0.0, "minimumPrevalence": 0.0},
     "inclusive": {"minimumRelativeAbundance": 0.00001, "minimumPrevalence": 0.05},

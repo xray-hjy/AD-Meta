@@ -14,8 +14,8 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse
 
-from app.api.datasets import router as datasets_router
 from app.api.analysis_runs import router as analysis_runs_router
+from app.api.datasets import router as datasets_router
 from app.core.config import CACHE_ROOT, DEFAULT_CORS_ORIGINS, STATS_WORKER_URL
 from app.core.database import connect, dispose_engine
 from app.core.migrations import HEAD_REVISION, upgrade_database
