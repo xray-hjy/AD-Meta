@@ -9,7 +9,13 @@ export class ApiError extends Error {
   }
 }
 
-export async function fetchJson(path, { signal, timeoutMs = 15_000 } = {}) {
+export async function fetchJson(path, {
+  signal,
+  timeoutMs = 15_000,
+  method = 'GET',
+  body,
+  headers = {},
+} = {}) {
   const controller = new AbortController();
   let timedOut = false;
   const timeout = window.setTimeout(() => {
@@ -20,7 +26,18 @@ export async function fetchJson(path, { signal, timeoutMs = 15_000 } = {}) {
   signal?.addEventListener('abort', cancel, { once: true });
 
   try {
-    const response = await fetch(`${API_BASE_URL}${path}`, { signal: controller.signal });
+    const requestHeaders = { ...headers };
+    let requestBody = body;
+    if (body != null && typeof body !== 'string' && !(body instanceof FormData)) {
+      requestBody = JSON.stringify(body);
+      requestHeaders['Content-Type'] ||= 'application/json';
+    }
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+      method,
+      body: requestBody,
+      headers: requestHeaders,
+      signal: controller.signal,
+    });
     let payload = null;
     try {
       payload = await response.json();

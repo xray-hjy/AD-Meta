@@ -23,11 +23,29 @@ def test_empty_database_upgrades_to_head() -> None:
                 "SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE 'revision_%'"
             )
         }
+        analysis_tables = {
+            row[0]
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE 'analysis_%'"
+            )
+        }
+        projection_audit_tables = {
+            row[0]
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master "
+                "WHERE type = 'table' AND name LIKE 'projection_audit_%'"
+            )
+        }
         connection.close()
 
     assert version == HEAD_REVISION
     assert "revision_chart_artifacts" in revision_tables
     assert "revision_sample_info" in revision_tables
+    assert "analysis_runs" in analysis_tables
+    assert "analysis_artifacts" in analysis_tables
+    assert "analysis_artifact_samples" in analysis_tables
+    assert "projection_audit_artifacts" in projection_audit_tables
+    assert "projection_audit_rows" in projection_audit_tables
 
 
 def test_unversioned_legacy_database_is_stamped_once() -> None:

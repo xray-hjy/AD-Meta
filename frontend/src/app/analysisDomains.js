@@ -41,7 +41,7 @@ export const ANALYSIS_DOMAINS = [
       { label: '通路解释', status: 'planned' },
     ],
     navigationSections: [
-      { key: 'composition', label: '功能概览', charts: ['species', 'phylum'] },
+      { key: 'composition', label: '功能概览', charts: ['species', 'koContribution'] },
       { key: 'difference', label: '检出与差异', charts: ['detection', 'differential_ko'] },
     ],
   },

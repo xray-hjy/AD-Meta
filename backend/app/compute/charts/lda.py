@@ -29,6 +29,7 @@ def compute_ko_differential(
     top_n: int = 30,
     q_value_max: float = 0.05,
     prevalence_min: float = 0.1,
+    include_audit: bool = False,
 ) -> dict:
     """Generate an FDR-controlled exploratory KO differential payload."""
 
@@ -43,9 +44,17 @@ def compute_ko_differential(
     per_group_top_n = max(1, max_features // 2)
 
     tested: list[dict] = []
+    audit_rows: list[dict] = []
     for index, col in enumerate(species_cols):
         prevalence = float(np.mean(all_values[:, index] > 0)) if len(all_values) else 0.0
         if prevalence < prevalence_min:
+            if include_audit:
+                audit_rows.append({
+                    "koId": col,
+                    "prevalence": prevalence,
+                    "status": "filtered",
+                    "reason": "below_prevalence_threshold",
+                })
             continue
         try:
             result = mannwhitneyu(ad_values[:, index], nc_values[:, index], alternative="two-sided")
@@ -91,15 +100,28 @@ def compute_ko_differential(
     ad_items.sort(key=sort_key)
     nc_items.sort(key=sort_key)
     selected_items = (ad_items[:per_group_top_n] + nc_items[:per_group_top_n])[:max_features]
+    if include_audit:
+        selected_ids = {item["koId"] for item in selected_items}
+        for item in tested:
+            row = dict(item)
+            if item["koId"] in selected_ids:
+                row["status"] = "displayed"
+                row["reason"] = "balanced_effect_ranking"
+            elif item["qValue"] < q_value_max:
+                row["status"] = "display_cap"
+                row["reason"] = "outside_balanced_top_n"
+            else:
+                row["status"] = "filtered"
+                row["reason"] = "q_value_threshold"
+            audit_rows.append(row)
 
-    return {
+    payload = {
         "featureLabel": df.attrs.get("feature_label", FEATURE_META["ko"]["label"]),
         "method": "Mann-Whitney U with Benjamini-Hochberg FDR",
         "inferenceLevel": "exploratory_fdr",
         "modelFormula": "Group",
         "filter": {
             "qValueMax": q_value_max,
-            "pValueMax": 0.05,
             "prevalenceMin": prevalence_min,
             "topN": max_features,
             "selectionMode": "balanced_fdr_significant_by_group",
@@ -122,6 +144,9 @@ def compute_ko_differential(
             "legacyFields": ["ldaScore"],
         },
     }
+    if include_audit:
+        payload["_auditRows"] = audit_rows
+    return payload
 
 
 def compute_ko_lda(

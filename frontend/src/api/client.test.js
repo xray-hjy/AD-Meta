@@ -15,6 +15,25 @@ describe('fetchJson', () => {
     await expect(fetchJson('/api/demo')).resolves.toEqual({ ok: true });
   });
 
+  test('serializes JSON request bodies for projection endpoints', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ projectionKey: 'p1' }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await fetchJson('/api/projection', {
+      method: 'POST',
+      body: { topN: 20 },
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/projection', expect.objectContaining({
+      method: 'POST',
+      body: '{"topN":20}',
+      headers: expect.objectContaining({ 'Content-Type': 'application/json' }),
+    }));
+  });
+
   test('classifies 404 and server responses', async () => {
     const fetchMock = vi.fn()
       .mockResolvedValueOnce({ ok: false, status: 404, json: async () => ({ detail: 'missing' }) })

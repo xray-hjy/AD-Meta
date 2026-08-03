@@ -1,6 +1,490 @@
 {
   "components": {
     "schemas": {
+      "AbundanceProjectionRequest": {
+        "properties": {
+          "ranking": {
+            "const": "mean_abundance",
+            "default": "mean_abundance",
+            "title": "Ranking",
+            "type": "string"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/AnalysisScope"
+          },
+          "topN": {
+            "default": 20,
+            "maximum": 500.0,
+            "minimum": 1.0,
+            "title": "Topn",
+            "type": "integer"
+          }
+        },
+        "title": "AbundanceProjectionRequest",
+        "type": "object"
+      },
+      "AbundanceProjectionResponse": {
+        "additionalProperties": true,
+        "properties": {
+          "artifactKey": {
+            "title": "Artifactkey",
+            "type": "string"
+          },
+          "datasetRevision": {
+            "title": "Datasetrevision",
+            "type": "string"
+          },
+          "datasetSlug": {
+            "title": "Datasetslug",
+            "type": "string"
+          },
+          "featureKind": {
+            "title": "Featurekind",
+            "type": "string"
+          },
+          "featureLabel": {
+            "title": "Featurelabel",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "projection": {
+            "additionalProperties": true,
+            "title": "Projection",
+            "type": "object"
+          },
+          "projectionKey": {
+            "title": "Projectionkey",
+            "type": "string"
+          },
+          "runKey": {
+            "title": "Runkey",
+            "type": "string"
+          },
+          "scope": {
+            "additionalProperties": true,
+            "title": "Scope",
+            "type": "object"
+          },
+          "series": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Series",
+            "type": "array"
+          }
+        },
+        "required": [
+          "projectionKey",
+          "runKey",
+          "artifactKey",
+          "datasetSlug",
+          "datasetRevision",
+          "featureKind",
+          "featureLabel",
+          "scope",
+          "projection"
+        ],
+        "title": "AbundanceProjectionResponse",
+        "type": "object"
+      },
+      "AnalysisArtifactResponse": {
+        "properties": {
+          "abundanceScale": {
+            "default": "unknown",
+            "title": "Abundancescale",
+            "type": "string"
+          },
+          "coverageFraction": {
+            "title": "Coveragefraction",
+            "type": "number"
+          },
+          "datasetRevision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Datasetrevision"
+          },
+          "datasetSlug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Datasetslug"
+          },
+          "featureKind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Featurekind"
+          },
+          "featureLabel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Featurelabel"
+          },
+          "groupCounts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Groupcounts",
+            "type": "object"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "normalization": {
+            "default": "unknown",
+            "title": "Normalization",
+            "type": "string"
+          },
+          "sampleCount": {
+            "title": "Samplecount",
+            "type": "integer"
+          },
+          "schemaVersion": {
+            "title": "Schemaversion",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          },
+          "uri": {
+            "title": "Uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "type",
+          "sampleCount",
+          "coverageFraction",
+          "schemaVersion",
+          "uri"
+        ],
+        "title": "AnalysisArtifactResponse",
+        "type": "object"
+      },
+      "AnalysisRunResponse": {
+        "properties": {
+          "artifacts": {
+            "items": {
+              "$ref": "#/components/schemas/AnalysisArtifactResponse"
+            },
+            "title": "Artifacts",
+            "type": "array"
+          },
+          "completedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completedat"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Createdat"
+          },
+          "description": {
+            "default": "",
+            "title": "Description",
+            "type": "string"
+          },
+          "groupCounts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Groupcounts",
+            "type": "object"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "manifestVersion": {
+            "title": "Manifestversion",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "parameters": {
+            "additionalProperties": true,
+            "title": "Parameters",
+            "type": "object"
+          },
+          "pipeline": {
+            "additionalProperties": true,
+            "title": "Pipeline",
+            "type": "object"
+          },
+          "provenance": {
+            "additionalProperties": true,
+            "title": "Provenance",
+            "type": "object"
+          },
+          "publishedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publishedat"
+          },
+          "referenceDatabases": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Referencedatabases",
+            "type": "array"
+          },
+          "sampleCount": {
+            "title": "Samplecount",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "key",
+          "name",
+          "status",
+          "manifestVersion",
+          "sampleCount"
+        ],
+        "title": "AnalysisRunResponse",
+        "type": "object"
+      },
+      "AnalysisSampleDetailResponse": {
+        "properties": {
+          "artifacts": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Artifacts",
+            "type": "array"
+          },
+          "cohortKey": {
+            "default": "",
+            "title": "Cohortkey",
+            "type": "string"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "title": "Metadata",
+            "type": "object"
+          },
+          "phenotype": {
+            "title": "Phenotype",
+            "type": "string"
+          },
+          "runKey": {
+            "title": "Runkey",
+            "type": "string"
+          },
+          "sampleCode": {
+            "title": "Samplecode",
+            "type": "string"
+          },
+          "sourceStudy": {
+            "default": "",
+            "title": "Sourcestudy",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sampleCode",
+          "phenotype",
+          "runKey"
+        ],
+        "title": "AnalysisSampleDetailResponse",
+        "type": "object"
+      },
+      "AnalysisSamplePageResponse": {
+        "properties": {
+          "artifactKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Artifactkey"
+          },
+          "availableFields": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Availablefields",
+            "type": "array"
+          },
+          "groupCounts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Groupcounts",
+            "type": "object"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AnalysisSampleResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "runKey": {
+            "title": "Runkey",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "runKey",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "AnalysisSamplePageResponse",
+        "type": "object"
+      },
+      "AnalysisSampleResponse": {
+        "properties": {
+          "cohortKey": {
+            "default": "",
+            "title": "Cohortkey",
+            "type": "string"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "title": "Metadata",
+            "type": "object"
+          },
+          "phenotype": {
+            "title": "Phenotype",
+            "type": "string"
+          },
+          "sampleCode": {
+            "title": "Samplecode",
+            "type": "string"
+          },
+          "sourceStudy": {
+            "default": "",
+            "title": "Sourcestudy",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sampleCode",
+          "phenotype"
+        ],
+        "title": "AnalysisSampleResponse",
+        "type": "object"
+      },
+      "AnalysisScope": {
+        "description": "The exact sample population used to build one analytical projection.",
+        "properties": {
+          "groups": {
+            "items": {
+              "enum": [
+                "AD",
+                "NC"
+              ],
+              "type": "string"
+            },
+            "title": "Groups",
+            "type": "array"
+          },
+          "mode": {
+            "default": "cohort",
+            "enum": [
+              "cohort",
+              "group",
+              "subset",
+              "sample"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "sampleCodes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Samplecodes",
+            "type": "array"
+          }
+        },
+        "title": "AnalysisScope",
+        "type": "object"
+      },
       "ChartArtifactResponse": {
         "additionalProperties": true,
         "properties": {
@@ -69,6 +553,88 @@
           }
         },
         "title": "ChartArtifactResponse",
+        "type": "object"
+      },
+      "ChartProjectionRequest": {
+        "description": "Scope and display parameters for a server-computed chart projection.",
+        "properties": {
+          "parameters": {
+            "additionalProperties": true,
+            "title": "Parameters",
+            "type": "object"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/AnalysisScope"
+          },
+          "topN": {
+            "default": 20,
+            "maximum": 500.0,
+            "minimum": 1.0,
+            "title": "Topn",
+            "type": "integer"
+          }
+        },
+        "title": "ChartProjectionRequest",
+        "type": "object"
+      },
+      "ChartProjectionResponse": {
+        "additionalProperties": true,
+        "properties": {
+          "artifactKey": {
+            "title": "Artifactkey",
+            "type": "string"
+          },
+          "datasetRevision": {
+            "title": "Datasetrevision",
+            "type": "string"
+          },
+          "datasetSlug": {
+            "title": "Datasetslug",
+            "type": "string"
+          },
+          "featureKind": {
+            "title": "Featurekind",
+            "type": "string"
+          },
+          "featureLabel": {
+            "title": "Featurelabel",
+            "type": "string"
+          },
+          "payload": {
+            "title": "Payload"
+          },
+          "projection": {
+            "additionalProperties": true,
+            "title": "Projection",
+            "type": "object"
+          },
+          "projectionKey": {
+            "title": "Projectionkey",
+            "type": "string"
+          },
+          "runKey": {
+            "title": "Runkey",
+            "type": "string"
+          },
+          "scope": {
+            "additionalProperties": true,
+            "title": "Scope",
+            "type": "object"
+          }
+        },
+        "required": [
+          "projectionKey",
+          "runKey",
+          "artifactKey",
+          "datasetSlug",
+          "datasetRevision",
+          "featureKind",
+          "featureLabel",
+          "scope",
+          "payload",
+          "projection"
+        ],
+        "title": "ChartProjectionResponse",
         "type": "object"
       },
       "DatasetResponse": {
@@ -236,6 +802,315 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "ProjectionAuditMetadataResponse": {
+        "additionalProperties": true,
+        "properties": {
+          "artifact": {
+            "additionalProperties": true,
+            "title": "Artifact",
+            "type": "object"
+          },
+          "columns": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Columns",
+            "type": "array"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "projectionKey": {
+            "title": "Projectionkey",
+            "type": "string"
+          },
+          "sampleScope": {
+            "additionalProperties": true,
+            "title": "Samplescope",
+            "type": "object"
+          },
+          "section": {
+            "title": "Section",
+            "type": "string"
+          },
+          "sections": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Sections",
+            "type": "array"
+          },
+          "summary": {
+            "additionalProperties": true,
+            "title": "Summary",
+            "type": "object"
+          }
+        },
+        "required": [
+          "projectionKey",
+          "kind",
+          "section"
+        ],
+        "title": "ProjectionAuditMetadataResponse",
+        "type": "object"
+      },
+      "ProjectionAuditOptionsResponse": {
+        "properties": {
+          "field": {
+            "title": "Field",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "default": 200,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "projectionKey": {
+            "title": "Projectionkey",
+            "type": "string"
+          },
+          "section": {
+            "title": "Section",
+            "type": "string"
+          }
+        },
+        "required": [
+          "projectionKey",
+          "section",
+          "field"
+        ],
+        "title": "ProjectionAuditOptionsResponse",
+        "type": "object"
+      },
+      "ProjectionAuditRequest": {
+        "description": "Exact projection identity plus lazy detail-table pagination.",
+        "properties": {
+          "filters": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Filters",
+            "type": "object"
+          },
+          "limit": {
+            "default": 100,
+            "maximum": 500.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "parameters": {
+            "additionalProperties": true,
+            "title": "Parameters",
+            "type": "object"
+          },
+          "projectionKey": {
+            "minLength": 16,
+            "title": "Projectionkey",
+            "type": "string"
+          },
+          "query": {
+            "default": "",
+            "title": "Query",
+            "type": "string"
+          },
+          "ranking": {
+            "const": "mean_abundance",
+            "default": "mean_abundance",
+            "title": "Ranking",
+            "type": "string"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/AnalysisScope"
+          },
+          "section": {
+            "default": "",
+            "title": "Section",
+            "type": "string"
+          },
+          "sortBy": {
+            "default": "",
+            "title": "Sortby",
+            "type": "string"
+          },
+          "sortDirection": {
+            "default": "asc",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "title": "Sortdirection",
+            "type": "string"
+          },
+          "topN": {
+            "default": 20,
+            "maximum": 500.0,
+            "minimum": 1.0,
+            "title": "Topn",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "projectionKey"
+        ],
+        "title": "ProjectionAuditRequest",
+        "type": "object"
+      },
+      "ProjectionAuditResponse": {
+        "additionalProperties": true,
+        "properties": {
+          "columns": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Columns",
+            "type": "array"
+          },
+          "filterOptions": {
+            "additionalProperties": {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "title": "Filteroptions",
+            "type": "object"
+          },
+          "items": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "limit": {
+            "default": 100,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "projectionKey": {
+            "title": "Projectionkey",
+            "type": "string"
+          },
+          "sampleScope": {
+            "additionalProperties": true,
+            "title": "Samplescope",
+            "type": "object"
+          },
+          "section": {
+            "title": "Section",
+            "type": "string"
+          },
+          "sections": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Sections",
+            "type": "array"
+          },
+          "summary": {
+            "additionalProperties": true,
+            "title": "Summary",
+            "type": "object"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "projectionKey",
+          "kind",
+          "section"
+        ],
+        "title": "ProjectionAuditResponse",
+        "type": "object"
+      },
+      "ProjectionAuditRowsResponse": {
+        "properties": {
+          "columns": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Columns",
+            "type": "array"
+          },
+          "items": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "limit": {
+            "default": 100,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "projectionKey": {
+            "title": "Projectionkey",
+            "type": "string"
+          },
+          "section": {
+            "title": "Section",
+            "type": "string"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "projectionKey",
+          "kind",
+          "section"
+        ],
+        "title": "ProjectionAuditRowsResponse",
+        "type": "object"
+      },
       "ProvenanceResponse": {
         "additionalProperties": true,
         "properties": {
@@ -334,6 +1209,34 @@
           }
         },
         "title": "ProvenanceResponse",
+        "type": "object"
+      },
+      "ScopedSampleRequest": {
+        "description": "Lightweight sample-metadata query bound to one analytical scope.",
+        "properties": {
+          "limit": {
+            "default": 100,
+            "maximum": 500.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "query": {
+            "default": "",
+            "title": "Query",
+            "type": "string"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/AnalysisScope"
+          }
+        },
+        "title": "ScopedSampleRequest",
         "type": "object"
       },
       "SummaryResponse": {
@@ -454,6 +1357,814 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/analysis-runs": {
+      "get": {
+        "operationId": "analysis_runs_api_analysis_runs_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AnalysisRunResponse"
+                  },
+                  "title": "Response Analysis Runs Api Analysis Runs Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Analysis Runs",
+        "tags": [
+          "analysis-runs"
+        ]
+      }
+    },
+    "/api/analysis-runs/{run_key}": {
+      "get": {
+        "operationId": "analysis_run_api_analysis_runs__run_key__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_key",
+            "required": true,
+            "schema": {
+              "title": "Run Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisRunResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Analysis Run",
+        "tags": [
+          "analysis-runs"
+        ]
+      }
+    },
+    "/api/analysis-runs/{run_key}/artifacts/{artifact_key}/projection-audits/{projection_kind}": {
+      "post": {
+        "operationId": "projection_audit_api_analysis_runs__run_key__artifacts__artifact_key__projection_audits__projection_kind__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_key",
+            "required": true,
+            "schema": {
+              "title": "Run Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "artifact_key",
+            "required": true,
+            "schema": {
+              "title": "Artifact Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "projection_kind",
+            "required": true,
+            "schema": {
+              "enum": [
+                "abundance",
+                "composition",
+                "ko_contribution",
+                "boxplot",
+                "heatmap",
+                "detection",
+                "differential_ko",
+                "taxonomy",
+                "taxonomy_sankey",
+                "pca",
+                "pcoa"
+              ],
+              "title": "Projection Kind",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectionAuditRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectionAuditResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Projection Audit",
+        "tags": [
+          "analysis-runs"
+        ]
+      }
+    },
+    "/api/analysis-runs/{run_key}/artifacts/{artifact_key}/projection-audits/{projection_kind}/metadata": {
+      "post": {
+        "operationId": "projection_audit_metadata_api_analysis_runs__run_key__artifacts__artifact_key__projection_audits__projection_kind__metadata_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_key",
+            "required": true,
+            "schema": {
+              "title": "Run Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "artifact_key",
+            "required": true,
+            "schema": {
+              "title": "Artifact Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "projection_kind",
+            "required": true,
+            "schema": {
+              "enum": [
+                "abundance",
+                "composition",
+                "ko_contribution",
+                "boxplot",
+                "heatmap",
+                "detection",
+                "differential_ko",
+                "taxonomy",
+                "taxonomy_sankey",
+                "pca",
+                "pcoa"
+              ],
+              "title": "Projection Kind",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectionAuditRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectionAuditMetadataResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Projection Audit Metadata",
+        "tags": [
+          "analysis-runs"
+        ]
+      }
+    },
+    "/api/analysis-runs/{run_key}/artifacts/{artifact_key}/projection-audits/{projection_kind}/options/{field}": {
+      "post": {
+        "operationId": "projection_audit_options_api_analysis_runs__run_key__artifacts__artifact_key__projection_audits__projection_kind__options__field__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_key",
+            "required": true,
+            "schema": {
+              "title": "Run Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "artifact_key",
+            "required": true,
+            "schema": {
+              "title": "Artifact Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "projection_kind",
+            "required": true,
+            "schema": {
+              "enum": [
+                "abundance",
+                "composition",
+                "ko_contribution",
+                "boxplot",
+                "heatmap",
+                "detection",
+                "differential_ko",
+                "taxonomy",
+                "taxonomy_sankey",
+                "pca",
+                "pcoa"
+              ],
+              "title": "Projection Kind",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "field",
+            "required": true,
+            "schema": {
+              "title": "Field",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Query",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 200,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectionAuditRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectionAuditOptionsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Projection Audit Options",
+        "tags": [
+          "analysis-runs"
+        ]
+      }
+    },
+    "/api/analysis-runs/{run_key}/artifacts/{artifact_key}/projection-audits/{projection_kind}/rows": {
+      "post": {
+        "operationId": "projection_audit_rows_api_analysis_runs__run_key__artifacts__artifact_key__projection_audits__projection_kind__rows_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_key",
+            "required": true,
+            "schema": {
+              "title": "Run Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "artifact_key",
+            "required": true,
+            "schema": {
+              "title": "Artifact Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "projection_kind",
+            "required": true,
+            "schema": {
+              "enum": [
+                "abundance",
+                "composition",
+                "ko_contribution",
+                "boxplot",
+                "heatmap",
+                "detection",
+                "differential_ko",
+                "taxonomy",
+                "taxonomy_sankey",
+                "pca",
+                "pcoa"
+              ],
+              "title": "Projection Kind",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectionAuditRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectionAuditRowsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Projection Audit Rows",
+        "tags": [
+          "analysis-runs"
+        ]
+      }
+    },
+    "/api/analysis-runs/{run_key}/artifacts/{artifact_key}/projections/abundance": {
+      "post": {
+        "operationId": "abundance_projection_api_analysis_runs__run_key__artifacts__artifact_key__projections_abundance_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_key",
+            "required": true,
+            "schema": {
+              "title": "Run Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "artifact_key",
+            "required": true,
+            "schema": {
+              "title": "Artifact Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AbundanceProjectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AbundanceProjectionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Abundance Projection",
+        "tags": [
+          "analysis-runs"
+        ]
+      }
+    },
+    "/api/analysis-runs/{run_key}/artifacts/{artifact_key}/projections/{projection_kind}": {
+      "post": {
+        "operationId": "chart_projection_api_analysis_runs__run_key__artifacts__artifact_key__projections__projection_kind__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_key",
+            "required": true,
+            "schema": {
+              "title": "Run Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "artifact_key",
+            "required": true,
+            "schema": {
+              "title": "Artifact Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "projection_kind",
+            "required": true,
+            "schema": {
+              "enum": [
+                "composition",
+                "ko_contribution",
+                "boxplot",
+                "heatmap",
+                "detection",
+                "differential_ko",
+                "taxonomy",
+                "taxonomy_sankey",
+                "pca",
+                "pcoa"
+              ],
+              "title": "Projection Kind",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChartProjectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChartProjectionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Chart Projection",
+        "tags": [
+          "analysis-runs"
+        ]
+      }
+    },
+    "/api/analysis-runs/{run_key}/artifacts/{artifact_key}/samples/query": {
+      "post": {
+        "operationId": "scoped_analysis_samples_api_analysis_runs__run_key__artifacts__artifact_key__samples_query_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_key",
+            "required": true,
+            "schema": {
+              "title": "Run Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "artifact_key",
+            "required": true,
+            "schema": {
+              "title": "Artifact Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScopedSampleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisSamplePageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Scoped Analysis Samples",
+        "tags": [
+          "analysis-runs"
+        ]
+      }
+    },
+    "/api/analysis-runs/{run_key}/samples": {
+      "get": {
+        "operationId": "analysis_samples_api_analysis_runs__run_key__samples_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_key",
+            "required": true,
+            "schema": {
+              "title": "Run Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "artifactKey",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Artifactkey"
+            }
+          },
+          {
+            "in": "query",
+            "name": "phenotype",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Phenotype"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Query"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisSamplePageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Analysis Samples",
+        "tags": [
+          "analysis-runs"
+        ]
+      }
+    },
+    "/api/analysis-runs/{run_key}/samples/{sample_code}": {
+      "get": {
+        "operationId": "analysis_sample_api_analysis_runs__run_key__samples__sample_code__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_key",
+            "required": true,
+            "schema": {
+              "title": "Run Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "sample_code",
+            "required": true,
+            "schema": {
+              "title": "Sample Code",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisSampleDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Analysis Sample",
+        "tags": [
+          "analysis-runs"
+        ]
+      }
+    },
     "/api/datasets": {
       "get": {
         "operationId": "datasets_api_datasets_get",

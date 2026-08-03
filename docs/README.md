@@ -15,12 +15,20 @@
 
 - [API 契约](reference/api.md)：公开只读接口与图表 payload。
 - [数据库契约](reference/database.md)：科学数据表、应用支撑表和导入约束。
+- [AnalysisRun、Artifact 与 Manifest 数据契约](reference/analysis-run-artifact-manifest.md)：生信组、标志物组与 AD-Meta 之间的分析结果交付规范草案。
 - [AD 宏基因组生物信息分析流程摘要](reference/bioinformatics-analysis-workflow.md)：从 Raw FASTQ 到物种、KO 和未来 MAG 分析结果的上游流程。
 - [生物信息流程与分析数据接入](reference/bioinformatics-analysis-data.md)：分析数据接入边界、科学表述和未来 MAG 扩展约定。
+- [图表分析策略与投影契约](reference/chart-analysis-policies.md)：分析范围、计算参数、展示上限及各类图表的专属科学策略。
 
 ## 开发记录
 
 - [综合更新日志](development/updates.md)
+- [2026-08-03 PCoA 稀有特征过滤与探索性推断更新](development/2026-08-03-pcoa-filtering-and-inference.md)
+- [2026-08-01 投影筛选与合并明细更新](development/2026-08-01-projection-audit-details.md)
+- [2026-08-02 投影审计读模型](development/2026-08-02-projection-audit-read-model.md)
+- [2026-07-29 默认探索策略与投影缓存更新](development/2026-07-29-default-exploration-strategy.md)
+- [KO 功能类别组成后续开发提醒](development/ko-functional-category-composition-follow-up.md)：记录当前 KO 相对贡献边界、未来版本化映射要求及完成后的清理项。
+- [科学元数据后续实施提醒](development/scientific-metadata-follow-up.md)：记录丰度尺度、标准化方法、批次与协变量等待确认信息及未来 Manifest 接入要求。
 - [2026-07-14 开发更新日志](development/2026-07-14-development-update.md)
 - [2026-07-12 更新日志](development/2026-07-12-release-notes.md)
 - [前端 UI 重构记录](development/frontend-ui-refactor-update.md)

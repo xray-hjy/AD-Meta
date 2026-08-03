@@ -18,7 +18,7 @@ from .charts.boxplot import _box_summary, _box_values, compute_boxplot
 from .charts.detection import compute_detection_heatmap
 from .charts.heatmap import _cluster_order, _heatmap_filter, _hierarchical_cluster, compute_heatmap
 from .charts.lda import _univariate_lda_score, compute_ko_differential, compute_ko_lda
-from .charts.ordination import _confidence_ellipses, _permanova, compute_pca, compute_pcoa
+from .charts.ordination import _distribution_ellipses, _permanova, compute_pca, compute_pcoa
 from .charts.phylum import compute_phylum
 from .charts.species import compute_species
 from .charts.summary import compute_summary
@@ -118,7 +118,7 @@ __all__ = [
     "_box_summary",
     "_box_values",
     "_cluster_order",
-    "_confidence_ellipses",
+    "_distribution_ellipses",
     "_group_frames",
     "_heatmap_filter",
     "_hierarchical_cluster",

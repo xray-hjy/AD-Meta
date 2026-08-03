@@ -1,4 +1,37 @@
 {
+  "manifestVersion": "1.0",
+  "analysisRuns": [
+    {
+      "key": "ad-nc-community-baseline-2026-07",
+      "name": "当前 AD/NC 分析结果",
+      "description": "同一研究背景下形成的物种组成与 KO 功能分析结果；各产物按其实际样本覆盖独立登记。",
+      "status": "published",
+      "pipeline": {
+        "name": "external-ad-metagenome-workflow",
+        "version": "unknown"
+      },
+      "parameters": {},
+      "referenceDatabases": [],
+      "provenance": {
+        "scope": "current-tracked-analysis-results",
+        "note": "Upstream workflow details and database versions require confirmation from the bioinformatics team."
+      },
+      "artifacts": [
+        {
+          "key": "species-abundance-matrix",
+          "type": "species_abundance",
+          "datasetSlug": "ad-nc-species",
+          "schemaVersion": "1.0"
+        },
+        {
+          "key": "ko-abundance-matrix",
+          "type": "ko_abundance",
+          "datasetSlug": "ad-nc-ko-abundance",
+          "schemaVersion": "1.0"
+        }
+      ]
+    }
+  ],
   "datasets": [
     {
       "slug": "ad-nc-species",

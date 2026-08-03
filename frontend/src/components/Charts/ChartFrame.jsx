@@ -10,10 +10,14 @@ export default function ChartFrame({
   onRetry,
   empty,
   layout = 'fit',
+  controls = null,
+  disclosure = null,
+  audit = null,
+  loadingState = null,
   children,
 }) {
   let body = children;
-  if (loading) body = <LoadingState />;
+  if (loading) body = loadingState || <LoadingState />;
   else if (error) body = <ErrorState message={error} onRetry={onRetry} />;
   else if (empty) body = <EmptyState message="当前图表暂无可展示数据" />;
 
@@ -25,7 +29,12 @@ export default function ChartFrame({
           {subtitle ? <p className="chart-frame__subtitle">{subtitle}</p> : null}
         </div>
       </header>
-      <div className="chart-frame__body">{body}</div>
+      {controls ? <div className="chart-frame__controls">{controls}</div> : null}
+      {disclosure ? <div className="chart-frame__disclosure">{disclosure}</div> : null}
+      <div className="chart-frame__body">
+        {body}
+        {audit ? <div className="chart-frame__audit">{audit}</div> : null}
+      </div>
     </section>
   );
 }

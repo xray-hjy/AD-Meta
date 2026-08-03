@@ -104,7 +104,7 @@ const EChartBase = forwardRef(function EChartBase(
       </div>
       {showDataTable && tableRows.length ? (
         <details className="chart-data-table" onToggle={event => setTableOpen(event.currentTarget.open)}>
-          <summary>查看图表数据表</summary>
+          <summary>查看当前图表数据</summary>
           {tableOpen ? (
             <div className="chart-data-table__scroll">
               <table>

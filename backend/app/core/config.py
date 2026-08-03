@@ -64,7 +64,7 @@ MYSQL_POOL_RECYCLE = SETTINGS.mysql_pool_recycle
 STATS_WORKER_URL = SETTINGS.stats_worker_url.rstrip("/")
 STATS_WORKER_TIMEOUT = SETTINGS.stats_worker_timeout
 
-COMPUTE_VERSION = "2026-07-15-v3"
+COMPUTE_VERSION = "2026-08-03-v1"
 
 PUBLIC_CHART_TYPES = {
     "species",

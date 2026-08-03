@@ -52,3 +52,22 @@ test('renders a clear empty state', () => {
   render(<BarChart data={[]} featureLabel="KO" />);
   expect(screen.getByText('暂无KO丰度数据')).toBeTruthy();
 });
+
+test('renders backend projection series without a second client-side Top N filter', async () => {
+  const projection = {
+    scope: { mode: 'group', groups: ['AD'], sampleCodes: [] },
+    projection: { returnedFeatureCount: 2 },
+    series: [{ key: 'AD', label: 'AD 均值', group: 'AD', color: '#e74c3c' }],
+    items: [
+      { feature: 'Feature A', fullName: 'Feature A', values: { AD: { mean: 12 } } },
+      { feature: 'Feature B', fullName: 'Feature B', values: { AD: { mean: 8 } } },
+    ],
+  };
+  render(<BarChart data={projection} featureLabel="物种" />);
+
+  await waitFor(() => expect(screen.getByText('查看当前展示数据')).toBeTruthy());
+  expect(screen.queryByRole('spinbutton', { name: '展示数量' })).toBeNull();
+  const option = chartProps.mock.calls.at(-1)[0].option;
+  expect(option.series).toHaveLength(1);
+  expect(option.series[0].data).toEqual([12, 8]);
+});

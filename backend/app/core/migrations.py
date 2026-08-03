@@ -9,7 +9,8 @@ from alembic.config import Config
 from app.core.database import database_url, get_engine, init_db
 
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
-HEAD_REVISION = "20260715_01"
+BASELINE_REVISION = "20260715_01"
+HEAD_REVISION = "20260802_01"
 
 
 def alembic_config() -> Config:
@@ -29,6 +30,5 @@ def upgrade_database() -> None:
         # init_db() directly. Bring that schema up to the last legacy shape,
         # then let all subsequent changes flow through Alembic revisions.
         init_db()
-        command.stamp(config, HEAD_REVISION)
-        return
+        command.stamp(config, BASELINE_REVISION)
     command.upgrade(config, "head")

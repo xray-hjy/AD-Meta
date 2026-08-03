@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from app.cli import import_dataset as import_module
+from app.services.analysis_run_service import sync_analysis_runs_from_manifest
 
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_MANIFEST = BACKEND_ROOT / "storage_manifest.json"
@@ -98,6 +99,7 @@ def bootstrap_storage(
             }
         )
 
+    sync_analysis_runs_from_manifest(manifest_path)
     return results
 
 

@@ -9,6 +9,9 @@ from typing import Iterable
 
 from sqlalchemy import URL, create_engine
 from sqlalchemy.engine import Engine
+from sqlalchemy.pool import NullPool
+
+from .analysis_schema import MYSQL_ANALYSIS_SCHEMA, SQLITE_ANALYSIS_SCHEMA
 
 from .config import (
     DB_ENGINE,
@@ -94,6 +97,7 @@ def get_engine() -> Engine:
             DB_PATH.parent.mkdir(parents=True, exist_ok=True)
             _engine = create_engine(
                 url,
+                poolclass=NullPool,
                 pool_pre_ping=True,
                 connect_args={"check_same_thread": False},
             )
@@ -711,7 +715,9 @@ def _ensure_mysql_columns(conn: PooledConnection) -> None:
 
 def init_db() -> None:
     with connect() as conn:
-        conn.executescript(MYSQL_SCHEMA if is_mysql() else SQLITE_SCHEMA)
+        base_schema = MYSQL_SCHEMA if is_mysql() else SQLITE_SCHEMA
+        analysis_schema = MYSQL_ANALYSIS_SCHEMA if is_mysql() else SQLITE_ANALYSIS_SCHEMA
+        conn.executescript(f"{base_schema}\n{analysis_schema}")
         if is_mysql():
             _ensure_mysql_columns(conn)
         else:

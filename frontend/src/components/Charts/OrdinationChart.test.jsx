@@ -14,7 +14,7 @@ import OrdinationChart from './OrdinationChart';
 
 beforeEach(() => chartProps.mockClear());
 
-test('renders grouped points, confidence ellipses and bounded axes', () => {
+test('renders grouped points, data-distribution ellipses and bounded axes', () => {
   render(
     <OrdinationChart
       data={{
@@ -37,6 +37,36 @@ test('renders grouped points, confidence ellipses and bounded axes', () => {
   expect(option.yAxis.name).toBe('Axis 2 (20.0%)');
   expect(option.series).toHaveLength(3);
   expect(option.tooltip.formatter({ data: [2, 1, 'AD01', 'AD'] })).toContain('AD01');
+  expect(chartProps.mock.calls.at(-1)[0].notMerge).toBe(true);
+});
+
+test('replaces stale group series when the analysis scope changes', () => {
+  const { rerender } = render(
+    <OrdinationChart
+      data={{
+        points: [
+          { sample: 'AD01', group: 'AD', x: 2, y: 1 },
+          { sample: 'NC01', group: 'NC', x: -1, y: -2 },
+        ],
+        ellipses: [],
+      }}
+    />
+  );
+
+  rerender(
+    <OrdinationChart
+      data={{
+        points: [{ sample: 'NC01', group: 'NC', x: -1, y: -2 }],
+        ellipses: [],
+      }}
+    />
+  );
+
+  const props = chartProps.mock.calls.at(-1)[0];
+  expect(props.notMerge).toBe(true);
+  expect(props.option.legend.data).toEqual(['NC']);
+  expect(props.option.series).toHaveLength(1);
+  expect(props.option.series[0].data).toEqual([[-1, -2, 'NC01', 'NC']]);
 });
 
 test('renders an empty state without valid points', () => {

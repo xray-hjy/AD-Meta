@@ -15,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse
 
 from app.api.datasets import router as datasets_router
+from app.api.analysis_runs import router as analysis_runs_router
 from app.core.config import CACHE_ROOT, DEFAULT_CORS_ORIGINS, STATS_WORKER_URL
 from app.core.database import connect, dispose_engine
 from app.core.migrations import HEAD_REVISION, upgrade_database
@@ -57,7 +58,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=DEFAULT_CORS_ORIGINS,
     allow_credentials=False,
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
 
@@ -242,3 +243,4 @@ def internal_metrics():
 
 
 app.include_router(datasets_router)
+app.include_router(analysis_runs_router)

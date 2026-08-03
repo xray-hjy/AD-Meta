@@ -2,29 +2,12 @@ import { useMemo } from 'react';
 import ReactECharts from './CartesianEChart';
 import ChartViewport from './ChartViewport';
 
-const COLORS = {
-  AD: '#e74c3c',
-  NC: '#2ecc71',
-};
-
+const FALLBACK_COLORS = ['#e74c3c', '#2ecc71', '#2563eb', '#f59e0b'];
 const BAR_HEIGHT = 22;
 const ROW_GAP = 6;
 
 function formatPercent(value) {
-  const number = Number(value) || 0;
-  return `${(number * 100).toFixed(1)}%`;
-}
-
-function formatPointGap(value) {
-  const number = Math.abs(Number(value) || 0);
-  return `${(number * 100).toFixed(1)} pp`;
-}
-
-function topBy(data, key) {
-  return data.reduce((best, item) => {
-    if (!best) return item;
-    return Number(item[key] || 0) > Number(best[key] || 0) ? item : best;
-  }, null);
+  return `${((Number(value) || 0) * 100).toFixed(1)}%`;
 }
 
 function abbreviateLabel(label) {
@@ -32,68 +15,86 @@ function abbreviateLabel(label) {
   return text.length > 18 ? `${text.slice(0, 17)}...` : text;
 }
 
-function buildSummaryItems(data, isKo) {
-  const adTop = topBy(data, 'adRatio');
-  const ncTop = topBy(data, 'ncRatio');
-  const gapTop = data.reduce((best, item) => {
-    const gap = Math.abs(Number(item.adRatio || 0) - Number(item.ncRatio || 0));
-    if (!best || gap > best.gap) {
-      return { ...item, gap };
-    }
-    return best;
-  }, null);
-  const gapDirection = Number(gapTop?.adRatio || 0) >= Number(gapTop?.ncRatio || 0) ? 'AD 高' : 'NC 高';
-  const itemLabel = isKo ? 'KO' : '门';
+function normalizeComposition(data) {
+  if (Array.isArray(data)) {
+    return {
+      series: [
+        { key: 'AD', label: 'AD 组', color: '#e74c3c' },
+        { key: 'NC', label: 'NC 组', color: '#2ecc71' },
+      ],
+      items: data.map(item => ({
+        feature: item.phylum || item.feature || 'Unknown',
+        values: { AD: Number(item.adRatio) || 0, NC: Number(item.ncRatio) || 0 },
+      })),
+    };
+  }
+  return {
+    series: Array.isArray(data?.series) ? data.series : [],
+    items: Array.isArray(data?.items) ? data.items : [],
+  };
+}
 
-  return [
-    { label: '展示项', value: `${data.length} 项`, hint: isKo ? 'Top KO 功能' : 'Top 门级组成' },
-    { label: 'AD 最高', value: adTop?.phylum || 'NA', hint: `${formatPercent(adTop?.adRatio)} · ${itemLabel}`, tone: COLORS.AD },
-    { label: 'NC 最高', value: ncTop?.phylum || 'NA', hint: `${formatPercent(ncTop?.ncRatio)} · ${itemLabel}`, tone: COLORS.NC },
-    { label: '最大组间差异', value: gapTop?.phylum || 'NA', hint: `${gapDirection} ${formatPointGap(gapTop?.gap)}` },
-  ];
+function topItem(items, seriesKey) {
+  return items.reduce((best, item) => {
+    if (!best) return item;
+    return Number(item.values?.[seriesKey] || 0) > Number(best.values?.[seriesKey] || 0) ? item : best;
+  }, null);
+}
+
+function summaryLabel(seriesItem) {
+  return String(seriesItem.label || seriesItem.key || '').replace(/\s*组$/, '');
+}
+
+function buildDifferenceSummary(items, series) {
+  if (series.length !== 2) return null;
+  const [left, right] = series;
+  const difference = items.reduce((best, item) => {
+    const leftValue = Number(item.values?.[left.key]) || 0;
+    const rightValue = Number(item.values?.[right.key]) || 0;
+    const absolute = Math.abs(leftValue - rightValue);
+    return !best || absolute > best.absolute
+      ? { item, leftValue, rightValue, absolute }
+      : best;
+  }, null);
+  if (!difference) return null;
+  const leader = difference.leftValue >= difference.rightValue ? left : right;
+  return {
+    feature: difference.item.feature || 'NA',
+    direction: `${summaryLabel(leader)} 高`,
+    difference: `${(difference.absolute * 100).toFixed(1)} pp`,
+  };
 }
 
 function PhylumChart({ data, featureKind = 'taxonomy' }) {
+  const normalized = useMemo(() => normalizeComposition(data), [data]);
+  const { series, items } = normalized;
   const isKo = featureKind === 'ko';
-  const summaryItems = data && data.length ? buildSummaryItems(data, isKo) : [];
 
   const option = useMemo(() => {
-    if (!Array.isArray(data) || data.length === 0) return null;
-
-    const chartData = data.map(item => ({
-      label: item.phylum || item.feature || 'Unknown',
-      shortLabel: abbreviateLabel(item.phylum || item.feature),
-      adRatio: Math.max(0, Number(item.adRatio) || 0),
-      ncRatio: Math.max(0, Number(item.ncRatio) || 0),
+    if (!items.length || !series.length) return null;
+    const chartItems = items.map(item => ({
+      label: item.feature || 'Unknown',
+      shortLabel: abbreviateLabel(item.feature),
+      values: item.values || {},
     }));
 
     return {
       backgroundColor: 'transparent',
       tooltip: {
         trigger: 'axis',
-        axisPointer: {
-          type: 'shadow',
-          shadowStyle: { color: 'rgba(148, 163, 184, 0.08)' },
-          label: { show: true, backgroundColor: '#475569' },
-        },
+        axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(148, 163, 184, 0.08)' } },
         backgroundColor: 'rgba(15,23,42,0.96)',
         borderColor: 'transparent',
         textStyle: { color: '#f8fafc', fontSize: 12, lineHeight: 18 },
         extraCssText: 'border-radius:10px; padding:12px 14px;',
         formatter(params) {
-          const index = params?.[0]?.dataIndex ?? 0;
-          const item = chartData[index];
+          const item = chartItems[params?.[0]?.dataIndex ?? 0];
           if (!item) return '';
-
-          const lines = [`<b>${item.label}</b>`, '<br/>'];
-          params.forEach(entry => {
-            lines.push(`${entry.marker}${entry.seriesName}: ${formatPercent(entry.value)}`);
-          });
-          return lines.join('<br/>');
+          return [`<b>${item.label}</b>`, ...params.map(entry => `${entry.marker}${entry.seriesName}: ${formatPercent(entry.value)}`)].join('<br/>');
         },
       },
       legend: {
-        data: ['AD 组', 'NC 组'],
+        data: series.map(item => item.label),
         top: 8,
         right: 24,
         itemGap: 18,
@@ -101,134 +102,103 @@ function PhylumChart({ data, featureKind = 'taxonomy' }) {
         itemHeight: 14,
         textStyle: { color: '#475569', fontSize: 12 },
       },
-      grid: {
-        top: 52,
-        left: 116,
-        right: 92,
-        bottom: 42,
-        containLabel: false,
-      },
-      xAxis: [
-        {
-          type: 'value',
-          min: 0,
-          max: 1,
-          name: '平均占比',
-          nameLocation: 'middle',
-          nameGap: 30,
-          nameTextStyle: { color: '#64748b', fontSize: 12 },
-          axisLine: { show: false },
-          axisTick: { show: false },
-          axisLabel: {
-            color: '#94a3b8',
-            fontSize: 11,
-            formatter(value) {
-              return `${Math.round(Number(value) * 100)}%`;
-            },
-          },
-          splitLine: { lineStyle: { color: '#e7edf5', type: 'dashed' } },
-        },
-      ],
-      yAxis: [
-        {
-          type: 'category',
-          inverse: true,
-          data: chartData.map(item => item.shortLabel),
-          axisTick: { show: false },
-          axisLine: { show: false },
-          axisLabel: {
-            color: '#475569',
-            fontSize: 12,
-            fontWeight: 500,
-            margin: 12,
-          },
-        },
-      ],
-      series: [
-        {
-          name: 'AD 组',
+      grid: { top: 52, left: 116, right: 92, bottom: 42 },
+      xAxis: [{
+        type: 'value',
+        min: 0,
+        max: 1,
+        name: '相对丰度占比',
+        nameLocation: 'middle',
+        nameGap: 30,
+        axisLine: { show: false },
+        axisTick: { show: false },
+        axisLabel: { color: '#94a3b8', fontSize: 11, formatter: value => `${Math.round(Number(value) * 100)}%` },
+        splitLine: { lineStyle: { color: '#e7edf5', type: 'dashed' } },
+      }],
+      yAxis: [{
+        type: 'category',
+        inverse: true,
+        data: chartItems.map(item => item.shortLabel),
+        axisTick: { show: false },
+        axisLine: { show: false },
+        axisLabel: { color: '#475569', fontSize: 12, fontWeight: 500, margin: 12 },
+      }],
+      series: series.map((seriesItem, index) => {
+        const color = seriesItem.color || FALLBACK_COLORS[index % FALLBACK_COLORS.length];
+        return {
+          name: seriesItem.label,
           type: 'bar',
           barWidth: BAR_HEIGHT,
           barGap: '0%',
           barCategoryGap: `${ROW_GAP}px`,
-          itemStyle: { color: COLORS.AD, borderRadius: [0, 6, 6, 0] },
+          itemStyle: {
+            color,
+            borderRadius: [0, 6, 6, 0],
+          },
           label: {
             show: true,
             position: 'right',
             color: '#64748b',
             fontSize: 10,
             fontWeight: 700,
-            formatter(params) {
-              return formatPercent(params.value);
-            },
+            formatter: params => formatPercent(params.value),
           },
           emphasis: {
+            focus: 'series',
             itemStyle: {
-              color: COLORS.AD,
+              color,
               shadowBlur: 10,
-              shadowColor: 'rgba(231, 76, 60, 0.24)',
-            },
-            label: { color: '#0f172a' },
-          },
-          data: chartData.map(item => item.adRatio),
-        },
-        {
-          name: 'NC 组',
-          type: 'bar',
-          barWidth: BAR_HEIGHT,
-          barGap: '0%',
-          barCategoryGap: `${ROW_GAP}px`,
-          itemStyle: { color: COLORS.NC, borderRadius: [0, 6, 6, 0] },
-          label: {
-            show: true,
-            position: 'right',
-            color: '#64748b',
-            fontSize: 10,
-            fontWeight: 700,
-            formatter(params) {
-              return formatPercent(params.value);
+              shadowColor: `${color}66`,
             },
           },
-          emphasis: {
-            itemStyle: {
-              color: COLORS.NC,
-              shadowBlur: 10,
-              shadowColor: 'rgba(46, 204, 113, 0.24)',
-            },
-            label: { color: '#0f172a' },
-          },
-          data: chartData.map(item => item.ncRatio),
-        },
-      ],
+          data: chartItems.map(item => Number(item.values[seriesItem.key]) || 0),
+        };
+      }),
     };
-  }, [data]);
+  }, [items, series]);
 
   if (!option) {
     return <div className="placeholder"><p>{isKo ? '暂无 KO 功能组成数据' : '暂无门级组成数据'}</p></div>;
   }
 
-  const chartHeight = Math.max(360, data.length * (BAR_HEIGHT * 2 + ROW_GAP) + 96);
+  const summaryItems = series.map(seriesItem => {
+    const top = topItem(items, seriesItem.key);
+    return {
+      key: seriesItem.key,
+      label: summaryLabel(seriesItem),
+      value: top?.feature || 'NA',
+      ratio: formatPercent(top?.values?.[seriesItem.key]),
+      color: seriesItem.color,
+    };
+  });
+  const differenceSummary = buildDifferenceSummary(items, series);
+  const chartHeight = Math.max(360, items.length * (BAR_HEIGHT * series.length + ROW_GAP) + 96);
 
   return (
     <div className="chart-plain">
       <div className="chart-stat-strip chart-stat-strip--compact">
+        <span className="chart-stat-item">
+          <b>展示项</b>
+          <span className="chart-stat-value">{items.length} 项</span>
+          <span>{isKo ? 'Top KO 功能' : 'Top 门级组成'}</span>
+        </span>
         {summaryItems.map(item => (
-          <span className="chart-stat-item" key={item.label}>
-            <b style={{ color: item.tone || undefined }}>{item.label}</b>
+          <span className="chart-stat-item" key={item.key}>
+            <b style={{ color: item.color }}>{item.label} 最高</b>
             <span className="chart-stat-value" title={item.value}>{item.value}</span>
-            <span>{item.hint}</span>
+            <span>{item.ratio}</span>
           </span>
         ))}
+        {differenceSummary ? (
+          <span className="chart-stat-item">
+            <b>最大组间差异</b>
+            <span className="chart-stat-value" title={differenceSummary.feature}>{differenceSummary.feature}</span>
+            <span>{differenceSummary.direction} {differenceSummary.difference}</span>
+          </span>
+        ) : null}
       </div>
-
       <ChartViewport variant="data" minHeight={480} preferredHeight={chartHeight}>
-        <ReactECharts
-          option={option}
-          opts={{ renderer: 'svg' }}
-          notMerge
-          lazyUpdate
-          style={{ width: '100%', height: '100%' }}
-        />
+        <ReactECharts option={option} opts={{ renderer: 'svg' }} notMerge lazyUpdate style={{ width: '100%', height: '100%' }} />
       </ChartViewport>
     </div>
   );

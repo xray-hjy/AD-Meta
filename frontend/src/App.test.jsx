@@ -18,6 +18,12 @@ vi.mock('./components/Charts/PhylumChart', () => ({
   ),
 }));
 
+vi.mock('./components/Charts/KoContributionChart', () => ({
+  default: ({ data }) => (
+    <div data-testid="ko-contribution-chart" data-item-count={data?.items?.length || 0} />
+  ),
+}));
+
 vi.mock('./components/Charts/BoxPlot', () => ({ default: () => <div data-testid="boxplot-chart" /> }));
 
 vi.mock('./components/Charts/Heatmap', () => ({ default: () => <div data-testid="heatmap-chart" /> }));
@@ -34,6 +40,7 @@ vi.mock('./components/Charts/PCoAPlot', () => ({ default: () => <div data-testid
 
 let datasets;
 let summaries;
+let analysisRuns;
 
 beforeEach(() => {
   window.localStorage.clear();
@@ -54,10 +61,54 @@ beforeEach(() => {
       totalFeatures: 3,
     },
   };
+  analysisRuns = [{
+    key: 'ad-nc-baseline',
+    name: 'AD/NC 群落分析基线',
+    sampleCount: 4,
+    artifacts: [{
+      key: 'ko-abundance',
+      type: 'ko_abundance',
+      datasetSlug: 'ad-nc-ko-abundance',
+      sampleCount: 4,
+    }],
+  }];
 
   fetchJson.mockImplementation(async url => {
+    if (url === '/api/analysis-runs') {
+      return analysisRuns;
+    }
     if (url === '/api/datasets') {
       return datasets;
+    }
+    if (/^\/api\/analysis-runs\/[^/]+\/samples\?/.test(url)) {
+      return {
+        items: [
+          { sampleCode: 'S1', phenotype: 'AD' },
+          { sampleCode: 'S2', phenotype: 'NC' },
+        ],
+        total: 2,
+        limit: 500,
+        offset: 0,
+      };
+    }
+    if (/^\/api\/analysis-runs\/[^/]+\/artifacts\/[^/]+\/projections\/abundance$/.test(url)) {
+      return {
+        projectionKey: 'projection-1',
+        featureKind: 'ko',
+        featureLabel: 'KO',
+        scope: { mode: 'cohort', groups: [], sampleCodes: [] },
+        series: [
+          { key: 'AD', label: 'AD 均值', group: 'AD', color: '#e74c3c' },
+          { key: 'NC', label: 'NC 均值', group: 'NC', color: '#2ecc71' },
+        ],
+        items: [{ feature: 'K00001', values: { AD: { mean: 2 }, NC: { mean: 1 } } }],
+        projection: {
+          sampleCount: 4,
+          sourceFeatureCount: 3,
+          returnedFeatureCount: 1,
+          mergedFeatureCount: 0,
+        },
+      };
     }
     const summaryMatch = url.match(/^\/api\/datasets\/([^/]+)\/summary$/);
     if (summaryMatch) {
@@ -78,12 +129,12 @@ afterEach(() => {
 test('shows the four supported chart tabs for KO datasets', async () => {
   render(<App />);
 
-  await waitFor(() => {
-    expect(screen.getByText('KO 检出率热图')).toBeTruthy();
-  });
+  expect(
+    await screen.findByText('KO 检出率热图', {}, { timeout: 3000 })
+  ).toBeTruthy();
 
   expect(screen.getAllByText('丰度对比').length).toBeGreaterThan(0);
-  expect(screen.getByText('KO 功能组成')).toBeTruthy();
+  expect(screen.getByText('高丰度 KO')).toBeTruthy();
   expect(screen.getByText('KO 检出率热图')).toBeTruthy();
   expect(screen.getByText('KO 差异特征')).toBeTruthy();
   expect(screen.queryByText('差异热图')).toBeNull();
@@ -93,16 +144,40 @@ test('shows the four supported chart tabs for KO datasets', async () => {
   expect(screen.queryByText('KO PCoA')).toBeNull();
 });
 
-test('describes imported matrices as analysis data with an explicit sample scope', async () => {
+test('stores the selected scientific scope in the URL and requests a group projection', async () => {
+  render(<App />);
+  const ncButton = await screen.findByRole('button', { name: 'NC 组' });
+
+  fireEvent.click(ncButton);
+
+  await waitFor(() => {
+    const params = new URLSearchParams(window.location.search);
+    expect(params.get('scope')).toBe('group');
+    expect(params.get('group')).toBe('NC');
+  });
+  await waitFor(() => {
+    expect(fetchJson).toHaveBeenCalledWith(
+      '/api/analysis-runs/ad-nc-baseline/artifacts/ko-abundance/projections/abundance',
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.objectContaining({
+          scope: { mode: 'group', groups: ['NC'], sampleCodes: [] },
+        }),
+      })
+    );
+  });
+});
+
+test('describes the selected analysis run and current artifact sample coverage', async () => {
   render(<App />);
 
   await waitFor(() => {
-    expect(screen.getByRole('option', { name: 'KO 功能丰度矩阵' })).toBeTruthy();
-    expect(screen.getByText('4 样本 · AD 2 / NC 2')).toBeTruthy();
+    expect(screen.getByRole('option', { name: 'AD/NC 群落分析基线' })).toBeTruthy();
+    expect(screen.getByText('运行 4 样本 · 当前结果覆盖 4')).toBeTruthy();
   });
 
-  expect(screen.getByText('分析数据')).toBeTruthy();
-  expect(screen.getByLabelText('选择分析数据')).toBeTruthy();
+  expect(screen.getByText('分析运行')).toBeTruthy();
+  expect(screen.getByLabelText('选择分析运行')).toBeTruthy();
   expect(screen.queryByText('预计算数据')).toBeNull();
 });
 
@@ -135,6 +210,17 @@ test('does not show KO differential tab for taxonomy datasets', async () => {
     name: 'AD vs NC Species',
     featureKind: 'taxonomy',
   }];
+  analysisRuns = [{
+    key: 'ad-nc-baseline',
+    name: 'AD/NC 群落分析基线',
+    sampleCount: 4,
+    artifacts: [{
+      key: 'species-abundance',
+      type: 'species_abundance',
+      datasetSlug: 'ad-nc-species',
+      sampleCount: 4,
+    }],
+  }];
   summaries = {
     'ad-nc-species': {
       datasetName: 'AD vs NC Species',
@@ -160,7 +246,7 @@ test('separates the desktop sidebar and main content into independent scroll reg
   render(<App />);
 
   await waitFor(() => {
-    expect(screen.getByText('KO 功能组成')).toBeTruthy();
+    expect(screen.getByText('高丰度 KO')).toBeTruthy();
   });
 
   expect(document.querySelector('aside.sidebar')?.getAttribute('data-scroll-region')).toBe('sidebar');
@@ -178,30 +264,61 @@ test('keeps future analysis domains visible but disabled', async () => {
   expect(screen.getByRole('button', { name: /MAG 解析/ }).disabled).toBe(true);
 });
 
-test('passes feature metadata to the phylum composition chart', async () => {
+test('uses the dedicated KO contribution projection instead of taxonomy composition', async () => {
   render(<App />);
 
   await waitFor(() => {
-    expect(screen.getByText('KO 功能组成')).toBeTruthy();
+    expect(screen.getByText('高丰度 KO')).toBeTruthy();
   });
 
   fetchJson.mockImplementation(async url => {
+    if (url === '/api/analysis-runs') return analysisRuns;
     if (url === '/api/datasets') return datasets;
+    if (/^\/api\/analysis-runs\/[^/]+\/samples\?/.test(url)) {
+      return {
+        items: [
+          { sampleCode: 'AD-1', phenotype: 'AD' },
+          { sampleCode: 'AD-2', phenotype: 'AD' },
+          { sampleCode: 'AD-3', phenotype: 'AD' },
+          { sampleCode: 'NC-1', phenotype: 'NC' },
+          { sampleCode: 'NC-2', phenotype: 'NC' },
+          { sampleCode: 'NC-3', phenotype: 'NC' },
+        ],
+        total: 6,
+        limit: 500,
+        offset: 0,
+      };
+    }
+    if (/^\/api\/analysis-runs\/[^/]+\/artifacts\/[^/]+\/projections\/ko_contribution$/.test(url)) {
+      return {
+        projectionKey: 'ko-contribution-test',
+        payload: {
+          series: [{ key: 'AD', label: 'AD 均值', color: '#e74c3c' }],
+          items: [{ feature: 'K00001', values: { AD: 0.2 } }],
+          sourceFeatureCount: 3,
+          omittedFeatureCount: 2,
+          coverageBySeries: { AD: 0.2 },
+        },
+        projection: { sampleCount: 4, sourceFeatureCount: 3, returnedFeatureCount: 1, mergedFeatureCount: 0 },
+      };
+    }
     const summaryMatch = url.match(/^\/api\/datasets\/([^/]+)\/summary$/);
     if (summaryMatch) return summaries[summaryMatch[1]];
-    if (/^\/api\/datasets\/[^/]+\/charts\/phylum$/.test(url)) return [];
     if (/^\/api\/datasets\/[^/]+\/charts\/species$/.test(url)) return [];
     throw new Error(`Unexpected URL: ${url}`);
   });
 
-  fireEvent.click(screen.getByText('KO 功能组成'));
+  fireEvent.click(screen.getByText('高丰度 KO'));
 
   await waitFor(() => {
-    expect(screen.getByTestId('phylum-chart')).toBeTruthy();
+    expect(screen.getByTestId('ko-contribution-chart')).toBeTruthy();
   });
 
-  expect(screen.getByTestId('phylum-chart').getAttribute('data-feature-kind')).toBe('ko');
-  expect(screen.getByTestId('phylum-chart').getAttribute('data-feature-label')).toBe('KO');
+  expect(screen.getByTestId('ko-contribution-chart').getAttribute('data-item-count')).toBe('1');
+  expect(fetchJson).toHaveBeenCalledWith(
+    '/api/analysis-runs/ad-nc-baseline/artifacts/ko-abundance/projections/ko_contribution',
+    expect.objectContaining({ method: 'POST' })
+  );
 });
 
 test('restores dataset and chart selection from a shareable deep link', async () => {
@@ -217,14 +334,36 @@ test('restores dataset and chart selection from a shareable deep link', async ()
     'differential_ko',
   ];
   fetchJson.mockImplementation(async url => {
+    if (url === '/api/analysis-runs') return analysisRuns;
     if (url === '/api/datasets') return datasets;
+    if (/^\/api\/analysis-runs\/[^/]+\/samples\?/.test(url)) {
+      return {
+        items: [
+          { sampleCode: 'AD-1', phenotype: 'AD' },
+          { sampleCode: 'AD-2', phenotype: 'AD' },
+          { sampleCode: 'AD-3', phenotype: 'AD' },
+          { sampleCode: 'NC-1', phenotype: 'NC' },
+          { sampleCode: 'NC-2', phenotype: 'NC' },
+          { sampleCode: 'NC-3', phenotype: 'NC' },
+        ],
+        total: 6,
+        limit: 500,
+        offset: 0,
+      };
+    }
+    if (/^\/api\/analysis-runs\/[^/]+\/artifacts\/[^/]+\/projections\/differential_ko$/.test(url)) {
+      return {
+        projectionKey: 'differential-test',
+        payload: { items: [] },
+        projection: { sampleCount: 4, sourceFeatureCount: 3, returnedFeatureCount: 0, mergedFeatureCount: 0 },
+      };
+    }
     if (url.endsWith('/summary')) return summaries['ad-nc-ko-abundance'];
-    if (url.endsWith('/charts/differential_ko')) return { items: [] };
     throw new Error(`Unexpected URL: ${url}`);
   });
 
   render(<App />);
-  await waitFor(() => expect(screen.getByTestId('lda-chart')).toBeTruthy());
+  await waitFor(() => expect(screen.getByTestId('lda-chart')).toBeTruthy(), { timeout: 3000 });
   expect(new URLSearchParams(window.location.search).get('dataset')).toBe('ad-nc-ko-abundance');
   expect(new URLSearchParams(window.location.search).get('chart')).toBe('differential_ko');
 });

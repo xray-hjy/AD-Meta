@@ -50,9 +50,10 @@ function OrdinationChart({ data, footer }) {
     const groups = [...new Set(points.map(point => point.group))].sort();
     const bounds = axisBounds(points, ellipses);
     const variance = Array.isArray(data?.variance) ? data.variance : [];
+    const axisPrefix = data?.method === 'PCA' ? 'PC' : 'Axis';
 
     const ellipseSeries = ellipses.map(ellipse => ({
-      name: `${ellipse.group} 95% CI`,
+      name: `${ellipse.group} ${ellipse.label || '95% 数据分布椭圆'}`,
       type: 'line',
       data: ellipse.points,
       symbol: 'none',
@@ -97,8 +98,8 @@ function OrdinationChart({ data, footer }) {
           return `
             <b>${item[2] || ''}</b><br/>
             分组: ${item[3] || ''}<br/>
-            Axis 1: ${Number(item[0]).toFixed(4)}<br/>
-            Axis 2: ${Number(item[1]).toFixed(4)}
+            ${axisPrefix} 1: ${Number(item[0]).toFixed(4)}<br/>
+            ${axisPrefix} 2: ${Number(item[1]).toFixed(4)}
           `;
         },
         backgroundColor: 'rgba(30,41,59,0.9)',
@@ -120,7 +121,7 @@ function OrdinationChart({ data, footer }) {
       ],
       xAxis: {
         type: 'value',
-        name: `Axis 1 (${((variance[0] || 0) * 100).toFixed(1)}%)`,
+        name: `${axisPrefix} 1 (${((variance[0] || 0) * 100).toFixed(1)}%)`,
         min: bounds.xMin,
         max: bounds.xMax,
         nameLocation: 'center',
@@ -131,7 +132,7 @@ function OrdinationChart({ data, footer }) {
       },
       yAxis: {
         type: 'value',
-        name: `Axis 2 (${((variance[1] || 0) * 100).toFixed(1)}%)`,
+        name: `${axisPrefix} 2 (${((variance[1] || 0) * 100).toFixed(1)}%)`,
         min: bounds.yMin,
         max: bounds.yMax,
         nameLocation: 'center',
@@ -152,7 +153,12 @@ function OrdinationChart({ data, footer }) {
     <div className="chart-plain chart-plain--ordination">
       <div className="ordination-chart-surface">
         <div className="ordination-chart-canvas">
-          <ReactECharts option={option} style={{ width: '100%', height: '100%' }} />
+          <ReactECharts
+            option={option}
+            notMerge
+            lazyUpdate
+            style={{ width: '100%', height: '100%' }}
+          />
         </div>
         {footer ? <div className="chart-plain__footer">{footer}</div> : null}
       </div>

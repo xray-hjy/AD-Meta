@@ -156,7 +156,8 @@ Chart calculation code is split by chart type under
 matching module first:
 
 - `species.py`: abundance comparison.
-- `phylum.py`: phylum-level or KO composition.
+- `phylum.py`: legacy precompute compatibility for phylum composition; new taxonomy composition work belongs in the formal `composition` projection.
+- `ko_contribution.py`: sample-closed KO relative contributions, shared ranking, and display-cap selection for the formal `ko_contribution` projection.
 - `boxplot.py`: abundance boxplots.
 - `heatmap.py`: differential abundance heatmap and dendrogram metadata.
 - `detection.py`: KO detection-rate heatmap.

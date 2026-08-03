@@ -4,6 +4,193 @@
  */
 
 export interface paths {
+    "/api/analysis-runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Analysis Runs */
+        get: operations["analysis_runs_api_analysis_runs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analysis-runs/{run_key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Analysis Run */
+        get: operations["analysis_run_api_analysis_runs__run_key__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analysis-runs/{run_key}/artifacts/{artifact_key}/projection-audits/{projection_kind}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Projection Audit */
+        post: operations["projection_audit_api_analysis_runs__run_key__artifacts__artifact_key__projection_audits__projection_kind__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analysis-runs/{run_key}/artifacts/{artifact_key}/projection-audits/{projection_kind}/metadata": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Projection Audit Metadata */
+        post: operations["projection_audit_metadata_api_analysis_runs__run_key__artifacts__artifact_key__projection_audits__projection_kind__metadata_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analysis-runs/{run_key}/artifacts/{artifact_key}/projection-audits/{projection_kind}/options/{field}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Projection Audit Options */
+        post: operations["projection_audit_options_api_analysis_runs__run_key__artifacts__artifact_key__projection_audits__projection_kind__options__field__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analysis-runs/{run_key}/artifacts/{artifact_key}/projection-audits/{projection_kind}/rows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Projection Audit Rows */
+        post: operations["projection_audit_rows_api_analysis_runs__run_key__artifacts__artifact_key__projection_audits__projection_kind__rows_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analysis-runs/{run_key}/artifacts/{artifact_key}/projections/abundance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Abundance Projection */
+        post: operations["abundance_projection_api_analysis_runs__run_key__artifacts__artifact_key__projections_abundance_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analysis-runs/{run_key}/artifacts/{artifact_key}/projections/{projection_kind}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Chart Projection */
+        post: operations["chart_projection_api_analysis_runs__run_key__artifacts__artifact_key__projections__projection_kind__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analysis-runs/{run_key}/artifacts/{artifact_key}/samples/query": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Scoped Analysis Samples */
+        post: operations["scoped_analysis_samples_api_analysis_runs__run_key__artifacts__artifact_key__samples_query_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analysis-runs/{run_key}/samples": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Analysis Samples */
+        get: operations["analysis_samples_api_analysis_runs__run_key__samples_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analysis-runs/{run_key}/samples/{sample_code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Analysis Sample */
+        get: operations["analysis_sample_api_analysis_runs__run_key__samples__sample_code__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/datasets": {
         parameters: {
             query?: never;
@@ -144,6 +331,226 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AbundanceProjectionRequest */
+        AbundanceProjectionRequest: {
+            /**
+             * Ranking
+             * @default mean_abundance
+             * @constant
+             */
+            ranking: "mean_abundance";
+            scope?: components["schemas"]["AnalysisScope"];
+            /**
+             * Topn
+             * @default 20
+             */
+            topN: number;
+        };
+        /** AbundanceProjectionResponse */
+        AbundanceProjectionResponse: {
+            /** Artifactkey */
+            artifactKey: string;
+            /** Datasetrevision */
+            datasetRevision: string;
+            /** Datasetslug */
+            datasetSlug: string;
+            /** Featurekind */
+            featureKind: string;
+            /** Featurelabel */
+            featureLabel: string;
+            /** Items */
+            items?: {
+                [key: string]: unknown;
+            }[];
+            /** Projection */
+            projection: {
+                [key: string]: unknown;
+            };
+            /** Projectionkey */
+            projectionKey: string;
+            /** Runkey */
+            runKey: string;
+            /** Scope */
+            scope: {
+                [key: string]: unknown;
+            };
+            /** Series */
+            series?: {
+                [key: string]: unknown;
+            }[];
+        } & {
+            [key: string]: unknown;
+        };
+        /** AnalysisArtifactResponse */
+        AnalysisArtifactResponse: {
+            /**
+             * Abundancescale
+             * @default unknown
+             */
+            abundanceScale: string;
+            /** Coveragefraction */
+            coverageFraction: number;
+            /** Datasetrevision */
+            datasetRevision?: string | null;
+            /** Datasetslug */
+            datasetSlug?: string | null;
+            /** Featurekind */
+            featureKind?: string | null;
+            /** Featurelabel */
+            featureLabel?: string | null;
+            /** Groupcounts */
+            groupCounts?: {
+                [key: string]: number;
+            };
+            /** Key */
+            key: string;
+            /**
+             * Normalization
+             * @default unknown
+             */
+            normalization: string;
+            /** Samplecount */
+            sampleCount: number;
+            /** Schemaversion */
+            schemaVersion: string;
+            /** Type */
+            type: string;
+            /** Uri */
+            uri: string;
+        };
+        /** AnalysisRunResponse */
+        AnalysisRunResponse: {
+            /** Artifacts */
+            artifacts?: components["schemas"]["AnalysisArtifactResponse"][];
+            /** Completedat */
+            completedAt?: string | null;
+            /** Createdat */
+            createdAt?: string | null;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /** Groupcounts */
+            groupCounts?: {
+                [key: string]: number;
+            };
+            /** Id */
+            id: number;
+            /** Key */
+            key: string;
+            /** Manifestversion */
+            manifestVersion: string;
+            /** Name */
+            name: string;
+            /** Parameters */
+            parameters?: {
+                [key: string]: unknown;
+            };
+            /** Pipeline */
+            pipeline?: {
+                [key: string]: unknown;
+            };
+            /** Provenance */
+            provenance?: {
+                [key: string]: unknown;
+            };
+            /** Publishedat */
+            publishedAt?: string | null;
+            /** Referencedatabases */
+            referenceDatabases?: {
+                [key: string]: unknown;
+            }[];
+            /** Samplecount */
+            sampleCount: number;
+            /** Status */
+            status: string;
+        };
+        /** AnalysisSampleDetailResponse */
+        AnalysisSampleDetailResponse: {
+            /** Artifacts */
+            artifacts?: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Cohortkey
+             * @default
+             */
+            cohortKey: string;
+            /** Metadata */
+            metadata?: {
+                [key: string]: unknown;
+            };
+            /** Phenotype */
+            phenotype: string;
+            /** Runkey */
+            runKey: string;
+            /** Samplecode */
+            sampleCode: string;
+            /**
+             * Sourcestudy
+             * @default
+             */
+            sourceStudy: string;
+        };
+        /** AnalysisSamplePageResponse */
+        AnalysisSamplePageResponse: {
+            /** Artifactkey */
+            artifactKey?: string | null;
+            /** Availablefields */
+            availableFields?: string[];
+            /** Groupcounts */
+            groupCounts?: {
+                [key: string]: number;
+            };
+            /** Items */
+            items?: components["schemas"]["AnalysisSampleResponse"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Runkey */
+            runKey: string;
+            /** Total */
+            total: number;
+        };
+        /** AnalysisSampleResponse */
+        AnalysisSampleResponse: {
+            /**
+             * Cohortkey
+             * @default
+             */
+            cohortKey: string;
+            /** Metadata */
+            metadata?: {
+                [key: string]: unknown;
+            };
+            /** Phenotype */
+            phenotype: string;
+            /** Samplecode */
+            sampleCode: string;
+            /**
+             * Sourcestudy
+             * @default
+             */
+            sourceStudy: string;
+        };
+        /**
+         * AnalysisScope
+         * @description The exact sample population used to build one analytical projection.
+         */
+        AnalysisScope: {
+            /** Groups */
+            groups?: ("AD" | "NC")[];
+            /**
+             * Mode
+             * @default cohort
+             * @enum {string}
+             */
+            mode: "cohort" | "group" | "subset" | "sample";
+            /** Samplecodes */
+            sampleCodes?: string[];
+        };
         /** ChartArtifactResponse */
         ChartArtifactResponse: {
             /** Inferencelevel */
@@ -160,6 +567,51 @@ export interface components {
             stats?: {
                 [key: string]: unknown;
             }[] | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * ChartProjectionRequest
+         * @description Scope and display parameters for a server-computed chart projection.
+         */
+        ChartProjectionRequest: {
+            /** Parameters */
+            parameters?: {
+                [key: string]: unknown;
+            };
+            scope?: components["schemas"]["AnalysisScope"];
+            /**
+             * Topn
+             * @default 20
+             */
+            topN: number;
+        };
+        /** ChartProjectionResponse */
+        ChartProjectionResponse: {
+            /** Artifactkey */
+            artifactKey: string;
+            /** Datasetrevision */
+            datasetRevision: string;
+            /** Datasetslug */
+            datasetSlug: string;
+            /** Featurekind */
+            featureKind: string;
+            /** Featurelabel */
+            featureLabel: string;
+            /** Payload */
+            payload: unknown;
+            /** Projection */
+            projection: {
+                [key: string]: unknown;
+            };
+            /** Projectionkey */
+            projectionKey: string;
+            /** Runkey */
+            runKey: string;
+            /** Scope */
+            scope: {
+                [key: string]: unknown;
+            };
         } & {
             [key: string]: unknown;
         };
@@ -237,6 +689,198 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** ProjectionAuditMetadataResponse */
+        ProjectionAuditMetadataResponse: {
+            /** Artifact */
+            artifact?: {
+                [key: string]: unknown;
+            };
+            /** Columns */
+            columns?: {
+                [key: string]: unknown;
+            }[];
+            /** Kind */
+            kind: string;
+            /** Projectionkey */
+            projectionKey: string;
+            /** Samplescope */
+            sampleScope?: {
+                [key: string]: unknown;
+            };
+            /** Section */
+            section: string;
+            /** Sections */
+            sections?: {
+                [key: string]: unknown;
+            }[];
+            /** Summary */
+            summary?: {
+                [key: string]: unknown;
+            };
+        } & {
+            [key: string]: unknown;
+        };
+        /** ProjectionAuditOptionsResponse */
+        ProjectionAuditOptionsResponse: {
+            /** Field */
+            field: string;
+            /** Items */
+            items?: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Limit
+             * @default 200
+             */
+            limit: number;
+            /** Projectionkey */
+            projectionKey: string;
+            /** Section */
+            section: string;
+        };
+        /**
+         * ProjectionAuditRequest
+         * @description Exact projection identity plus lazy detail-table pagination.
+         */
+        ProjectionAuditRequest: {
+            /** Filters */
+            filters?: {
+                [key: string]: string;
+            };
+            /**
+             * Limit
+             * @default 100
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            /** Parameters */
+            parameters?: {
+                [key: string]: unknown;
+            };
+            /** Projectionkey */
+            projectionKey: string;
+            /**
+             * Query
+             * @default
+             */
+            query: string;
+            /**
+             * Ranking
+             * @default mean_abundance
+             * @constant
+             */
+            ranking: "mean_abundance";
+            scope?: components["schemas"]["AnalysisScope"];
+            /**
+             * Section
+             * @default
+             */
+            section: string;
+            /**
+             * Sortby
+             * @default
+             */
+            sortBy: string;
+            /**
+             * Sortdirection
+             * @default asc
+             * @enum {string}
+             */
+            sortDirection: "asc" | "desc";
+            /**
+             * Topn
+             * @default 20
+             */
+            topN: number;
+        };
+        /** ProjectionAuditResponse */
+        ProjectionAuditResponse: {
+            /** Columns */
+            columns?: {
+                [key: string]: unknown;
+            }[];
+            /** Filteroptions */
+            filterOptions?: {
+                [key: string]: {
+                    [key: string]: unknown;
+                }[];
+            };
+            /** Items */
+            items?: {
+                [key: string]: unknown;
+            }[];
+            /** Kind */
+            kind: string;
+            /**
+             * Limit
+             * @default 100
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            /** Projectionkey */
+            projectionKey: string;
+            /** Samplescope */
+            sampleScope?: {
+                [key: string]: unknown;
+            };
+            /** Section */
+            section: string;
+            /** Sections */
+            sections?: {
+                [key: string]: unknown;
+            }[];
+            /** Summary */
+            summary?: {
+                [key: string]: unknown;
+            };
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+        } & {
+            [key: string]: unknown;
+        };
+        /** ProjectionAuditRowsResponse */
+        ProjectionAuditRowsResponse: {
+            /** Columns */
+            columns?: {
+                [key: string]: unknown;
+            }[];
+            /** Items */
+            items?: {
+                [key: string]: unknown;
+            }[];
+            /** Kind */
+            kind: string;
+            /**
+             * Limit
+             * @default 100
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            /** Projectionkey */
+            projectionKey: string;
+            /** Section */
+            section: string;
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+        };
         /** ProvenanceResponse */
         ProvenanceResponse: {
             /**
@@ -274,6 +918,28 @@ export interface components {
             sourceSha256?: string | null;
         } & {
             [key: string]: unknown;
+        };
+        /**
+         * ScopedSampleRequest
+         * @description Lightweight sample-metadata query bound to one analytical scope.
+         */
+        ScopedSampleRequest: {
+            /**
+             * Limit
+             * @default 100
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            /**
+             * Query
+             * @default
+             */
+            query: string;
+            scope?: components["schemas"]["AnalysisScope"];
         };
         /** SummaryResponse */
         SummaryResponse: {
@@ -338,6 +1004,396 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    analysis_runs_api_analysis_runs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalysisRunResponse"][];
+                };
+            };
+        };
+    };
+    analysis_run_api_analysis_runs__run_key__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalysisRunResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    projection_audit_api_analysis_runs__run_key__artifacts__artifact_key__projection_audits__projection_kind__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_key: string;
+                artifact_key: string;
+                projection_kind: "abundance" | "composition" | "ko_contribution" | "boxplot" | "heatmap" | "detection" | "differential_ko" | "taxonomy" | "taxonomy_sankey" | "pca" | "pcoa";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectionAuditRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectionAuditResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    projection_audit_metadata_api_analysis_runs__run_key__artifacts__artifact_key__projection_audits__projection_kind__metadata_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_key: string;
+                artifact_key: string;
+                projection_kind: "abundance" | "composition" | "ko_contribution" | "boxplot" | "heatmap" | "detection" | "differential_ko" | "taxonomy" | "taxonomy_sankey" | "pca" | "pcoa";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectionAuditRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectionAuditMetadataResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    projection_audit_options_api_analysis_runs__run_key__artifacts__artifact_key__projection_audits__projection_kind__options__field__post: {
+        parameters: {
+            query?: {
+                query?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                run_key: string;
+                artifact_key: string;
+                projection_kind: "abundance" | "composition" | "ko_contribution" | "boxplot" | "heatmap" | "detection" | "differential_ko" | "taxonomy" | "taxonomy_sankey" | "pca" | "pcoa";
+                field: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectionAuditRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectionAuditOptionsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    projection_audit_rows_api_analysis_runs__run_key__artifacts__artifact_key__projection_audits__projection_kind__rows_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_key: string;
+                artifact_key: string;
+                projection_kind: "abundance" | "composition" | "ko_contribution" | "boxplot" | "heatmap" | "detection" | "differential_ko" | "taxonomy" | "taxonomy_sankey" | "pca" | "pcoa";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectionAuditRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectionAuditRowsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    abundance_projection_api_analysis_runs__run_key__artifacts__artifact_key__projections_abundance_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_key: string;
+                artifact_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AbundanceProjectionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbundanceProjectionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    chart_projection_api_analysis_runs__run_key__artifacts__artifact_key__projections__projection_kind__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_key: string;
+                artifact_key: string;
+                projection_kind: "composition" | "ko_contribution" | "boxplot" | "heatmap" | "detection" | "differential_ko" | "taxonomy" | "taxonomy_sankey" | "pca" | "pcoa";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChartProjectionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChartProjectionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    scoped_analysis_samples_api_analysis_runs__run_key__artifacts__artifact_key__samples_query_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_key: string;
+                artifact_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScopedSampleRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalysisSamplePageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    analysis_samples_api_analysis_runs__run_key__samples_get: {
+        parameters: {
+            query?: {
+                artifactKey?: string | null;
+                phenotype?: string | null;
+                query?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                run_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalysisSamplePageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    analysis_sample_api_analysis_runs__run_key__samples__sample_code__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_key: string;
+                sample_code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalysisSampleDetailResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     datasets_api_datasets_get: {
         parameters: {
             query?: never;

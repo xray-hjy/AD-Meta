@@ -52,15 +52,16 @@ def _cluster_order(matrix: np.ndarray) -> list[int]:
 
 def _heatmap_filter(
     max_features: int,
+    q_value_max: float = 0.05,
+    log2_fc_min_abs: float = 1.0,
     selected_count: int | None = None,
     significant_count: int | None = None,
 ) -> dict:
     """记录热图筛选条件，随 payload 返回给前端展示/排查。"""
 
     payload = {
-        "qValueMax": 0.05,
-        "pValueMax": 0.05,
-        "log2FcMinAbs": 1,
+        "qValueMax": q_value_max,
+        "log2FcMinAbs": log2_fc_min_abs,
         "topN": max_features,
         "maxFeatures": max_features,
         "multipleTesting": "Benjamini-Hochberg",
@@ -73,13 +74,20 @@ def _heatmap_filter(
     return payload
 
 
-def compute_heatmap(df: pd.DataFrame, species_cols: list[str], top_n: int = 200) -> dict:
+def compute_heatmap(
+    df: pd.DataFrame,
+    species_cols: list[str],
+    top_n: int = 200,
+    q_value_max: float = 0.05,
+    log2_fc_min_abs: float = 1.0,
+    include_audit: bool = False,
+) -> dict:
     """计算差异特征热图 payload。
 
     筛选规则：
     - Mann-Whitney U 检验并用 Benjamini-Hochberg 校正，要求 `q < 0.05`。
     - 组均值 log2 fold-change 绝对值大于 1。
-    - 候选项按 `-log10(p) * abs(log2FC)` 排序，最多保留 `top_n` 个。
+    - 候选项按 `-log10(q) * abs(log2FC)` 排序，最多展示 `top_n` 个。
     """
 
     ad, nc = group_frames(df, species_cols)
@@ -118,26 +126,27 @@ def compute_heatmap(df: pd.DataFrame, species_cols: list[str], top_n: int = 200)
     diff_log = ad_mean_log - nc_mean_log
 
     candidates = []
+    audit_rows = []
     for i, col in enumerate(species_cols):
+        audit_item = {
+            "idx": i,
+            "col": col,
+            "fullName": col,
+            "label": short_name(col, max_len=10),
+            "p": p_values[i],
+            "pValue": p_values[i],
+            "qValue": float(q_values[i]),
+            "effectSize": float(effect_sizes[i]),
+            "effectMetric": "rank_biserial_correlation",
+            "log2FC": float(log2fc[i]),
+            "meanAD": float(ad_mean[i]),
+            "meanNC": float(nc_mean[i]),
+            "diffLog": float(diff_log[i]),
+        }
         # 只保留同时满足显著性和效应量阈值的差异特征。
-        if q_values[i] < 0.05 and abs(log2fc[i]) > 1:
-            candidates.append(
-                {
-                    "idx": i,
-                    "col": col,
-                    "fullName": col,
-                    "label": short_name(col, max_len=10),
-                    "p": p_values[i],
-                    "pValue": p_values[i],
-                    "qValue": float(q_values[i]),
-                    "effectSize": float(effect_sizes[i]),
-                    "effectMetric": "rank_biserial_correlation",
-                    "log2FC": float(log2fc[i]),
-                    "meanAD": float(ad_mean[i]),
-                    "meanNC": float(nc_mean[i]),
-                    "diffLog": float(diff_log[i]),
-                }
-            )
+        if q_values[i] < q_value_max and abs(log2fc[i]) > log2_fc_min_abs:
+            candidates.append(audit_item)
+        audit_rows.append(audit_item)
     for item in candidates:
         # score 同时考虑显著性和效应量，避免只按 p 值选出变化幅度很小的特征。
         item["score"] = -math.log10(item["qValue"] + 1e-300) * abs(item["log2FC"])
@@ -145,18 +154,43 @@ def compute_heatmap(df: pd.DataFrame, species_cols: list[str], top_n: int = 200)
     candidates.sort(key=lambda item: item["score"], reverse=True)
     max_features = max(1, int(top_n))
     stats = candidates[: min(len(candidates), max_features)]
+    if include_audit:
+        displayed = {item["col"] for item in stats}
+        eligible = {item["col"] for item in candidates}
+        for item in audit_rows:
+            if item["col"] in displayed:
+                item["status"] = "displayed"
+                item["reason"] = "significance_effect_rank"
+            elif item["col"] in eligible:
+                item["status"] = "display_cap"
+                item["reason"] = "outside_top_n"
+            elif item["qValue"] >= q_value_max:
+                item["status"] = "filtered"
+                item["reason"] = "q_value_threshold"
+            else:
+                item["status"] = "filtered"
+                item["reason"] = "effect_size_threshold"
 
     if not stats:
         # 无候选特征时返回可解释错误 payload，前端显示空状态而不是崩溃。
         feature_label = df.attrs.get("feature_label", FEATURE_META["taxonomy"]["label"])
-        return {
-            "error": f"未筛选到满足 q < 0.05 且 |log2FC| > 1 的差异{feature_label}。",
-            "filter": _heatmap_filter(max_features, 0, 0),
+        payload = {
+            "error": f"未筛选到满足 q < {q_value_max:g} 且 |log2FC| > {log2_fc_min_abs:g} 的差异{feature_label}。",
+            "filter": _heatmap_filter(
+                max_features,
+                q_value_max,
+                log2_fc_min_abs,
+                0,
+                0,
+            ),
             "featureLabel": feature_label,
             "method": "Mann-Whitney U with Benjamini-Hochberg FDR",
             "inferenceLevel": "exploratory_fdr",
             "stats": [],
         }
+        if include_audit:
+            payload["_auditRows"] = audit_rows
+        return payload
 
     # 先分别聚类 AD/NC 矩阵，再基于排序后的合并矩阵生成全样本 dendrogram。
     idx = [item["idx"] for item in stats]
@@ -171,10 +205,16 @@ def compute_heatmap(df: pd.DataFrame, species_cols: list[str], top_n: int = 200)
     combined_cluster = _hierarchical_cluster(np.concatenate([ordered_ad_mat, ordered_nc_mat], axis=0))
     column_cluster = _hierarchical_cluster(raw_mat.T)
 
-    return {
+    payload = {
         "method": "Mann-Whitney U with Benjamini-Hochberg FDR",
         "inferenceLevel": "exploratory_fdr",
-        "filter": _heatmap_filter(max_features, len(stats), len(candidates)),
+        "filter": _heatmap_filter(
+            max_features,
+            q_value_max,
+            log2_fc_min_abs,
+            len(stats),
+            len(candidates),
+        ),
         "featureLabel": df.attrs.get("feature_label", FEATURE_META["taxonomy"]["label"]),
         "stats": [{k: v for k, v in item.items() if k != "idx"} for item in stats],
         "colLabels": [item["label"] for item in stats],
@@ -196,3 +236,6 @@ def compute_heatmap(df: pd.DataFrame, species_cols: list[str], top_n: int = 200)
             "columns": {"merges": column_cluster["merges"]},
         },
     }
+    if include_audit:
+        payload["_auditRows"] = audit_rows
+    return payload

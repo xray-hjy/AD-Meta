@@ -1,19 +1,20 @@
 import { getAnalysisDataForFeatureKind } from '../../app/analysisDomains';
 import { useColorVision } from '../../context/ColorVisionContext';
 import { Link } from 'react-router-dom';
-import DatasetSelect from '../dataset/DatasetSelect';
+import AnalysisRunSelect from '../analysisRun/AnalysisRunSelect';
 
 export default function TopBar({
   featureKind,
   summary,
-  datasets = [],
-  activeDataset,
-  onDatasetChange,
+  runs = [],
+  activeRun,
+  activeArtifact,
+  onRunChange,
 }) {
   const { colorBlindFriendly, setColorBlindFriendly } = useColorVision();
   const currentAnalysisData = getAnalysisDataForFeatureKind(featureKind);
-  const sampleScope = summary
-    ? `${summary.totalSamples} 样本 · AD ${summary.adSamples} / NC ${summary.ncSamples}`
+  const sampleScope = activeRun && summary
+    ? `运行 ${activeRun.sampleCount} 样本 · 当前结果覆盖 ${activeArtifact?.sampleCount ?? summary.totalSamples}`
     : '样本范围加载中';
 
   return (
@@ -28,13 +29,12 @@ export default function TopBar({
       </div>
       <div className="topbar-context">
         <div className="topbar-product">
-          <span className="topbar-product__label">分析数据</span>
-          <DatasetSelect
-            datasets={datasets}
-            value={activeDataset}
-            onChange={onDatasetChange}
-            disabled={datasets.length === 0}
-            getOptionLabel={dataset => getAnalysisDataForFeatureKind(dataset.featureKind).label}
+          <span className="topbar-product__label">分析运行</span>
+          <AnalysisRunSelect
+            runs={runs}
+            value={activeRun?.key || ''}
+            onChange={onRunChange}
+            disabled={runs.length === 0}
           />
         </div>
         <span className="topbar-status"><i aria-hidden="true" />结果已就绪</span>
