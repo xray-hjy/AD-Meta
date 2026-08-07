@@ -1,7 +1,7 @@
 fastapi==0.141.1
 httpx==0.28.1
 uvicorn[standard]==0.52.1
-pandas==2.2.3
+pandas==3.0.5
 numpy==2.2.1
 scipy==1.15.0
 scikit-learn==1.6.0
