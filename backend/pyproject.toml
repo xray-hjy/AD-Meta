@@ -12,6 +12,7 @@ ignore = ["E501"]
 
 [tool.mypy]
 python_version = "3.13"
+incremental = false
 ignore_missing_imports = true
 check_untyped_defs = true
 warn_unused_ignores = true

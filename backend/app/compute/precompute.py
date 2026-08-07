@@ -77,7 +77,30 @@ def precompute_all(
         minimum_group_size=minimum_group_size,
         group_mapping=group_mapping,
     )
-    summary = compute_summary(df, species_cols, slug, name, published_at)
+    return precompute_prepared(
+        df,
+        species_cols,
+        warnings,
+        slug,
+        name,
+        published_at,
+        abundance_scale=abundance_scale,
+    )
+
+
+def precompute_prepared(
+    df,
+    feature_cols: list[str],
+    warnings: list[str],
+    slug: str,
+    name: str,
+    published_at: str,
+    *,
+    abundance_scale: str = "unknown",
+) -> tuple[dict, dict[str, Any], list[str]]:
+    """Generate cached artifacts from an already validated input table."""
+
+    summary = compute_summary(df, feature_cols, slug, name, published_at)
     summary["abundanceScale"] = abundance_scale
     summary["analysisStatus"] = (
         "formal_eligible" if df.attrs["validation_report"]["inferenceEligible"] else "exploratory_only"
@@ -87,25 +110,25 @@ def precompute_all(
     # summary/species/phylum 是物种和 KO 数据集都会生成的基础图表。
     artifacts = {
         "summary": summary,
-        "species": compute_species(df, species_cols),
-        "phylum": compute_phylum(df, species_cols),
+        "species": compute_species(df, feature_cols),
+        "phylum": compute_phylum(df, feature_cols),
     }
 
     # KO 数据集只生成 KO 专属图；物种数据集生成分类、排序和多样性图。
     if summary.get("featureKind") == "ko":
-        artifacts["detection"] = compute_detection_heatmap(df, species_cols)
-        differential_ko = compute_ko_differential(df, species_cols)
+        artifacts["detection"] = compute_detection_heatmap(df, feature_cols)
+        differential_ko = compute_ko_differential(df, feature_cols)
         artifacts["differential_ko"] = differential_ko
         artifacts["lda"] = differential_ko
     else:
-        artifacts["boxplot"] = compute_boxplot(df, species_cols)
-        taxonomy_hierarchy = compute_taxonomy_hierarchy(df, species_cols)
+        artifacts["boxplot"] = compute_boxplot(df, feature_cols)
+        taxonomy_hierarchy = compute_taxonomy_hierarchy(df, feature_cols)
         artifacts["taxonomy"] = taxonomy_hierarchy
         artifacts["sunburst"] = taxonomy_hierarchy
         artifacts["taxonomy_sankey"] = compute_taxonomy_sankey_projection(taxonomy_hierarchy)
-        artifacts["pca"] = compute_pca(df, species_cols)
-        artifacts["pcoa"] = compute_pcoa(df, species_cols)
-        artifacts["heatmap"] = compute_heatmap(df, species_cols)
+        artifacts["pca"] = compute_pca(df, feature_cols)
+        artifacts["pcoa"] = compute_pcoa(df, feature_cols)
+        artifacts["heatmap"] = compute_heatmap(df, feature_cols)
     return summary, artifacts, warnings
 
 
@@ -141,6 +164,7 @@ __all__ = [
     "compute_taxonomy_sankey_projection",
     "compute_taxonomy_tree",
     "precompute_all",
+    "precompute_prepared",
     "prepare_dataframe",
     "read_table",
     "write_json",

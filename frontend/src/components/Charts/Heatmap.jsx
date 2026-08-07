@@ -1,5 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as d3 from 'd3';
+import { useColorVision } from '../../context/ColorVisionContext';
 import useTooltip from '../../hooks/useTooltip';
 import HeatmapLightbox from './HeatmapLightbox';
 
@@ -9,6 +10,8 @@ const DEFAULT_DIFF_LABELS = ['AD - NC'];
 const MAX_RENDER_SCALE = 1.5;
 const SNAPSHOT_SCALE = 2;
 const GROUP_COLORS = { AD: '#e74c3c', NC: '#2ecc71' };
+const COLORBLIND_GROUP_COLORS = { AD: '#d55e00', NC: '#0072b2' };
+const GROUP_TEXT_COLORS = { AD: '#b42318', NC: '#067647' };
 
 /* ====== 工具函数 ====== */
 
@@ -287,6 +290,7 @@ function drawHeatmap(canvas, params, renderScale = getRenderScale(), options = {
     columnDendrogram,
     rowLeafOrder,
     columnLeafOrder,
+    groupColors,
   } = params;
 
   const { L, ch, gridW, gridH, totalW, totalH, labelEvery } = layout;
@@ -324,7 +328,7 @@ function drawHeatmap(canvas, params, renderScale = getRenderScale(), options = {
 
   if (showDendrograms && Array.isArray(rowGroups)) {
     rowGroups.forEach((group, i) => {
-      ctx.fillStyle = GROUP_COLORS[group] || '#94a3b8';
+      ctx.fillStyle = groupColors[group] || '#64748b';
       ctx.fillRect(-12, i * ch, 7, Math.max(0.5, ch - 0.4));
     });
   }
@@ -341,13 +345,13 @@ function drawHeatmap(canvas, params, renderScale = getRenderScale(), options = {
     ctx.fillText(label, showDendrograms ? -18 : -6, i * ch + ch / 2);
   });
 
-  ctx.strokeStyle = '#94a3b8';
+  ctx.strokeStyle = '#64748b';
   ctx.lineWidth = 0.5;
   ctx.fillStyle = '#334155';
   ctx.font = `${L.colFont}px sans-serif`;
   colLabels.forEach((label, j) => {
     const cx = j * L.cellW + L.cellW / 2;
-    drawLine(ctx, cx, -2, cx, 1, '#94a3b8', 0.5);
+    drawLine(ctx, cx, -2, cx, 1, '#64748b', 0.5);
     ctx.save();
     ctx.translate(cx, -5);
     ctx.rotate(-65 * Math.PI / 180);
@@ -381,7 +385,7 @@ function drawHeatmap(canvas, params, renderScale = getRenderScale(), options = {
   }
 
   ctx.font = '7px sans-serif';
-  ctx.fillStyle = '#94a3b8';
+  ctx.fillStyle = '#475569';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
   const tickCount = 4;
@@ -389,7 +393,7 @@ function drawHeatmap(canvas, params, renderScale = getRenderScale(), options = {
     const t = i / tickCount;
     const val = mode === 'diff' ? maxAbs * (1 - 2 * t) : maxV * (1 - t);
     const y = legY + t * legH;
-    drawLine(ctx, legX + legW, y, legX + legW + 4, y, '#94a3b8', 0.6);
+    drawLine(ctx, legX + legW, y, legX + legW + 4, y, '#64748b', 0.6);
     ctx.fillText(val >= 1000 ? `${(val / 1000).toFixed(1)}k` : fmt(val, 1), legX + legW + 6, y);
   }
 
@@ -404,7 +408,7 @@ function drawHeatmap(canvas, params, renderScale = getRenderScale(), options = {
   if (options.includeNote) {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'alphabetic';
-    ctx.fillStyle = '#94a3b8';
+    ctx.fillStyle = '#475569';
     ctx.font = '7px sans-serif';
     ctx.fillText(
       `筛选: Mann-Whitney U + BH-FDR q<${filter?.qValueMax ?? 0.05}, |log₂FC|>${filter?.log2FcMinAbs ?? 1} | 行列聚类: 层次聚类(average) | 数据: log₁₀(丰度+1)`,
@@ -423,7 +427,7 @@ export function HeatmapDataTable({ title, matrix, rowLabels, colLabels }) {
   return (
     <details className="chart-data-table">
       <summary>查看{title}数据表</summary>
-      <div className="chart-data-table__scroll">
+      <div className="chart-data-table__scroll" tabIndex={0} aria-label={`${title}数据表，可滚动`}>
         <table>
           <thead>
             <tr>
@@ -467,6 +471,8 @@ const HeatmapCanvas = memo(function HeatmapCanvas({
   columnDendrogram,
   rowLeafOrder,
   columnLeafOrder,
+  colorBlindFriendly,
+  groupColors,
 }) {
   const canvasRef = useRef(null);
   const { Tooltip, show, move, hide } = useTooltip();
@@ -495,7 +501,8 @@ const HeatmapCanvas = memo(function HeatmapCanvas({
     columnDendrogram,
     rowLeafOrder,
     columnLeafOrder,
-  }), [matrix, rowLabels, colLabels, stats, mode, maxV, maxAbs, filter, layout, rowGroups, rowDendrogram, columnDendrogram, rowLeafOrder, columnLeafOrder]);
+    groupColors,
+  }), [matrix, rowLabels, colLabels, stats, mode, maxV, maxAbs, filter, layout, rowGroups, rowDendrogram, columnDendrogram, rowLeafOrder, columnLeafOrder, groupColors]);
 
   const createSnapshot = useCallback((scale = SNAPSHOT_SCALE, includeNote = false) => {
     const canvas = document.createElement('canvas');
@@ -526,18 +533,14 @@ const HeatmapCanvas = memo(function HeatmapCanvas({
     drawHeatmap(canvasRef.current, drawParams);
   }, [drawParams]);
 
-  const handleMouseMove = useCallback((event) => {
-    if (!canvasRef.current) return;
-    const point = canvasPoint(event, canvasRef.current, layout);
+  const getTooltipHtml = useCallback((point) => {
     const hit = heatmapHitTest(point, layout, rows, cols);
-    if (!hit) {
-      hide();
-      return;
-    }
+    if (!hit) return null;
 
     const value = matrix[hit.i][hit.j];
     const stat = stats[hit.j];
-    const tax = formatTaxonomy(stat.fullName);
+    if (!stat) return null;
+    const tax = formatTaxonomy(stat.fullName || colLabels[hit.j] || `列 ${hit.j + 1}`);
     const lines = [
       tax,
       `q = ${formatP(stat.qValue ?? stat.p)}`,
@@ -550,17 +553,33 @@ const HeatmapCanvas = memo(function HeatmapCanvas({
       lines.push(`样本: ${rowLabels[hit.i]}`, `log10(丰度+1) = ${fmt(value, 4)}`);
       if (rowGroups?.[hit.i]) lines.push(`分组: ${rowGroups[hit.i]}`);
     }
-    show(lines.join('<br/>'));
+    return lines.join('<br/>');
+  }, [cols, colLabels, layout, matrix, mode, rowGroups, rowLabels, rows, stats]);
+
+  const handleMouseMove = useCallback((event) => {
+    if (!canvasRef.current) return;
+    const html = getTooltipHtml(canvasPoint(event, canvasRef.current, layout));
+    if (!html) {
+      hide();
+      return;
+    }
+    show(html);
     move(event);
-  }, [cols, hide, layout, matrix, mode, move, rowGroups, rowLabels, rows, show, stats]);
+  }, [getTooltipHtml, hide, layout, move, show]);
 
   const handleOpen = useCallback(() => {
     if (!onOpen) return;
+    hide();
     onOpen({
       src: createSnapshot(SNAPSHOT_SCALE),
       title,
+      interaction: {
+        width: layout.totalW,
+        height: layout.totalH,
+        getTooltipHtml,
+      },
     });
-  }, [createSnapshot, onOpen, title]);
+  }, [createSnapshot, getTooltipHtml, hide, layout.totalH, layout.totalW, onOpen, title]);
 
   return (
     <section className={`heatmap-panel ${compact ? 'heatmap-panel--compact' : ''}`}>
@@ -591,11 +610,11 @@ const HeatmapCanvas = memo(function HeatmapCanvas({
           {exporting ? '导出中...' : '导出图片'}
         </button>
       </div>
-      <div style={{ fontSize: compact ? 10 : 11, color: '#94a3b8', marginBottom: 6 }}>
+      <div style={{ fontSize: compact ? 10 : 11, color: '#475569', marginBottom: 6 }}>
         {mode === 'diff'
           ? '红色=AD高 蓝色=NC高'
           : showDendrograms
-            ? '颜色越深 log丰度越高 · 分组条：红色=AD 绿色=NC'
+            ? `颜色越深 log丰度越高 · 分组条：${colorBlindFriendly ? '橙色=AD 蓝色=NC' : '红色=AD 绿色=NC'}`
             : '颜色越深 log丰度越高'}
         {' · 点击热图可放大'}
       </div>
@@ -607,8 +626,6 @@ const HeatmapCanvas = memo(function HeatmapCanvas({
             handleOpen();
           }
         }}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={hide}
         role="button"
         tabIndex={0}
         aria-label={`${title}，按回车放大`}
@@ -623,7 +640,9 @@ const HeatmapCanvas = memo(function HeatmapCanvas({
           data-row-dendrogram-position={showDendrograms ? 'right' : undefined}
           data-column-dendrogram-position={showDendrograms ? 'bottom' : undefined}
           data-row-groups={Array.isArray(rowGroups) ? rowGroups.join(',') : undefined}
-          data-colorblind-friendly="false"
+          data-colorblind-friendly={colorBlindFriendly}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={hide}
           style={{ display: 'block', width: '100%', height: 'auto' }}
         />
         <Tooltip />
@@ -642,6 +661,8 @@ const HeatmapCanvas = memo(function HeatmapCanvas({
 
 function Heatmap({ data, featureLabel = '物种' }) {
   const result = data;
+  const { colorBlindFriendly } = useColorVision();
+  const groupColors = colorBlindFriendly ? COLORBLIND_GROUP_COLORS : GROUP_COLORS;
   const resolvedFeatureLabel = result?.featureLabel || featureLabel;
   const [lightboxImage, setLightboxImage] = useState(null);
 
@@ -701,8 +722,8 @@ function Heatmap({ data, featureLabel = '物种' }) {
       {/* 筛选信息 */}
       <div className="chart-info-strip">
         <span><b style={{ color: '#0f172a' }}>差异{resolvedFeatureLabel}：</b>{stats.length}</span>
-        <span style={{ color: GROUP_COLORS.AD }}><b>AD：</b>{adLabels.length} 样本</span>
-        <span style={{ color: GROUP_COLORS.NC }}><b>NC：</b>{ncLabels.length} 样本</span>
+        <span style={{ color: GROUP_TEXT_COLORS.AD }}><b>AD：</b>{adLabels.length} 样本</span>
+        <span style={{ color: GROUP_TEXT_COLORS.NC }}><b>NC：</b>{ncLabels.length} 样本</span>
         <span><b style={{ color: '#0f172a' }}>列排序：</b>层次聚类（average linkage）</span>
       </div>
 
@@ -720,6 +741,8 @@ function Heatmap({ data, featureLabel = '物种' }) {
           chartSubType="AD-abundance"
           filter={result.filter}
           onOpen={handleOpen}
+          colorBlindFriendly={colorBlindFriendly}
+          groupColors={groupColors}
         />
         <HeatmapCanvas
           title="NC 组丰度热图"
@@ -733,6 +756,8 @@ function Heatmap({ data, featureLabel = '物种' }) {
           chartSubType="NC-abundance"
           filter={result.filter}
           onOpen={handleOpen}
+          colorBlindFriendly={colorBlindFriendly}
+          groupColors={groupColors}
         />
 
         {combinedData ? (
@@ -754,6 +779,8 @@ function Heatmap({ data, featureLabel = '物种' }) {
             columnDendrogram={combinedData.columnDendrogram}
             rowLeafOrder={combinedData.rowLeafOrder}
             columnLeafOrder={combinedData.columnLeafOrder}
+            colorBlindFriendly={colorBlindFriendly}
+            groupColors={groupColors}
           />
         ) : (
           <section className="chart-notice">
@@ -779,6 +806,8 @@ function Heatmap({ data, featureLabel = '物种' }) {
           chartSubType="diff"
           filter={result.filter}
           onOpen={handleOpen}
+          colorBlindFriendly={colorBlindFriendly}
+          groupColors={groupColors}
         />
       </div>
 

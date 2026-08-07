@@ -112,7 +112,7 @@ function PhylumChart({ data, featureKind = 'taxonomy' }) {
         nameGap: 30,
         axisLine: { show: false },
         axisTick: { show: false },
-        axisLabel: { color: '#94a3b8', fontSize: 11, formatter: value => `${Math.round(Number(value) * 100)}%` },
+        axisLabel: { color: '#475569', fontSize: 11, formatter: value => `${Math.round(Number(value) * 100)}%` },
         splitLine: { lineStyle: { color: '#e7edf5', type: 'dashed' } },
       }],
       yAxis: [{

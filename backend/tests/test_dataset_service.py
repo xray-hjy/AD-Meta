@@ -13,6 +13,53 @@ from app.services import dataset_service
 
 
 class ReadChartPathCompatibilityTests(unittest.TestCase):
+    def test_matching_etag_returns_metadata_without_reading_the_artifact(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            db_path = Path(tmpdir) / "datasets.sqlite3"
+            expected_sha256 = "a" * 64
+            with patch.object(database, "DB_PATH", db_path), patch.object(database, "DB_ENGINE", "sqlite"):
+                database.dispose_engine()
+                database.init_db()
+                with database.connect() as conn:
+                    dataset = conn.execute(
+                        """
+                        INSERT INTO datasets (slug, name, status, created_at, updated_at)
+                        VALUES ('demo', 'Demo', 'published', '2026-08-03', '2026-08-03')
+                        """
+                    )
+                    revision = conn.execute(
+                        """
+                        INSERT INTO dataset_revisions (
+                          dataset_id, revision_key, status, source_sha256, source_file_size,
+                          compute_version, params_hash, created_at
+                        ) VALUES (?, 'revision-1', 'published', ?, 1, 'v1', ?, '2026-08-03')
+                        """,
+                        (dataset.lastrowid, "b" * 64, "c" * 64),
+                    )
+                    conn.execute(
+                        "UPDATE datasets SET current_revision_id = ? WHERE id = ?",
+                        (revision.lastrowid, dataset.lastrowid),
+                    )
+                    conn.execute(
+                        """
+                        INSERT INTO revision_chart_artifacts (
+                          revision_id, chart_type, cache_path, sha256, size_bytes, created_at
+                        ) VALUES (?, 'summary', 'storage/cache/missing.json', ?, 123, '2026-08-03')
+                        """,
+                        (revision.lastrowid, expected_sha256),
+                    )
+
+                with patch.object(Path, "read_bytes", side_effect=AssertionError("artifact was read")):
+                    payload, error, metadata = dataset_service.read_chart_with_metadata(
+                        "demo", "summary", if_none_match=f'"{expected_sha256}"'
+                    )
+                database.dispose_engine()
+
+        self.assertIsNone(payload)
+        self.assertIsNone(error)
+        self.assertTrue(metadata["notModified"])
+        self.assertEqual(metadata["etag"], expected_sha256)
+
     def test_dataset_list_reports_only_actual_public_artifacts(self) -> None:
         with TemporaryDirectory() as tmpdir:
             db_path = Path(tmpdir) / "datasets.sqlite3"

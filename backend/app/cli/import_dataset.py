@@ -1,17 +1,19 @@
 from __future__ import annotations
 
 import argparse
+import errno
 import hashlib
 import json
 import logging
 import os
 import shutil
+import tempfile
 import time
 import uuid
 from pathlib import Path
 from typing import Any
 
-from app.compute.precompute import precompute_all, prepare_dataframe, write_json
+from app.compute.precompute import precompute_prepared, prepare_dataframe, write_json
 from app.compute.table import InputValidationError, validate_covariates
 from app.core.config import CACHE_ROOT, COMPUTE_VERSION
 from app.core.database import connect, is_mysql, utcnow
@@ -21,6 +23,29 @@ from app.services.statistics_worker import run_formal_differential
 
 RETAIN_SUCCESSFUL_REVISIONS = 3
 logger = logging.getLogger("ad_meta.import")
+
+
+def _publish_staged_directory(stage_dir: Path, final_dir: Path) -> None:
+    """Publish a completed revision atomically, including across mounted filesystems."""
+
+    final_dir.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        os.replace(stage_dir, final_dir)
+        return
+    except OSError as exc:
+        if exc.errno != errno.EXDEV:
+            raise
+
+    target_stage = Path(
+        tempfile.mkdtemp(prefix=f".{final_dir.name}.publishing-", dir=final_dir.parent)
+    )
+    try:
+        shutil.copytree(stage_dir, target_stage, dirs_exist_ok=True)
+        os.replace(target_stage, final_dir)
+        shutil.rmtree(stage_dir)
+    except Exception:
+        shutil.rmtree(target_stage, ignore_errors=True)
+        raise
 
 
 def _log_import_event(
@@ -305,25 +330,24 @@ def import_dataset(
             job_id = int(job_cursor.lastrowid)
 
         published_at = utcnow()
-        summary, artifacts, warnings = precompute_all(
+        df, feature_cols, warnings = prepare_dataframe(
             stage_raw,
+            abundance_scale=abundance_scale,
+            missing_value_policy=missing_value_policy,
+            minimum_group_size=2,
+            group_mapping=group_mapping,
+        )
+        validate_covariates(df, feature_cols, covariates)
+        summary, artifacts, warnings = precompute_prepared(
+            df,
+            feature_cols,
+            warnings,
             slug,
             name,
             published_at,
             abundance_scale=abundance_scale,
-            missing_value_policy=missing_value_policy,
-            minimum_group_size=2,
-            group_mapping=group_mapping,
-        )
-        df, feature_cols, _ = prepare_dataframe(
-            stage_raw,
-            abundance_scale=abundance_scale,
-            missing_value_policy=missing_value_policy,
-            minimum_group_size=2,
-            group_mapping=group_mapping,
         )
         validation = dict(df.attrs["validation_report"])
-        validate_covariates(df, feature_cols, covariates)
         _log_import_event(
             slug=slug,
             revision=revision_key,
@@ -392,8 +416,7 @@ def import_dataset(
             json.loads(stage_path.read_text(encoding="utf-8"))
             artifact_metadata[chart_type] = (_sha256_file(stage_path), stage_path.stat().st_size)
 
-        final_dir.parent.mkdir(parents=True, exist_ok=True)
-        os.replace(stage_dir, final_dir)
+        _publish_staged_directory(stage_dir, final_dir)
         published_files = True
         total_artifact_bytes = sum(size for _, size in artifact_metadata.values())
         _log_import_event(

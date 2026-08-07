@@ -1,0 +1,19 @@
+Package: admetastatsworker
+Type: Project
+Title: AD-Meta Statistics Worker
+Version: 0.1.0
+Authors@R: person("AD-Meta", role = c("aut", "cre"), email = "maintainers@example.invalid")
+Description: Internal Plumber service for reproducible differential abundance analyses.
+License: MIT
+Encoding: UTF-8
+Imports:
+    ANCOMBC,
+    jsonlite,
+    Maaslin2,
+    mia,
+    microbiome,
+    phyloseq,
+    plumber,
+    S4Vectors,
+    SummarizedExperiment,
+    TreeSummarizedExperiment

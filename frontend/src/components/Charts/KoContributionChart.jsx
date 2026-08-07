@@ -60,7 +60,7 @@ export default function KoContributionChart({ data }) {
         axisLine: { show: false },
         axisTick: { show: false },
         axisLabel: {
-          color: '#94a3b8',
+          color: '#475569',
           fontSize: 11,
           formatter: value => formatPercent(value, value < 0.01 ? 2 : 1),
         },

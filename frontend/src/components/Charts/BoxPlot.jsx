@@ -118,7 +118,7 @@ function BoxPlot({ data, featureLabel = '物种' }) {
       yAxis: {
         type: 'value',
         name: isLogScale ? 'log10(丰度 + 1)' : '丰度',
-        axisLabel: { color: '#94a3b8', formatter: value => fmtNum(value, isLogScale) },
+        axisLabel: { color: '#475569', formatter: value => fmtNum(value, isLogScale) },
         splitLine: { lineStyle: { color: '#f1f5f9' } },
       },
       series: [...boxSeries, ...scatterSeries],

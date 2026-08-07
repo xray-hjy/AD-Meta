@@ -336,11 +336,18 @@ export default function ProjectionAuditPanel({
                         ...current,
                         [field.key]: value,
                     }))}
+                    scrollSelectedValue={field.key === 'feature'}
                   />
                 );
               })}
               <div className="projection-audit__filter-actions">
-                <button type="submit" disabled={state.fetching}>查询</button>
+                <button
+                  className="projection-audit__query-button"
+                  type="submit"
+                  disabled={state.fetching}
+                >
+                  查询
+                </button>
                 <button type="button" disabled={!hasFilters || state.fetching} onClick={clearFilters}>
                   清空
                 </button>

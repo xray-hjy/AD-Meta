@@ -127,7 +127,7 @@ function OrdinationChart({ data, footer }) {
         nameLocation: 'center',
         nameGap: 34,
         nameTextStyle: { fontSize: 12, color: '#64748b' },
-        axisLabel: { fontSize: 10, color: '#94a3b8' },
+        axisLabel: { fontSize: 10, color: '#475569' },
         splitLine: { lineStyle: { color: '#f1f5f9' } },
       },
       yAxis: {
@@ -138,7 +138,7 @@ function OrdinationChart({ data, footer }) {
         nameLocation: 'center',
         nameGap: 46,
         nameTextStyle: { fontSize: 12, color: '#64748b' },
-        axisLabel: { fontSize: 10, color: '#94a3b8' },
+        axisLabel: { fontSize: 10, color: '#475569' },
         splitLine: { lineStyle: { color: '#f1f5f9' } },
       },
       series: [...ellipseSeries, ...scatterSeries],

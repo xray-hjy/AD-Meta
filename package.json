@@ -1,20 +1,31 @@
 {
   "name": "ad-meta",
   "private": true,
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "npm --prefix frontend run dev",
-    "dev:backend": "cd backend && .venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000",
+    "dev:backend": "npm run sync:analysis && cd backend && .venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000",
     "dev:frontend": "npm --prefix frontend start",
     "migrate:sqlite-to-mysql": "cd backend && .venv/bin/python -m app.cli.migrate_sqlite_to_mysql",
     "bootstrap:storage": "cd backend && .venv/bin/python -m app.cli.bootstrap_storage",
+    "prepare:runtime": "cd backend && .venv/bin/python -m app.cli.prepare_runtime",
+    "sync:analysis": "cd backend && .venv/bin/python -m app.cli.sync_analysis_manifest",
     "migrate": "cd backend && .venv/bin/python -m alembic upgrade head",
     "openapi": "cd backend && .venv/bin/python -m app.cli.export_openapi && npm --prefix ../frontend run openapi:types",
     "build": "npm --prefix frontend run build",
     "test:backend": "cd backend && .venv/bin/python -m pytest",
     "test:frontend": "npm --prefix frontend test",
     "test:e2e": "npm --prefix frontend run test:e2e",
+    "test:coverage": "cd backend && .venv/bin/python -m pytest --cov=app --cov-report=term-missing --cov-fail-under=70 && npm --prefix ../frontend run test:coverage",
+    "audit:python": "cd backend && .venv/bin/python -m pip_audit -r requirements.txt",
+    "audit": "npm run audit:python && npm --prefix frontend audit --audit-level=high",
+    "check:openapi": "cd backend && .venv/bin/python -m app.cli.export_openapi --check && npm --prefix ../frontend run openapi:types:check",
     "lint": "cd backend && .venv/bin/python -m ruff check app tests && npm --prefix ../frontend run lint",
     "typecheck": "cd backend && .venv/bin/python -m mypy app && npm --prefix ../frontend run typecheck",
-    "verify": "npm run lint && npm run typecheck && npm run test:backend && npm run test:frontend && npm run build"
+    "verify": "npm run lint && npm run typecheck && npm run test:backend && npm run test:frontend && npm run build",
+    "verify:full": "npm run verify && npm run test:coverage && npm run check:openapi && npm run audit && npm run test:e2e",
+    "verify:containers": "bash scripts/verify-containers.sh"
   }
 }

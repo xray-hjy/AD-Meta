@@ -463,33 +463,33 @@
   height: 100%;
 }
 
-.chart-viewport--fit:has(.chart-data-table),
-.chart-viewport--data:has(.chart-data-table) {
+.chart-viewport--fit:has(.echart-layout),
+.chart-viewport--data:has(.echart-layout) {
   height: auto;
 }
 
-.chart-viewport--fit .chart-viewport__canvas:has(> .chart-data-table),
-.chart-viewport--data .chart-viewport__canvas:has(> .chart-data-table) {
+.chart-viewport--fit .chart-viewport__canvas:has(> .echart-layout),
+.chart-viewport--data .chart-viewport__canvas:has(> .echart-layout) {
   height: auto;
-  display: grid;
+  display: block;
 }
 
-.chart-viewport--fit .chart-viewport__canvas:has(> .chart-data-table) {
-  grid-template-rows: clamp(
+.chart-viewport--fit .echart-layout {
+  --echart-context-height: clamp(
     var(--chart-viewport-min-height, 480px),
     calc(100dvh - 300px),
     var(--chart-viewport-max-height, 760px)
-  ) auto;
+  );
 }
 
-.chart-viewport--data .chart-viewport__canvas:has(> .chart-data-table) {
-  grid-template-rows: max(
+.chart-viewport--data .echart-layout {
+  --echart-context-height: max(
     var(--chart-viewport-min-height, 480px),
     var(--chart-viewport-preferred-height, 480px)
-  ) auto;
+  );
 }
 
-.chart-viewport__canvas > .chart-data-table {
+.chart-viewport__canvas > .echart-layout {
   height: auto;
 }
 
@@ -764,8 +764,12 @@
 
 .ordination-chart-canvas {
   width: 100%;
-  aspect-ratio: 16 / 7;
-  min-height: 760px;
+  height: auto;
+  min-height: 0;
+}
+
+.ordination-chart-canvas .echart-layout {
+  --echart-context-height: 760px;
 }
 
 .chart-plain__footer {
@@ -1387,7 +1391,7 @@
 }
 
 .projection-disclosure__warning {
-  color: #9a6700;
+  color: #765000;
   font-weight: 700;
 }
 
@@ -1502,10 +1506,25 @@
   font-size: 12px;
 }
 
+.echart-layout {
+  width: 100%;
+  height: auto;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: minmax(0, var(--echart-layout-canvas-height)) auto;
+  align-items: stretch;
+}
+
+.echart-layout__canvas {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
 .chart-data-table summary,
 .projection-audit > summary {
   width: fit-content;
-  color: var(--color-accent);
+  color: #1d4ed8;
   cursor: pointer;
   font-weight: 700;
 }
@@ -1542,6 +1561,7 @@
 }
 
 .chart-frame__audit {
+  margin-top: 12px;
   padding: 0;
 }
 
@@ -1707,6 +1727,7 @@
 
 .projection-audit__select-trigger {
   width: 100%;
+  min-width: 0;
   min-height: 32px;
   display: flex;
   align-items: center;
@@ -1720,14 +1741,53 @@
   cursor: pointer;
   font: inherit;
   font-weight: 400;
+  overflow: hidden;
   text-align: left;
 }
 
-.projection-audit__select-trigger > span:first-child {
+.projection-audit__select-value {
+  flex: 1 1 auto;
   min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.projection-audit__select-value-text {
+  display: block;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.projection-audit__select-trigger.is-marquee-enabled .projection-audit__select-value-text {
+  width: max-content;
+  max-width: none;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.projection-audit__select-value-text.is-scrolling {
+  padding-left: 100%;
+  animation: projection-audit-value-marquee var(--audit-marquee-duration, 12s) linear infinite;
+  will-change: transform;
+}
+
+@keyframes projection-audit-value-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .projection-audit__select-trigger.is-marquee-enabled .projection-audit__select-value-text.is-scrolling {
+    width: auto;
+    max-width: 100%;
+    padding-left: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    animation: none;
+    will-change: auto;
+  }
 }
 
 .projection-audit__select-trigger:focus-visible {
@@ -1791,6 +1851,7 @@
 }
 
 .projection-audit__toolbar .projection-audit__select-menu button:hover,
+.projection-audit__toolbar .projection-audit__select-menu button.is-active,
 .projection-audit__toolbar .projection-audit__select-menu button.is-selected {
   background: #edf4ff;
   color: #1d4ed8;
@@ -1805,6 +1866,22 @@
 .projection-audit__filter-actions {
   display: flex;
   gap: 6px;
+}
+
+.projection-audit__toolbar .projection-audit__query-button {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.projection-audit__toolbar .projection-audit__query-button:hover:not(:disabled) {
+  border-color: #1d4ed8;
+  background: #1d4ed8;
+}
+
+.projection-audit__toolbar .projection-audit__query-button:focus-visible {
+  outline: 3px solid rgb(37 99 235 / 24%);
+  outline-offset: 2px;
 }
 
 .projection-audit__toolbar > span {

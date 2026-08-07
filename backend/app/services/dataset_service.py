@@ -159,7 +159,12 @@ def get_dataset(slug: str) -> dict | None:
     return _dataset_payload(row, available_charts=_public_artifacts(charts))
 
 
-def _read_chart_record(slug: str, chart_type: str, revision_key: str | None = None):
+def _read_chart_record(
+    slug: str,
+    chart_type: str,
+    revision_key: str | None = None,
+    if_none_match: str | None = None,
+):
     chart_type = CHART_TYPE_ALIASES.get(chart_type, chart_type)
     if chart_type not in PUBLIC_CHART_TYPES and chart_type != "summary":
         return None, "unsupported", None
@@ -217,10 +222,18 @@ def _read_chart_record(slug: str, chart_type: str, revision_key: str | None = No
             return None, "chart", None
 
     CACHE_METRICS["requests"] += 1
+    expected_sha256 = _row_get(artifact, "sha256")
+    if expected_sha256 and if_none_match == f'"{expected_sha256}"':
+        CACHE_METRICS["hits"] += 1
+        return None, None, {
+            "etag": expected_sha256,
+            "lastModified": _row_get(artifact, "created_at"),
+            "sizeBytes": _row_get(artifact, "size_bytes"),
+            "notModified": True,
+        }
     try:
         path = _resolve_cache_path(artifact["cache_path"])
         encoded = path.read_bytes()
-        expected_sha256 = _row_get(artifact, "sha256")
         actual_sha256 = hashlib.sha256(encoded).hexdigest()
         if expected_sha256 and actual_sha256 != expected_sha256:
             CACHE_METRICS["errors"] += 1
@@ -243,5 +256,10 @@ def read_chart(slug: str, chart_type: str):
     return payload, error
 
 
-def read_chart_with_metadata(slug: str, chart_type: str, revision_key: str | None = None):
-    return _read_chart_record(slug, chart_type, revision_key)
+def read_chart_with_metadata(
+    slug: str,
+    chart_type: str,
+    revision_key: str | None = None,
+    if_none_match: str | None = None,
+):
+    return _read_chart_record(slug, chart_type, revision_key, if_none_match)

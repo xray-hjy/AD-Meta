@@ -5,6 +5,14 @@ on:
   pull_request:
 
 jobs:
+  python-dependency-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pypa/gh-action-pip-audit@v1.1.0
+        with:
+          inputs: backend/requirements.txt
+
   backend-sqlite:
     runs-on: ubuntu-latest
     steps:
@@ -18,11 +26,9 @@ jobs:
         working-directory: backend
       - run: mypy app
         working-directory: backend
-      - run: python -m app.cli.export_openapi
+      - run: python -m app.cli.export_openapi --check
         working-directory: backend
-      - run: git diff --exit-code -- openapi.json
-        working-directory: backend
-      - run: pytest --cov=app --cov-report=term-missing
+      - run: pytest --cov=app --cov-report=term-missing --cov-fail-under=70
         working-directory: backend
         env:
           AD_META_DB_ENGINE: sqlite
@@ -40,9 +46,7 @@ jobs:
         working-directory: frontend
       - run: npm audit --audit-level=high
         working-directory: frontend
-      - run: npm run openapi:types
-        working-directory: frontend
-      - run: git diff --exit-code -- src/api/generated.ts
+      - run: npm run openapi:types:check
         working-directory: frontend
       - run: npm run lint
         working-directory: frontend
@@ -71,18 +75,8 @@ jobs:
         working-directory: frontend
       - run: npx playwright install --with-deps chromium
         working-directory: frontend
-      - run: python -m app.cli.bootstrap_storage
-        working-directory: backend
-        env:
-          AD_META_DB_ENGINE: sqlite
-          AD_META_DB_PATH: /tmp/ad-meta-e2e.sqlite3
-          AD_META_STORAGE_ROOT: /tmp/ad-meta-e2e-storage
-      - run: npx playwright test
+      - run: npm run test:e2e
         working-directory: frontend
-        env:
-          AD_META_DB_ENGINE: sqlite
-          AD_META_DB_PATH: /tmp/ad-meta-e2e.sqlite3
-          AD_META_STORAGE_ROOT: /tmp/ad-meta-e2e-storage
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -120,12 +114,40 @@ jobs:
           AD_META_MYSQL_USER: ad_meta
           AD_META_MYSQL_PASSWORD: test-password
           AD_META_MYSQL_DATABASE: ad_meta_test
+      - run: pytest -q
+        working-directory: backend
+        env:
+          AD_META_DB_ENGINE: mysql
+          AD_META_MYSQL_HOST: 127.0.0.1
+          AD_META_MYSQL_USER: ad_meta
+          AD_META_MYSQL_PASSWORD: test-password
+          AD_META_MYSQL_DATABASE: ad_meta_test
 
   docker-smoke:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - run: docker compose config --quiet
-      - run: docker build -t ad-meta-backend ./backend
-      - run: docker build -t ad-meta-frontend ./frontend
-      - run: docker build -t ad-meta-stats-worker ./stats-worker
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/bake-action@v7
+        with:
+          source: .
+          files: docker-compose.yml
+          targets: backend,frontend,stats-worker
+          load: true
+          set: |
+            backend.cache-from=type=gha,scope=backend
+            backend.cache-to=type=gha,scope=backend,mode=max
+            frontend.cache-from=type=gha,scope=frontend
+            frontend.cache-to=type=gha,scope=frontend,mode=max
+            stats-worker.cache-from=type=gha,scope=stats-worker
+            stats-worker.cache-to=type=gha,scope=stats-worker,mode=max
+      - run: docker compose up -d --wait --wait-timeout 1200 mysql stats-worker
+      - run: docker compose run --rm --no-deps backend python -m app.cli.smoke_statistics_worker
+      - run: docker compose up -d --wait --wait-timeout 1200 --scale backend=2
+      - run: curl --fail --silent http://127.0.0.1:8080/ > /dev/null
+      - if: failure()
+        run: docker compose logs --no-color --tail=200
+      - if: always()
+        run: docker compose down -v

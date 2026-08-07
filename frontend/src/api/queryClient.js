@@ -1,4 +1,5 @@
 import { QueryClient } from '@tanstack/react-query';
+import { ApiError } from './client';
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -7,7 +8,9 @@ export const queryClient = new QueryClient({
       gcTime: 10 * 60_000,
       refetchOnWindowFocus: false,
       retry(failureCount, error) {
-        return failureCount < 1 && ['network', 'timeout', 'server'].includes(error?.kind);
+        return failureCount < 1
+          && error instanceof ApiError
+          && ['network', 'timeout', 'server'].includes(error.kind);
       },
     },
   },

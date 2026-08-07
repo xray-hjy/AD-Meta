@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import { ColorVisionProvider } from '../../context/ColorVisionContext';
 import EChartBase, { chartRowsFromOption } from './EChartBase';
@@ -42,7 +42,7 @@ describe('chartRowsFromOption', () => {
   });
 
   test('keeps percentage-sized charts from collapsing inside the accessibility wrapper', () => {
-    render(
+    const { container } = render(
       <EChartBase
         option={{ series: [{ data: [1] }] }}
         style={{ width: '100%', height: '100%' }}
@@ -51,6 +51,26 @@ describe('chartRowsFromOption', () => {
 
     expect(screen.getByRole('img')).toHaveStyle({ width: '100%', height: '100%' });
     expect(screen.getByTestId('echart')).toHaveStyle({ width: '100%', height: '100%' });
+    expect(container.querySelector('.echart-layout')).toBeInTheDocument();
+    expect(container.querySelector('.echart-layout__canvas')).toContainElement(screen.getByTestId('echart'));
+  });
+
+  test('keeps the expanded table in the same layout flow as the chart canvas', async () => {
+    const { container } = render(
+      <EChartBase option={{ series: [{ name: 'AD', data: [1, 2] }] }} />
+    );
+
+    fireEvent.click(screen.getByText('查看当前图表数据'));
+
+    const layout = container.querySelector('.echart-layout');
+    const canvas = container.querySelector('.echart-layout__canvas');
+    const table = container.querySelector('.chart-data-table');
+    expect(layout.children[0]).toBe(canvas);
+    expect(layout.children[1]).toBe(table);
+    expect(table).toHaveAttribute('open');
+    await waitFor(() => {
+      expect(table.querySelector('.chart-data-table__scroll')).toBeInTheDocument();
+    });
   });
 
   test('applies the global color-blind preference to ECharts decals', () => {

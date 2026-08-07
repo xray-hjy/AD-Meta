@@ -89,7 +89,7 @@ function ProjectionDataTable({ normalized, featureLabel }) {
   return (
     <details className="chart-data-table">
       <summary>查看当前展示数据</summary>
-      <div className="chart-data-table__scroll">
+      <div className="chart-data-table__scroll" tabIndex={0} aria-label="当前展示数据，可滚动">
         <table>
           <thead>
             <tr>
@@ -204,7 +204,7 @@ export default function BarChart({ data, featureLabel = '物种' }) {
         nameTextStyle: { color: '#64748b', fontSize: 12 },
         axisLine: { show: false },
         axisTick: { show: false },
-        axisLabel: { color: '#94a3b8', fontSize: 11, formatter: compactNumber },
+        axisLabel: { color: '#475569', fontSize: 11, formatter: compactNumber },
         splitLine: { lineStyle: { color: '#e7edf5', type: 'dashed' } },
       }],
       dataZoom: [
@@ -219,7 +219,7 @@ export default function BarChart({ data, featureLabel = '物种' }) {
           backgroundColor: 'rgba(241, 245, 249, 0.9)',
           handleStyle: { color: '#2563eb' },
           moveHandleStyle: { color: '#2563eb' },
-          textStyle: { color: '#94a3b8' },
+          textStyle: { color: '#475569' },
         },
         { type: 'inside', start, end: 100 },
       ],

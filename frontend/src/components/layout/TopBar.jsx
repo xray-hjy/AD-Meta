@@ -7,15 +7,28 @@ export default function TopBar({
   featureKind,
   summary,
   runs = [],
+  runsLoading = false,
+  runsError = null,
   activeRun,
   activeArtifact,
   onRunChange,
 }) {
   const { colorBlindFriendly, setColorBlindFriendly } = useColorVision();
   const currentAnalysisData = getAnalysisDataForFeatureKind(featureKind);
-  const sampleScope = activeRun && summary
-    ? `运行 ${activeRun.sampleCount} 样本 · 当前结果覆盖 ${activeArtifact?.sampleCount ?? summary.totalSamples}`
-    : '样本范围加载中';
+  let sampleScope = '样本范围加载中';
+  let resultStatus = '正在加载';
+  if (runsError) {
+    sampleScope = '样本范围加载失败';
+    resultStatus = '加载失败';
+  } else if (!runsLoading && !activeRun) {
+    sampleScope = '尚未登记分析运行';
+    resultStatus = '配置未完成';
+  } else if (activeRun && !summary) {
+    sampleScope = '数据摘要加载中';
+  } else if (activeRun && summary) {
+    sampleScope = `运行 ${activeRun.sampleCount} 样本 · 当前结果覆盖 ${activeArtifact?.sampleCount ?? summary.totalSamples}`;
+    resultStatus = '结果已就绪';
+  }
 
   return (
     <header className="app-topbar">
@@ -37,7 +50,7 @@ export default function TopBar({
             disabled={runs.length === 0}
           />
         </div>
-        <span className="topbar-status"><i aria-hidden="true" />结果已就绪</span>
+        <span className="topbar-status"><i aria-hidden="true" />{resultStatus}</span>
         <span
           className="topbar-context__scope"
           title={`${currentAnalysisData.label}，${currentAnalysisData.shape}`}

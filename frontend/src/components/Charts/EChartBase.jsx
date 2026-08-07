@@ -2,10 +2,10 @@ import { forwardRef, useMemo, useState } from 'react';
 import ReactEChartsCore from 'echarts-for-react/lib/core';
 import * as echarts from 'echarts/core';
 import { AriaComponent } from 'echarts/components';
-import { CanvasRenderer } from 'echarts/renderers';
+import { CanvasRenderer, SVGRenderer } from 'echarts/renderers';
 import { useColorVision } from '../../context/ColorVisionContext';
 
-echarts.use([AriaComponent, CanvasRenderer]);
+echarts.use([AriaComponent, CanvasRenderer, SVGRenderer]);
 
 export { echarts };
 
@@ -14,6 +14,11 @@ function printableValue(value) {
   if (value && typeof value === 'object') return JSON.stringify(value);
   if (value == null) return '—';
   return String(value);
+}
+
+function cssLength(value, fallback) {
+  if (value == null) return fallback;
+  return typeof value === 'number' ? `${value}px` : value;
 }
 
 export function chartRowsFromOption(option, limit = 200) {
@@ -83,48 +88,65 @@ const EChartBase = forwardRef(function EChartBase(
     },
   }), [colorBlindFriendly, option]);
   const tableRows = useMemo(() => chartRowsFromOption(option), [option]);
-  const containerStyle = useMemo(() => ({ height: 300, ...style }), [style]);
+  const hasDataTable = showDataTable && tableRows.length > 0;
+  const containerStyle = useMemo(
+    () => hasDataTable ? { ...style, height: '100%' } : { height: 300, ...style },
+    [hasDataTable, style]
+  );
+  const layoutStyle = useMemo(() => {
+    const requestedHeight = style?.height;
+    return {
+      '--echart-layout-canvas-height': requestedHeight && requestedHeight !== '100%'
+        ? cssLength(requestedHeight, '300px')
+        : 'var(--echart-context-height, 300px)',
+    };
+  }, [style?.height]);
+
+  const chart = (
+    <div
+      className={hasDataTable ? 'echart-layout__canvas' : undefined}
+      role="img"
+      aria-label={ariaLabel}
+      tabIndex={0}
+      style={containerStyle}
+      data-colorblind-friendly={colorBlindFriendly}
+    >
+      <ReactEChartsCore
+        ref={ref}
+        echarts={echarts}
+        option={accessibleOption}
+        style={{ width: '100%', height: '100%' }}
+        {...props}
+      />
+    </div>
+  );
+
+  if (!hasDataTable) return chart;
 
   return (
-    <>
-      <div
-        role="img"
-        aria-label={ariaLabel}
-        tabIndex={0}
-        style={containerStyle}
-        data-colorblind-friendly={colorBlindFriendly}
-      >
-        <ReactEChartsCore
-          ref={ref}
-          echarts={echarts}
-          option={accessibleOption}
-          style={{ width: '100%', height: '100%' }}
-          {...props}
-        />
-      </div>
-      {showDataTable && tableRows.length ? (
-        <details className="chart-data-table" onToggle={event => setTableOpen(event.currentTarget.open)}>
-          <summary>查看当前图表数据</summary>
-          {tableOpen ? (
-            <div className="chart-data-table__scroll">
-              <table>
-                <thead>
-                  <tr><th scope="col">系列</th><th scope="col">项目</th><th scope="col">数值</th></tr>
-                </thead>
-                <tbody>
-                  {tableRows.map((row, index) => (
-                    <tr key={`${row.series}-${row.item}-${index}`}>
-                      <td>{row.series}</td><td>{row.item}</td><td>{row.value}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {tableRows.length >= 200 ? <p>为保证页面性能，仅展示前 200 行。</p> : null}
-            </div>
-          ) : null}
-        </details>
-      ) : null}
-    </>
+    <div className="echart-layout" style={layoutStyle}>
+      {chart}
+      <details className="chart-data-table" onToggle={event => setTableOpen(event.currentTarget.open)}>
+        <summary>查看当前图表数据</summary>
+        {tableOpen ? (
+          <div className="chart-data-table__scroll" tabIndex={0} aria-label="当前图表数据，可滚动">
+            <table>
+              <thead>
+                <tr><th scope="col">系列</th><th scope="col">项目</th><th scope="col">数值</th></tr>
+              </thead>
+              <tbody>
+                {tableRows.map((row, index) => (
+                  <tr key={`${row.series}-${row.item}-${index}`}>
+                    <td>{row.series}</td><td>{row.item}</td><td>{row.value}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {tableRows.length >= 200 ? <p>为保证页面性能，仅展示前 200 行。</p> : null}
+          </div>
+        ) : null}
+      </details>
+    </div>
   );
 });
 

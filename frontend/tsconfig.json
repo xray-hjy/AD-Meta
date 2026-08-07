@@ -3,9 +3,13 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "types": ["vite/client"],
+    "allowJs": true,
+    "checkJs": true,
     "strict": true,
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src/api/generated.ts"]
+  "include": ["src/api/generated.ts", "src/api/*.js"],
+  "exclude": ["src/api/*.test.js"]
 }

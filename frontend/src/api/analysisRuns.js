@@ -1,13 +1,31 @@
 import { fetchJson } from './client';
 
+/** @typedef {import('./client').FetchJsonOptions} FetchJsonOptions */
+/** @typedef {import('./generated').components['schemas']['AnalysisRunResponse']} AnalysisRun */
+/** @typedef {import('./generated').components['schemas']['AnalysisSamplePageResponse']} AnalysisSamplePage */
+/** @typedef {import('./generated').components['schemas']['ScopedSampleRequest']} ScopedSampleRequest */
+/** @typedef {import('./generated').components['schemas']['AbundanceProjectionRequest']} AbundanceProjectionRequest */
+/** @typedef {import('./generated').components['schemas']['AbundanceProjectionResponse']} AbundanceProjectionResponse */
+/** @typedef {import('./generated').components['schemas']['ChartProjectionRequest']} ChartProjectionRequest */
+/** @typedef {import('./generated').components['schemas']['ChartProjectionResponse']} ChartProjectionResponse */
+/** @typedef {import('./generated').components['schemas']['ProjectionAuditRequest']} ProjectionAuditRequest */
+/** @typedef {import('./generated').components['schemas']['ProjectionAuditResponse']} ProjectionAuditResponse */
+/** @typedef {import('./generated').components['schemas']['ProjectionAuditMetadataResponse']} ProjectionAuditMetadataResponse */
+/** @typedef {import('./generated').components['schemas']['ProjectionAuditOptionsResponse']} ProjectionAuditOptionsResponse */
+/** @typedef {import('./generated').components['schemas']['ProjectionAuditRowsResponse']} ProjectionAuditRowsResponse */
+/** @typedef {FetchJsonOptions & {artifactKey?: string, phenotype?: string, query?: string, limit?: number, offset?: number}} SampleListOptions */
+/** @typedef {FetchJsonOptions & {query?: string, limit?: number}} AuditOptionListOptions */
+
+/** @param {FetchJsonOptions} [options] @returns {Promise<AnalysisRun[]>} */
 export function listAnalysisRuns(options) {
   return fetchJson('/api/analysis-runs', options);
 }
 
-export function getAnalysisRun(runKey, options) {
-  return fetchJson(`/api/analysis-runs/${runKey}`, options);
-}
-
+/**
+ * @param {string} runKey
+ * @param {SampleListOptions} [options]
+ * @returns {Promise<AnalysisSamplePage>}
+ */
 export function listAnalysisSamples(runKey, {
   artifactKey,
   phenotype,
@@ -23,6 +41,13 @@ export function listAnalysisSamples(runKey, {
   return fetchJson(`/api/analysis-runs/${runKey}/samples?${params}`, { signal });
 }
 
+/**
+ * @param {string} runKey
+ * @param {string} artifactKey
+ * @param {ScopedSampleRequest} request
+ * @param {FetchJsonOptions} [options]
+ * @returns {Promise<AnalysisSamplePage>}
+ */
 export function listScopedAnalysisSamples(runKey, artifactKey, request, options = {}) {
   return fetchJson(
     `/api/analysis-runs/${runKey}/artifacts/${artifactKey}/samples/query`,
@@ -30,6 +55,13 @@ export function listScopedAnalysisSamples(runKey, artifactKey, request, options 
   );
 }
 
+/**
+ * @param {string} runKey
+ * @param {string} artifactKey
+ * @param {AbundanceProjectionRequest} request
+ * @param {FetchJsonOptions} [options]
+ * @returns {Promise<AbundanceProjectionResponse>}
+ */
 export function projectAbundance(runKey, artifactKey, request, options = {}) {
   return fetchJson(
     `/api/analysis-runs/${runKey}/artifacts/${artifactKey}/projections/abundance`,
@@ -37,6 +69,14 @@ export function projectAbundance(runKey, artifactKey, request, options = {}) {
   );
 }
 
+/**
+ * @param {string} runKey
+ * @param {string} artifactKey
+ * @param {string} projectionKind
+ * @param {ChartProjectionRequest} request
+ * @param {FetchJsonOptions} [options]
+ * @returns {Promise<ChartProjectionResponse>}
+ */
 export function projectChart(runKey, artifactKey, projectionKind, request, options = {}) {
   return fetchJson(
     `/api/analysis-runs/${runKey}/artifacts/${artifactKey}/projections/${projectionKind}`,
@@ -44,6 +84,14 @@ export function projectChart(runKey, artifactKey, projectionKind, request, optio
   );
 }
 
+/**
+ * @param {string} runKey
+ * @param {string} artifactKey
+ * @param {string} projectionKind
+ * @param {ProjectionAuditRequest} request
+ * @param {FetchJsonOptions} [options]
+ * @returns {Promise<ProjectionAuditResponse>}
+ */
 export function getProjectionAudit(runKey, artifactKey, projectionKind, request, options = {}) {
   return fetchJson(
     `/api/analysis-runs/${runKey}/artifacts/${artifactKey}/projection-audits/${projectionKind}`,
@@ -51,6 +99,14 @@ export function getProjectionAudit(runKey, artifactKey, projectionKind, request,
   );
 }
 
+/**
+ * @param {string} runKey
+ * @param {string} artifactKey
+ * @param {string} projectionKind
+ * @param {ProjectionAuditRequest} request
+ * @param {FetchJsonOptions} [options]
+ * @returns {Promise<ProjectionAuditMetadataResponse>}
+ */
 export function getProjectionAuditMetadata(
   runKey,
   artifactKey,
@@ -64,6 +120,15 @@ export function getProjectionAuditMetadata(
   );
 }
 
+/**
+ * @param {string} runKey
+ * @param {string} artifactKey
+ * @param {string} projectionKind
+ * @param {string} field
+ * @param {ProjectionAuditRequest} request
+ * @param {AuditOptionListOptions} [options]
+ * @returns {Promise<ProjectionAuditOptionsResponse>}
+ */
 export function getProjectionAuditOptions(
   runKey,
   artifactKey,
@@ -80,6 +145,14 @@ export function getProjectionAuditOptions(
   );
 }
 
+/**
+ * @param {string} runKey
+ * @param {string} artifactKey
+ * @param {string} projectionKind
+ * @param {ProjectionAuditRequest} request
+ * @param {FetchJsonOptions} [options]
+ * @returns {Promise<ProjectionAuditRowsResponse>}
+ */
 export function getProjectionAuditRows(
   runKey,
   artifactKey,

@@ -44,6 +44,19 @@ class HeatmapApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 304)
         self.assertEqual(response.headers["etag"], '"abc123"')
 
+    def test_chart_endpoint_emits_an_rfc_http_last_modified_header(self) -> None:
+        with patch(
+            "app.api.datasets.read_chart_with_metadata",
+            return_value=(
+                {"items": []},
+                None,
+                {"etag": "abc123", "lastModified": "2026-08-03T12:34:56+08:00"},
+            ),
+        ):
+            response = TestClient(app).get("/api/datasets/demo/charts/species")
+
+        self.assertEqual(response.headers["last-modified"], "Mon, 03 Aug 2026 04:34:56 GMT")
+
     def test_chart_endpoint_accepts_top_level_array_artifacts(self) -> None:
         cached_payload = [{"name": "Bacteroides", "value": 0.42}]
         with patch(
@@ -64,7 +77,7 @@ class HeatmapApiTests(unittest.TestCase):
                 "/api/datasets/demo/revisions/revision-1/charts/species"
             )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(reader.call_args.args, ("demo", "species", "revision-1"))
+        self.assertEqual(reader.call_args.args, ("demo", "species", "revision-1", None))
 
     def test_detection_endpoint_reads_detection_cache_for_supported_chart(self) -> None:
         with TemporaryDirectory() as tmpdir:

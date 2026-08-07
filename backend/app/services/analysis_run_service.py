@@ -227,6 +227,8 @@ def _insert_run(
 
 def sync_analysis_runs_from_manifest(manifest_path: Path) -> list[dict[str, Any]]:
     manifest = load_analysis_manifest(manifest_path)
+    if not manifest.analysis_runs:
+        return []
     results: list[dict[str, Any]] = []
     with connect() as conn:
         for run in manifest.analysis_runs:
@@ -299,62 +301,88 @@ def _artifact_payload(row, run_sample_count: int) -> dict[str, Any]:
     }
 
 
-def list_analysis_runs() -> list[dict[str, Any]]:
+def _load_analysis_runs(run_key: str | None = None) -> list[dict[str, Any]]:
     with connect() as conn:
+        where_clause = "WHERE analysis_runs.run_key = ?" if run_key is not None else ""
+        parameters = (run_key,) if run_key is not None else ()
         runs = conn.execute(
-            """
+            f"""
             SELECT analysis_runs.*
             FROM analysis_runs
+            {where_clause}
             ORDER BY analysis_runs.published_at DESC, analysis_runs.id DESC
-            """
+            """,
+            parameters,
         ).fetchall()
+        if not runs:
+            return []
+
+        run_ids = tuple(int(run["id"]) for run in runs)
+        run_placeholders = ", ".join("?" for _ in run_ids)
+        group_rows = conn.execute(
+            f"""
+            SELECT analysis_run_id, phenotype, COUNT(*) AS value
+            FROM analysis_run_samples
+            WHERE analysis_run_id IN ({run_placeholders})
+            GROUP BY analysis_run_id, phenotype
+            ORDER BY analysis_run_id, phenotype
+            """,
+            run_ids,
+        ).fetchall()
+        groups_by_run: dict[int, dict[str, int]] = {run_id: {} for run_id in run_ids}
+        for row in group_rows:
+            groups_by_run[int(row["analysis_run_id"])][str(row["phenotype"])] = int(row["value"])
+
+        artifact_rows = conn.execute(
+            f"""
+            SELECT analysis_artifacts.*, datasets.slug AS dataset_slug,
+                   datasets.feature_kind, datasets.feature_label,
+                   dataset_revisions.revision_key,
+                   dataset_revisions.abundance_scale,
+                   dataset_revisions.normalization
+            FROM analysis_artifacts
+            LEFT JOIN datasets ON datasets.id = analysis_artifacts.dataset_id
+            LEFT JOIN dataset_revisions ON dataset_revisions.id = analysis_artifacts.dataset_revision_id
+            WHERE analysis_artifacts.analysis_run_id IN ({run_placeholders})
+            ORDER BY analysis_artifacts.analysis_run_id, analysis_artifacts.id
+            """,
+            run_ids,
+        ).fetchall()
+        artifacts_by_run: dict[int, list[dict[str, Any]]] = {run_id: [] for run_id in run_ids}
+        artifact_ids = tuple(int(row["id"]) for row in artifact_rows)
+        groups_by_artifact: dict[int, dict[str, int]] = {artifact_id: {} for artifact_id in artifact_ids}
+        if artifact_ids:
+            artifact_placeholders = ", ".join("?" for _ in artifact_ids)
+            artifact_group_rows = conn.execute(
+                f"""
+                SELECT analysis_artifact_samples.artifact_id,
+                       analysis_run_samples.phenotype,
+                       COUNT(*) AS value
+                FROM analysis_artifact_samples
+                JOIN analysis_run_samples
+                  ON analysis_run_samples.id = analysis_artifact_samples.run_sample_id
+                WHERE analysis_artifact_samples.artifact_id IN ({artifact_placeholders})
+                GROUP BY analysis_artifact_samples.artifact_id, analysis_run_samples.phenotype
+                """,
+                artifact_ids,
+            ).fetchall()
+            for row in artifact_group_rows:
+                groups_by_artifact[int(row["artifact_id"])][str(row["phenotype"])] = int(row["value"])
+
+        for artifact in artifact_rows:
+            artifact_dict = dict(artifact)
+            artifact_groups = groups_by_artifact[int(artifact["id"])]
+            artifact_dict["sample_count"] = sum(artifact_groups.values())
+            artifact_dict["group_counts_json"] = _json(artifact_groups)
+            run_id = int(artifact["analysis_run_id"])
+            run_sample_count = sum(groups_by_run[run_id].values())
+            artifacts_by_run[run_id].append(_artifact_payload(artifact_dict, run_sample_count))
+
         payloads = []
         for run in runs:
-            group_rows = conn.execute(
-                """
-                SELECT phenotype, COUNT(*) AS value
-                FROM analysis_run_samples WHERE analysis_run_id = ?
-                GROUP BY phenotype ORDER BY phenotype
-                """,
-                (run["id"],),
-            ).fetchall()
-            sample_count = sum(int(row["value"]) for row in group_rows)
-            artifact_rows = conn.execute(
-                """
-                SELECT analysis_artifacts.*, datasets.slug AS dataset_slug,
-                       datasets.feature_kind, datasets.feature_label,
-                       dataset_revisions.revision_key,
-                       dataset_revisions.abundance_scale,
-                       dataset_revisions.normalization
-                FROM analysis_artifacts
-                LEFT JOIN datasets ON datasets.id = analysis_artifacts.dataset_id
-                LEFT JOIN dataset_revisions ON dataset_revisions.id = analysis_artifacts.dataset_revision_id
-                WHERE analysis_artifacts.analysis_run_id = ?
-                ORDER BY analysis_artifacts.id
-                """,
-                (run["id"],),
-            ).fetchall()
-            artifacts = []
-            for artifact in artifact_rows:
-                artifact_groups = conn.execute(
-                    """
-                    SELECT analysis_run_samples.phenotype, COUNT(*) AS value
-                    FROM analysis_artifact_samples
-                    JOIN analysis_run_samples
-                      ON analysis_run_samples.id = analysis_artifact_samples.run_sample_id
-                    WHERE analysis_artifact_samples.artifact_id = ?
-                    GROUP BY analysis_run_samples.phenotype
-                    """,
-                    (artifact["id"],),
-                ).fetchall()
-                artifact_dict = dict(artifact)
-                artifact_dict["sample_count"] = sum(
-                    int(row["value"]) for row in artifact_groups
-                )
-                artifact_dict["group_counts_json"] = _json(
-                    {str(row["phenotype"]): int(row["value"]) for row in artifact_groups}
-                )
-                artifacts.append(_artifact_payload(artifact_dict, sample_count))
+            run_id = int(run["id"])
+            run_groups = groups_by_run[run_id]
+            sample_count = sum(run_groups.values())
             payloads.append(
                 {
                     "id": run["id"],
@@ -364,12 +392,12 @@ def list_analysis_runs() -> list[dict[str, Any]]:
                     "status": run["status"],
                     "manifestVersion": run["manifest_version"],
                     "sampleCount": sample_count,
-                    "groupCounts": {str(row["phenotype"]): int(row["value"]) for row in group_rows},
+                    "groupCounts": run_groups,
                     "pipeline": _loads(run["pipeline_json"], {}),
                     "parameters": _loads(run["parameters_json"], {}),
                     "referenceDatabases": _loads(run["reference_databases_json"], []),
                     "provenance": _loads(run["provenance_json"], {}),
-                    "artifacts": artifacts,
+                    "artifacts": artifacts_by_run[run_id],
                     "createdAt": run["created_at"],
                     "completedAt": run["completed_at"],
                     "publishedAt": run["published_at"],
@@ -378,5 +406,10 @@ def list_analysis_runs() -> list[dict[str, Any]]:
     return payloads
 
 
+def list_analysis_runs() -> list[dict[str, Any]]:
+    return _load_analysis_runs()
+
+
 def get_analysis_run(run_key: str) -> dict[str, Any] | None:
-    return next((run for run in list_analysis_runs() if run["key"] == run_key), None)
+    runs = _load_analysis_runs(run_key)
+    return runs[0] if runs else None

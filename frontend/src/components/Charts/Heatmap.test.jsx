@@ -116,10 +116,10 @@ test('renders heatmap panels as canvas instead of SVG rect grids', () => {
   expect(combinedCanvas.dataset.rowGroups).toBe('NC,AD');
   expect(
     [...document.querySelectorAll('canvas')].map(canvas => canvas.dataset.colorblindFriendly)
-  ).toEqual(['false', 'false', 'false', 'false']);
+  ).toEqual(['true', 'true', 'true', 'true']);
 });
 
-test('keeps all four heatmaps free of texture encoding regardless of the global preference', () => {
+test('reports the global color-blind preference on all four heatmaps', () => {
   render(
     <ColorVisionProvider initialEnabled>
       <Heatmap data={heatmapData} featureLabel="物种" />
@@ -128,7 +128,7 @@ test('keeps all four heatmaps free of texture encoding regardless of the global 
 
   expect(
     [...document.querySelectorAll('canvas')].every(
-      canvas => canvas.dataset.colorblindFriendly === 'false'
+      canvas => canvas.dataset.colorblindFriendly === 'true'
     )
   ).toBe(true);
   expect(screen.queryByText(/色盲友好纹理已开启/)).toBeNull();
@@ -259,6 +259,10 @@ test('shows tooltip content by resolving the hovered canvas cell', () => {
   expect(document.body.textContent).toContain('log10(丰度+1) = 2.0000');
   expect(document.body.textContent).toContain('p = 0.020');
   expect(document.body.textContent).toContain('log2FC = -3.000');
+
+  const visibleTooltip = [...document.querySelectorAll('[data-chart-tooltip]')]
+    .find(tooltip => tooltip.style.opacity === '1');
+  expect(visibleTooltip?.parentElement).toBe(document.body);
 });
 
 test('positions the difference tooltip above the cursor and inside the viewport', () => {
@@ -273,7 +277,7 @@ test('positions the difference tooltip above the cursor and inside the viewport'
     right: 213,
     bottom: 620,
   }));
-  const tooltip = canvas.parentElement.querySelector('div[style*="position: fixed"]');
+  const tooltip = [...document.querySelectorAll('[data-chart-tooltip]')].at(-1);
   tooltip.getBoundingClientRect = vi.fn(() => ({
     left: 0,
     top: 0,
@@ -296,6 +300,19 @@ test('positions the difference tooltip above the cursor and inside the viewport'
 test('opens a performant image lightbox from a canvas snapshot', () => {
   render(<Heatmap data={heatmapData} featureLabel="物种" />);
 
+  const canvas = firstCanvas();
+  canvas.getBoundingClientRect = vi.fn(() => ({
+    left: 0,
+    top: 0,
+    width: 213,
+    height: 120,
+    right: 213,
+    bottom: 120,
+  }));
+  fireEvent.mouseMove(canvas, { clientX: 118, clientY: 68 });
+  expect([...document.querySelectorAll('[data-chart-tooltip]')]
+    .some(tooltip => tooltip.style.opacity === '1')).toBe(true);
+
   fireEvent.click(firstCanvas());
 
   expect(screen.getByRole('img', { name: 'AD 组丰度热图 放大预览' })).toBeTruthy();
@@ -303,6 +320,8 @@ test('opens a performant image lightbox from a canvas snapshot', () => {
   expect(screen.getByRole('button', { name: '缩小' })).toBeTruthy();
   expect(screen.getByRole('button', { name: '重置' })).toBeTruthy();
   expect(HTMLCanvasElement.prototype.toDataURL).toHaveBeenCalledWith('image/png');
+  expect([...document.querySelectorAll('[data-chart-tooltip]')]
+    .every(tooltip => tooltip.style.opacity === '0')).toBe(true);
 
   fireEvent.click(screen.getByRole('button', { name: '放大' }));
   expect(window.requestAnimationFrame).toHaveBeenCalled();
@@ -335,4 +354,39 @@ test('zooms the lightbox around the mouse cursor on wheel', () => {
 
   expect(window.requestAnimationFrame).toHaveBeenCalled();
   expect(content.style.transform).toBe('translate(50px, 40px) scale(1.2)');
+  expect(screen.getByText('120%')).toBeTruthy();
+});
+
+test('keeps heatmap cell tooltips interactive inside the lightbox', () => {
+  render(<Heatmap data={heatmapData} featureLabel="物种" />);
+
+  fireEvent.click(firstCanvas());
+
+  const image = screen.getByRole('img', { name: 'AD 组丰度热图 放大预览' });
+  const content = image.parentElement;
+  const viewport = content.parentElement;
+  const layout = buildHeatmapLayout({
+    rows: 1,
+    cols: 2,
+    compact: false,
+    showDendrograms: false,
+  });
+  image.getBoundingClientRect = vi.fn(() => ({
+    left: 0,
+    top: 0,
+    width: layout.totalW,
+    height: layout.totalH,
+    right: layout.totalW,
+    bottom: layout.totalH,
+  }));
+
+  fireEvent.mouseMove(viewport, {
+    clientX: layout.L.left + layout.L.cellW / 2,
+    clientY: layout.L.top + layout.ch / 2,
+  });
+
+  const visibleTooltip = [...document.querySelectorAll('[data-chart-tooltip]')]
+    .find(tooltip => tooltip.style.opacity === '1');
+  expect(visibleTooltip?.textContent).toContain('样本: AD1');
+  expect(visibleTooltip?.textContent).toContain('log10(丰度+1) = 2.0000');
 });

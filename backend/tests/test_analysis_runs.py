@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
@@ -9,8 +10,10 @@ import pytest
 
 from app.core import database
 from app.core.migrations import upgrade_database
+from app.services import analysis_run_service
 from app.services.analysis_run_service import (
     AnalysisManifestConflict,
+    get_analysis_run,
     list_analysis_runs,
     sync_analysis_runs_from_manifest,
 )
@@ -119,6 +122,48 @@ def test_manifest_registers_union_and_exact_artifact_coverage() -> None:
     assert coverage["species"]["coverageFraction"] == 1.0
     assert coverage["ko"]["sampleCount"] == 1
     assert coverage["ko"]["coverageFraction"] == 0.5
+
+
+def test_list_and_get_batch_related_rows_without_n_plus_one_queries() -> None:
+    with TemporaryDirectory() as tmpdir:
+        db_path = Path(tmpdir) / "analysis.sqlite3"
+        first_manifest = _manifest(Path(tmpdir) / "manifest-1.json", "run-1")
+        second_manifest = _manifest(Path(tmpdir) / "manifest-2.json", "run-2")
+        with patch.object(database, "DB_PATH", db_path), patch.object(database, "DB_ENGINE", "sqlite"):
+            database.dispose_engine()
+            upgrade_database()
+            with database.connect() as conn:
+                _seed_dataset(conn, "species", "species-r1", [("S1", "AD"), ("S2", "NC")])
+                _seed_dataset(conn, "ko", "ko-r1", [("S1", "AD")])
+            sync_analysis_runs_from_manifest(first_manifest)
+            sync_analysis_runs_from_manifest(second_manifest)
+
+            statements = []
+            real_connect = database.connect
+
+            @contextmanager
+            def counting_connect():
+                with real_connect() as connection:
+                    class CountingConnection:
+                        def execute(self, statement, parameters=()):
+                            statements.append(" ".join(statement.split()))
+                            return connection.execute(statement, parameters)
+
+                    yield CountingConnection()
+
+            with patch.object(analysis_run_service, "connect", counting_connect):
+                runs = list_analysis_runs()
+                list_query_count = len(statements)
+                statements.clear()
+                selected = get_analysis_run("run-2")
+                get_statements = list(statements)
+            database.dispose_engine()
+
+    assert len(runs) == 2
+    assert list_query_count == 4
+    assert selected["key"] == "run-2"
+    assert len(get_statements) == 4
+    assert "WHERE analysis_runs.run_key = ?" in get_statements[0]
 
 
 def test_manifest_rejects_cross_artifact_phenotype_conflict() -> None:

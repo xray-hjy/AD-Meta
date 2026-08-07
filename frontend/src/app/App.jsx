@@ -218,7 +218,13 @@ function App() {
     Boolean(projectionKind && activeRun?.key && activeArtifact?.key)
   );
   const scopeValidation = useMemo(() => {
-    if (!projectionKind || samplesState.loading || samplesState.error) {
+    if (
+      !projectionKind
+      || !activeRun
+      || !activeArtifact
+      || samplesState.loading
+      || samplesState.error
+    ) {
       return { valid: true, reason: '' };
     }
     return validateAnalysisScope(
@@ -226,7 +232,7 @@ function App() {
       projectionSelection.scope,
       samplesState.data
     );
-  }, [activeChartDefinition?.analysisPolicy, projectionKind, projectionSelection.scope, samplesState.data, samplesState.error, samplesState.loading]);
+  }, [activeArtifact, activeChartDefinition?.analysisPolicy, activeRun, projectionKind, projectionSelection.scope, samplesState.data, samplesState.error, samplesState.loading]);
   const projectionEnabled = Boolean(
     projectionKind
       && scopeSupported
@@ -326,10 +332,28 @@ function App() {
       : summaryState.error ? summaryState.reload
         : samplesState.error ? samplesState.reload : activeDataState.reload;
   const scopeUnavailable = Boolean(projectionKind && !scopeSupported);
-  const scopeInvalid = Boolean(
-    projectionKind && scopeSupported && !samplesState.loading && !scopeValidation.valid
+  const analysisRunUnavailable = Boolean(
+    projectionKind
+      && !runsState.loading
+      && !runsState.error
+      && runsState.data.length === 0
   );
-  const chartBody = scopeUnavailable
+  const analysisArtifactUnavailable = Boolean(
+    projectionKind && activeRun && activeDataset && !activeArtifact
+  );
+  const scopeInvalid = Boolean(
+    projectionKind
+      && !analysisRunUnavailable
+      && !analysisArtifactUnavailable
+      && scopeSupported
+      && !samplesState.loading
+      && !scopeValidation.valid
+  );
+  const chartBody = analysisRunUnavailable
+    ? <EmptyState message="尚未登记分析运行，请先同步分析运行清单。" />
+    : analysisArtifactUnavailable
+      ? <EmptyState message="当前分析运行未登记该数据集的分析产物。" />
+      : scopeUnavailable
     ? <EmptyState message="当前图表不支持所选分析范围，请在上方选择可用范围。" />
     : scopeInvalid
       ? <EmptyState message={scopeValidation.reason} />
@@ -345,7 +369,7 @@ function App() {
     }) || charts.find(chart => chart.key === activeChart) || charts[0],
     [activeChart, activeChartData, charts, projectionSelection.parameters, projectionSelection.topN, summaryState.data]
   );
-  const projectionControls = projectionKind ? (
+  const projectionControls = projectionKind && activeRun && activeArtifact ? (
     <AnalysisScopeToolbar
       scope={projectionSelection.scope}
       topN={projectionSelection.topN}
@@ -405,6 +429,8 @@ function App() {
           featureKind={summaryState.data?.featureKind}
           summary={summaryState.data}
           runs={runsState.data}
+          runsLoading={runsState.loading}
+          runsError={runsState.error}
           activeRun={activeRun}
           activeArtifact={activeArtifact}
           onRunChange={changeRun}

@@ -1,9 +1,27 @@
+from datetime import UTC, datetime
+from email.utils import format_datetime
+
 from fastapi import APIRouter, HTTPException, Request, Response
 
 from app.api.models import ChartArtifactPayload, DatasetResponse, ErrorResponse, SummaryResponse
 from app.services.dataset_service import get_dataset, list_datasets, read_chart_with_metadata
 
 router = APIRouter(prefix="/api", tags=["datasets"])
+
+
+def _http_date(value) -> str | None:
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        parsed = value
+    else:
+        try:
+            parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        except ValueError:
+            return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=UTC)
+    return format_datetime(parsed.astimezone(UTC), usegmt=True)
 
 
 def _raise_chart_error(error: str | None, chart_name: str = "Chart") -> None:
@@ -26,16 +44,23 @@ def _cached_chart_response(
     revision_key: str | None = None,
     chart_name: str = "Chart",
 ):
-    payload, error, metadata = read_chart_with_metadata(slug, chart_type, revision_key)
+    if_none_match = request.headers.get("if-none-match")
+    payload, error, metadata = read_chart_with_metadata(
+        slug,
+        chart_type,
+        revision_key,
+        if_none_match,
+    )
     _raise_chart_error(error, chart_name)
     etag = metadata.get("etag") if metadata else None
     if etag:
         quoted_etag = f'"{etag}"'
-        if request.headers.get("if-none-match") == quoted_etag:
+        if metadata.get("notModified") or if_none_match == quoted_etag:
             return Response(status_code=304, headers={"ETag": quoted_etag})
         response.headers["ETag"] = quoted_etag
-    if metadata and metadata.get("lastModified"):
-        response.headers["Last-Modified"] = str(metadata["lastModified"])
+    last_modified = _http_date(metadata.get("lastModified")) if metadata else None
+    if last_modified:
+        response.headers["Last-Modified"] = last_modified
     response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=300"
     if chart_type == "lda":
         response.headers["Deprecation"] = "true"

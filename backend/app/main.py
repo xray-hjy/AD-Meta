@@ -63,15 +63,33 @@ app.add_middleware(
 )
 
 
+@app.exception_handler(Exception)
+async def unhandled_exception_response(request: Request, exc: Exception):
+    request_id = getattr(request.state, "request_id", uuid.uuid4().hex)
+    request.state.unhandled_exception_type = type(exc).__name__
+    logger.error(
+        "Unhandled request exception",
+        exc_info=(type(exc), exc, exc.__traceback__),
+        extra={"requestId": request_id, "path": request.url.path},
+    )
+    return JSONResponse(
+        {"detail": "Internal Server Error", "requestId": request_id},
+        status_code=500,
+        headers={"X-Request-ID": request_id},
+    )
+
+
 @app.middleware("http")
 async def request_observability(request: Request, call_next):
     request_id = request.headers.get("x-request-id") or uuid.uuid4().hex
+    request.state.request_id = request_id
     started = time.perf_counter()
     status_code = 500
     exception_type = None
     try:
         response = await call_next(request)
         status_code = response.status_code
+        exception_type = getattr(request.state, "unhandled_exception_type", None)
     except Exception as exc:
         exception_type = type(exc).__name__
         raise
@@ -116,6 +134,7 @@ def _readiness_components(app_state) -> dict[str, dict[str, Any]]:
         "database": {"ok": False},
         "migration": {"ok": False, "expected": HEAD_REVISION},
         "cache": {"ok": False},
+        "analysisRuns": {"ok": False, "publishedCount": 0},
         "statisticsWorker": {"ok": True, "enabled": bool(STATS_WORKER_URL)},
     }
     if getattr(app_state, "migration_error", None):
@@ -131,6 +150,14 @@ def _readiness_components(app_state) -> dict[str, dict[str, Any]]:
             components["migration"].update(
                 {"ok": actual_revision == HEAD_REVISION, "actual": actual_revision}
             )
+            run_row = conn.execute(
+                "SELECT COUNT(*) AS value FROM analysis_runs WHERE status = 'published'"
+            ).fetchone()
+            published_run_count = int(run_row["value"])
+            components["analysisRuns"] = {
+                "ok": published_run_count > 0,
+                "publishedCount": published_run_count,
+            }
             rows = conn.execute(
                 """
                 SELECT revision_chart_artifacts.cache_path

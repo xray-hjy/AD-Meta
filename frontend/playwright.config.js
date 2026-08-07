@@ -1,6 +1,14 @@
 import { defineConfig, devices } from '@playwright/test';
 import path from 'node:path';
 
+import {
+  e2eApiProxyTarget,
+  e2eBackendEnvironment,
+  e2eBackendPort,
+  e2eBaseUrl,
+  e2eFrontendPort,
+} from './e2e/environment.js';
+
 const frontendRoot = path.basename(process.cwd()) === 'frontend'
   ? process.cwd()
   : path.resolve(process.cwd(), 'frontend');
@@ -18,7 +26,7 @@ export default defineConfig({
     ? [['line'], ['html', { outputFolder: './output/playwright/report', open: 'never' }]]
     : 'line',
   use: {
-    baseURL: 'http://127.0.0.1:4173',
+    baseURL: e2eBaseUrl,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -31,17 +39,19 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: `${python} -m uvicorn app.main:app --host 127.0.0.1 --port 8000`,
+      command: `${python} -m uvicorn app.main:app --host 127.0.0.1 --port ${e2eBackendPort}`,
       cwd: backendRoot,
-      url: 'http://127.0.0.1:8000/api/health/live',
-      reuseExistingServer: !process.env.CI,
+      env: { ...process.env, ...e2eBackendEnvironment },
+      url: `http://127.0.0.1:${e2eBackendPort}/api/health/live`,
+      reuseExistingServer: false,
       timeout: 120_000,
     },
     {
-      command: 'npm run build && npm run preview',
+      command: `npm run build && npm run preview -- --port ${e2eFrontendPort}`,
       cwd: frontendRoot,
-      url: 'http://127.0.0.1:4173',
-      reuseExistingServer: !process.env.CI,
+      env: { ...process.env, VITE_API_PROXY_TARGET: e2eApiProxyTarget },
+      url: e2eBaseUrl,
+      reuseExistingServer: false,
       timeout: 120_000,
     },
   ],

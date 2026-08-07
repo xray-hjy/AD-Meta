@@ -188,13 +188,19 @@ AD_META_DB_ENGINE=sqlite .venv/bin/python -m unittest tests.test_precompute test
 
 The root verification and real-browser gates are:
 
+All of these commands require Node.js 22 or newer, matching CI and the frontend
+build image.
+
 ```bash
 npm run verify
+npm run verify:full
+npm run verify:containers
 npm --prefix frontend exec -- playwright install chromium
 npm run test:e2e
 ```
 
-The E2E command uses a temporary SQLite database and storage root. It covers
+The E2E command uses dedicated ports `18000/14173`, a temporary SQLite database,
+and a temporary storage root. It never reuses a server on the development ports. It covers
 deep links, dataset switching, all four taxonomy modes, heatmap lightbox/export,
 and axe WCAG A/AA checks without modifying the configured MySQL database.
 
@@ -239,10 +245,19 @@ export AD_META_DB_PATH=storage/ad_meta.sqlite3
 ## Production-Style Docker Run
 
 Compose starts a health-checked MySQL 8.4 service and an internal-only R worker by default.
-The backend, worker and Nginx containers run as non-root with read-only root filesystems.
+`backend-init` completes schema and data preparation once before the backend starts. The
+backend, worker and Nginx containers run as non-root with read-only root filesystems.
 
 ```bash
 docker compose up --build
+```
+
+For a non-Compose deployment with multiple backend replicas, run the initializer once:
+
+```bash
+cd backend
+.venv/bin/python -m app.cli.prepare_runtime
+.venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
 The site is served at:
@@ -255,8 +270,9 @@ The frontend container serves static files through Nginx. Requests under
 `/api/` are proxied to the backend container.
 
 Use `docker compose --profile external-mysql up backend-external stats-worker`
-for an externally managed MySQL host. Production mode rejects a blank password
-or the MySQL root account.
+for an externally managed MySQL host. Its `backend-external-init` dependency performs
+the same one-time preparation. Production mode rejects a blank password or the MySQL
+root account.
 
 ## Public Data Contract
 

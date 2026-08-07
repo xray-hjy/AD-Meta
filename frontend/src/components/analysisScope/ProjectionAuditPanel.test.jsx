@@ -182,6 +182,12 @@ describe('ProjectionAuditPanel', () => {
     render(<ProjectionAuditPanel {...baseProps} />);
     fireEvent.click(screen.getByText('查看筛选与合并明细'));
 
+    expect(await screen.findByRole('button', { name: '查询' })).toHaveClass(
+      'projection-audit__query-button',
+    );
+    expect(screen.getByLabelText('特征')).toHaveClass('is-marquee-enabled');
+    expect(screen.getByLabelText('样本')).not.toHaveClass('is-marquee-enabled');
+
     fireEvent.click(await screen.findByLabelText('特征'));
     fireEvent.click(screen.getByRole('option', { name: 'K00001' }));
     fireEvent.click(screen.getByLabelText('样本'));

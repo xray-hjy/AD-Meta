@@ -181,6 +181,21 @@ test('describes the selected analysis run and current artifact sample coverage',
   expect(screen.queryByText('预计算数据')).toBeNull();
 });
 
+test('reports a missing analysis run without misreporting insufficient samples', async () => {
+  analysisRuns = [];
+
+  render(<App />);
+
+  expect(
+    await screen.findByText('尚未登记分析运行，请先同步分析运行清单。')
+  ).toBeTruthy();
+  expect(screen.getByText('尚未登记分析运行')).toBeTruthy();
+  expect(screen.getByText('配置未完成')).toBeTruthy();
+  expect(screen.queryByText(/至少需要.+样本/)).toBeNull();
+  expect(fetchJson.mock.calls.some(([url]) => /\/analysis-runs\/[^/]+\/samples\?/.test(url)))
+    .toBe(false);
+});
+
 test('keeps the workspace label and subtitle on the same branding row', async () => {
   render(<App />);
 

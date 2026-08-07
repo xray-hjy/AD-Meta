@@ -3,11 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
-    "@testing-library/dom": "^10.4.1",
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.2",
-    "@testing-library/user-event": "^13.5.0",
     "@tanstack/react-query": "5.83.0",
     "d3": "^7.9.0",
     "echarts": "^6.1.0",
@@ -25,9 +24,10 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "test:e2e": "npm run test:e2e:prepare && AD_META_DB_ENGINE=sqlite AD_META_DB_PATH=/tmp/ad-meta-e2e.sqlite3 AD_META_STORAGE_ROOT=/tmp/ad-meta-e2e-storage playwright test",
-    "test:e2e:prepare": "cd ../backend && AD_META_DB_ENGINE=sqlite AD_META_DB_PATH=/tmp/ad-meta-e2e.sqlite3 AD_META_STORAGE_ROOT=/tmp/ad-meta-e2e-storage .venv/bin/python -m app.cli.bootstrap_storage",
+    "test:e2e": "npm run test:e2e:prepare && playwright test",
+    "test:e2e:prepare": "node scripts/prepare-e2e.mjs",
     "openapi:types": "openapi-typescript ../backend/openapi.json -o src/api/generated.ts",
+    "openapi:types:check": "node scripts/check-openapi-types.mjs",
     "preview": "vite preview --host 127.0.0.1 --port 4173",
     "typecheck": "tsc --noEmit"
   },
@@ -44,6 +44,9 @@
     ]
   },
   "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@vitejs/plugin-react": "4.5.2",
     "@vitest/coverage-v8": "3.2.7",
     "@axe-core/playwright": "4.12.1",

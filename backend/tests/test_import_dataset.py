@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import errno
+import os
 import sqlite3
 import unittest
 from pathlib import Path
@@ -12,6 +14,29 @@ from app.core import database
 
 
 class ImportDatasetIntegrationTests(unittest.TestCase):
+    def test_publish_staged_directory_falls_back_across_filesystems(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            stage_dir = root / "staging" / "revision-1"
+            final_dir = root / "cache" / "dataset" / "revision-1"
+            stage_dir.mkdir(parents=True)
+            (stage_dir / "summary.json").write_text('{"status":"ok"}', encoding="utf-8")
+            real_replace = os.replace
+            calls = 0
+
+            def replace_with_cross_device_failure(source, target):
+                nonlocal calls
+                calls += 1
+                if calls == 1:
+                    raise OSError(errno.EXDEV, "cross-device link")
+                return real_replace(source, target)
+
+            with patch.object(import_module.os, "replace", side_effect=replace_with_cross_device_failure):
+                import_module._publish_staged_directory(stage_dir, final_dir)
+
+            self.assertFalse(stage_dir.exists())
+            self.assertEqual((final_dir / "summary.json").read_text(encoding="utf-8"), '{"status":"ok"}')
+
     def test_artifact_path_supports_external_storage_mounts(self) -> None:
         with TemporaryDirectory() as tmpdir:
             external_artifact = Path(tmpdir) / "cache" / "summary.json"
@@ -197,7 +222,11 @@ class ImportDatasetIntegrationTests(unittest.TestCase):
                 ).fetchone()["cache_path"]
                 raw.close()
 
-                with patch.object(import_module, "precompute_all", side_effect=RuntimeError("injected compute failure")):
+                with patch.object(
+                    import_module,
+                    "precompute_prepared",
+                    side_effect=RuntimeError("injected compute failure"),
+                ):
                     with self.assertRaisesRegex(RuntimeError, "injected compute failure"):
                         import_module.import_dataset(csv_path, "atomic", "Atomic revised")
 
@@ -225,6 +254,35 @@ class ImportDatasetIntegrationTests(unittest.TestCase):
         self.assertEqual(after["name"], "Atomic")
         self.assertEqual(revision_statuses, ["published", "failed"])
         self.assertTrue(old_artifact_exists)
+
+    def test_import_parses_the_source_table_once(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            db_path = root / "db.sqlite3"
+            cache_root = root / "cache"
+            csv_path = root / "species.csv"
+            csv_path.write_text(
+                "sample_id,Group,k__Bacteria|p__Firmicutes|s__Target\n"
+                "AD1,AD,2\nAD2,AD,3\nNC1,NC,1\nNC2,NC,1\n",
+                encoding="utf-8",
+            )
+            original_prepare = import_module.prepare_dataframe
+            with patch.object(database, "DB_PATH", db_path), patch.object(
+                database, "DB_ENGINE", "sqlite"
+            ), patch.object(import_module, "CACHE_ROOT", cache_root), patch.object(
+                import_module, "_relative_to_backend", lambda path: str(path)
+            ), patch.object(
+                import_module, "prepare_dataframe", wraps=original_prepare
+            ) as prepare:
+                import_module.import_dataset(csv_path, "single-parse", "Single Parse")
+
+        prepare.assert_called_once_with(
+            unittest.mock.ANY,
+            abundance_scale="unknown",
+            missing_value_policy="error",
+            minimum_group_size=2,
+            group_mapping={},
+        )
 
     def test_formal_ko_import_publishes_worker_artifacts(self) -> None:
         with TemporaryDirectory() as tmpdir:

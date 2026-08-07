@@ -6,6 +6,10 @@ const GROUP_COLORS = {
   AD: '#e74c3c',
   NC: '#2ecc71',
 };
+const GROUP_TEXT_COLORS = {
+  AD: '#b42318',
+  NC: '#067647',
+};
 
 function formatNumber(value, digits = 4) {
   const number = Number(value);
@@ -174,8 +178,8 @@ function KoLdaBarChart({ data }) {
       <div className="chart-stat-strip chart-stat-strip--compact">
         <span><b>Q &lt;</b> {filter.qValueMax ?? 0.05}</span>
         <span><b>显著 KO:</b> {summary.significantCount}</span>
-        <span><b style={{ color: GROUP_COLORS.AD }}>AD 富集:</b> {summary.adEnrichedCount}</span>
-        <span><b style={{ color: GROUP_COLORS.NC }}>NC 富集:</b> {summary.ncEnrichedCount}</span>
+        <span><b style={{ color: GROUP_TEXT_COLORS.AD }}>AD 富集:</b> {summary.adEnrichedCount}</span>
+        <span><b style={{ color: GROUP_TEXT_COLORS.NC }}>NC 富集:</b> {summary.ncEnrichedCount}</span>
         <span><b>展示 AD Top {summary.adDisplayedCount} + NC Top {summary.ncDisplayedCount}</b></span>
       </div>
       <ChartViewport

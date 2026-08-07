@@ -1,7 +1,21 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
+/** @typedef {'not_found' | 'server' | 'request' | 'timeout' | 'cancelled' | 'network'} ApiErrorKind */
+/**
+ * @typedef {Object} FetchJsonOptions
+ * @property {AbortSignal} [signal]
+ * @property {number} [timeoutMs]
+ * @property {string} [method]
+ * @property {unknown} [body]
+ * @property {Record<string, string>} [headers]
+ */
+
 export class ApiError extends Error {
-  constructor(message, { kind, status = null, cause = null } = {}) {
+  /**
+   * @param {string} message
+   * @param {{kind?: ApiErrorKind, status?: number | null, cause?: unknown}} [options]
+   */
+  constructor(message, { kind = 'request', status = null, cause = null } = {}) {
     super(message, { cause });
     this.name = 'ApiError';
     this.kind = kind;
@@ -9,6 +23,12 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * @template T
+ * @param {string} path
+ * @param {FetchJsonOptions} [options]
+ * @returns {Promise<T>}
+ */
 export async function fetchJson(path, {
   signal,
   timeoutMs = 15_000,
@@ -26,8 +46,12 @@ export async function fetchJson(path, {
   signal?.addEventListener('abort', cancel, { once: true });
 
   try {
+    /** @type {Record<string, string>} */
     const requestHeaders = { ...headers };
-    let requestBody = body;
+    /** @type {BodyInit | null | undefined} */
+    let requestBody = body == null || typeof body === 'string' || body instanceof FormData
+      ? body
+      : undefined;
     if (body != null && typeof body !== 'string' && !(body instanceof FormData)) {
       requestBody = JSON.stringify(body);
       requestHeaders['Content-Type'] ||= 'application/json';
@@ -38,6 +62,7 @@ export async function fetchJson(path, {
       headers: requestHeaders,
       signal: controller.signal,
     });
+    /** @type {any} */
     let payload = null;
     try {
       payload = await response.json();
@@ -51,7 +76,7 @@ export async function fetchJson(path, {
         status: response.status,
       });
     }
-    return payload;
+    return /** @type {T} */ (payload);
   } catch (error) {
     if (error instanceof ApiError) throw error;
     if (controller.signal.aborted) {

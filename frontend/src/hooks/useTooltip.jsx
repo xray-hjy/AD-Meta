@@ -1,4 +1,5 @@
 import { useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 
 /** Shared tooltip hook for canvas and D3 chart components. */
 export function resolveTooltipPosition({
@@ -52,9 +53,11 @@ export default function useTooltip() {
     if (ref.current) ref.current.style.opacity = 0;
   }, []);
 
-  const Tooltip = () => (
+  const Tooltip = useCallback(() => createPortal(
     <div
       ref={ref}
+      data-chart-tooltip="true"
+      role="tooltip"
       style={{
         position: 'fixed',
         pointerEvents: 'none',
@@ -72,8 +75,9 @@ export default function useTooltip() {
         whiteSpace: 'pre-line',
         wordBreak: 'break-all',
       }}
-    />
-  );
+    />,
+    document.body
+  ), []);
 
   return { tooltipRef: ref, Tooltip, show, move, hide };
 }

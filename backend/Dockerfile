@@ -15,6 +15,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app ./app
 COPY alembic.ini ./alembic.ini
 COPY alembic ./alembic
+COPY storage_manifest.json ./storage_manifest.json
 RUN groupadd --gid 10001 admeta \
   && useradd --uid 10001 --gid admeta --create-home admeta \
   && mkdir -p storage/raw storage/cache storage/staging \
@@ -24,4 +25,4 @@ USER admeta
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "app.cli.serve"]

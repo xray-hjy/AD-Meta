@@ -11,6 +11,9 @@ backend/.venv
 /coverage
 /.coverage
 /test-results
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
 frontend/coverage
 backend/.coverage
 frontend/output/playwright
@@ -36,6 +39,15 @@ frontend/.tmp/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Local analysis outputs and design/reference material
+/easymetagenome_run/
+/external/
+/图片/
+/*.psd
+/design-assets/
+/.superpowers/
+/docs/superpowers/
 
 # Python
 __pycache__/
