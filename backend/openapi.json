@@ -194,6 +194,109 @@
         "title": "AnalysisArtifactResponse",
         "type": "object"
       },
+      "AnalysisFeaturePageResponse": {
+        "properties": {
+          "artifactKey": {
+            "title": "Artifactkey",
+            "type": "string"
+          },
+          "featureKind": {
+            "title": "Featurekind",
+            "type": "string"
+          },
+          "featureLabel": {
+            "title": "Featurelabel",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AnalysisFeatureResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "query": {
+            "default": "",
+            "title": "Query",
+            "type": "string"
+          },
+          "runKey": {
+            "title": "Runkey",
+            "type": "string"
+          },
+          "sourceFeatureCount": {
+            "title": "Sourcefeaturecount",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "runKey",
+          "artifactKey",
+          "featureKind",
+          "featureLabel",
+          "total",
+          "limit",
+          "offset",
+          "sourceFeatureCount"
+        ],
+        "title": "AnalysisFeaturePageResponse",
+        "type": "object"
+      },
+      "AnalysisFeatureResponse": {
+        "properties": {
+          "detectedSampleCount": {
+            "title": "Detectedsamplecount",
+            "type": "integer"
+          },
+          "featureId": {
+            "title": "Featureid",
+            "type": "string"
+          },
+          "fullName": {
+            "title": "Fullname",
+            "type": "string"
+          },
+          "meanAbundance": {
+            "title": "Meanabundance",
+            "type": "number"
+          },
+          "prevalence": {
+            "title": "Prevalence",
+            "type": "number"
+          },
+          "rank": {
+            "title": "Rank",
+            "type": "integer"
+          },
+          "shortName": {
+            "title": "Shortname",
+            "type": "string"
+          }
+        },
+        "required": [
+          "featureId",
+          "fullName",
+          "shortName",
+          "rank",
+          "meanAbundance",
+          "detectedSampleCount",
+          "prevalence"
+        ],
+        "title": "AnalysisFeatureResponse",
+        "type": "object"
+      },
       "AnalysisRunResponse": {
         "properties": {
           "artifacts": {
@@ -566,6 +669,16 @@
           "scope": {
             "$ref": "#/components/schemas/AnalysisScope"
           },
+          "selection": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FeatureSelection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "topN": {
             "default": 20,
             "maximum": 500.0,
@@ -789,6 +902,42 @@
         "title": "ErrorResponse",
         "type": "object"
       },
+      "FeatureSelection": {
+        "description": "A chart-independent feature selection that survives scope changes.",
+        "properties": {
+          "featureIds": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Featureids",
+            "type": "array"
+          },
+          "limit": {
+            "default": 30,
+            "maximum": 500.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "mode": {
+            "default": "ranked",
+            "enum": [
+              "ranked",
+              "explicit"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "ranking": {
+            "const": "mean_abundance",
+            "default": "mean_abundance",
+            "title": "Ranking",
+            "type": "string"
+          }
+        },
+        "title": "FeatureSelection",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -863,6 +1012,16 @@
             "title": "Field",
             "type": "string"
           },
+          "hasMore": {
+            "default": false,
+            "title": "Hasmore",
+            "type": "boolean"
+          },
+          "initialOrder": {
+            "default": "search_results",
+            "title": "Initialorder",
+            "type": "string"
+          },
           "items": {
             "items": {
               "additionalProperties": true,
@@ -876,13 +1035,44 @@
             "title": "Limit",
             "type": "integer"
           },
+          "mode": {
+            "default": "search_results",
+            "title": "Mode",
+            "type": "string"
+          },
+          "offset": {
+            "default": 0,
+            "title": "Offset",
+            "type": "integer"
+          },
           "projectionKey": {
             "title": "Projectionkey",
+            "type": "string"
+          },
+          "query": {
+            "default": "",
+            "title": "Query",
             "type": "string"
           },
           "section": {
             "title": "Section",
             "type": "string"
+          },
+          "sourceFeatureCount": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourcefeaturecount"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
           }
         },
         "required": [
@@ -944,6 +1134,16 @@
             "default": "",
             "title": "Section",
             "type": "string"
+          },
+          "selection": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FeatureSelection"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "sortBy": {
             "default": "",
@@ -1211,6 +1411,41 @@
         "title": "ProvenanceResponse",
         "type": "object"
       },
+      "ScopedFeatureRequest": {
+        "description": "Search and rank the complete feature catalog within one sample scope.",
+        "properties": {
+          "featureIds": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Featureids",
+            "type": "array"
+          },
+          "limit": {
+            "default": 50,
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "query": {
+            "default": "",
+            "title": "Query",
+            "type": "string"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/AnalysisScope"
+          }
+        },
+        "title": "ScopedFeatureRequest",
+        "type": "object"
+      },
       "ScopedSampleRequest": {
         "description": "Lightweight sample-metadata query bound to one analytical scope.",
         "properties": {
@@ -1318,13 +1553,6 @@
       },
       "ValidationError": {
         "properties": {
-          "ctx": {
-            "title": "Context",
-            "type": "object"
-          },
-          "input": {
-            "title": "Input"
-          },
           "loc": {
             "items": {
               "anyOf": [
@@ -1436,6 +1664,67 @@
           }
         },
         "summary": "Analysis Run",
+        "tags": [
+          "analysis-runs"
+        ]
+      }
+    },
+    "/api/analysis-runs/{run_key}/artifacts/{artifact_key}/features/query": {
+      "post": {
+        "operationId": "scoped_analysis_features_api_analysis_runs__run_key__artifacts__artifact_key__features_query_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_key",
+            "required": true,
+            "schema": {
+              "title": "Run Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "artifact_key",
+            "required": true,
+            "schema": {
+              "title": "Artifact Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScopedFeatureRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisFeaturePageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Scoped Analysis Features",
         "tags": [
           "analysis-runs"
         ]
@@ -1679,6 +1968,17 @@
               "maximum": 500,
               "minimum": 1,
               "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
               "type": "integer"
             }
           }

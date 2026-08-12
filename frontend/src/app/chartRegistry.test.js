@@ -32,6 +32,19 @@ describe('chart analysis-scope capabilities', () => {
     }
   });
 
+  it('defines boxplot feature selection separately from analysis scope', () => {
+    const boxplot = getChartDefinition('boxplot').analysisPolicy;
+    expect(boxplot.controls).toEqual([]);
+    expect(boxplot.featureSelection).toMatchObject({
+      defaultMode: 'ranked',
+      ranking: 'mean_abundance',
+      defaultLimit: 30,
+      rankedLimits: [10, 20, 30, 50, 100, 200, 500],
+      warningThreshold: 30,
+      strongWarningThreshold: 100,
+    });
+  });
+
   it('does not start expensive ordination work from hover intent', () => {
     expect(getChartDefinition('pca').prefetchPolicy).toBe('on_navigation');
     expect(getChartDefinition('pcoa').prefetchPolicy).toBe('on_navigation');

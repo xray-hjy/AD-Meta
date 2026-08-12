@@ -4,6 +4,7 @@ import * as echarts from 'echarts/core';
 import { AriaComponent } from 'echarts/components';
 import { CanvasRenderer, SVGRenderer } from 'echarts/renderers';
 import { useColorVision } from '../../context/ColorVisionContext';
+import DataTableViewport from '../data-display/DataTableViewport';
 
 echarts.use([AriaComponent, CanvasRenderer, SVGRenderer]);
 
@@ -71,6 +72,7 @@ const EChartBase = forwardRef(function EChartBase(
   {
     option,
     ariaLabel = '交互式数据图表',
+    dataTableModel = null,
     showDataTable = true,
     style,
     ...props
@@ -87,8 +89,25 @@ const EChartBase = forwardRef(function EChartBase(
       ...(option?.aria || {}),
     },
   }), [colorBlindFriendly, option]);
-  const tableRows = useMemo(() => chartRowsFromOption(option), [option]);
-  const hasDataTable = showDataTable && tableRows.length > 0;
+  const fallbackTableRows = useMemo(() => chartRowsFromOption(option), [option]);
+  const tableModel = useMemo(() => {
+    if (dataTableModel) {
+      const rows = Array.isArray(dataTableModel.rows) ? dataTableModel.rows : [];
+      const columns = Array.isArray(dataTableModel.columns) ? dataTableModel.columns : [];
+      return { ...dataTableModel, columns, rows };
+    }
+    return {
+      ariaLabel: '当前图表数据，可滚动',
+      columns: [
+        { key: 'series', label: '系列' },
+        { key: 'item', label: '项目' },
+        { key: 'value', label: '数值' },
+      ],
+      rows: fallbackTableRows,
+      footer: fallbackTableRows.length >= 200 ? '为保证页面性能，仅展示前 200 行。' : null,
+    };
+  }, [dataTableModel, fallbackTableRows]);
+  const hasDataTable = showDataTable && tableModel.columns.length > 0 && tableModel.rows.length > 0;
   const containerStyle = useMemo(
     () => hasDataTable ? { ...style, height: '100%' } : { height: 300, ...style },
     [hasDataTable, style]
@@ -129,21 +148,30 @@ const EChartBase = forwardRef(function EChartBase(
       <details className="chart-data-table" onToggle={event => setTableOpen(event.currentTarget.open)}>
         <summary>查看当前图表数据</summary>
         {tableOpen ? (
-          <div className="chart-data-table__scroll" tabIndex={0} aria-label="当前图表数据，可滚动">
-            <table>
-              <thead>
-                <tr><th scope="col">系列</th><th scope="col">项目</th><th scope="col">数值</th></tr>
-              </thead>
-              <tbody>
-                {tableRows.map((row, index) => (
-                  <tr key={`${row.series}-${row.item}-${index}`}>
-                    <td>{row.series}</td><td>{row.item}</td><td>{row.value}</td>
-                  </tr>
+          <DataTableViewport
+            ariaLabel={tableModel.ariaLabel || '当前图表数据，可滚动'}
+            footer={tableModel.footer || null}
+          >
+            <thead>
+              <tr>
+                {tableModel.columns.map(column => (
+                  <th scope="col" key={column.key}>{column.label}</th>
                 ))}
-              </tbody>
-            </table>
-            {tableRows.length >= 200 ? <p>为保证页面性能，仅展示前 200 行。</p> : null}
-          </div>
+              </tr>
+            </thead>
+            <tbody>
+              {tableModel.rows.map((row, index) => (
+                <tr key={tableModel.rowKey?.(row, index) || index}>
+                  {tableModel.columns.map(column => {
+                    const value = column.format
+                      ? column.format(row[column.key], row)
+                      : printableValue(row[column.key]);
+                    return <td key={column.key}>{value}</td>;
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </DataTableViewport>
         ) : null}
       </details>
     </div>

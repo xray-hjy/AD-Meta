@@ -54,7 +54,7 @@ def warm_default_projection_cache(
                 if projection_kinds is None
                 else artifact_projection_kinds & projection_kinds
             )
-            if requested_projection_kinds & {"pca", "pcoa"}:
+            if requested_projection_kinds & {"boxplot", "pca", "pcoa"}:
                 matrix = warm_revision_matrix_cache(run_key, artifact_key)
                 results.append(
                     {

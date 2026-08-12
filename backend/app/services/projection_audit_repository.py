@@ -13,7 +13,9 @@ from typing import Any
 
 from app.core.database import connect, utcnow
 
-AUDIT_SCHEMA_VERSION = "1.1"
+# Increment this whenever persisted audit metadata or its public semantics change.
+# Existing rows remain reproducible, while new requests build a compatible read model.
+AUDIT_SCHEMA_VERSION = "1.2"
 
 
 def _loads(value: Any, fallback):
@@ -295,32 +297,126 @@ def list_distinct_row_values(
     *,
     query: str = "",
     limit: int = 200,
+    prioritize_displayed: bool = False,
 ) -> list[str]:
+    """Compatibility wrapper for callers that only need option values."""
+
+    values, _ = query_distinct_row_values(
+        artifact_id,
+        field,
+        query=query,
+        limit=limit,
+        prioritize_displayed=prioritize_displayed,
+    )
+    return values
+
+
+def _escape_like(value: str) -> str:
+    """Escape a user value for the SQL LIKE expressions below."""
+
+    return value.replace("!", "!!").replace("%", "!%").replace("_", "!_")
+
+
+def query_distinct_row_values(
+    artifact_id: int,
+    field: str,
+    *,
+    query: str = "",
+    limit: int = 200,
+    offset: int = 0,
+    prioritize_displayed: bool = False,
+    displayed_only: bool = False,
+) -> tuple[list[str], int]:
+    """Return a page of distinct audit values and the exact match count.
+
+    The audit read model remains the source of truth.  This function only
+    projects its categorical fields for a combobox: an empty feature search can
+    expose the chart's displayed values as recommendations, while a named
+    search always ranges across every auditable source feature.
+    """
+
     column = {
         "feature": "feature",
         "status": "status_code",
         "reason": "reason_code",
     }.get(field)
     if column is None:
-        return []
+        return [], 0
+
+    normalized_query = query.strip().casefold()
     where = ["audit_artifact_id = ?", f"{column} <> ''"]
     params: list[Any] = [artifact_id]
-    if query.strip():
-        where.append(f"LOWER({column}) LIKE ?")
-        params.append(f"%{query.strip().casefold()}%")
-    params.append(max(1, min(500, int(limit))))
+    if displayed_only:
+        where.append("status_code = 'displayed'")
+    if normalized_query:
+        where.append(f"LOWER({column}) LIKE ? ESCAPE '!'")
+        params.append(f"%{_escape_like(normalized_query)}%")
+
+    where_sql = " AND ".join(where)
+    safe_limit = max(1, min(500, int(limit)))
+    safe_offset = max(0, int(offset))
     with connect() as conn:
-        rows = conn.execute(
-            f"""
-            SELECT DISTINCT {column} AS value
-            FROM projection_audit_rows
-            WHERE {' AND '.join(where)}
-            ORDER BY {column}
-            LIMIT ?
-            """,
+        count_row = conn.execute(
+            f"SELECT COUNT(DISTINCT {column}) AS value "
+            f"FROM projection_audit_rows WHERE {where_sql}",
             params,
-        ).fetchall()
-    return [str(row["value"]) for row in rows]
+        ).fetchone()
+        if prioritize_displayed and field == "feature" and not normalized_query:
+            rows = conn.execute(
+                f"""
+                SELECT
+                  feature AS value,
+                  MIN(row_index) AS first_row_index
+                FROM projection_audit_rows
+                WHERE {where_sql}
+                GROUP BY feature
+                ORDER BY first_row_index ASC, feature ASC
+                LIMIT ? OFFSET ?
+                """,
+                [*params, safe_limit, safe_offset],
+            ).fetchall()
+        elif normalized_query and field == "feature":
+            escaped = _escape_like(normalized_query)
+            word_prefix = f"% {escaped}%"
+            rows = conn.execute(
+                f"""
+                SELECT feature AS value
+                FROM projection_audit_rows
+                WHERE {where_sql}
+                GROUP BY feature
+                ORDER BY
+                  CASE
+                    WHEN LOWER(feature) = ? THEN 0
+                    WHEN LOWER(feature) LIKE ? ESCAPE '!' THEN 1
+                    WHEN LOWER(REPLACE(REPLACE(REPLACE(feature, '_', ' '), '-', ' '), '|', ' '))
+                      LIKE ? ESCAPE '!' THEN 2
+                    ELSE 3
+                  END ASC,
+                  feature ASC
+                LIMIT ? OFFSET ?
+                """,
+                [
+                    *params,
+                    normalized_query,
+                    f"{escaped}%",
+                    word_prefix,
+                    safe_limit,
+                    safe_offset,
+                ],
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                f"""
+                SELECT {column} AS value
+                FROM projection_audit_rows
+                WHERE {where_sql}
+                GROUP BY {column}
+                ORDER BY {column} ASC
+                LIMIT ? OFFSET ?
+                """,
+                [*params, safe_limit, safe_offset],
+            ).fetchall()
+    return [str(row["value"]) for row in rows], int(count_row["value"] or 0)
 
 
 def delete_audit_artifacts_for_source(source_artifact_id: int) -> int:
@@ -344,5 +440,6 @@ __all__ = [
     "find_audit_artifact",
     "list_distinct_row_values",
     "load_audit_rows",
+    "query_distinct_row_values",
     "query_audit_rows_page",
 ]

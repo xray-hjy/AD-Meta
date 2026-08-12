@@ -14,6 +14,7 @@ import { normalizeAnalysisParameters, validateAnalysisScope } from './analysisPo
 import AppShell from '../components/layout/AppShell';
 import ChartFrame from '../components/Charts/ChartFrame';
 import AnalysisScopeToolbar from '../components/analysisScope/AnalysisScopeToolbar';
+import BoxplotFeatureSelector from '../components/analysisScope/BoxplotFeatureSelector';
 import ProjectionDisclosure from '../components/analysisScope/ProjectionDisclosure';
 import ProjectionLoadingState from '../components/analysisScope/ProjectionLoadingState';
 import ProjectionAuditPanel from '../components/analysisScope/ProjectionAuditPanel';
@@ -32,6 +33,7 @@ import useAnalysisSamples from '../hooks/useAnalysisSamples';
 import useAnalysisProjection, {
   analysisProjectionQueryOptions,
 } from '../hooks/useAnalysisProjection';
+import useFeatureSelection from '../hooks/useFeatureSelection';
 
 function renderChartComponent(chartType, chartData, summary) {
   const definition = getChartDefinition(chartType);
@@ -65,8 +67,16 @@ function renderChartComponent(chartType, chartData, summary) {
     case 'pcoa':
       chart = <ChartComponent data={chartData} featureKind={featureKind} featureLabel={featureLabel} />;
       break;
-    case 'species':
     case 'boxplot':
+      chart = (
+        <ChartComponent
+          data={chartData}
+          featureLabel={featureLabel}
+          featureSelectionConfig={definition.analysisPolicy?.featureSelection}
+        />
+      );
+      break;
+    case 'species':
     case 'heatmap':
       chart = <ChartComponent data={chartData} featureLabel={featureLabel} />;
       break;
@@ -210,6 +220,12 @@ function App() {
   const activeChartDefinition = getChartDefinition(activeChart);
   const chartDataKey = activeChartDefinition?.dataKey || activeChart;
   const projectionKind = activeChartDefinition?.projection || '';
+  const boxplotSelection = useFeatureSelection(
+    activeRun?.key,
+    activeArtifact?.key,
+    'boxplot',
+    projectionKind === 'boxplot'
+  );
   const scopeSupported = !projectionKind
     || (activeChartDefinition?.supportedScopes || []).includes(projectionSelection.scope.mode);
   const samplesState = useAnalysisSamples(
@@ -238,17 +254,19 @@ function App() {
       && scopeSupported
       && scopeValidation.valid
       && !samplesState.loading
-      && !samplesState.error
-      && activeRun?.key
-      && activeArtifact?.key
-  );
+        && !samplesState.error
+        && activeRun?.key
+        && activeArtifact?.key
+        && (projectionKind !== 'boxplot' || boxplotSelection.ready)
+    );
   const projectionRequest = useMemo(() => ({
     scope: projectionSelection.scope,
     topN: projectionSelection.topN,
     ...(projectionKind === 'abundance'
       ? { ranking: 'mean_abundance' }
       : { parameters: projectionSelection.parameters }),
-  }), [projectionKind, projectionSelection]);
+    ...(projectionKind === 'boxplot' ? { selection: boxplotSelection.request } : {}),
+  }), [boxplotSelection.request, projectionKind, projectionSelection]);
   const chartState = useChartData(activeDataset, chartDataKey, !projectionKind);
   const projectionState = useAnalysisProjection(
     activeRun?.key,
@@ -298,6 +316,14 @@ function App() {
         ...(definition.projection === 'abundance'
           ? { ranking: 'mean_abundance' }
           : { parameters: normalized.parameters }),
+        ...(definition.projection === 'boxplot' ? {
+          selection: {
+            mode: 'ranked',
+            ranking: 'mean_abundance',
+            limit: definition.analysisPolicy?.featureSelection?.defaultLimit || 30,
+            featureIds: [],
+          },
+        } : {}),
       };
       queryClient.prefetchQuery(analysisProjectionQueryOptions(
         activeRun.key,
@@ -376,11 +402,27 @@ function App() {
       parameters={projectionSelection.parameters}
       samples={samplesState.data}
       samplesLoading={samplesState.loading}
-      featureLabel={summaryState.data?.featureLabel || '特征'}
+      featureLabel={summaryState.data?.featureLabel || '物种'}
       supportedScopes={activeChartMeta?.supportedScopes}
       controls={activeChartMeta?.controls}
       scopeRequirement={activeChartMeta?.scopeRequirement}
       analysisPolicy={activeChartMeta?.analysisPolicy}
+      chartControls={projectionKind === 'boxplot' ? (
+        <BoxplotFeatureSelector
+          runKey={activeRun.key}
+          artifactKey={activeArtifact.key}
+          scope={projectionSelection.scope}
+          value={boxplotSelection.value}
+          onChange={boxplotSelection.update}
+          onApply={boxplotSelection.apply}
+          onReset={boxplotSelection.reset}
+          isDirty={boxplotSelection.isDirty}
+          dirtyCount={boxplotSelection.dirtyCount}
+          applying={projectionState.refreshing}
+          featureLabel={summaryState.data?.featureLabel || '物种'}
+          config={activeChartDefinition?.analysisPolicy?.featureSelection}
+        />
+      ) : null}
       onChange={changeProjection}
     />
   ) : null;
@@ -404,11 +446,13 @@ function App() {
     mainContent = <ErrorState message={error} onRetry={retry} />;
   } else {
     mainContent = (
-      <ChartFrame
+        <ChartFrame
         title={activeChartMeta?.title || activeChartMeta?.label || '图表'}
         subtitle={activeChartMeta?.frameSubtitle || activeChartMeta?.subtitle}
-        loading={loading}
-        error={error}
+          loading={loading}
+          refreshing={projectionState.refreshing}
+          refreshError={projectionState.refreshError}
+          error={error}
         onRetry={retry}
         empty={!scopeUnavailable && !scopeInvalid && !loading && !error && !chartBody}
         layout={activeChartMeta?.layout || 'fit'}

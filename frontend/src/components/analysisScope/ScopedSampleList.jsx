@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import useScopedAnalysisSamples from '../../hooks/useScopedAnalysisSamples';
+import DataTableViewport from '../data-display/DataTableViewport';
 
 export default function ScopedSampleList({
   runKey,
@@ -52,8 +53,7 @@ export default function ScopedSampleList({
             <div className="projection-audit__message">正在读取参与样本...</div>
           ) : null}
           {!state.error && !state.loading ? (
-            <div className="projection-audit__table-scroll">
-              <table>
+            <DataTableViewport ariaLabel="参与样本数据，可滚动">
                 <thead>
                   <tr>
                     <th>样本编号</th>
@@ -75,8 +75,7 @@ export default function ScopedSampleList({
                     </tr>
                   ) : null}
                 </tbody>
-              </table>
-            </div>
+            </DataTableViewport>
           ) : null}
           <div className="projection-audit__pagination">
             <button type="button" disabled={offset <= 0} onClick={() => setOffset(Math.max(0, offset - limit))}>

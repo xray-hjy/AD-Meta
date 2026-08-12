@@ -146,6 +146,29 @@ class AnalysisSampleDetailResponse(AnalysisSampleResponse):
     artifacts: list[dict[str, Any]] = Field(default_factory=list)
 
 
+class AnalysisFeatureResponse(BaseModel):
+    featureId: str
+    fullName: str
+    shortName: str
+    rank: int
+    meanAbundance: float
+    detectedSampleCount: int
+    prevalence: float
+
+
+class AnalysisFeaturePageResponse(BaseModel):
+    runKey: str
+    artifactKey: str
+    featureKind: str
+    featureLabel: str
+    items: list[AnalysisFeatureResponse] = Field(default_factory=list)
+    total: int
+    limit: int
+    offset: int
+    query: str = ""
+    sourceFeatureCount: int
+
+
 class AbundanceProjectionResponse(BaseModel):
     model_config = ConfigDict(extra="allow")
 
@@ -213,6 +236,13 @@ class ProjectionAuditOptionsResponse(BaseModel):
     field: str
     items: list[dict[str, Any]] = Field(default_factory=list)
     limit: int = 200
+    offset: int = 0
+    total: int = 0
+    hasMore: bool = False
+    query: str = ""
+    mode: str = "search_results"
+    initialOrder: str = "search_results"
+    sourceFeatureCount: int | None = None
 
 
 class ProjectionAuditRowsResponse(BaseModel):

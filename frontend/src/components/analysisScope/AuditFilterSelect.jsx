@@ -7,11 +7,14 @@ export default function AuditFilterSelect({
   value,
   options,
   loading,
+  searching = false,
   search,
   onSearch,
   onChange,
   onOpen,
   optionLabel,
+  helperText = '',
+  resultSummary = '',
   scrollSelectedValue = false,
 }) {
   const [open, setOpen] = useState(false);
@@ -31,9 +34,9 @@ export default function AuditFilterSelect({
   const visibleOptions = useMemo(
     () => [
       { value: '', label: emptyLabel },
-      ...options.map(option => ({ value: option.value, label: optionLabel(option) })),
+      ...(searching ? [] : options.map(option => ({ value: option.value, label: optionLabel(option) }))),
     ],
-    [emptyLabel, optionLabel, options]
+    [emptyLabel, optionLabel, options, searching]
   );
 
   useEffect(() => {
@@ -164,6 +167,11 @@ export default function AuditFilterSelect({
               }
             }}
           />
+          {resultSummary ? (
+            <p className="projection-audit__select-summary" aria-live="polite">
+              {resultSummary}
+            </p>
+          ) : null}
           <div
             id={listboxId}
             ref={listboxRef}
@@ -191,9 +199,11 @@ export default function AuditFilterSelect({
                 {option.label}
               </button>
             ))}
-            {loading ? <p>正在读取选项...</p> : null}
-            {!loading && options.length === 0 ? <p>没有匹配选项</p> : null}
+            {searching ? <p role="status">正在检索匹配项...</p> : null}
+            {!searching && loading ? <p>正在读取选项...</p> : null}
+            {!searching && !loading && options.length === 0 ? <p>没有匹配选项</p> : null}
           </div>
+          {helperText ? <p className="projection-audit__select-helper">{helperText}</p> : null}
         </div>
       ) : null}
     </div>

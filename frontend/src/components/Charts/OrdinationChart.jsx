@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import ReactECharts from './CartesianEChart';
+import ChartViewport from './ChartViewport';
 
 const GROUP_COLORS = {
   AD: '#e74c3c',
@@ -41,7 +42,28 @@ function axisBounds(points, ellipses) {
   };
 }
 
-function OrdinationChart({ data, footer }) {
+function OrdinationChart({ data }) {
+  const dataTableModel = useMemo(() => {
+    const points = Array.isArray(data?.points) ? data.points : [];
+    const variance = Array.isArray(data?.variance) ? data.variance : [];
+    const axisPrefix = data?.method === 'PCA' ? 'PC' : 'Axis';
+    const axisLabel = index => `${axisPrefix}${index + 1} (${((variance[index] || 0) * 100).toFixed(1)}%)`;
+    const formatCoordinate = value => Number.isFinite(Number(value)) ? Number(value).toFixed(6) : '—';
+
+    return {
+      ariaLabel: `${data?.method || '排序分析'}当前样本坐标，可滚动`,
+      columns: [
+        { key: 'sample', label: '样本' },
+        { key: 'group', label: '分组' },
+        { key: 'x', label: axisLabel(0), format: formatCoordinate },
+        { key: 'y', label: axisLabel(1), format: formatCoordinate },
+      ],
+      rows: points,
+      rowKey: (row, index) => `${row.sample || '样本'}-${index}`,
+      footer: `共 ${points.length} 个当前展示样本；95% 数据分布椭圆为根据样本坐标计算的辅助图层，不作为样本记录重复列出。`,
+    };
+  }, [data]);
+
   const option = useMemo(() => {
     const points = Array.isArray(data?.points) ? data.points : [];
     const ellipses = Array.isArray(data?.ellipses) ? data.ellipses : [];
@@ -151,17 +173,15 @@ function OrdinationChart({ data, footer }) {
 
   return (
     <div className="chart-plain chart-plain--ordination">
-      <div className="ordination-chart-surface">
-        <div className="ordination-chart-canvas">
-          <ReactECharts
-            option={option}
-            notMerge
-            lazyUpdate
-            style={{ width: '100%', height: '100%' }}
-          />
-        </div>
-        {footer ? <div className="chart-plain__footer">{footer}</div> : null}
-      </div>
+      <ChartViewport variant="fit" minHeight={620} maxHeight={760}>
+        <ReactECharts
+          option={option}
+          dataTableModel={dataTableModel}
+          notMerge
+          lazyUpdate
+          style={{ width: '100%', height: '100%' }}
+        />
+      </ChartViewport>
     </div>
   );
 }

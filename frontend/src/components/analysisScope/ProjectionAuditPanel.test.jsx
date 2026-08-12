@@ -26,7 +26,7 @@ const baseProps = {
     topN: 20,
     parameters: {},
   },
-  projectionData: { projectionKey: 'projection-key-1' },
+  projectionData: { projectionKey: 'projection-key-1', featureLabel: 'KO' },
 };
 
 beforeEach(() => {
@@ -185,10 +185,10 @@ describe('ProjectionAuditPanel', () => {
     expect(await screen.findByRole('button', { name: '查询' })).toHaveClass(
       'projection-audit__query-button',
     );
-    expect(screen.getByLabelText('特征')).toHaveClass('is-marquee-enabled');
+    expect(screen.getByLabelText('KO')).toHaveClass('is-marquee-enabled');
     expect(screen.getByLabelText('样本')).not.toHaveClass('is-marquee-enabled');
 
-    fireEvent.click(await screen.findByLabelText('特征'));
+    fireEvent.click(await screen.findByLabelText('KO'));
     fireEvent.click(screen.getByRole('option', { name: 'K00001' }));
     fireEvent.click(screen.getByLabelText('样本'));
     fireEvent.click(screen.getByRole('option', { name: 'S1 · AD' }));
@@ -227,6 +227,38 @@ describe('ProjectionAuditPanel', () => {
     });
     expect(screen.queryByTitle('按处理结果排序')).not.toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: '处理结果' })).not.toHaveAttribute('aria-sort');
+  });
+
+  test('labels taxonomy candidates as species and prioritizes current chart species', async () => {
+    useProjectionAuditOptions.mockReturnValue({
+      feature: {
+        items: [
+          { value: 'Bacteroides_uniformis', label: 'Bacteroides_uniformis' },
+          { value: 'Akkermansia_muciniphila', label: 'Akkermansia_muciniphila' },
+        ],
+        initialOrder: 'displayed_then_rank',
+        sourceFeatureCount: 9460,
+        loading: false,
+      },
+      sample: { items: [], loading: false },
+      status: { items: [], loading: false },
+      reason: { items: [], loading: false },
+    });
+    render(
+      <ProjectionAuditPanel
+        {...baseProps}
+        projectionKind="boxplot"
+        projectionData={{ projectionKey: 'taxonomy-boxplot', featureLabel: '物种' }}
+      />,
+    );
+    fireEvent.click(screen.getByText('查看筛选与合并明细'));
+    fireEvent.click(await screen.findByLabelText('物种'));
+
+    expect(screen.getByText('当前图表相关物种优先显示；输入名称可检索全部 9,460 个物种。')).toBeInTheDocument();
+    expect(screen.getAllByRole('option').slice(1, 3).map(option => option.textContent)).toEqual([
+      'Bacteroides_uniformis',
+      'Akkermansia_muciniphila',
+    ]);
   });
 
   test('switches taxonomy Sankey to its layout-specific section', async () => {

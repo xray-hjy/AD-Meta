@@ -10,12 +10,16 @@ const generated = path.join(frontendRoot, 'src/api/generated.ts');
 const schema = path.resolve(frontendRoot, '../backend/openapi.json');
 const temporaryRoot = mkdtempSync(path.join(os.tmpdir(), 'ad-meta-openapi-'));
 const temporaryOutput = path.join(temporaryRoot, 'generated.ts');
-const executable = path.join(frontendRoot, 'node_modules/.bin/openapi-typescript');
+const executable = path.join(
+  frontendRoot,
+  `node_modules/.bin/openapi-typescript${process.platform === 'win32' ? '.cmd' : ''}`,
+);
 
 try {
   const result = spawnSync(executable, [schema, '-o', temporaryOutput], {
     cwd: frontendRoot,
     stdio: 'inherit',
+    shell: process.platform === 'win32',
   });
   if (result.error) throw result.error;
   if (result.status !== 0) process.exit(result.status ?? 1);

@@ -35,8 +35,12 @@ from app.services.chart_projection_service import (
 )
 from app.services.projection_audit_service import (
     ProjectionAuditMismatch,
+    _columns_for_section,
+    _section_title,
     get_projection_audit,
+    get_projection_audit_options,
 )
+from app.api.models import ProjectionAuditOptionsResponse
 
 
 def _seed_taxonomy_dataset(conn) -> None:
@@ -280,6 +284,18 @@ def test_projection_audit_is_bound_to_the_visible_projection_and_paginates() -> 
                     limit=1,
                 ),
             )
+            feature_options = get_projection_audit_options(
+                "run-projection",
+                "species",
+                "abundance",
+                ProjectionAuditRequest(
+                    projectionKey=projection["projectionKey"],
+                    topN=1,
+                    section="selection",
+                ),
+                "feature",
+                limit=10,
+            )
             with pytest.raises(ProjectionAuditMismatch):
                 get_projection_audit(
                     "run-projection",
@@ -329,16 +345,37 @@ def test_projection_audit_is_bound_to_the_visible_projection_and_paginates() -> 
     assert filtered_audit["total"] == 1
     assert filtered_audit["items"][0]["feature"] == "Species_B"
     assert sorted_audit["items"][0]["rank"] == 2
+    assert [item["value"] for item in feature_options["items"]] == ["Species_A"]
+    assert feature_options["total"] == 1
+    assert feature_options["mode"] == "recommended"
+    assert feature_options["initialOrder"] == "displayed_then_rank"
+    assert feature_options["sourceFeatureCount"] == 2
+    assert ProjectionAuditOptionsResponse.model_validate(feature_options).model_dump()[
+        "initialOrder"
+    ] == "displayed_then_rank"
     assert artifact_count == 1
     assert row_count == 2
     assert audit["sections"] == [
-        {"key": "selection", "title": "展示与未展示特征", "total": 2},
+        {"key": "selection", "title": "展示与未展示物种", "total": 2},
     ]
     assert audit["sampleScope"] == {
         "mode": "cohort",
         "sampleCount": 3,
         "groupCounts": {"AD": 2, "NC": 1},
     }
+
+
+def test_audit_metadata_uses_the_artifact_feature_label_for_generic_feature_columns() -> None:
+    species_projection = {"featureLabel": "物种"}
+    ko_projection = {"featureLabel": "KO"}
+
+    assert _section_title("feature_selection", species_projection) == "计算物种选择"
+    assert _section_title("ordination_filter", species_projection) == "PCoA 物种过滤"
+    assert _section_title("contribution_selection", ko_projection) == "展示与未展示 KO"
+    assert _columns_for_section("feature_selection", species_projection)[1]["label"] == "物种"
+    assert _columns_for_section("statistical_filter", ko_projection)[0]["label"] == "KO"
+    assert _columns_for_section("aggregation", species_projection)[1]["label"] == "类别"
+    assert _columns_for_section("hierarchy_aggregation", species_projection)[0]["label"] == "原始物种"
 
 
 def test_scoped_sample_page_matches_the_projection_scope() -> None:

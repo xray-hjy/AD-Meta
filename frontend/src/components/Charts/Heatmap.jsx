@@ -3,6 +3,7 @@ import * as d3 from 'd3';
 import { useColorVision } from '../../context/ColorVisionContext';
 import useTooltip from '../../hooks/useTooltip';
 import HeatmapLightbox from './HeatmapLightbox';
+import DataTableViewport from '../data-display/DataTableViewport';
 
 const ABUNDANCE_COLORS = ['#ffffcc', '#ffeda0', '#fed976', '#feb24c', '#fd8d3c', '#fc4e2a', '#e31a1c', '#bd0026', '#800026'];
 const DIFF_COLORS = ['#2166ac', '#67a9cf', '#f7f7f7', '#ef8a62', '#b2182b'];
@@ -427,8 +428,10 @@ export function HeatmapDataTable({ title, matrix, rowLabels, colLabels }) {
   return (
     <details className="chart-data-table">
       <summary>查看{title}数据表</summary>
-      <div className="chart-data-table__scroll" tabIndex={0} aria-label={`${title}数据表，可滚动`}>
-        <table>
+      <DataTableViewport
+        ariaLabel={`${title}数据表，可滚动`}
+        footer={truncated ? '为保证页面性能，仅展示前 25 行、20 列。' : null}
+      >
           <thead>
             <tr>
               <th scope="col">样本</th>
@@ -445,9 +448,7 @@ export function HeatmapDataTable({ title, matrix, rowLabels, colLabels }) {
               </tr>
             ))}
           </tbody>
-        </table>
-        {truncated ? <p>为保证页面性能，仅展示前 25 行、20 列。</p> : null}
-      </div>
+      </DataTableViewport>
     </details>
   );
 }

@@ -4,8 +4,8 @@ import AuditFilterSelect from './AuditFilterSelect';
 
 const baseProps = {
   id: 'feature-filter',
-  label: '特征',
-  emptyLabel: '全部特征',
+  label: '物种',
+  emptyLabel: '全部物种',
   value: '',
   options: [
     { value: 'K00001', label: 'K00001' },
@@ -23,10 +23,10 @@ test('uses one tab stop and standard listbox arrow-key selection', () => {
   const onChange = vi.fn();
   render(<AuditFilterSelect {...baseProps} onChange={onChange} />);
 
-  const trigger = screen.getByLabelText('特征');
+  const trigger = screen.getByLabelText('物种');
   fireEvent.click(trigger);
-  const search = screen.getByRole('searchbox', { name: '搜索特征' });
-  const listbox = screen.getByRole('listbox', { name: '特征选项' });
+  const search = screen.getByRole('searchbox', { name: '搜索物种' });
+  const listbox = screen.getByRole('listbox', { name: '物种选项' });
   const options = screen.getAllByRole('option');
 
   expect(listbox).toHaveAttribute('tabindex', '0');
@@ -44,11 +44,21 @@ test('uses one tab stop and standard listbox arrow-key selection', () => {
 
 test('escape closes the listbox and restores trigger focus', () => {
   render(<AuditFilterSelect {...baseProps} />);
-  const trigger = screen.getByLabelText('特征');
+  const trigger = screen.getByLabelText('物种');
   fireEvent.click(trigger);
 
-  fireEvent.keyDown(screen.getByRole('searchbox', { name: '搜索特征' }), { key: 'Escape' });
+  fireEvent.keyDown(screen.getByRole('searchbox', { name: '搜索物种' }), { key: 'Escape' });
 
   expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
   expect(trigger).toHaveFocus();
+});
+
+test('does not present stale options while a new search is pending', () => {
+  render(<AuditFilterSelect {...baseProps} search="P" searching />);
+
+  fireEvent.click(document.getElementById('feature-filter'));
+
+  expect(screen.getByRole('status')).toBeInTheDocument();
+  expect(screen.queryByRole('option', { name: 'K00001' })).not.toBeInTheDocument();
+  expect(screen.getAllByRole('option')).toHaveLength(1);
 });

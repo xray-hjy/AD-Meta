@@ -27,17 +27,25 @@ test('renders grouped points, data-distribution ellipses and bounded axes', () =
           { group: 'AD', points: [[1, 0], [2, 1], [1, 0]] },
         ],
       }}
-      footer="PERMANOVA"
     />
   );
   expect(screen.getByTestId('ordination-echart')).toBeTruthy();
-  expect(screen.getByText('PERMANOVA')).toBeTruthy();
   const option = chartProps.mock.calls.at(-1)[0].option;
   expect(option.xAxis.name).toBe('Axis 1 (60.0%)');
   expect(option.yAxis.name).toBe('Axis 2 (20.0%)');
   expect(option.series).toHaveLength(3);
   expect(option.tooltip.formatter({ data: [2, 1, 'AD01', 'AD'] })).toContain('AD01');
-  expect(chartProps.mock.calls.at(-1)[0].notMerge).toBe(true);
+  const props = chartProps.mock.calls.at(-1)[0];
+  expect(props.notMerge).toBe(true);
+  expect(props.dataTableModel.columns.map(column => column.label)).toEqual([
+    '样本',
+    '分组',
+    'Axis1 (60.0%)',
+    'Axis2 (20.0%)',
+  ]);
+  expect(props.dataTableModel.rows).toHaveLength(2);
+  expect(props.dataTableModel.rows[0]).toMatchObject({ sample: 'AD01', group: 'AD', x: 2, y: 1 });
+  expect(props.dataTableModel.footer).toContain('椭圆为根据样本坐标计算的辅助图层');
 });
 
 test('replaces stale group series when the analysis scope changes', () => {

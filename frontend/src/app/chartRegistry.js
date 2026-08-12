@@ -48,6 +48,7 @@ function topNPresetControl(label, defaultValue, options, purpose = 'display') {
 function analysisPolicy({
   scopes,
   controls = [],
+  featureSelection = null,
   minSamples = 1,
   minPerGroup = 0,
   requirement = '',
@@ -62,6 +63,7 @@ function analysisPolicy({
       requirement,
     },
     controls,
+    featureSelection,
     inference,
   };
 }
@@ -143,7 +145,14 @@ export const CHART_REGISTRY = {
     analysisPolicy: analysisPolicy({
       scopes: DISTRIBUTION_SCOPES,
       minSamples: 2,
-      controls: [topNPresetControl(({ featureLabel }) => `参与分布展示的${featureLabel}数`, 30, [5, 10, 20, 30, 50, 100], 'feature_selection')],
+      featureSelection: {
+        defaultMode: 'ranked',
+        ranking: 'mean_abundance',
+        defaultLimit: 30,
+        rankedLimits: [10, 20, 30, 50, 100, 200, 500],
+        warningThreshold: 30,
+        strongWarningThreshold: 100,
+      },
       requirement: '至少 2 个样本；单组范围仅描述该组分布',
     }),
   },
@@ -165,7 +174,7 @@ export const CHART_REGISTRY = {
       minSamples: 6,
       minPerGroup: 3,
       controls: [
-        topNPresetControl('差异特征展示上限', 50, [20, 50, 100, 200]),
+        topNPresetControl(({ featureLabel }) => `差异${featureLabel}展示上限`, 50, [20, 50, 100, 200]),
         selectControl('qValueMax', 'FDR q 值上限', 0.05, [0.01, 0.05, 0.1]),
         selectControl('log2FcMinAbs', '|log2FC| 下限', 1, [0.5, 1, 1.5, 2]),
       ],
@@ -273,7 +282,10 @@ export const CHART_REGISTRY = {
     navLabel: 'PCA',
     navSubtitle: '样本聚类趋势',
     title: '样本丰度结构 PCA',
-    subtitle: context => `按总丰度选取 ${resolvedFeatureCount(context) || selectedValue(context, 'topN', 50)} 个${resolvedFeatureLabel(context)}，逐特征 Z-score 标准化后进行 PCA`,
+    subtitle: context => {
+      const featureLabel = resolvedFeatureLabel(context);
+      return `按总丰度选取 ${resolvedFeatureCount(context) || selectedValue(context, 'topN', 50)} 个${featureLabel}，逐${featureLabel} Z-score 标准化后进行 PCA`;
+    },
     availableFor: ['taxonomy'],
     component: PCAPlot,
     layout: 'special',
@@ -283,7 +295,7 @@ export const CHART_REGISTRY = {
       scopes: DISTRIBUTION_SCOPES,
       minSamples: 3,
       controls: [topNPresetControl(({ featureLabel }) => `参与计算的${featureLabel}数`, 50, [50, 100, 200, 500], 'feature_selection')],
-      requirement: '至少 3 个样本；按总丰度选取特征并逐特征标准化',
+      requirement: '至少 3 个样本；按总丰度选取物种并逐物种标准化',
       inference: { method: 'exploratory_ordination', ellipse: 'group_data_distribution_95' },
     }),
   },

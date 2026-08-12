@@ -28,6 +28,7 @@ export default function AnalysisScopeToolbar({
   controls = [],
   scopeRequirement = '',
   analysisPolicy = null,
+  chartControls = null,
   onChange,
 }) {
   const [query, setQuery] = useState('');
@@ -219,6 +220,10 @@ export default function AnalysisScopeToolbar({
             );
           })}
         </div>
+      ) : null}
+
+      {chartControls ? (
+        <div className="projection-controls__chart">{chartControls}</div>
       ) : null}
 
       {!currentScopeSupported ? (

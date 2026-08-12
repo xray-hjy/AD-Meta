@@ -38,6 +38,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/analysis-runs/{run_key}/artifacts/{artifact_key}/features/query": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Scoped Analysis Features */
+        post: operations["scoped_analysis_features_api_analysis_runs__run_key__artifacts__artifact_key__features_query_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/analysis-runs/{run_key}/artifacts/{artifact_key}/projection-audits/{projection_kind}": {
         parameters: {
             query?: never;
@@ -418,6 +435,49 @@ export interface components {
             /** Uri */
             uri: string;
         };
+        /** AnalysisFeaturePageResponse */
+        AnalysisFeaturePageResponse: {
+            /** Artifactkey */
+            artifactKey: string;
+            /** Featurekind */
+            featureKind: string;
+            /** Featurelabel */
+            featureLabel: string;
+            /** Items */
+            items?: components["schemas"]["AnalysisFeatureResponse"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /**
+             * Query
+             * @default
+             */
+            query: string;
+            /** Runkey */
+            runKey: string;
+            /** Sourcefeaturecount */
+            sourceFeatureCount: number;
+            /** Total */
+            total: number;
+        };
+        /** AnalysisFeatureResponse */
+        AnalysisFeatureResponse: {
+            /** Detectedsamplecount */
+            detectedSampleCount: number;
+            /** Featureid */
+            featureId: string;
+            /** Fullname */
+            fullName: string;
+            /** Meanabundance */
+            meanAbundance: number;
+            /** Prevalence */
+            prevalence: number;
+            /** Rank */
+            rank: number;
+            /** Shortname */
+            shortName: string;
+        };
         /** AnalysisRunResponse */
         AnalysisRunResponse: {
             /** Artifacts */
@@ -580,6 +640,7 @@ export interface components {
                 [key: string]: unknown;
             };
             scope?: components["schemas"]["AnalysisScope"];
+            selection?: components["schemas"]["FeatureSelection"] | null;
             /**
              * Topn
              * @default 20
@@ -684,6 +745,31 @@ export interface components {
             /** Requestid */
             requestId?: string | null;
         };
+        /**
+         * FeatureSelection
+         * @description A chart-independent feature selection that survives scope changes.
+         */
+        FeatureSelection: {
+            /** Featureids */
+            featureIds?: string[];
+            /**
+             * Limit
+             * @default 30
+             */
+            limit: number;
+            /**
+             * Mode
+             * @default ranked
+             * @enum {string}
+             */
+            mode: "ranked" | "explicit";
+            /**
+             * Ranking
+             * @default mean_abundance
+             * @constant
+             */
+            ranking: "mean_abundance";
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -724,6 +810,16 @@ export interface components {
         ProjectionAuditOptionsResponse: {
             /** Field */
             field: string;
+            /**
+             * Hasmore
+             * @default false
+             */
+            hasMore: boolean;
+            /**
+             * Initialorder
+             * @default search_results
+             */
+            initialOrder: string;
             /** Items */
             items?: {
                 [key: string]: unknown;
@@ -733,10 +829,32 @@ export interface components {
              * @default 200
              */
             limit: number;
+            /**
+             * Mode
+             * @default search_results
+             */
+            mode: string;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
             /** Projectionkey */
             projectionKey: string;
+            /**
+             * Query
+             * @default
+             */
+            query: string;
             /** Section */
             section: string;
+            /** Sourcefeaturecount */
+            sourceFeatureCount?: number | null;
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
         };
         /**
          * ProjectionAuditRequest
@@ -780,6 +898,7 @@ export interface components {
              * @default
              */
             section: string;
+            selection?: components["schemas"]["FeatureSelection"] | null;
             /**
              * Sortby
              * @default
@@ -920,6 +1039,30 @@ export interface components {
             [key: string]: unknown;
         };
         /**
+         * ScopedFeatureRequest
+         * @description Search and rank the complete feature catalog within one sample scope.
+         */
+        ScopedFeatureRequest: {
+            /** Featureids */
+            featureIds?: string[];
+            /**
+             * Limit
+             * @default 50
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            /**
+             * Query
+             * @default
+             */
+            query: string;
+            scope?: components["schemas"]["AnalysisScope"];
+        };
+        /**
          * ScopedSampleRequest
          * @description Lightweight sample-metadata query bound to one analytical scope.
          */
@@ -988,10 +1131,6 @@ export interface components {
         };
         /** ValidationError */
         ValidationError: {
-            /** Context */
-            ctx?: Record<string, never>;
-            /** Input */
-            input?: unknown;
             /** Location */
             loc: (string | number)[];
             /** Message */
@@ -1055,6 +1194,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    scoped_analysis_features_api_analysis_runs__run_key__artifacts__artifact_key__features_query_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_key: string;
+                artifact_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScopedFeatureRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalysisFeaturePageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -1147,6 +1322,7 @@ export interface operations {
             query?: {
                 query?: string;
                 limit?: number;
+                offset?: number;
             };
             header?: never;
             path: {

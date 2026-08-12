@@ -7,6 +7,8 @@ const SCOPE_LABELS = {
 
 function projectionSummary(data) {
   const projection = data.projection;
+  const payload = data.payload || {};
+  const featureLabel = data.featureLabel || '物种';
   if (projection.kind === 'ko_contribution') {
     const series = Array.isArray(data.payload?.series) ? data.payload.series : [];
     const coverage = projection.coverageBySeries || {};
@@ -19,7 +21,7 @@ function projectionSummary(data) {
   }
   if (projection.projectionUnit === 'taxonomy_nodes') {
     return [
-      `来源 ${projection.sourceFeatureCount} 个${data.featureLabel}`,
+      `来源 ${projection.sourceFeatureCount} 个${featureLabel}`,
       `展示 ${projection.displayedNodeCount || 0} 个分类层级节点`,
       projection.mergedCategoryCount > 0
         ? `聚合 ${projection.mergedCategoryCount} 个长尾分类`
@@ -28,7 +30,7 @@ function projectionSummary(data) {
   }
   if (projection.projectionUnit === 'categories') {
     return [
-      `来源 ${projection.sourceFeatureCount} 个${data.featureLabel}`,
+      `来源 ${projection.sourceFeatureCount} 个${featureLabel}`,
       `汇总为 ${projection.sourceCategoryCount || 0} 个类别`,
       projection.mergedFeatureCount > 0
         ? `展示 ${projection.displayedCategoryCount || 0} 项，末尾聚合 ${projection.mergedFeatureCount} 类`
@@ -39,26 +41,38 @@ function projectionSummary(data) {
     const selection = projection.featureSelection?.method === 'top_n_by_total_abundance'
       ? '按总丰度排序选取'
       : '按当前策略选取';
+    const variance = Array.isArray(payload.variance) ? payload.variance : [];
+    const axisSummary = variance.length >= 2
+      ? `PC1 ${formatPercent(variance[0])}，PC2 ${formatPercent(variance[1])}，前两轴合计 ${formatPercent(Number(variance[0]) + Number(variance[1]))}`
+      : null;
     return [
-      `${selection} ${projection.returnedFeatureCount}/${projection.sourceFeatureCount} 个${data.featureLabel}`,
+      `${selection} ${projection.returnedFeatureCount}/${projection.sourceFeatureCount} 个${featureLabel}`,
       `绘制 ${projection.samplePointCount || projection.sampleCount} 个样本点`,
-      '逐特征 Z-score 标准化',
-    ];
+      `逐${featureLabel} Z-score 标准化`,
+      axisSummary,
+    ].filter(Boolean);
   }
   if (projection.kind === 'pcoa') {
     const selection = projection.featureSelection || {};
     const status = projection.inference?.permanovaStatus;
     const retainedMass = projection.retainedMass || selection.retainedMass || {};
     const messages = [
-      `无标签过滤保留 ${projection.returnedFeatureCount}/${projection.sourceFeatureCount} 个${data.featureLabel}`,
+      `无标签过滤保留 ${projection.returnedFeatureCount}/${projection.sourceFeatureCount} 个${featureLabel}`,
       selection.preset === 'unfiltered'
-        ? '未启用稀有特征过滤'
+        ? `未启用稀有${featureLabel}过滤`
         : `相对丰度 ≥ ${formatPercent(selection.minimumRelativeAbundance)}，检出率 ≥ ${formatPercent(selection.minimumPrevalence)}`,
       `过滤前后均按样本总和闭合；平均保留质量 ${formatPercent(retainedMass.mean)}`,
       `同一 Bray-Curtis 距离矩阵绘制 ${projection.samplePointCount || projection.sampleCount} 个样本点`,
     ];
     if (status === 'computed_exploratory_unadjusted') {
-      messages.push('已计算探索性未校正 PERMANOVA，并以 PERMDISP 检查组内离散度');
+      const permanova = payload.permanova;
+      const permdisp = payload.permdisp;
+      messages.push(permanova
+        ? `探索性未校正 PERMANOVA R²=${formatNumber(permanova.r2)}，F=${formatNumber(permanova.fStat)}，p=${formatNumber(permanova.pValue)}，置换 ${permanova.nPerm} 次`
+        : '已计算探索性未校正 PERMANOVA');
+      messages.push(permdisp
+        ? `PERMDISP F=${formatNumber(permdisp.fStat)}，p=${formatNumber(permdisp.pValue)}，置换 ${permdisp.nPerm} 次`
+        : 'PERMDISP 结果暂不可用');
     } else if (status === 'not_applicable_single_group') {
       messages.push('当前为单组排序探索，不进行组间检验');
     } else if (status === 'not_applicable_minimum_group_size') {
@@ -66,20 +80,24 @@ function projectionSummary(data) {
     } else {
       messages.push('当前数据不足，不进行组间检验');
     }
+    const negativeCount = Number(payload.eigenDiagnostics?.negativeEigenvalueCount || 0);
+    if (negativeCount > 0) {
+      messages.push(`存在 ${negativeCount} 个负特征值，坐标轴解释率按正特征值计算`);
+    }
     return messages;
   }
   if (projection.kind === 'heatmap') {
     const parameters = projection.parameters || {};
     return [
-      `来源 ${projection.sourceFeatureCount} 个${data.featureLabel}`,
+      `来源 ${projection.sourceFeatureCount} 个${featureLabel}`,
       `筛得 ${projection.eligibleFeatureCount || 0} 个满足 q < ${parameters.qValueMax} 且 |log2FC| > ${parameters.log2FcMinAbs} 的候选`,
       `展示排名前 ${projection.returnedFeatureCount || 0} 个`,
     ];
   }
   if (projection.kind === 'detection') {
     return [
-      `来源 ${projection.sourceFeatureCount} 个${data.featureLabel}`,
-      `检出 ${projection.eligibleFeatureCount || 0} 个丰度 > 0 的特征`,
+      `来源 ${projection.sourceFeatureCount} 个${featureLabel}`,
+      `检出 ${projection.eligibleFeatureCount || 0} 个丰度 > 0 的${featureLabel}`,
       `按 AD/NC 检出率差值展示前 ${projection.returnedFeatureCount || 0} 个`,
     ];
   }
@@ -92,7 +110,7 @@ function projectionSummary(data) {
     ];
   }
   return [
-    `展示 ${projection.returnedFeatureCount}/${projection.sourceFeatureCount} 个${data.featureLabel}`,
+    `展示 ${projection.returnedFeatureCount}/${projection.sourceFeatureCount} 个${featureLabel}`,
     projection.truncatedFeatureCount > 0
       ? `${projection.truncatedFeatureCount} 个未进入当前浏览器投影，完整结果仍保留在后端`
       : '当前范围完整展示',
@@ -101,6 +119,11 @@ function projectionSummary(data) {
 
 function formatPercent(value) {
   return `${((Number(value) || 0) * 100).toFixed(2)}%`;
+}
+
+function formatNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number.toFixed(4) : '-';
 }
 
 export default function ProjectionDisclosure({ data, fetching = false }) {

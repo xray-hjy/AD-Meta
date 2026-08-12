@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException, Query
 
 from app.api.models import (
     AbundanceProjectionResponse,
+    AnalysisFeaturePageResponse,
     AnalysisRunResponse,
     AnalysisSampleDetailResponse,
     AnalysisSamplePageResponse,
@@ -21,6 +22,7 @@ from app.domain.analysis_scope import (
     ProjectionAuditRequest,
     ProjectionKind,
     ScopedSampleRequest,
+    ScopedFeatureRequest,
 )
 from app.services.analysis_projection_service import (
     AnalysisArtifactNotFound,
@@ -32,7 +34,7 @@ from app.services.analysis_projection_service import (
     project_abundance,
 )
 from app.services.analysis_run_service import get_analysis_run, list_analysis_runs
-from app.services.chart_projection_service import project_chart
+from app.services.chart_projection_service import project_chart, query_scoped_features
 from app.services.projection_audit_service import (
     ProjectionAuditMismatch,
     get_projection_audit,
@@ -135,6 +137,22 @@ def scoped_analysis_samples(
 
 
 @router.post(
+    "/{run_key}/artifacts/{artifact_key}/features/query",
+    response_model=AnalysisFeaturePageResponse,
+    response_model_exclude_none=True,
+)
+def scoped_analysis_features(
+    run_key: str,
+    artifact_key: str,
+    request: ScopedFeatureRequest,
+):
+    try:
+        return query_scoped_features(run_key, artifact_key, request)
+    except (AnalysisRunNotFound, AnalysisArtifactNotFound, AnalysisScopeError) as exc:
+        raise _projection_error(exc) from exc
+
+
+@router.post(
     "/{run_key}/artifacts/{artifact_key}/projections/abundance",
     response_model=AbundanceProjectionResponse,
     response_model_exclude_none=True,
@@ -223,6 +241,7 @@ def projection_audit_options(
     request: ProjectionAuditRequest,
     query: str = "",
     limit: int = Query(default=200, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
 ):
     if field not in {"feature", "sample", "status", "reason"}:
         raise HTTPException(status_code=422, detail="Unsupported projection audit option field")
@@ -235,6 +254,7 @@ def projection_audit_options(
             field,
             query=query,
             limit=limit,
+            offset=offset,
         )
     except ProjectionAuditMismatch as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc

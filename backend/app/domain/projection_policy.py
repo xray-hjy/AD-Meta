@@ -135,8 +135,8 @@ PROJECTION_POLICIES: dict[str, ProjectionPolicy] = {
         min_samples=2,
         feature_kind="taxonomy",
         top_n_default=30,
-        top_n_maximum=100,
-        top_n_recommended=(5, 10, 20, 30, 50, 100),
+        top_n_maximum=500,
+        top_n_recommended=(10, 20, 30, 50, 100, 200, 500),
         top_n_role="feature_selection",
     ),
     "pca": ProjectionPolicy(

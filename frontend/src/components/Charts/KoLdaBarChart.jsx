@@ -168,7 +168,7 @@ function KoLdaBarChart({ data }) {
     return (
       <div className="placeholder">
         <p>没有 KO 通过 BH-FDR 校正阈值</p>
-        <small>当前结果不会回填未经校正的候选特征。</small>
+        <small>当前结果不会回填未经校正的候选 KO。</small>
       </div>
     );
   }

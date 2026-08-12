@@ -69,8 +69,31 @@ describe('chartRowsFromOption', () => {
     expect(layout.children[1]).toBe(table);
     expect(table).toHaveAttribute('open');
     await waitFor(() => {
-      expect(table.querySelector('.chart-data-table__scroll')).toBeInTheDocument();
+      expect(table.querySelector('.data-table-viewport')).toBeInTheDocument();
     });
+  });
+
+  test('renders a chart-provided semantic data table instead of flattening render series', async () => {
+    render(
+      <EChartBase
+        option={{ series: [{ name: '椭圆折线', data: [[1, 2], [3, 4]] }] }}
+        dataTableModel={{
+          ariaLabel: '样本坐标',
+          columns: [
+            { key: 'sample', label: '样本' },
+            { key: 'x', label: 'PC1', format: value => value.toFixed(2) },
+          ],
+          rows: [{ sample: 'AD01', x: 1.234 }],
+        }}
+      />
+    );
+
+    fireEvent.click(screen.getByText('查看当前图表数据'));
+
+    expect(await screen.findByRole('region', { name: '样本坐标' })).toBeInTheDocument();
+    expect(screen.getByText('AD01')).toBeInTheDocument();
+    expect(screen.getByText('1.23')).toBeInTheDocument();
+    expect(screen.queryByText('椭圆折线')).not.toBeInTheDocument();
   });
 
   test('applies the global color-blind preference to ECharts decals', () => {

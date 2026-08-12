@@ -21,6 +21,13 @@ from app.main import (
 
 
 class OpenApiContractTests(unittest.TestCase):
+    def test_committed_openapi_schema_matches_the_application(self) -> None:
+        output = Path(__file__).resolve().parents[1] / "openapi.json"
+        self.assertTrue(
+            export_openapi(output, check=True),
+            "openapi.json is stale; run python -m app.cli.export_openapi",
+        )
+
     def test_openapi_check_is_read_only(self) -> None:
         with TemporaryDirectory() as tmpdir:
             output = Path(tmpdir) / "openapi.json"

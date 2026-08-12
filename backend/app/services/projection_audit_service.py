@@ -50,8 +50,8 @@ from app.services.projection_audit_repository import (
     complete_audit_artifact,
     fail_audit_artifact,
     find_audit_artifact,
-    list_distinct_row_values,
     load_audit_rows,
+    query_distinct_row_values,
     query_audit_rows_page,
 )
 
@@ -70,17 +70,22 @@ def _build_lock(projection_key: str, section: str) -> threading.Lock:
         return _BUILD_LOCKS.setdefault(key, threading.Lock())
 
 
-SECTION_TITLES = {
-    "selection": "展示与未展示特征",
+SECTION_TITLE_TEMPLATES = {
+    "selection": "展示与未展示{feature_label}",
     "contribution_selection": "展示与未展示 KO",
     "aggregation": "Other 合并明细",
-    "feature_selection": "计算特征选择",
-    "ordination_filter": "PCoA 稀有特征过滤",
+    "feature_selection": "计算{feature_label}选择",
+    "ordination_filter": "PCoA {feature_label}过滤",
     "statistical_filter": "统计筛选明细",
     "detection_filter": "检出与展示筛选",
     "hierarchy_aggregation": "层级合并明细",
     "sankey_layout": "桑基布局压缩",
 }
+
+
+def _section_title(section: str, projection: dict[str, Any]) -> str:
+    feature_label = str(projection.get("featureLabel") or "物种")
+    return SECTION_TITLE_TEMPLATES[section].format(feature_label=feature_label)
 
 PRIMARY_SECTION = {
     "abundance": "selection",
@@ -99,7 +104,7 @@ PRIMARY_SECTION = {
 COMMON_COLUMNS = {
     "selection": [
         {"key": "rank", "label": "排序", "sortable": True},
-        {"key": "feature", "label": "特征", "sortable": True},
+        {"key": "feature", "label": "物种", "labelRole": "feature", "sortable": True},
         {"key": "rankValue", "label": "排序值", "format": "number", "sortable": True},
         {"key": "status", "label": "处理结果", "format": "status"},
         {"key": "reason", "label": "原因", "format": "reason"},
@@ -119,7 +124,7 @@ COMMON_COLUMNS = {
     ],
     "feature_selection": [
         {"key": "rank", "label": "排序", "sortable": True},
-        {"key": "feature", "label": "特征", "sortable": True},
+        {"key": "feature", "label": "物种", "labelRole": "feature", "sortable": True},
         {"key": "total", "label": "范围内总丰度", "format": "number", "sortable": True},
         {"key": "coverage", "label": "累计覆盖", "format": "percent", "sortable": True},
         {"key": "status", "label": "计算状态", "format": "status"},
@@ -127,7 +132,7 @@ COMMON_COLUMNS = {
     ],
     "ordination_filter": [
         {"key": "rank", "label": "排序", "sortable": True},
-        {"key": "feature", "label": "特征", "sortable": True},
+        {"key": "feature", "label": "物种", "labelRole": "feature", "sortable": True},
         {"key": "detectionSampleCount", "label": "达到阈值样本数", "format": "integer", "sortable": True},
         {"key": "prevalence", "label": "检出率", "format": "percent", "sortable": True},
         {"key": "meanRelativeAbundance", "label": "平均相对丰度", "format": "percent", "sortable": True},
@@ -136,7 +141,7 @@ COMMON_COLUMNS = {
         {"key": "reason", "label": "原因", "format": "reason"},
     ],
     "statistical_filter": [
-        {"key": "feature", "label": "特征", "sortable": True},
+        {"key": "feature", "label": "物种", "labelRole": "feature", "sortable": True},
         {"key": "pValue", "label": "p", "format": "number", "sortable": True},
         {"key": "qValue", "label": "q", "format": "number", "sortable": True},
         {"key": "effectSize", "label": "效应量", "format": "number", "sortable": True},
@@ -194,6 +199,7 @@ def _projection_for_request(
             scope=request.scope,
             topN=request.topN,
             parameters=request.parameters,
+            selection=request.selection,
         ),
     )
 
@@ -437,7 +443,22 @@ def _rows_for_section(kind, section, selected, frame, features, projection, requ
             request.topN,
             projection.get("payload") or {},
         )
-    if kind in {"boxplot", "pca"}:
+    if kind == "boxplot":
+        rows = _ranked_feature_rows(frame, features, request.topN, "feature_selection", request.scope)
+        if request.selection and request.selection.mode == "explicit":
+            selected_ids = set(request.selection.featureIds)
+            id_by_name = frame.attrs.get("feature_id_by_name") or {}
+            for row in rows:
+                selected_row = str(id_by_name.get(row["fullName"], row["fullName"])) in selected_ids
+                row["status"] = "displayed" if selected_row else "excluded"
+                row["reason"] = "explicit_selection" if selected_row else "not_selected"
+        elif request.selection and request.selection.mode == "ranked":
+            for row in rows:
+                selected_row = row["rank"] <= request.selection.limit
+                row["status"] = "displayed" if selected_row else "excluded"
+                row["reason"] = "within_top_n" if selected_row else "outside_top_n"
+        return rows
+    if kind == "pca":
         return _ranked_feature_rows(frame, features, request.topN, "feature_selection", request.scope)
     if kind == "pcoa":
         return _pcoa_filter_rows(frame, features, request)
@@ -523,6 +544,10 @@ def _public_row(row: dict[str, Any]) -> dict[str, Any]:
 
 def _columns_for_section(section: str, projection: dict[str, Any]) -> list[dict[str, Any]]:
     columns = [dict(column) for column in COMMON_COLUMNS[section]]
+    feature_label = str(projection.get("featureLabel") or "物种")
+    for column in columns:
+        if column.pop("labelRole", None) == "feature":
+            column["label"] = feature_label
     if section not in {"aggregation", "contribution_selection"}:
         return columns
     series_columns = [
@@ -645,7 +670,7 @@ def _ensure_projection_audit_artifact(
                 "sections": [
                     {
                         "key": key,
-                        "title": SECTION_TITLES[key],
+                        "title": _section_title(key, projection),
                         "total": len(rows) if key == section else None,
                     }
                     for key in section_keys
@@ -719,6 +744,8 @@ def get_projection_audit_options(
     *,
     query: str = "",
     limit: int = 200,
+    offset: int = 0,
+    recommend_displayed: bool = True,
 ) -> dict[str, Any]:
     _, audit_artifact = _ensure_projection_audit_artifact(
         run_key,
@@ -726,6 +753,10 @@ def get_projection_audit_options(
         kind,
         request,
     )
+    normalized_query = query.strip()
+    safe_limit = max(1, min(500, int(limit)))
+    safe_offset = max(0, int(offset))
+    is_feature_recommendation = False
     if field == "sample":
         _, selected = _selected_samples_for_request(run_key, artifact_key, request)
         options = [
@@ -737,29 +768,55 @@ def get_projection_audit_options(
             for sample in selected
             if sample.get("sample_code")
         ]
-        if query.strip():
-            needle = query.strip().casefold()
+        if normalized_query:
+            needle = normalized_query.casefold()
             options = [
                 option
                 for option in options
                 if needle in option["label"].casefold()
                 or needle in option["group"].casefold()
             ]
-        options = options[: max(1, min(500, int(limit)))]
+        total = len(options)
+        options = options[safe_offset:safe_offset + safe_limit]
+        mode = "search_results" if normalized_query else "options"
     else:
-        values = list_distinct_row_values(
+        is_feature_recommendation = (
+            recommend_displayed and field == "feature" and not normalized_query
+        )
+        values, total = query_distinct_row_values(
             int(audit_artifact["id"]),
             field,
             query=query,
-            limit=limit,
+            limit=safe_limit,
+            offset=safe_offset,
+            # The unopened feature chooser recommends only values that are
+            # genuinely present in the visible chart. A typed search always
+            # ranges across the complete audit source.
+            prioritize_displayed=is_feature_recommendation,
+            displayed_only=is_feature_recommendation,
         )
         options = [{"value": value, "label": value} for value in values]
+        mode = "recommended" if is_feature_recommendation else (
+            "search_results" if normalized_query else "options"
+        )
+    summary = (audit_artifact.get("metadata") or {}).get("summary") or {}
     return {
         "projectionKey": request.projectionKey,
         "section": (audit_artifact.get("metadata") or {}).get("section"),
         "field": field,
         "items": options,
-        "limit": max(1, min(500, int(limit))),
+        "limit": safe_limit,
+        "offset": safe_offset,
+        "query": normalized_query,
+        "total": total,
+        "hasMore": safe_offset + len(options) < total,
+        "mode": mode,
+        "initialOrder": (
+            "displayed_then_rank"
+            if is_feature_recommendation
+            else "search_results"
+        ),
+        "sourceFeatureCount": summary.get("sourceFeatureCount"),
     }
 
 
@@ -906,6 +963,7 @@ def get_projection_audit(
             request,
             field,
             limit=500,
+            recommend_displayed=False,
         )["items"]
         for field in ("feature", "sample", "status", "reason")
     }

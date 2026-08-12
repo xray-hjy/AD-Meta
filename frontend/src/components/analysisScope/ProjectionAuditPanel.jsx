@@ -3,6 +3,8 @@ import useProjectionAudit from '../../hooks/useProjectionAudit';
 import useProjectionAuditOptions from '../../hooks/useProjectionAuditOptions';
 import AuditFilterSelect from './AuditFilterSelect';
 import ScopedSampleList from './ScopedSampleList';
+import PaginationControls from '../data-display/PaginationControls';
+import DataTableViewport from '../data-display/DataTableViewport';
 
 const PRIMARY_SECTION = {
   abundance: 'selection',
@@ -18,17 +20,21 @@ const PRIMARY_SECTION = {
   taxonomy_sankey: 'hierarchy_aggregation',
 };
 
-const SECTION_LABELS = {
-  selection: '展示与未展示特征',
+const SECTION_LABEL_TEMPLATES = {
+  selection: '展示与未展示{featureLabel}',
   contribution_selection: '展示与未展示 KO',
   aggregation: 'Other 合并明细',
-  feature_selection: '计算特征选择',
-  ordination_filter: '排序分析过滤明细',
+  feature_selection: '计算{featureLabel}选择',
+  ordination_filter: 'PCoA {featureLabel}过滤',
   statistical_filter: '统计筛选明细',
   detection_filter: '检出与展示筛选',
   hierarchy_aggregation: '层级合并明细',
   sankey_layout: '桑基布局压缩',
 };
+
+function sectionLabel(section, featureLabel) {
+  return (SECTION_LABEL_TEMPLATES[section] || section).replace('{featureLabel}', featureLabel);
+}
 
 const STATUS_LABELS = {
   displayed: '已展示',
@@ -61,11 +67,15 @@ const REASON_LABELS = {
 };
 
 const TOP_N_ROLE_LABELS = {
-  feature_selection: '计算前特征选择',
   display_cap: '合格结果展示上限',
   aggregation_limit: '长尾聚合上限',
   not_applicable: '当前图不使用通用 Top N',
 };
+
+function topNRoleLabel(role, featureLabel) {
+  if (role === 'feature_selection') return `计算前${featureLabel}选择`;
+  return TOP_N_ROLE_LABELS[role] || role;
+}
 
 const MERGE_AUDIT_KINDS = new Set(['composition', 'taxonomy', 'taxonomy_sankey']);
 
@@ -108,12 +118,14 @@ const EMPTY_FILTERS = {
   reason: '',
 };
 
-const FILTER_FIELDS = [
-  { key: 'feature', label: '特征', emptyLabel: '全部特征' },
-  { key: 'sample', label: '样本', emptyLabel: '全部参与样本' },
-  { key: 'status', label: '处理结果', emptyLabel: '全部处理结果' },
-  { key: 'reason', label: '原因', emptyLabel: '全部原因' },
-];
+function filterFields(featureLabel) {
+  return [
+    { key: 'feature', label: featureLabel, emptyLabel: `全部${featureLabel}` },
+    { key: 'sample', label: '样本', emptyLabel: '全部参与样本' },
+    { key: 'status', label: '处理结果', emptyLabel: '全部处理结果' },
+    { key: 'reason', label: '原因', emptyLabel: '全部原因' },
+  ];
+}
 
 function filterOptionLabel(field, option) {
   if (field === 'sample') {
@@ -122,6 +134,27 @@ function filterOptionLabel(field, option) {
   if (field === 'status') return STATUS_LABELS[option.value] || option.label;
   if (field === 'reason') return REASON_LABELS[option.value] || option.label;
   return option.label;
+}
+
+function optionResultSummary(field, optionState, featureLabel, summary, rawQuery) {
+  const query = String(optionState?.query || '').trim();
+  const pendingQuery = String(rawQuery || '').trim();
+  const total = Number(optionState?.total || 0);
+  const visible = optionState?.items?.length || 0;
+
+  if (field === 'feature') {
+    const sourceCount = optionState?.sourceFeatureCount ?? summary.sourceFeatureCount;
+    if (pendingQuery && (optionState?.searchPending || optionState?.fetching)) {
+      return `正在检索“${pendingQuery}”…`;
+    }
+    if (query) {
+      return `当前显示前 ${formatNumber(visible)} 项，共匹配 ${formatNumber(total)} 个${featureLabel}`;
+    }
+    return `当前图表相关${featureLabel}优先显示；输入名称可检索全部 ${formatNumber(sourceCount)} 个${featureLabel}。`;
+  }
+
+  if (query) return `匹配“${query}”：${formatNumber(visible)} / ${formatNumber(total)} 项`;
+  return total ? `可选 ${formatNumber(total)} 项` : '';
 }
 
 function sampleScopeView(scopeInfo, requestScope) {
@@ -207,6 +240,8 @@ export default function ProjectionAuditPanel({
     || initialSections(projectionKind);
   const columns = state.data?.columns || [];
   const summary = state.data?.summary || {};
+  const featureLabel = projectionData?.featureLabel || '物种';
+  const auditFilterFields = useMemo(() => filterFields(featureLabel), [featureLabel]);
   const scopeFallback = {
     ...(projectionData?.scope || projectionRequest?.scope || {}),
     sampleCount: projectionData?.projection?.sampleCount,
@@ -218,6 +253,8 @@ export default function ProjectionAuditPanel({
   const total = state.data?.total || 0;
   const pageStart = total ? offset + 1 : 0;
   const pageEnd = Math.min(offset + limit, total);
+  const pageCount = Math.max(1, Math.ceil(total / limit));
+  const currentPage = Math.min(pageCount, Math.floor(offset / limit) + 1);
 
   const chooseSection = next => {
     setSection(next);
@@ -289,14 +326,14 @@ export default function ProjectionAuditPanel({
                 className={section === key ? 'is-active' : ''}
                 onClick={() => chooseSection(key)}
               >
-                {SECTION_LABELS[key] || key}
+                {state.data?.sections?.find(section => section.key === key)?.title || sectionLabel(key, featureLabel)}
               </button>
             ))}
           </div>
           {state.data ? (
             <dl className="projection-audit__summary">
               <div><dt>样本</dt><dd>{formatNumber(summary.sampleCount)}</dd></div>
-              <div><dt>源特征</dt><dd>{formatNumber(summary.sourceFeatureCount)}</dd></div>
+              <div><dt>源{featureLabel}</dt><dd>{formatNumber(summary.sourceFeatureCount)}</dd></div>
               <div><dt>当前展示</dt><dd>{formatNumber(summary.returnedFeatureCount)}</dd></div>
               {MERGE_AUDIT_KINDS.has(projectionKind) ? (
                 <div><dt>合并</dt><dd>{formatNumber(summary.mergedFeatureCount ?? 0)}</dd></div>
@@ -305,15 +342,23 @@ export default function ProjectionAuditPanel({
               {summary.topNRole && summary.topNRole !== 'not_applicable' ? (
                 <div>
                   <dt>Top N 作用</dt>
-                  <dd>{TOP_N_ROLE_LABELS[summary.topNRole] || summary.topNRole}</dd>
+                  <dd>{topNRoleLabel(summary.topNRole, featureLabel)}</dd>
                 </div>
               ) : null}
             </dl>
           ) : null}
           <div className="projection-audit__toolbar">
             <form className="projection-audit__filter-form" onSubmit={submitFilters}>
-              {FILTER_FIELDS.map(field => {
+              {auditFilterFields.map(field => {
                 const inputId = `${filterFormId}-${field.key}`;
+                const optionState = optionStates[field.key] || {};
+                const resultSummary = optionResultSummary(
+                  field.key,
+                  optionState,
+                  featureLabel,
+                  summary,
+                  optionSearches[field.key],
+                );
                 return (
                   <AuditFilterSelect
                     id={inputId}
@@ -323,8 +368,13 @@ export default function ProjectionAuditPanel({
                     value={filterDraft[field.key]}
                     options={optionStates[field.key]?.items || []}
                     loading={optionStates[field.key]?.loading || false}
+                    searching={Boolean(optionSearches[field.key]?.trim()) && (
+                      optionStates[field.key]?.searchPending || optionStates[field.key]?.fetching
+                    )}
                     search={optionSearches[field.key]}
                     optionLabel={option => filterOptionLabel(field.key, option)}
+                    helperText=""
+                    resultSummary={resultSummary}
                     onOpen={() => setEnabledOptionFields(current => (
                       current.includes(field.key) ? current : [...current, field.key]
                     ))}
@@ -365,8 +415,7 @@ export default function ProjectionAuditPanel({
             <div className="projection-audit__message">正在生成当前投影的可追溯明细...</div>
           ) : null}
           {!state.error && !state.loading ? (
-            <div className="projection-audit__table-scroll">
-              <table>
+            <DataTableViewport ariaLabel="筛选与合并明细数据，可滚动">
                 <thead>
                   <tr>
                     {columns.map(column => {
@@ -408,17 +457,15 @@ export default function ProjectionAuditPanel({
                     <tr><td colSpan={Math.max(1, columns.length)}>当前条件下没有明细记录。</td></tr>
                   ) : null}
                 </tbody>
-              </table>
-            </div>
+            </DataTableViewport>
           ) : null}
-          <div className="projection-audit__pagination">
-            <button type="button" disabled={offset <= 0} onClick={() => setOffset(Math.max(0, offset - limit))}>
-              上一页
-            </button>
-            <button type="button" disabled={offset + limit >= total} onClick={() => setOffset(offset + limit)}>
-              下一页
-            </button>
-          </div>
+          <PaginationControls
+            page={currentPage}
+            pageCount={pageCount}
+            onPageChange={nextPage => setOffset((nextPage - 1) * limit)}
+            disabled={state.fetching}
+            ariaLabel="筛选与合并明细分页"
+          />
         </div>
       ) : null}
     </details>

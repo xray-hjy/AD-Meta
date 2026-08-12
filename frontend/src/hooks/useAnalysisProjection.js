@@ -30,12 +30,17 @@ export default function useAnalysisProjection(
   const query = useQuery({
     ...analysisProjectionQueryOptions(runKey, artifactKey, projectionKind, request),
     enabled: Boolean(enabled && runKey && artifactKey && projectionKind),
+    placeholderData: previous => previous,
   });
+  const queryError = query.error?.message || null;
+  const hasData = Boolean(query.data);
   return {
     data: query.data || null,
-    loading: Boolean(enabled && runKey && artifactKey && projectionKind) && query.isPending,
+    loading: Boolean(enabled && runKey && artifactKey && projectionKind) && query.isPending && !query.data,
     fetching: query.isFetching,
-    error: query.error?.message || null,
+    refreshing: query.isFetching && hasData,
+    error: hasData ? null : queryError,
+    refreshError: hasData ? queryError : null,
     reload: query.refetch,
   };
 }

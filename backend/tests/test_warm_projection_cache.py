@@ -59,7 +59,7 @@ def test_warm_default_projection_cache_builds_every_registered_audit_section() -
     ]
 
 
-def test_warm_default_projection_cache_can_target_ordination_only() -> None:
+def test_warm_default_projection_cache_can_target_interactive_defaults() -> None:
     runs = [
         {
             "key": "run-1",
@@ -84,17 +84,22 @@ def test_warm_default_projection_cache_can_target_ordination_only() -> None:
         ) as get_audit,
     ):
         results = warm_default_projection_cache(
-            projection_kinds={"pca", "pcoa"},
+            projection_kinds={"boxplot", "pca", "pcoa"},
             include_abundance=False,
             include_audits=False,
         )
 
     warm_matrix.assert_called_once_with("run-1", "species")
-    assert [call.args[2] for call in project_chart.call_args_list] == ["pca", "pcoa"]
+    assert [call.args[2] for call in project_chart.call_args_list] == [
+        "boxplot",
+        "pca",
+        "pcoa",
+    ]
     project_abundance.assert_not_called()
     get_audit.assert_not_called()
     assert [item["projection"] for item in results] == [
         "analysis-matrix:373x9460",
+        "boxplot",
         "pca",
         "pcoa",
     ]

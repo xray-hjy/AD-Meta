@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import ReactECharts from './CartesianEChart';
 import ChartViewport from './ChartViewport';
+import DataTableViewport from '../data-display/DataTableViewport';
 
 const COLORS = { AD: '#e74c3c', NC: '#2ecc71' };
 const DEFAULT_TOP_N = 20;
@@ -89,8 +90,7 @@ function ProjectionDataTable({ normalized, featureLabel }) {
   return (
     <details className="chart-data-table">
       <summary>查看当前展示数据</summary>
-      <div className="chart-data-table__scroll" tabIndex={0} aria-label="当前展示数据，可滚动">
-        <table>
+      <DataTableViewport ariaLabel="当前展示数据，可滚动">
           <thead>
             <tr>
               <th>{featureLabel}</th>
@@ -107,8 +107,7 @@ function ProjectionDataTable({ normalized, featureLabel }) {
               </tr>
             ))}
           </tbody>
-        </table>
-      </div>
+      </DataTableViewport>
     </details>
   );
 }
@@ -288,7 +287,11 @@ export default function BarChart({ data, featureLabel = '物种' }) {
           style={{ width: '100%', height: '100%' }}
         />
       </ChartViewport>
-      {isProjection ? <ProjectionDataTable normalized={normalized} featureLabel={featureLabel} /> : null}
+      {isProjection ? (
+        <div className="chart-plain__supplement">
+          <ProjectionDataTable normalized={normalized} featureLabel={featureLabel} />
+        </div>
+      ) : null}
     </div>
   );
 }

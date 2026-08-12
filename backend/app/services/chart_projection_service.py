@@ -13,7 +13,14 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from app.compute.charts.boxplot import _box_summary, _log10_abundance
+from app.compute.charts.boxplot import (
+    BOXPLOT_DEFAULT_VALUE_TRANSFORM,
+    BOXPLOT_VALUE_TRANSFORM_NOTE,
+    BOXPLOT_VALUE_TRANSFORMS,
+    _box_summary,
+    _log10_abundance,
+    _sqrt_abundance,
+)
 from app.compute.charts.detection import compute_detection_heatmap
 from app.compute.charts.heatmap import compute_heatmap
 from app.compute.charts.ko_contribution import compute_ko_contribution
@@ -26,7 +33,13 @@ from app.compute.taxonomy import get_level, short_name
 from app.core import database
 from app.core.config import CACHE_ROOT, COMPUTE_VERSION
 from app.core.database import connect
-from app.domain.analysis_scope import AnalysisScope, ChartProjectionRequest, ProjectionKind
+from app.domain.analysis_scope import (
+    AnalysisScope,
+    ChartProjectionRequest,
+    FeatureSelection,
+    ProjectionKind,
+    ScopedFeatureRequest,
+)
 from app.domain.projection_policy import PROJECTION_POLICIES, ProjectionPolicy
 from app.services.analysis_projection_service import (
     SERIES_COLORS,
@@ -37,6 +50,11 @@ from app.services.analysis_projection_service import (
     _revision_series_sample_ids,
     _select_scope_samples,
 )
+from app.services.scoped_feature_catalog_service import (
+    ScopedFeatureCatalog,
+    get_scoped_feature_catalog,
+    search_scoped_feature_catalog,
+)
 
 # Kept as a read-only compatibility view for callers that still inspect the old
 # dictionary shape.  Validation below uses the typed policy objects.
@@ -44,8 +62,8 @@ PROJECTION_RULES: dict[str, dict[str, Any]] = {
     key: policy.as_legacy_rule() for key, policy in PROJECTION_POLICIES.items()
 }
 
-CHART_PROJECTION_CACHE_SCHEMA = "1.1"
-REVISION_MATRIX_CACHE_SCHEMA = "1.0"
+CHART_PROJECTION_CACHE_SCHEMA = "1.2"
+REVISION_MATRIX_CACHE_SCHEMA = "1.1"
 REVISION_MATRIX_CACHE_SIZE = 4
 
 
@@ -54,6 +72,7 @@ class RevisionMatrixSnapshot:
     matrix: pd.DataFrame
     sample_by_id: dict[int, tuple[str, str]]
     features: tuple[str, ...]
+    feature_ids: tuple[str, ...] = ()
 
 
 _revision_matrix_cache: OrderedDict[tuple[int, str, str], RevisionMatrixSnapshot] = OrderedDict()
@@ -103,10 +122,11 @@ def _read_revision_matrix_cache(path: Path | None) -> RevisionMatrixSnapshot | N
             sample_codes = payload["sample_codes"].astype(str).tolist()
             phenotypes = payload["phenotypes"].astype(str).tolist()
             features = tuple(payload["features"].astype(str).tolist())
+            feature_ids = tuple(payload["feature_ids"].astype(str).tolist())
             values = payload["values"].astype(float, copy=False)
     except (FileNotFoundError, OSError, ValueError, KeyError):
         return None
-    if values.shape != (len(sample_ids), len(features)):
+    if values.shape != (len(sample_ids), len(features)) or len(feature_ids) != len(features):
         return None
     matrix = pd.DataFrame(values, index=sample_ids, columns=list(features))
     return RevisionMatrixSnapshot(
@@ -118,6 +138,7 @@ def _read_revision_matrix_cache(path: Path | None) -> RevisionMatrixSnapshot | N
             )
         },
         features=features,
+        feature_ids=feature_ids,
     )
 
 
@@ -142,6 +163,7 @@ def _write_revision_matrix_cache(
                     [snapshot.sample_by_id[int(sample_id)][1] for sample_id in sample_ids]
                 ),
                 features=np.asarray(snapshot.features),
+                feature_ids=np.asarray(snapshot.feature_ids or snapshot.features),
                 values=snapshot.matrix.to_numpy(dtype=float, copy=False),
             )
         temporary.replace(path)
@@ -225,6 +247,7 @@ def _build_revision_matrix(artifact) -> RevisionMatrixSnapshot:
             rows = conn.execute(
                 """
                 SELECT revision_species_abundance.sample_id,
+                       revision_species_abundance.taxon_id AS feature_id,
                        taxon_anno.full_taxonomy AS feature,
                        revision_species_abundance.abundance
                 FROM revision_species_abundance
@@ -236,7 +259,7 @@ def _build_revision_matrix(artifact) -> RevisionMatrixSnapshot:
         else:
             rows = conn.execute(
                 """
-                SELECT sample_id, ko_id AS feature, abundance
+                SELECT sample_id, ko_id AS feature_id, ko_id AS feature, abundance
                 FROM revision_ko_abundance
                 WHERE revision_id = ?
                 """,
@@ -261,10 +284,17 @@ def _build_revision_matrix(artifact) -> RevisionMatrixSnapshot:
     if rows:
         long_frame = pd.DataFrame(
             [
-                (int(row["sample_id"]), str(row["feature"]), float(row["abundance"]))
+                (int(row["sample_id"]), str(row["feature_id"]), str(row["feature"]), float(row["abundance"]))
                 for row in rows
             ],
-            columns=["sample_id", "feature", "abundance"],
+            columns=["sample_id", "feature_id", "feature", "abundance"],
+        )
+        feature_id_by_name = (
+            long_frame[["feature", "feature_id"]]
+            .drop_duplicates(subset=["feature"], keep="first")
+            .set_index("feature")["feature_id"]
+            .astype(str)
+            .to_dict()
         )
         matrix = long_frame.pivot_table(
             index="sample_id",
@@ -275,11 +305,13 @@ def _build_revision_matrix(artifact) -> RevisionMatrixSnapshot:
         )
     else:
         matrix = pd.DataFrame(index=all_sample_ids)
+        feature_id_by_name = {}
     matrix = matrix.reindex(all_sample_ids, fill_value=0.0)
     return RevisionMatrixSnapshot(
         matrix=matrix,
         sample_by_id=sample_by_id,
         features=tuple(str(column) for column in matrix.columns),
+        feature_ids=tuple(feature_id_by_name[str(column)] for column in matrix.columns),
     )
 
 
@@ -326,24 +358,48 @@ def warm_revision_matrix_cache(run_key: str, artifact_key: str) -> dict[str, int
     with connect() as conn:
         run = _resolve_run(conn, run_key)
         artifact = _resolve_artifact(conn, int(run["id"]), artifact_key)
-    snapshot = _revision_matrix(artifact)
+        available = _artifact_samples(conn, int(run["id"]), int(artifact["id"]))
+        snapshot = _revision_matrix(artifact)
+        warmed_catalogs = 0
+        for scope in (
+            AnalysisScope(mode="cohort"),
+            AnalysisScope(mode="group", groups=["AD"]),
+            AnalysisScope(mode="group", groups=["NC"]),
+        ):
+            try:
+                selected = _select_scope_samples(available, scope)
+            except AnalysisScopeError:
+                continue
+            _scoped_feature_catalog(conn, artifact, selected, scope)
+            warmed_catalogs += 1
     return {
         "runKey": run_key,
         "artifactKey": artifact_key,
         "sampleCount": len(snapshot.matrix.index),
         "featureCount": len(snapshot.features),
+        "warmedFeatureCatalogCount": warmed_catalogs,
     }
 
 
-def _load_scoped_dataframe(conn, artifact, selected, scope: AnalysisScope) -> tuple[pd.DataFrame, list[str]]:
+def _scope_sample_ids(conn, artifact, selected, scope: AnalysisScope) -> list[int]:
     series_sample_ids = _revision_series_sample_ids(conn, artifact, selected, scope)
-    sample_ids = [sample_id for ids in series_sample_ids.values() for sample_id in ids]
+    return [sample_id for ids in series_sample_ids.values() for sample_id in ids]
+
+
+def _load_scoped_dataframe(
+    conn,
+    artifact,
+    selected,
+    scope: AnalysisScope,
+    selected_features: list[str] | None = None,
+) -> tuple[pd.DataFrame, list[str]]:
+    sample_ids = _scope_sample_ids(conn, artifact, selected, scope)
     snapshot = _revision_matrix(artifact)
     missing = [sample_id for sample_id in sample_ids if sample_id not in snapshot.sample_by_id]
     if missing:
         raise AnalysisScopeError("Selected samples are missing from the dataset revision matrix")
-    matrix = snapshot.matrix.reindex(sample_ids, fill_value=0.0)
-    features = list(snapshot.features)
+    features = selected_features if selected_features is not None else list(snapshot.features)
+    matrix = snapshot.matrix.reindex(index=sample_ids, columns=features, fill_value=0.0)
     frame = matrix.reset_index(drop=True)
     frame.insert(0, "Group", [snapshot.sample_by_id[sample_id][1] for sample_id in sample_ids])
     frame.insert(0, "Sample", [snapshot.sample_by_id[sample_id][0] for sample_id in sample_ids])
@@ -351,7 +407,30 @@ def _load_scoped_dataframe(conn, artifact, selected, scope: AnalysisScope) -> tu
     frame.attrs["feature_label"] = str(artifact["feature_label"])
     frame.attrs["abundance_scale"] = str(artifact["abundance_scale"] or "unknown")
     frame.attrs["normalization"] = str(artifact["normalization"] or "unknown")
+    frame.attrs["feature_id_by_name"] = dict(zip(snapshot.features, snapshot.feature_ids, strict=True))
+    frame.attrs["feature_name_by_id"] = dict(zip(snapshot.feature_ids, snapshot.features, strict=True))
     return frame, features
+
+
+def _scoped_feature_catalog(
+    conn,
+    artifact,
+    selected,
+    scope: AnalysisScope,
+) -> ScopedFeatureCatalog:
+    sample_ids = _scope_sample_ids(conn, artifact, selected, scope)
+    snapshot = _revision_matrix(artifact)
+    return get_scoped_feature_catalog(
+        revision_id=int(artifact["dataset_revision_id"]),
+        revision_key=str(artifact["revision_key"]),
+        feature_kind=str(artifact["feature_kind"]),
+        sample_ids=sample_ids,
+        matrix=snapshot.matrix,
+        feature_names=snapshot.features,
+        feature_ids=snapshot.feature_ids or snapshot.features,
+        display_names=[short_name(feature) for feature in snapshot.features],
+        persistent=scope.mode in {"cohort", "group"},
+    )
 
 
 def _scope_series(df: pd.DataFrame, scope: AnalysisScope) -> list[dict[str, Any]]:
@@ -409,9 +488,37 @@ def _compute_composition(df: pd.DataFrame, features: list[str], scope: AnalysisS
     }
 
 
-def _compute_boxplot(df: pd.DataFrame, features: list[str], scope: AnalysisScope, top_n: int) -> dict[str, Any]:
-    totals = df[features].sum(axis=0).sort_values(ascending=False)
-    selected_features = totals.head(top_n).index.tolist()
+def _compute_boxplot(
+    df: pd.DataFrame,
+    features: list[str],
+    scope: AnalysisScope,
+    top_n: int,
+    selection: FeatureSelection | None = None,
+    catalog: ScopedFeatureCatalog | None = None,
+) -> dict[str, Any]:
+    resolved = selection or FeatureSelection(limit=top_n)
+    if catalog is None:
+        means = df[features].mean(axis=0).sort_values(ascending=False, kind="stable")
+        ranks = {str(feature): rank for rank, feature in enumerate(means.index, start=1)}
+        catalog_entries = None
+    else:
+        means = pd.Series({entry.full_name: entry.mean_abundance for entry in catalog.entries})
+        ranks = {entry.full_name: entry.rank for entry in catalog.entries}
+        catalog_entries = catalog.by_id
+    feature_id_by_name = df.attrs.get("feature_id_by_name") or {}
+    feature_name_by_id = df.attrs.get("feature_name_by_id") or {}
+    if resolved.mode == "explicit":
+        missing_ids = [feature_id for feature_id in resolved.featureIds if feature_id not in feature_name_by_id]
+        if missing_ids:
+            preview = ", ".join(missing_ids[:5])
+            raise AnalysisScopeError(f"Selected feature IDs are unavailable in this artifact: {preview}")
+        selected_features = [feature_name_by_id[feature_id] for feature_id in resolved.featureIds]
+    else:
+        selected_features = (
+            [entry.full_name for entry in catalog.ranked[:resolved.limit]]
+            if catalog is not None
+            else means.head(resolved.limit).index.tolist()
+        )
     series = _scope_series(df, scope)
     items = []
     for feature in selected_features:
@@ -421,15 +528,40 @@ def _compute_boxplot(df: pd.DataFrame, features: list[str], scope: AnalysisScope
             values = rows[feature].to_numpy(dtype=float)
             samples = rows["Sample"].astype(str).to_numpy()
             raw = _box_summary(values, samples)
+            square_root = _box_summary(_sqrt_abundance(values), samples)
             logged = _box_summary(_log10_abundance(values), samples)
-            values_by_series[series_item["key"]] = {"raw": raw, "log": logged}
+            values_by_series[series_item["key"]] = {
+                "raw": raw,
+                "sqrt": square_root,
+                "log": logged,
+            }
+        entry = catalog_entries.get(str(feature_id_by_name.get(feature, feature))) if catalog_entries else None
         items.append({
+            "featureId": str(feature_id_by_name.get(feature, feature)),
             "fullName": feature,
             "shortName": short_name(feature),
-            "total": float(totals[feature]),
+            "rank": int(ranks[feature]),
+            "meanAbundance": float(means[feature]),
+            "total": float(df[feature].sum()),
+            "detectedSampleCount": entry.detected_sample_count if entry else int((df[feature] > 0).sum()),
+            "prevalence": entry.prevalence if entry else float((df[feature] > 0).mean()),
+            "detectedInScope": bool((df[feature] > 0).any()),
             "values": values_by_series,
         })
-    return {"series": series, "items": items}
+    return {
+        "series": series,
+        "items": items,
+        "featureSelection": {
+            "mode": resolved.mode,
+            "ranking": resolved.ranking,
+            "limit": resolved.limit if resolved.mode == "ranked" else None,
+            "requestedCount": resolved.limit if resolved.mode == "ranked" else len(resolved.featureIds),
+            "selectedCount": len(items),
+        },
+        "valueTransforms": [dict(item) for item in BOXPLOT_VALUE_TRANSFORMS],
+        "defaultValueTransform": BOXPLOT_DEFAULT_VALUE_TRANSFORM,
+        "valueTransformNote": BOXPLOT_VALUE_TRANSFORM_NOTE,
+    }
 
 
 def _tree_stats(items: list[dict[str, Any]]) -> dict[str, int]:
@@ -506,6 +638,8 @@ def _compute_payload(
     scope: AnalysisScope,
     top_n: int,
     parameters: dict[str, Any],
+    selection: FeatureSelection | None = None,
+    catalog: ScopedFeatureCatalog | None = None,
     include_audit: bool = False,
 ):
     policy = PROJECTION_POLICIES[kind]
@@ -520,7 +654,7 @@ def _compute_payload(
             top_n=top_n,
         )
     if kind == "boxplot":
-        return _compute_boxplot(df, features, scope, top_n)
+        return _compute_boxplot(df, features, scope, top_n, selection, catalog)
     if kind == "taxonomy":
         return compute_taxonomy_hierarchy(df, features)
     if kind == "taxonomy_sankey":
@@ -762,10 +896,13 @@ def _compute_chart_projection(
     sample_codes: tuple[str, ...],
     top_n: int,
     parameters_json: str,
+    selection_json: str,
 ) -> dict[str, Any]:
     policy = PROJECTION_POLICIES[projection_kind]
     scope = AnalysisScope(mode=mode, groups=list(groups), sampleCodes=list(sample_codes))
     parameters = json.loads(parameters_json)
+    selection_payload = json.loads(selection_json) if selection_json else None
+    selection = FeatureSelection.model_validate(selection_payload) if selection_payload else None
     _validate_projection_parameters(projection_kind, top_n, parameters)
     with connect() as conn:
         run = _resolve_run(conn, run_key)
@@ -783,12 +920,49 @@ def _compute_chart_projection(
             "scope": scope.model_dump(),
             "topN": top_n,
             "parameters": parameters,
+            "selection": selection.model_dump() if selection else None,
         }
         cache_path = _projection_cache_path(identity)
         cached = _read_projection_cache(cache_path)
         if cached is not None:
             return cached
-        frame, features = _load_scoped_dataframe(conn, artifact, selected, scope)
+        catalog = None
+        source_feature_count = None
+        selected_features = None
+        if projection_kind == "boxplot":
+            catalog = _scoped_feature_catalog(conn, artifact, selected, scope)
+            source_feature_count = len(catalog.entries)
+            resolved_selection = selection or FeatureSelection(limit=top_n)
+            if resolved_selection.mode == "explicit":
+                by_id = catalog.by_id
+                missing_ids = [
+                    feature_id
+                    for feature_id in resolved_selection.featureIds
+                    if feature_id not in by_id
+                ]
+                if missing_ids:
+                    preview = ", ".join(missing_ids[:5])
+                    raise AnalysisScopeError(
+                        f"Selected feature IDs are unavailable in this artifact: {preview}"
+                    )
+                selected_features = [
+                    by_id[feature_id].full_name
+                    for feature_id in resolved_selection.featureIds
+                ]
+            else:
+                selected_features = [
+                    entry.full_name
+                    for entry in catalog.ranked[:resolved_selection.limit]
+                ]
+        frame, features = _load_scoped_dataframe(
+            conn,
+            artifact,
+            selected,
+            scope,
+            selected_features=selected_features,
+        )
+        if source_feature_count is None:
+            source_feature_count = len(features)
 
     payload = _compute_payload(
         projection_kind,
@@ -797,16 +971,30 @@ def _compute_chart_projection(
         scope,
         top_n,
         parameters,
+        selection,
+        catalog,
     )
     projection_metadata = _projection_metadata(
         projection_kind,
         payload,
-        len(features),
+        source_feature_count,
         top_n,
     )
     payload_metadata = payload if isinstance(payload, dict) else {}
 
     projection_key = hashlib.sha256(json.dumps(identity, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
+    data_semantics = {
+        "abundanceScale": artifact["abundance_scale"] or "unknown",
+        "normalization": artifact["normalization"] or "unknown",
+    }
+    if projection_kind == "boxplot":
+        data_semantics.update(
+            {
+                "visualTransforms": payload_metadata.get("valueTransforms"),
+                "visualTransformNote": payload_metadata.get("valueTransformNote"),
+            }
+        )
+
     result = {
         "projectionKey": projection_key,
         "runKey": run_key,
@@ -815,10 +1003,7 @@ def _compute_chart_projection(
         "datasetRevision": artifact["revision_key"],
         "featureKind": artifact["feature_kind"],
         "featureLabel": artifact["feature_label"],
-        "dataSemantics": {
-            "abundanceScale": artifact["abundance_scale"] or "unknown",
-            "normalization": artifact["normalization"] or "unknown",
-        },
+        "dataSemantics": data_semantics,
         "scope": scope.model_dump(),
         "payload": payload,
         "projection": {
@@ -859,6 +1044,9 @@ def project_chart(
     )
     _validate_projection_parameters(projection_kind, top_n, request.parameters)
     parameters = _resolve_projection_parameters(projection_kind, request.parameters)
+    selection = request.selection if projection_kind == "boxplot" else None
+    if projection_kind == "boxplot" and selection is None:
+        selection = FeatureSelection(limit=top_n)
     cache_key = (
         run_key,
         artifact_key,
@@ -868,9 +1056,43 @@ def project_chart(
         tuple(scope.sampleCodes),
         top_n,
         json.dumps(parameters, sort_keys=True, ensure_ascii=False),
+        json.dumps(selection.model_dump(), sort_keys=True, ensure_ascii=False) if selection else "",
     )
     with _projection_build_lock(cache_key):
         return _compute_chart_projection(*cache_key)
 
 
-__all__ = ["PROJECTION_RULES", "project_chart", "warm_revision_matrix_cache"]
+def query_scoped_features(
+    run_key: str,
+    artifact_key: str,
+    request: ScopedFeatureRequest,
+) -> dict[str, Any]:
+    with connect() as conn:
+        run = _resolve_run(conn, run_key)
+        artifact = _resolve_artifact(conn, int(run["id"]), artifact_key)
+        available = _artifact_samples(conn, int(run["id"]), int(artifact["id"]))
+        selected = _select_scope_samples(available, request.scope)
+        catalog = _scoped_feature_catalog(conn, artifact, selected, request.scope)
+
+    matched = search_scoped_feature_catalog(
+        catalog,
+        query=request.query,
+        feature_ids=request.featureIds,
+    )
+    total = len(matched)
+    page = matched[request.offset:request.offset + request.limit]
+    return {
+        "runKey": run_key,
+        "artifactKey": artifact_key,
+        "featureKind": str(artifact["feature_kind"]),
+        "featureLabel": str(artifact["feature_label"]),
+        "items": [entry.as_payload() for entry in page],
+        "total": total,
+        "limit": request.limit,
+        "offset": request.offset,
+        "query": request.query,
+        "sourceFeatureCount": len(catalog.entries),
+    }
+
+
+__all__ = ["PROJECTION_RULES", "project_chart", "query_scoped_features", "warm_revision_matrix_cache"]
