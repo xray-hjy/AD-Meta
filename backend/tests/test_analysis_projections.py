@@ -8,6 +8,7 @@ from unittest.mock import patch
 import pandas as pd
 import pytest
 
+from app.api.models import ProjectionAuditOptionsResponse
 from app.compute.charts.detection import compute_detection_heatmap
 from app.core import database
 from app.core.migrations import upgrade_database
@@ -40,7 +41,6 @@ from app.services.projection_audit_service import (
     get_projection_audit,
     get_projection_audit_options,
 )
-from app.api.models import ProjectionAuditOptionsResponse
 
 
 def _seed_taxonomy_dataset(conn) -> None:

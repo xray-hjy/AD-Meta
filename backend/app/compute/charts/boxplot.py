@@ -15,7 +15,6 @@ from app.compute.charts.species import compute_species
 from app.compute.common import AD, NC, group_frames
 from app.compute.taxonomy import short_name
 
-
 BOXPLOT_VALUE_TRANSFORMS = (
     {"key": "raw", "label": "输入丰度", "formula": "x"},
     {"key": "sqrt", "label": "sqrt(丰度)", "formula": "sqrt(max(x, 0))"},

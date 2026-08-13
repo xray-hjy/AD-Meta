@@ -51,8 +51,8 @@ from app.services.projection_audit_repository import (
     fail_audit_artifact,
     find_audit_artifact,
     load_audit_rows,
-    query_distinct_row_values,
     query_audit_rows_page,
+    query_distinct_row_values,
 )
 
 

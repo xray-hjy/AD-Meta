@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from alembic.config import Config
 from sqlalchemy import inspect
 
 from alembic import command
-from alembic.config import Config
 from app.core.database import database_url, get_engine, init_db
 
 BACKEND_ROOT = Path(__file__).resolve().parents[2]

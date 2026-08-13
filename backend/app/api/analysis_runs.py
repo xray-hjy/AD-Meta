@@ -21,8 +21,8 @@ from app.domain.analysis_scope import (
     ChartProjectionRequest,
     ProjectionAuditRequest,
     ProjectionKind,
-    ScopedSampleRequest,
     ScopedFeatureRequest,
+    ScopedSampleRequest,
 )
 from app.services.analysis_projection_service import (
     AnalysisArtifactNotFound,
