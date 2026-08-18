@@ -202,6 +202,8 @@ test('keeps the workspace label and subtitle on the same branding row', async ()
   const workspaceLabel = await screen.findByText('分析工作区');
   const subtitle = screen.getByText('群落物种与功能分析');
 
+  expect(screen.getByRole('link', { name: 'AD-Meta 首页' })).toBeTruthy();
+  expect(screen.getByText('AD-Meta')).toBeTruthy();
   expect(workspaceLabel.parentElement).toBe(subtitle.parentElement);
   expect(workspaceLabel.parentElement).toHaveClass('workspace-branding__context');
 });

@@ -47,6 +47,8 @@ const STATUS_LABELS = {
 const REASON_LABELS = {
   within_top_n: '位于当前 Top N',
   outside_top_n: '位于当前 Top N 之外',
+  within_top_n_by_mean_relative_abundance: '按平均相对丰度位于当前 Top N',
+  outside_top_n_by_mean_relative_abundance: '按平均相对丰度位于当前 Top N 之外',
   category_top_n_aggregation: '按类别 Top N 合并到 Other',
   largest_detection_rate_gap: '按检出率差排序进入展示',
   not_detected_above_threshold: '没有样本超过检出阈值',

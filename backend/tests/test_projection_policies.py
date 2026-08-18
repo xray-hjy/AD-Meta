@@ -1,12 +1,23 @@
 from __future__ import annotations
 
+from unittest.mock import patch
+
+import numpy as np
 import pandas as pd
 import pytest
 
 from app.compute.charts.ko_contribution import compute_ko_contribution
-from app.compute.charts.ordination import compute_pca, compute_pcoa, prepare_pcoa_input
+from app.compute.charts.ordination import (
+    PCA_FEATURE_SELECTION_METHOD,
+    _permdisp,
+    compute_pca,
+    compute_pcoa,
+    prepare_pcoa_input,
+)
+from app.domain.analysis_scope import AnalysisScope
 from app.domain.projection_policy import PROJECTION_POLICIES
-from app.services.chart_projection_service import _projection_metadata
+from app.services.analysis_projection_service import AnalysisScopeError
+from app.services.chart_projection_service import _compute_payload, _projection_metadata
 
 
 def _ordination_frame(groups: list[str]) -> tuple[pd.DataFrame, list[str]]:
@@ -130,19 +141,68 @@ def test_sankey_projection_metadata_counts_only_terminal_nodes_as_leaves() -> No
     assert metadata["returnedFeatureCount"] == 2
 
 
-def test_pca_discloses_feature_selection_scaling_and_ellipse_semantics() -> None:
+def test_pca_discloses_composition_preprocessing_and_ellipse_semantics() -> None:
     frame, features = _ordination_frame(["AD", "AD", "AD", "NC", "NC", "NC"])
     payload = compute_pca(frame, features, top_n=3)
 
     assert payload["featureSelection"] == {
-        "method": "top_n_by_total_abundance",
+        "method": PCA_FEATURE_SELECTION_METHOD,
         "requestedTopN": 3,
         "selectedCount": 3,
     }
-    assert payload["preprocessing"]["scaling"] == "z_score_per_feature"
+    assert payload["preprocessing"]["transformation"] == "clr"
+    assert payload["preprocessing"]["zeroReplacement"] == "multiplicative_smallest_positive_part"
+    assert len(payload["resources"]["featureLoadings"]) == 3
     assert {ellipse["type"] for ellipse in payload["ellipses"]} == {
         "group_data_distribution_95"
     }
+
+
+def test_pca_is_invariant_to_sample_specific_abundance_scale() -> None:
+    frame, features = _ordination_frame(["AD", "AD", "AD", "NC", "NC", "NC"])
+    scaled = frame.copy()
+    scaled[features] = scaled[features].mul([1, 10, 100, 7, 50, 3], axis=0)
+
+    original = compute_pca(frame, features, top_n=3)
+    rescaled = compute_pca(scaled, features, top_n=3)
+
+    assert original["resources"]["selectionAudit"] == rescaled["resources"]["selectionAudit"]
+    assert [point["x"] for point in original["points"]] == pytest.approx(
+        [point["x"] for point in rescaled["points"]]
+    )
+
+
+def test_pca_returns_an_explicit_empty_projection_after_feature_selection() -> None:
+    frame = pd.DataFrame({
+        "Sample": ["A", "B", "C"],
+        "Group": ["AD", "NC", "NC"],
+        "a1": [50.0, 0.0, 0.0],
+        "a2": [50.0, 0.0, 0.0],
+        **{f"b{index}": [0.0, 10.0, 10.0] for index in range(1, 11)},
+    })
+    features = ["a1", "a2", *[f"b{index}" for index in range(1, 11)]]
+
+    payload = compute_pca(frame, features, top_n=2)
+
+    assert payload["points"] == []
+    assert payload["projectionStatus"] == (
+        "not_applicable_insufficient_samples_after_feature_selection"
+    )
+    assert payload["sampleFiltering"]["zeroAfterFeatureSelectionSampleCount"] == 2
+
+
+def test_ordination_input_errors_are_exposed_as_scope_errors() -> None:
+    frame = pd.DataFrame({
+        "Sample": ["S1", "S2", "S3"],
+        "Group": ["AD", "AD", "NC"],
+        "f1": [1.0, np.nan, 2.0],
+        "f2": [2.0, 3.0, 4.0],
+    })
+
+    with pytest.raises(AnalysisScopeError, match="non-finite"):
+        _compute_payload(
+            "pca", frame, ["f1", "f2"], AnalysisScope(), 2, {},
+        )
 
 
 def test_pcoa_only_runs_group_inference_when_both_groups_have_three_samples() -> None:
@@ -163,9 +223,41 @@ def test_pcoa_only_runs_group_inference_when_both_groups_have_three_samples() ->
     assert valid_payload["permdispStatus"] == "computed_exploratory_unadjusted"
     assert valid_payload["permanova"]["nPerm"] == 999
     assert valid_payload["permdisp"]["nPerm"] == 999
+    assert valid_payload["permdisp"]["negativeAxisCorrection"] is True
+    assert len(valid_payload["resources"]["dispersionDistances"]) == 6
     assert valid_payload["permanova"]["distanceFingerprint"] == valid_payload["distanceFingerprint"]
     assert valid_payload["permdisp"]["distanceFingerprint"] == valid_payload["distanceFingerprint"]
     assert valid_payload["eigenDiagnostics"]["varianceBasis"] == "positive_eigenvalues"
+
+
+def test_pcoa_handles_an_empty_positive_eigenspectrum_explicitly() -> None:
+    frame, features = _ordination_frame(["AD", "AD", "AD", "NC", "NC", "NC"])
+    eigenvalues = np.array([-2e-10, -5e-11, 0.0, 2e-11, 5e-11, 8e-11])
+    with patch(
+        "app.compute.charts.ordination.np.linalg.eigh",
+        return_value=(eigenvalues, np.eye(6)),
+    ):
+        payload = compute_pcoa(frame, features, filter_preset="unfiltered")
+
+    assert payload["eigenDiagnostics"]["interpretationStatus"] == (
+        "not_interpretable_no_positive_eigenvalues"
+    )
+    assert payload["permdisp"] is None
+    assert payload["permdispStatus"] == "not_applicable_no_positive_pcoa_axes"
+
+
+def test_permdisp_marks_degenerate_corrected_distances_as_not_interpretable() -> None:
+    groups = np.array(["AD", "AD", "AD", "NC", "NC", "NC"])
+    result = _permdisp(
+        np.zeros((6, 1)),
+        np.arange(6, dtype=float).reshape(-1, 1),
+        groups,
+        n_perm=99,
+    )
+
+    assert result["interpretable"] is False
+    assert result["status"] == "not_interpretable_degenerate_dispersion"
+    assert result["pValue"] is None
 
 
 def test_pcoa_filtering_is_label_blind_and_recloses_retained_features() -> None:

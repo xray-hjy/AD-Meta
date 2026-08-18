@@ -27,19 +27,19 @@
 .home-brand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   font-size: 18px;
   font-weight: 800;
 }
 
-.home-brand__mark {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.56);
-  font-size: 11px;
-  font-weight: 800;
+.home-brand__logo {
+  width: 50px;
+  height: 50px;
+  display: block;
+}
+
+.home-brand__name {
+  white-space: nowrap;
 }
 
 .home-nav {
@@ -476,16 +476,6 @@
   color: var(--color-text-muted);
   border-top: 1px solid var(--color-border-soft);
   font-size: 12px;
-}
-
-.app-title--link {
-  display: inline-block;
-  text-decoration: none;
-  transition: color 0.16s ease;
-}
-
-.app-title--link:hover {
-  color: var(--color-accent);
 }
 
 .route-loading {

@@ -9,6 +9,8 @@ test('presents the community analysis domains and planned extensions', () => {
     </MemoryRouter>
   );
 
+  expect(screen.getByRole('link', { name: '微脑智库首页' })).toBeTruthy();
+  expect(screen.getByText('微脑智库')).toBeTruthy();
   expect(screen.getByRole('heading', { level: 1, name: 'AD-Meta' })).toBeTruthy();
   expect(screen.getByText('面向 AD 脑肠轴研究的肠道宏基因组研发辅助工具')).toBeTruthy();
   expect(screen.getByRole('heading', { name: '围绕脑肠轴研究问题，逐步展开分析' })).toBeTruthy();

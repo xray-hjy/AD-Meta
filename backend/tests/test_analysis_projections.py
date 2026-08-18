@@ -367,12 +367,17 @@ def test_projection_audit_is_bound_to_the_visible_projection_and_paginates() -> 
 
 def test_audit_metadata_uses_the_artifact_feature_label_for_generic_feature_columns() -> None:
     species_projection = {"featureLabel": "物种"}
+    pca_projection = {"featureLabel": "物种", "projection": {"kind": "pca"}}
     ko_projection = {"featureLabel": "KO"}
 
     assert _section_title("feature_selection", species_projection) == "计算物种选择"
     assert _section_title("ordination_filter", species_projection) == "PCoA 物种过滤"
     assert _section_title("contribution_selection", ko_projection) == "展示与未展示 KO"
     assert _columns_for_section("feature_selection", species_projection)[1]["label"] == "物种"
+    assert [
+        column["key"]
+        for column in _columns_for_section("feature_selection", pca_projection)
+    ] == ["rank", "feature", "meanRelativeAbundance", "status", "reason"]
     assert _columns_for_section("statistical_filter", ko_projection)[0]["label"] == "KO"
     assert _columns_for_section("aggregation", species_projection)[1]["label"] == "类别"
     assert _columns_for_section("hierarchy_aggregation", species_projection)[0]["label"] == "原始物种"

@@ -1,11 +1,13 @@
-import { useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactECharts from './CartesianEChart';
 import ChartViewport from './ChartViewport';
+import OrdinationResources from './OrdinationResources';
 
 const GROUP_COLORS = {
   AD: '#e74c3c',
   NC: '#2ecc71',
 };
+const BASE_GRID = { left: 70, right: 30, top: 58, bottom: 66 };
 
 function axisBounds(points, ellipses) {
   const xs = [];
@@ -42,39 +44,105 @@ function axisBounds(points, ellipses) {
   };
 }
 
-function OrdinationChart({ data }) {
-  const dataTableModel = useMemo(() => {
-    const points = Array.isArray(data?.points) ? data.points : [];
-    const variance = Array.isArray(data?.variance) ? data.variance : [];
-    const axisPrefix = data?.method === 'PCA' ? 'PC' : 'Axis';
-    const axisLabel = index => `${axisPrefix}${index + 1} (${((variance[index] || 0) * 100).toFixed(1)}%)`;
-    const formatCoordinate = value => Number.isFinite(Number(value)) ? Number(value).toFixed(6) : '—';
+function equalAspectGrid(bounds, size) {
+  const margin = BASE_GRID;
+  if (!size.width || !size.height) return margin;
+  const xSpan = bounds.xMax - bounds.xMin || 1;
+  const ySpan = bounds.yMax - bounds.yMin || 1;
+  const availableWidth = Math.max(120, size.width - margin.left - margin.right);
+  const availableHeight = Math.max(120, size.height - margin.top - margin.bottom);
+  const aspect = xSpan / ySpan;
+  let plotWidth = availableWidth;
+  let plotHeight = plotWidth / aspect;
+  if (plotHeight > availableHeight) {
+    plotHeight = availableHeight;
+    plotWidth = plotHeight * aspect;
+  }
+  return {
+    left: margin.left + Math.max(0, (availableWidth - plotWidth) / 2),
+    right: margin.right + Math.max(0, availableWidth - plotWidth - (availableWidth - plotWidth) / 2),
+    top: margin.top + Math.max(0, (availableHeight - plotHeight) / 2),
+    bottom: margin.bottom + Math.max(0, availableHeight - plotHeight - (availableHeight - plotHeight) / 2),
+  };
+}
 
-    return {
-      ariaLabel: `${data?.method || '排序分析'}当前样本坐标，可滚动`,
-      columns: [
-        { key: 'sample', label: '样本' },
-        { key: 'group', label: '分组' },
-        { key: 'x', label: axisLabel(0), format: formatCoordinate },
-        { key: 'y', label: axisLabel(1), format: formatCoordinate },
-      ],
-      rows: points,
-      rowKey: (row, index) => `${row.sample || '样本'}-${index}`,
-      footer: `共 ${points.length} 个当前展示样本；95% 数据分布椭圆为根据样本坐标计算的辅助图层，不作为样本记录重复列出。`,
+function useEqualAspectGrid(bounds, surfaceMounted) {
+  const surfaceRef = useRef(null);
+  const chartRef = useRef(null);
+  const frameRef = useRef(null);
+  const boundsRef = useRef(bounds);
+
+  const updateGrid = useCallback(() => {
+    frameRef.current = null;
+    const element = surfaceRef.current;
+    const chart = chartRef.current;
+    if (!element || !chart) return;
+    const rect = element.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    chart.setOption(
+      { grid: equalAspectGrid(boundsRef.current, rect) },
+      { notMerge: false, lazyUpdate: true },
+    );
+  }, []);
+
+  const scheduleGridUpdate = useCallback(() => {
+    if (frameRef.current == null) {
+      frameRef.current = window.requestAnimationFrame(updateGrid);
+    }
+  }, [updateGrid]);
+
+  useEffect(() => {
+    if (!surfaceMounted) return undefined;
+    const element = surfaceRef.current;
+    if (!element || typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(scheduleGridUpdate);
+    observer.observe(element);
+    return () => {
+      observer.disconnect();
+      if (frameRef.current != null) window.cancelAnimationFrame(frameRef.current);
     };
-  }, [data]);
+  }, [scheduleGridUpdate, surfaceMounted]);
+
+  useEffect(() => {
+    boundsRef.current = bounds;
+    scheduleGridUpdate();
+  }, [bounds, scheduleGridUpdate]);
+
+  const onChartReady = useCallback(chart => {
+    chartRef.current = chart;
+    scheduleGridUpdate();
+  }, [scheduleGridUpdate]);
+
+  return [surfaceRef, onChartReady];
+}
+
+function OrdinationChart({ data }) {
+  const [showEllipses, setShowEllipses] = useState(true);
+  const {
+    points: dataPoints,
+    ellipses: dataEllipses,
+    method,
+    variance,
+  } = data || {};
+  const points = useMemo(
+    () => Array.isArray(dataPoints) ? dataPoints : [],
+    [dataPoints],
+  );
+  const ellipses = useMemo(
+    () => Array.isArray(dataEllipses) ? dataEllipses : [],
+    [dataEllipses],
+  );
+  const bounds = useMemo(() => axisBounds(points, ellipses), [ellipses, points]);
+  const [surfaceRef, onChartReady] = useEqualAspectGrid(bounds, points.length > 0);
 
   const option = useMemo(() => {
-    const points = Array.isArray(data?.points) ? data.points : [];
-    const ellipses = Array.isArray(data?.ellipses) ? data.ellipses : [];
     if (points.length === 0) return null;
 
     const groups = [...new Set(points.map(point => point.group))].sort();
-    const bounds = axisBounds(points, ellipses);
-    const variance = Array.isArray(data?.variance) ? data.variance : [];
-    const axisPrefix = data?.method === 'PCA' ? 'PC' : 'Axis';
+    const varianceValues = Array.isArray(variance) ? variance : [];
+    const axisPrefix = method === 'PCA' ? 'PC' : 'Axis';
 
-    const ellipseSeries = ellipses.map(ellipse => ({
+    const ellipseSeries = showEllipses ? ellipses.map(ellipse => ({
       name: `${ellipse.group} ${ellipse.label || '95% 数据分布椭圆'}`,
       type: 'line',
       data: ellipse.points,
@@ -88,7 +156,7 @@ function OrdinationChart({ data }) {
         opacity: 0.65,
       },
       tooltip: { show: false },
-    }));
+    })) : [];
 
     const scatterSeries = groups.map(group => ({
       name: group,
@@ -136,14 +204,19 @@ function OrdinationChart({ data }) {
         orient: 'horizontal',
         textStyle: { fontSize: 13, color: '#475569' },
       },
-      grid: { left: 72, right: 42, top: 62, bottom: 78 },
+      grid: BASE_GRID,
       dataZoom: [
         { type: 'inside', xAxisIndex: 0, filterMode: 'none' },
         { type: 'inside', yAxisIndex: 0, filterMode: 'none' },
       ],
+      toolbox: {
+        right: 14,
+        top: 42,
+        feature: { restore: { title: '重置缩放' }, saveAsImage: { title: '导出图片', pixelRatio: 2 } },
+      },
       xAxis: {
         type: 'value',
-        name: `${axisPrefix} 1 (${((variance[0] || 0) * 100).toFixed(1)}%)`,
+        name: `${axisPrefix} 1 (${((varianceValues[0] || 0) * 100).toFixed(1)}%)`,
         min: bounds.xMin,
         max: bounds.xMax,
         nameLocation: 'center',
@@ -154,7 +227,7 @@ function OrdinationChart({ data }) {
       },
       yAxis: {
         type: 'value',
-        name: `${axisPrefix} 2 (${((variance[1] || 0) * 100).toFixed(1)}%)`,
+        name: `${axisPrefix} 2 (${((varianceValues[1] || 0) * 100).toFixed(1)}%)`,
         min: bounds.yMin,
         max: bounds.yMax,
         nameLocation: 'center',
@@ -165,7 +238,7 @@ function OrdinationChart({ data }) {
       },
       series: [...ellipseSeries, ...scatterSeries],
     };
-  }, [data]);
+  }, [bounds, ellipses, method, points, showEllipses, variance]);
 
   if (!option) {
     return <div className="placeholder"><p>暂无降维分析数据</p></div>;
@@ -173,15 +246,25 @@ function OrdinationChart({ data }) {
 
   return (
     <div className="chart-plain chart-plain--ordination">
-      <ChartViewport variant="fit" minHeight={620} maxHeight={760}>
-        <ReactECharts
-          option={option}
-          dataTableModel={dataTableModel}
-          notMerge
-          lazyUpdate
-          style={{ width: '100%', height: '100%' }}
-        />
+      <div className="ordination-chart__controls">
+        <button type="button" onClick={() => setShowEllipses(value => !value)} aria-pressed={showEllipses}>
+          {showEllipses ? '隐藏 95% 分布椭圆' : '显示 95% 分布椭圆'}
+        </button>
+        <span>椭圆为组内数据分布辅助图层，不是均值置信区间。</span>
+      </div>
+      <ChartViewport variant="ordination" minHeight={460} preferredHeight={600} maxHeight={720}>
+        <div className="ordination-chart__surface" ref={surfaceRef}>
+          <ReactECharts
+            option={option}
+            onChartReady={onChartReady}
+            showDataTable={false}
+            notMerge
+            lazyUpdate
+            style={{ width: '100%', height: '100%' }}
+          />
+        </div>
       </ChartViewport>
+      <OrdinationResources data={data} />
     </div>
   );
 }

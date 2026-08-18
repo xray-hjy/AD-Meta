@@ -284,7 +284,7 @@ export const CHART_REGISTRY = {
     title: '样本丰度结构 PCA',
     subtitle: context => {
       const featureLabel = resolvedFeatureLabel(context);
-      return `按总丰度选取 ${resolvedFeatureCount(context) || selectedValue(context, 'topN', 50)} 个${featureLabel}，逐${featureLabel} Z-score 标准化后进行 PCA`;
+      return `按样本闭合后的平均相对丰度选取 ${resolvedFeatureCount(context) || selectedValue(context, 'topN', 50)} 个${featureLabel}，CLR 变换后进行 PCA`;
     },
     availableFor: ['taxonomy'],
     component: PCAPlot,
@@ -295,7 +295,7 @@ export const CHART_REGISTRY = {
       scopes: DISTRIBUTION_SCOPES,
       minSamples: 3,
       controls: [topNPresetControl(({ featureLabel }) => `参与计算的${featureLabel}数`, 50, [50, 100, 200, 500], 'feature_selection')],
-      requirement: '至少 3 个样本；按总丰度选取物种并逐物种标准化',
+      requirement: '至少 3 个样本；按样本闭合后的平均相对丰度选取物种，零值替换并 CLR 变换',
       inference: { method: 'exploratory_ordination', ellipse: 'group_data_distribution_95' },
     }),
   },
@@ -304,13 +304,11 @@ export const CHART_REGISTRY = {
     navSubtitle: 'Bray-Curtis 距离主坐标分析',
     title: 'β多样性 PCoA',
     subtitle: context => {
-      const permanova = context.chartData?.permanova;
       const selection = context.chartData?.featureSelection;
       const selectedCount = selection?.selectedCount || resolvedFeatureCount(context);
       const sourceCount = selection?.sourceFeatureCount || context.summary?.totalFeatures || context.summary?.totalSpecies;
       const base = `样本内相对丰度 · Bray-Curtis · ${selectedCount || 0}/${sourceCount || 0} 个${resolvedFeatureLabel(context)}参与距离计算`;
-      if (!permanova) return base;
-      return `${base} · PERMANOVA R²=${Number(permanova.r2 || 0).toFixed(4)}, p=${Number(permanova.pValue || 1).toFixed(4)}`;
+      return `${base} · 组间检验与离散度结果见下方计算说明`;
     },
     availableFor: ['taxonomy'],
     component: PCoAPlot,
@@ -326,7 +324,7 @@ export const CHART_REGISTRY = {
         { value: 'standard', label: '标准（相对丰度 ≥0.01%，检出率 ≥10%）' },
         { value: 'robust', label: '稳健（相对丰度 ≥0.05%，检出率 ≥20%）' },
       ], 'ordination_filter')],
-      requirement: '至少 3 个样本；过滤不使用 AD/NC 标签；两组均不少于 3 个样本时进行探索性 PERMANOVA 与 PERMDISP',
+      requirement: '至少 3 个样本；过滤不使用 AD/NC 标签；两组均不少于 3 个样本时进行探索性 PERMANOVA 与正/负轴校正的 PERMDISP',
       inference: {
         method: 'permanova_with_permdisp',
         minPerGroup: 3,

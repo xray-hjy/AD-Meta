@@ -291,4 +291,36 @@ describe('ProjectionAuditPanel', () => {
       );
     });
   });
+
+  test('translates PCA relative-abundance selection reasons', async () => {
+    useProjectionAudit.mockReturnValue({
+      data: {
+        sections: [{ key: 'feature_selection', title: '计算物种选择', total: 1 }],
+        columns: [
+          { key: 'feature', label: '物种' },
+          { key: 'reason', label: '原因', format: 'reason' },
+        ],
+        summary: { sampleCount: 3, sourceFeatureCount: 2, returnedFeatureCount: 1 },
+        sampleScope: { mode: 'cohort', sampleCount: 3, groupCounts: { AD: 2, NC: 1 } },
+        items: [{ feature: 'Species A', reason: 'within_top_n_by_mean_relative_abundance' }],
+        total: 1,
+        limit: 100,
+        offset: 0,
+      },
+      loading: false,
+      fetching: false,
+      error: null,
+      reload: vi.fn(),
+    });
+    render(
+      <ProjectionAuditPanel
+        {...baseProps}
+        projectionKind="pca"
+        projectionData={{ projectionKey: 'pca-key', featureLabel: '物种' }}
+      />,
+    );
+    fireEvent.click(screen.getByText('查看筛选与合并明细'));
+
+    expect(await screen.findByText('按平均相对丰度位于当前 Top N')).toBeInTheDocument();
+  });
 });

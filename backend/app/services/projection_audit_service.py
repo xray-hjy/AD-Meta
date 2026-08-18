@@ -19,6 +19,7 @@ from app.compute.charts.ko_contribution import (
     compute_relative_series_values,
     rank_relative_contributions,
 )
+from app.compute.charts.ordination import prepare_pca_input, prepare_pcoa_input
 from app.compute.charts.taxonomy.hierarchy import compute_taxonomy_hierarchy
 from app.compute.taxonomy import short_name, taxonomy_chain
 from app.core.config import COMPUTE_VERSION
@@ -173,6 +174,19 @@ COMMON_COLUMNS = {
         {"key": "reason", "label": "原因", "format": "reason"},
     ],
 }
+
+PCA_FEATURE_SELECTION_COLUMNS = [
+    {"key": "rank", "label": "排序", "sortable": True},
+    {"key": "feature", "label": "物种", "labelRole": "feature", "sortable": True},
+    {
+        "key": "meanRelativeAbundance",
+        "label": "平均相对丰度",
+        "format": "percent",
+        "sortable": True,
+    },
+    {"key": "status", "label": "计算状态", "format": "status"},
+    {"key": "reason", "label": "原因", "format": "reason"},
+]
 
 
 def _projection_for_request(
@@ -418,16 +432,12 @@ def _statistical_rows(kind, frame, features, request) -> list[dict[str, Any]]:
 
 def _pcoa_filter_rows(frame, features, request) -> list[dict[str, Any]]:
     parameters = _resolve_projection_parameters("pcoa", request.parameters)
-    payload = _compute_payload(
-        "pcoa",
+    prepared = prepare_pcoa_input(
         frame,
         features,
-        request.scope,
-        request.topN,
-        parameters,
-        include_audit=True,
+        str(parameters["filterPreset"]),
     )
-    return [dict(row) for row in payload.get("_auditRows") or []]
+    return [dict(row) for row in prepared["auditRows"]]
 
 
 def _rows_for_section(kind, section, selected, frame, features, projection, request):
@@ -459,7 +469,10 @@ def _rows_for_section(kind, section, selected, frame, features, projection, requ
                 row["reason"] = "within_top_n" if selected_row else "outside_top_n"
         return rows
     if kind == "pca":
-        return _ranked_feature_rows(frame, features, request.topN, "feature_selection", request.scope)
+        prepared = prepare_pca_input(
+            frame, features, request.topN, include_audit=True,
+        )
+        return [dict(row) for row in prepared["auditRows"]]
     if kind == "pcoa":
         return _pcoa_filter_rows(frame, features, request)
     if kind in {"heatmap", "detection", "differential_ko"}:
@@ -543,7 +556,13 @@ def _public_row(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def _columns_for_section(section: str, projection: dict[str, Any]) -> list[dict[str, Any]]:
-    columns = [dict(column) for column in COMMON_COLUMNS[section]]
+    projection_kind = str((projection.get("projection") or {}).get("kind") or "")
+    source_columns = (
+        PCA_FEATURE_SELECTION_COLUMNS
+        if section == "feature_selection" and projection_kind == "pca"
+        else COMMON_COLUMNS[section]
+    )
+    columns = [dict(column) for column in source_columns]
     feature_label = str(projection.get("featureLabel") or "物种")
     for column in columns:
         if column.pop("labelRole", None) == "feature":

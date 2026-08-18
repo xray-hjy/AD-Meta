@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 
 const chartProps = vi.hoisted(() => vi.fn());
@@ -37,15 +37,9 @@ test('renders grouped points, data-distribution ellipses and bounded axes', () =
   expect(option.tooltip.formatter({ data: [2, 1, 'AD01', 'AD'] })).toContain('AD01');
   const props = chartProps.mock.calls.at(-1)[0];
   expect(props.notMerge).toBe(true);
-  expect(props.dataTableModel.columns.map(column => column.label)).toEqual([
-    '样本',
-    '分组',
-    'Axis1 (60.0%)',
-    'Axis2 (20.0%)',
-  ]);
-  expect(props.dataTableModel.rows).toHaveLength(2);
-  expect(props.dataTableModel.rows[0]).toMatchObject({ sample: 'AD01', group: 'AD', x: 2, y: 1 });
-  expect(props.dataTableModel.footer).toContain('椭圆为根据样本坐标计算的辅助图层');
+  expect(props.showDataTable).toBe(false);
+  expect(props.option.toolbox.feature.restore).toBeTruthy();
+  expect(props.option.toolbox.feature.saveAsImage).toBeTruthy();
 });
 
 test('replaces stale group series when the analysis scope changes', () => {
@@ -80,4 +74,115 @@ test('replaces stale group series when the analysis scope changes', () => {
 test('renders an empty state without valid points', () => {
   render(<OrdinationChart data={{ points: [] }} />);
   expect(screen.getByText('暂无降维分析数据')).toBeTruthy();
+});
+
+test('updates only the grid on resize without rebuilding the chart option', async () => {
+  let resizeCallback;
+  const originalResizeObserver = globalThis.ResizeObserver;
+  globalThis.ResizeObserver = class ResizeObserver {
+    constructor(callback) { resizeCallback = callback; }
+    observe() {}
+    disconnect() {}
+  };
+  const chart = { setOption: vi.fn() };
+  const { container } = render(
+    <OrdinationChart
+      data={{
+        variance: [0.5, 0.25],
+        points: [
+          { sample: 'AD01', group: 'AD', x: 1, y: 2 },
+          { sample: 'NC01', group: 'NC', x: -1, y: -2 },
+        ],
+        ellipses: [],
+      }}
+    />,
+  );
+  const initialOption = chartProps.mock.calls.at(-1)[0].option;
+  const initialRenderCount = chartProps.mock.calls.length;
+  const surface = container.querySelector('.ordination-chart__surface');
+  vi.spyOn(surface, 'getBoundingClientRect').mockReturnValue({ width: 800, height: 600 });
+
+  act(() => chartProps.mock.calls.at(-1)[0].onChartReady(chart));
+  act(() => resizeCallback([]));
+
+  await waitFor(() => expect(chart.setOption).toHaveBeenCalled());
+  expect(chartProps.mock.calls).toHaveLength(initialRenderCount);
+  expect(chartProps.mock.calls.at(-1)[0].option).toBe(initialOption);
+  expect(chart.setOption).toHaveBeenLastCalledWith(
+    { grid: expect.objectContaining({ left: expect.any(Number), top: expect.any(Number) }) },
+    { notMerge: false, lazyUpdate: true },
+  );
+  globalThis.ResizeObserver = originalResizeObserver;
+});
+
+test('rebinds the resize observer across empty and non-empty projections', async () => {
+  const observers = [];
+  const originalResizeObserver = globalThis.ResizeObserver;
+  globalThis.ResizeObserver = class ResizeObserver {
+    constructor(callback) {
+      this.callback = callback;
+      this.observe = vi.fn();
+      this.disconnect = vi.fn();
+      observers.push(this);
+    }
+  };
+
+  const chart = { setOption: vi.fn() };
+  const { container, rerender } = render(<OrdinationChart data={{ points: [] }} />);
+  expect(observers).toHaveLength(0);
+
+  rerender(
+    <OrdinationChart
+      data={{
+        variance: [0.5, 0.25],
+        points: [{ sample: 'AD01', group: 'AD', x: 1, y: 2 }],
+        ellipses: [],
+      }}
+    />,
+  );
+
+  const surface = container.querySelector('.ordination-chart__surface');
+  vi.spyOn(surface, 'getBoundingClientRect').mockReturnValue({ width: 800, height: 600 });
+  expect(observers).toHaveLength(1);
+  expect(observers[0].observe).toHaveBeenCalledWith(surface);
+
+  act(() => chartProps.mock.calls.at(-1)[0].onChartReady(chart));
+  await waitFor(() => expect(chart.setOption).toHaveBeenCalled());
+  chart.setOption.mockClear();
+  act(() => observers[0].callback([]));
+
+  await waitFor(() => expect(chart.setOption).toHaveBeenCalledWith(
+    { grid: expect.objectContaining({ left: expect.any(Number), top: expect.any(Number) }) },
+    { notMerge: false, lazyUpdate: true },
+  ));
+
+  rerender(<OrdinationChart data={{ points: [] }} />);
+  expect(observers[0].disconnect).toHaveBeenCalledOnce();
+
+  const nextChart = { setOption: vi.fn() };
+  rerender(
+    <OrdinationChart
+      data={{
+        variance: [0.4, 0.2],
+        points: [{ sample: 'NC01', group: 'NC', x: -2, y: -1 }],
+        ellipses: [],
+      }}
+    />,
+  );
+
+  const nextSurface = container.querySelector('.ordination-chart__surface');
+  vi.spyOn(nextSurface, 'getBoundingClientRect').mockReturnValue({ width: 640, height: 480 });
+  expect(observers).toHaveLength(2);
+  expect(observers[1].observe).toHaveBeenCalledWith(nextSurface);
+
+  act(() => chartProps.mock.calls.at(-1)[0].onChartReady(nextChart));
+  await waitFor(() => expect(nextChart.setOption).toHaveBeenCalled());
+  nextChart.setOption.mockClear();
+  act(() => observers[1].callback([]));
+
+  await waitFor(() => expect(nextChart.setOption).toHaveBeenCalledWith(
+    { grid: expect.objectContaining({ left: expect.any(Number), top: expect.any(Number) }) },
+    { notMerge: false, lazyUpdate: true },
+  ));
+  globalThis.ResizeObserver = originalResizeObserver;
 });

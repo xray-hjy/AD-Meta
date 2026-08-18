@@ -1,7 +1,7 @@
 """PCA 和 PCoA 排序图数据计算。
 
 这两个图都把高维特征矩阵降到二维，给前端散点图使用：
-- PCA 使用标准化后的 Top N 特征矩阵。
+- PCA 使用组成数据闭合、零值替换和 CLR 变换后的 Top N 特征矩阵。
 - PCoA 使用 Bray-Curtis 距离矩阵，并在分组条件满足时计算 PERMANOVA
   与 PERMDISP。
 """
@@ -15,7 +15,6 @@ import numpy as np
 import pandas as pd
 from scipy.spatial.distance import pdist, squareform
 from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
 
 from app.compute.common import FEATURE_META
 
@@ -29,6 +28,27 @@ PCOA_DISTANCE = "bray_curtis"
 PCOA_PERMUTATIONS = 999
 PCOA_PERMANOVA_SEED = 20240514
 PCOA_PERMDISP_SEED = 20240515
+PCA_MAX_COMPONENTS = 20
+PCOA_NEGATIVE_EIGEN_WARNING_RATIO = 0.01
+PCA_FEATURE_SELECTION_METHOD = "top_n_by_mean_relative_abundance_after_sample_closure"
+
+
+def _numeric_abundance_matrix(
+    df: pd.DataFrame,
+    feature_cols: list[str],
+    context: str,
+) -> np.ndarray:
+    """Convert a validated abundance block without a Python call per column."""
+
+    try:
+        raw = df.loc[:, feature_cols].to_numpy(dtype=float, copy=False)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{context} abundance matrix contains non-numeric values") from exc
+    if not np.isfinite(raw).all():
+        raise ValueError(f"{context} abundance matrix contains non-finite values")
+    if bool((raw < 0).any()):
+        raise ValueError(f"{context} abundance matrix contains negative values")
+    return raw
 
 
 def _distribution_ellipses(points: list[dict]) -> list[dict]:
@@ -82,38 +102,188 @@ def _distribution_ellipses(points: list[dict]) -> list[dict]:
     return ellipses
 
 
-def compute_pca(df: pd.DataFrame, species_cols: list[str], top_n: int = 50) -> dict:
-    """计算 PCA 散点图 payload。
+def _validate_and_close(df: pd.DataFrame, feature_cols: list[str], context: str) -> tuple[np.ndarray, np.ndarray]:
+    """Return non-empty sample compositions and the matching source row indices."""
 
-    先按总丰度选择 Top N 特征，再做标准化和二维 PCA。返回每个样本的二维
-    坐标、主成分解释方差以及按分组估计的 95% 数据分布椭圆。
+    raw = _numeric_abundance_matrix(df, feature_cols, context)
+    totals = raw.sum(axis=1)
+    valid = totals > 0
+    return raw[valid] / totals[valid, None], np.flatnonzero(valid)
+
+
+def _multiplicative_zero_replacement(composition: np.ndarray) -> tuple[np.ndarray, int]:
+    """Replace structural zeros while retaining each row's total of one.
+
+    The replacement is deliberately tied to the smallest observed part in a
+    sample rather than to the original library size, so it is invariant to a
+    sample-wise multiplication of the abundance matrix.
     """
 
-    ranked = df[species_cols].sum(axis=0).sort_values(ascending=False).head(top_n).index.tolist()
-    if len(ranked) < 2:
-        return {
-            "method": "PCA",
-            "featureCount": len(ranked),
-            "speciesCount": len(ranked),
-            "variance": [],
-            "points": [],
-            "ellipses": [],
-            "featureSelection": {
-                "method": "top_n_by_total_abundance",
-                "requestedTopN": top_n,
-                "selectedCount": len(ranked),
-            },
-            "preprocessing": {
-                "transformation": "none",
-                "scaling": "z_score_per_feature",
-            },
-        }
+    result = composition.copy()
+    replaced = 0
+    for row in result:
+        zero = row <= 0
+        zero_count = int(zero.sum())
+        if not zero_count:
+            continue
+        positive = row[~zero]
+        if len(positive) == 0:
+            continue
+        delta = min(float(positive.min()) * 0.65, 0.5 / zero_count)
+        row[zero] = delta
+        row[~zero] *= (1 - zero_count * delta)
+        replaced += zero_count
+    return result, replaced
 
-    # PCA 对量纲敏感，所以先对每个特征做标准化。
-    X = df[ranked].to_numpy(dtype=float)
-    X = StandardScaler().fit_transform(X)
-    model = PCA(n_components=2)
-    coords = model.fit_transform(X)
+
+def _canonicalize_component_signs(coords: np.ndarray, components: np.ndarray) -> None:
+    """Make PCA signs reproducible across otherwise equivalent SVD solutions."""
+
+    for index, component in enumerate(components):
+        pivot = int(np.argmax(np.abs(component)))
+        if component[pivot] < 0:
+            component *= -1
+            coords[:, index] *= -1
+
+
+def prepare_pca_input(
+    df: pd.DataFrame,
+    species_cols: list[str],
+    top_n: int = 50,
+    include_audit: bool = False,
+) -> dict:
+    """Close, rank and select a PCA subcomposition without running the SVD."""
+
+    relative, source_rows = _validate_and_close(df, species_cols, "PCA")
+    mean_relative = relative.mean(axis=0) if len(relative) else np.zeros(len(species_cols))
+    order = np.lexsort((np.asarray(species_cols, dtype=str), -mean_relative))
+    selected_indices = order[:min(top_n, len(species_cols))]
+    selected_set = set(selected_indices.tolist())
+    rank_by_index = {int(feature_index): rank + 1 for rank, feature_index in enumerate(order)}
+    audit_rows = []
+    if include_audit:
+        audit_rows = [
+            {
+                "feature": str(feature),
+                "fullName": str(feature),
+                "_featureKeys": [str(feature)],
+                "rank": rank_by_index[index],
+                "meanRelativeAbundance": float(mean_relative[index]),
+                "rankValue": float(mean_relative[index]),
+                "status": "displayed" if index in selected_set else "excluded",
+                "reason": (
+                    "within_top_n_by_mean_relative_abundance"
+                    if index in selected_set
+                    else "outside_top_n_by_mean_relative_abundance"
+                ),
+            }
+            for index, feature in enumerate(species_cols)
+        ]
+        audit_rows.sort(key=lambda row: row["rank"])
+    return {
+        "relative": relative,
+        "sourceRows": source_rows,
+        "meanRelativeAbundance": mean_relative,
+        "selectedIndices": selected_indices,
+        "selectedFeatures": [species_cols[index] for index in selected_indices],
+        "auditRows": audit_rows,
+    }
+
+
+def _empty_pca_payload(
+    df: pd.DataFrame,
+    prepared: dict,
+    top_n: int,
+    status: str,
+    zero_total_samples: list[str],
+    zero_after_selection: int,
+    include_audit: bool,
+) -> dict:
+    ranked = prepared["selectedFeatures"]
+    source_rows = prepared["sourceRows"]
+    return {
+        "method": "PCA",
+        "projectionStatus": status,
+        "featureLabel": df.attrs.get("feature_label", FEATURE_META["taxonomy"]["label"]),
+        "featureCount": len(ranked),
+        "speciesCount": len(ranked),
+        "variance": [],
+        "points": [],
+        "ellipses": [],
+        "featureSelection": {
+            "method": PCA_FEATURE_SELECTION_METHOD,
+            "requestedTopN": top_n,
+            "selectedCount": len(ranked),
+        },
+        "sampleFiltering": {
+            "sourceSampleCount": len(df),
+            "selectedSampleCount": 0,
+            "validTotalSampleCount": int(len(source_rows)),
+            "zeroTotalSampleCount": len(zero_total_samples),
+            "excludedZeroTotalSamples": zero_total_samples,
+            "zeroAfterFeatureSelectionSampleCount": zero_after_selection,
+        },
+        "preprocessing": {
+            "fullMatrixClosure": "total_sum_scaling_per_sample",
+            "postSelectionClosure": "total_sum_scaling_per_sample",
+            "transformation": "clr",
+            "zeroReplacement": "multiplicative_smallest_positive_part",
+        },
+        "resources": {
+            "componentSummary": [],
+            "featureLoadings": [],
+            "selectionAudit": [],
+        },
+        **({"_auditRows": prepared["auditRows"]} if include_audit else {}),
+    }
+
+
+def compute_pca(
+    df: pd.DataFrame,
+    species_cols: list[str],
+    top_n: int = 50,
+    include_audit: bool = False,
+) -> dict:
+    """Compute a scale-invariant, composition-aware exploratory PCA.
+
+    Feature selection is based on mean sample-relative abundance.  The selected
+    subcomposition is re-closed, zeros receive a documented multiplicative
+    replacement, then CLR coordinates are decomposed by a deterministic full
+    SVD.  This removes sequencing-depth dominance from the ordination while
+    keeping the original IDs available for inspection.
+    """
+
+    prepared = prepare_pca_input(df, species_cols, top_n, include_audit)
+    relative = prepared["relative"]
+    source_rows = prepared["sourceRows"]
+    mean_relative = prepared["meanRelativeAbundance"]
+    selected_indices = prepared["selectedIndices"]
+    ranked = prepared["selectedFeatures"]
+    zero_total_samples = [str(df.iloc[index]["Sample"]) for index in np.flatnonzero(~np.isin(np.arange(len(df)), source_rows))]
+    if len(ranked) < 2 or len(relative) < 2:
+        return _empty_pca_payload(
+            df, prepared, top_n, "not_applicable_insufficient_data",
+            zero_total_samples, 0, include_audit,
+        )
+
+    selected_relative = relative[:, selected_indices]
+    selected_mass = selected_relative.sum(axis=1)
+    usable = selected_mass > 0
+    usable_count = int(usable.sum())
+    if usable_count < 2:
+        return _empty_pca_payload(
+            df, prepared, top_n,
+            "not_applicable_insufficient_samples_after_feature_selection",
+            zero_total_samples, int((~usable).sum()), include_audit,
+        )
+    composition = selected_relative[usable] / selected_mass[usable, None]
+    replaced, replaced_cells = _multiplicative_zero_replacement(composition)
+    clr = np.log(replaced) - np.log(replaced).mean(axis=1, keepdims=True)
+    n_components = min(PCA_MAX_COMPONENTS, clr.shape[0], clr.shape[1])
+    model = PCA(n_components=n_components, svd_solver="full")
+    coords = model.fit_transform(clr)
+    _canonicalize_component_signs(coords, model.components_)
+    active_rows = source_rows[usable]
     points = [
         {
             "sample": str(sample),
@@ -121,10 +291,11 @@ def compute_pca(df: pd.DataFrame, species_cols: list[str], top_n: int = 50) -> d
             "x": float(coords[i, 0]),
             "y": float(coords[i, 1]),
         }
-        for i, (sample, group) in enumerate(zip(df["Sample"], df["Group"], strict=False))
+        for i, (sample, group) in enumerate(zip(df.iloc[active_rows]["Sample"], df.iloc[active_rows]["Group"], strict=False))
     ]
     return {
         "method": "PCA",
+        "projectionStatus": "computed",
         "featureLabel": df.attrs.get("feature_label", FEATURE_META["taxonomy"]["label"]),
         "featureCount": len(ranked),
         "speciesCount": len(ranked),
@@ -132,14 +303,39 @@ def compute_pca(df: pd.DataFrame, species_cols: list[str], top_n: int = 50) -> d
         "points": points,
         "ellipses": _distribution_ellipses(points),
         "featureSelection": {
-            "method": "top_n_by_total_abundance",
+            "method": PCA_FEATURE_SELECTION_METHOD,
             "requestedTopN": top_n,
             "selectedCount": len(ranked),
         },
-        "preprocessing": {
-            "transformation": "none",
-            "scaling": "z_score_per_feature",
+        "sampleFiltering": {
+            "sourceSampleCount": len(df), "selectedSampleCount": int(len(active_rows)),
+            "zeroTotalSampleCount": len(zero_total_samples), "excludedZeroTotalSamples": zero_total_samples,
+            "zeroAfterFeatureSelectionSampleCount": int((~usable).sum()),
         },
+        "preprocessing": {
+            "fullMatrixClosure": "total_sum_scaling_per_sample",
+            "postSelectionClosure": "total_sum_scaling_per_sample",
+            "transformation": "clr",
+            "zeroReplacement": "multiplicative_smallest_positive_part",
+            "zeroReplacedCellCount": int(replaced_cells),
+            "inputScale": df.attrs.get("abundance_scale", "unknown"),
+            "sourceNormalization": df.attrs.get("normalization", "unknown"),
+        },
+        "resources": {
+            "componentSummary": [
+                {"component": index + 1, "eigenvalue": float(model.explained_variance_[index]), "explainedVarianceRatio": float(model.explained_variance_ratio_[index]), "cumulativeExplainedVarianceRatio": float(model.explained_variance_ratio_[:index + 1].sum())}
+                for index in range(n_components)
+            ],
+            "featureLoadings": [
+                {"feature": str(feature), "selectionRank": rank + 1, "meanRelativeAbundance": float(mean_relative[selected_indices[rank]]), "pc1Loading": float(model.components_[0, rank]), "pc2Loading": float(model.components_[1, rank]) if n_components > 1 else 0.0}
+                for rank, feature in enumerate(ranked)
+            ],
+            "selectionAudit": [
+                {"feature": str(feature), "rank": rank + 1, "meanRelativeAbundance": float(mean_relative[selected_indices[rank]])}
+                for rank, feature in enumerate(ranked)
+            ],
+        },
+        **({"_auditRows": prepared["auditRows"]} if include_audit else {}),
     }
 
 
@@ -196,8 +392,33 @@ def _permanova(distance: np.ndarray, groups: np.ndarray, n_perm: int = 999, seed
     }
 
 
+def _permdisp_distances(
+    positive_coordinates: np.ndarray,
+    negative_coordinates: np.ndarray,
+    groups: np.ndarray,
+) -> tuple[np.ndarray, int]:
+    """Distances to group centroids, correcting Euclidean axes by imaginary axes."""
+
+    distances = np.zeros(len(groups), dtype=float)
+    clipped = 0
+    for group in np.unique(groups):
+        idx = np.where(groups == group)[0]
+        positive_delta = positive_coordinates[idx] - positive_coordinates[idx].mean(axis=0)
+        positive_sq = np.square(positive_delta).sum(axis=1)
+        if negative_coordinates.shape[1]:
+            negative_delta = negative_coordinates[idx] - negative_coordinates[idx].mean(axis=0)
+            negative_sq = np.square(negative_delta).sum(axis=1)
+        else:
+            negative_sq = np.zeros(len(idx))
+        squared = positive_sq - negative_sq
+        clipped += int((squared < 0).sum())
+        distances[idx] = np.sqrt(np.maximum(squared, 0))
+    return distances, clipped
+
+
 def _permdisp(
-    coordinates: np.ndarray,
+    positive_coordinates: np.ndarray,
+    negative_coordinates: np.ndarray,
     groups: np.ndarray,
     n_perm: int = 999,
     seed: int = 20240515,
@@ -205,22 +426,30 @@ def _permdisp(
     """Test homogeneity of multivariate dispersion in PCoA space.
 
     Distances from each sample to its group centroid are compared with a
-    one-way pseudo-F statistic.  Label permutations provide a reproducible
-    p-value.  Coordinates include every positive PCoA axis, rather than only
-    the two axes displayed by the browser.
+    one-way pseudo-F statistic. Label permutations provide a reproducible
+    p-value. Negative PCoA axes are subtracted from squared centroid distances
+    before the square root, matching the correction used by PERMDISP2.
     """
 
     unique = np.unique(groups)
     n = len(groups)
-    if n < 4 or len(unique) < 2 or coordinates.shape[1] == 0:
-        return {"pValue": 1.0, "fStat": 0.0, "nPerm": n_perm}
+    method = "permdisp2_group_centroid_with_negative_axis_correction"
+    formula = "sqrt(max(positive_squared_distance - negative_squared_distance, 0))"
+    if n < 4 or len(unique) < 2 or positive_coordinates.shape[1] == 0:
+        return {
+            "pValue": None,
+            "fStat": None,
+            "nPerm": 0,
+            "requestedPermutations": n_perm,
+            "method": method,
+            "distanceFormula": formula,
+            "negativeAxisCorrection": True,
+            "interpretable": False,
+            "status": "not_interpretable_insufficient_pcoa_geometry",
+        }
 
-    def calc(labels: np.ndarray) -> float:
-        distances = np.zeros(n, dtype=float)
-        for group in np.unique(labels):
-            idx = np.where(labels == group)[0]
-            centroid = coordinates[idx].mean(axis=0)
-            distances[idx] = np.linalg.norm(coordinates[idx] - centroid, axis=1)
+    def calc(labels: np.ndarray) -> float | None:
+        distances, _ = _permdisp_distances(positive_coordinates, negative_coordinates, labels)
 
         overall = distances.mean()
         ss_between = 0.0
@@ -234,19 +463,65 @@ def _permdisp(
         df_between = len(np.unique(labels)) - 1
         df_within = n - len(np.unique(labels))
         if df_between <= 0 or df_within <= 0 or ss_within <= 1e-12:
-            return 0.0
+            return None
         return float((ss_between / df_between) / (ss_within / df_within))
 
-    observed = calc(groups)
-    rng = np.random.default_rng(seed)
-    exceedances = sum(
-        calc(rng.permutation(groups)) >= observed for _ in range(n_perm)
+    observed_distances, clipped_count = _permdisp_distances(
+        positive_coordinates, negative_coordinates, groups,
     )
+    observed = calc(groups)
+    if observed is None:
+        return {
+            "pValue": None,
+            "fStat": None,
+            "nPerm": 0,
+            "requestedPermutations": n_perm,
+            "method": method,
+            "distanceFormula": formula,
+            "negativeAxisCorrection": True,
+            "clippedDistanceCount": clipped_count,
+            "clippedDistanceFraction": clipped_count / n if n else 0.0,
+            "interpretable": False,
+            "status": "not_interpretable_degenerate_dispersion",
+        }
+    rng = np.random.default_rng(seed)
+    exceedances = 0
+    valid_permutations = 0
+    for _ in range(n_perm):
+        permuted = calc(rng.permutation(groups))
+        if permuted is None:
+            continue
+        valid_permutations += 1
+        if permuted >= observed:
+            exceedances += 1
+    if valid_permutations != n_perm:
+        return {
+            "pValue": None,
+            "fStat": observed,
+            "nPerm": valid_permutations,
+            "requestedPermutations": n_perm,
+            "invalidPermutationCount": n_perm - valid_permutations,
+            "method": method,
+            "distanceFormula": formula,
+            "negativeAxisCorrection": True,
+            "clippedDistanceCount": clipped_count,
+            "clippedDistanceFraction": clipped_count / n if n else 0.0,
+            "interpretable": False,
+            "status": "not_interpretable_degenerate_permutations",
+        }
     return {
-        "pValue": (exceedances + 1) / (n_perm + 1),
+        "pValue": (exceedances + 1) / (valid_permutations + 1),
         "fStat": observed,
-        "nPerm": n_perm,
-        "method": "distance_to_group_centroid_in_positive_pcoa_space",
+        "nPerm": valid_permutations,
+        "requestedPermutations": n_perm,
+        "invalidPermutationCount": n_perm - valid_permutations,
+        "method": method,
+        "distanceFormula": formula,
+        "negativeAxisCorrection": True,
+        "clippedDistanceCount": clipped_count,
+        "clippedDistanceFraction": clipped_count / n if n else 0.0,
+        "interpretable": True,
+        "status": "computed",
     }
 
 
@@ -265,11 +540,7 @@ def prepare_pcoa_input(
     if filter_preset not in PCOA_FILTER_PRESETS:
         raise ValueError(f"Unsupported PCoA filter preset: {filter_preset}")
     thresholds = PCOA_FILTER_PRESETS[filter_preset]
-    raw = df[feature_cols].apply(pd.to_numeric, errors="coerce").to_numpy(dtype=float)
-    if not np.isfinite(raw).all():
-        raise ValueError("PCoA abundance matrix contains non-finite values")
-    if bool((raw < 0).any()):
-        raise ValueError("PCoA abundance matrix contains negative values")
+    raw = _numeric_abundance_matrix(df, feature_cols, "PCoA")
 
     totals = raw.sum(axis=1)
     valid_mask = totals > 0
@@ -471,14 +742,20 @@ def compute_pcoa(
     positive = all_values > 1e-10
     values = all_values[positive]
     vectors = all_vectors[:, positive]
+    negative = all_values < -1e-10
+    negative_coordinates = all_vectors[:, negative] * np.sqrt(np.abs(all_values[negative]))
+    positive_coordinates = vectors * np.sqrt(values)
 
-    if len(values) < 2:
-        coords = np.zeros((n, 2))
-        variance = [0.0, 0.0]
-    else:
-        coords = vectors[:, :2] * np.sqrt(values[:2])
+    coords = np.zeros((n, 2))
+    variance = [0.0, 0.0]
+    displayed_axis_count = min(2, len(values))
+    if displayed_axis_count:
+        coords[:, :displayed_axis_count] = (
+            vectors[:, :displayed_axis_count] * np.sqrt(values[:displayed_axis_count])
+        )
         total = values.sum() or 1.0
-        variance = (values[:2] / total).tolist()
+        for index, ratio in enumerate(values[:displayed_axis_count] / total):
+            variance[index] = float(ratio)
 
     points = [
         {
@@ -495,28 +772,55 @@ def compute_pcoa(
     ]
     selected_df = df.iloc[prepared["rowIndices"]]
     group_counts = selected_df["Group"].astype(str).value_counts().to_dict()
+    group_labels = selected_df["Group"].astype(str).to_numpy()
+    dispersion_distances, clipped_distance_count = _permdisp_distances(
+        positive_coordinates, negative_coordinates, group_labels,
+    ) if len(values) else (np.zeros(n), 0)
+    dispersion_rows = [
+        {
+            "sample": point["sample"], "group": point["group"],
+            "distanceToGroupCentroid": float(dispersion_distances[index]),
+            "distanceFingerprint": distance_fingerprint,
+            "negativeAxisCorrection": True,
+        }
+        for index, point in enumerate(points)
+    ] if len(values) else []
     inference_eligible = (
         len(group_counts) == 2
         and all(count >= inference_min_per_group for count in group_counts.values())
     )
     if inference_eligible:
-        groups = selected_df["Group"].astype(str).to_numpy()
+        groups = group_labels
         permanova = _permanova(
             distance,
             groups,
             PCOA_PERMUTATIONS,
             PCOA_PERMANOVA_SEED,
         )
-        permdisp = _permdisp(
-            vectors * np.sqrt(values),
-            groups,
-            PCOA_PERMUTATIONS,
-            PCOA_PERMDISP_SEED,
+        permdisp = (
+            _permdisp(
+                positive_coordinates,
+                negative_coordinates,
+                groups,
+                PCOA_PERMUTATIONS,
+                PCOA_PERMDISP_SEED,
+            )
+            if len(values)
+            else None
         )
         permanova["distanceFingerprint"] = distance_fingerprint
-        permdisp["distanceFingerprint"] = distance_fingerprint
         permanova_status = "computed_exploratory_unadjusted"
-        permdisp_status = "computed_exploratory_unadjusted"
+        if permdisp is None:
+            permdisp_status = "not_applicable_no_positive_pcoa_axes"
+        else:
+            permdisp["distanceFingerprint"] = distance_fingerprint
+            permdisp["clippedDistanceCount"] = clipped_distance_count
+            permdisp["clippedDistanceFraction"] = clipped_distance_count / n if n else 0.0
+            permdisp_status = (
+                "computed_exploratory_unadjusted"
+                if permdisp.get("interpretable")
+                else str(permdisp.get("status") or "not_interpretable")
+            )
     elif len(group_counts) < 2:
         permanova = None
         permdisp = None
@@ -567,7 +871,37 @@ def compute_pcoa(
             "negativeEigenvalueCount": int(len(negative_values)),
             "negativeEigenvalueAbsoluteSum": float(np.abs(negative_values).sum()),
             "positiveEigenvalueSum": float(values.sum()),
+            "negativeEigenvalueAbsoluteRatio": float(np.abs(negative_values).sum() / values.sum()) if values.sum() else 0.0,
+            "largestNegativeEigenvalueAbsoluteRatio": float(np.abs(negative_values).max() / values.max()) if len(negative_values) and len(values) else 0.0,
+            "warningThreshold": PCOA_NEGATIVE_EIGEN_WARNING_RATIO,
+            "interpretationStatus": (
+                "not_interpretable_no_positive_eigenvalues"
+                if not len(values)
+                else "caution_negative_eigenvalues"
+                if len(negative_values)
+                and np.abs(negative_values).max() / values.max()
+                > PCOA_NEGATIVE_EIGEN_WARNING_RATIO
+                else "within_default_tolerance"
+            ),
             "varianceBasis": "positive_eigenvalues",
+        },
+        "resources": {
+            "dispersionDistances": dispersion_rows,
+            "eigenDiagnostics": [
+                {
+                    "axis": f"Axis {index + 1}",
+                    "eigenvalue": float(value),
+                    "sign": "positive",
+                    "positiveExplainedVarianceRatio": float(value / values.sum()) if values.sum() else 0.0,
+                }
+                for index, value in enumerate(values)
+            ] + [
+                {
+                    "axis": f"Negative axis {index + 1}", "eigenvalue": float(value),
+                    "sign": "negative", "positiveExplainedVarianceRatio": 0.0,
+                }
+                for index, value in enumerate(negative_values)
+            ],
         },
         **({"_auditRows": prepared["auditRows"]} if include_audit else {}),
     }

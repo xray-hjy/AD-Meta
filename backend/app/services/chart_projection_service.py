@@ -25,7 +25,11 @@ from app.compute.charts.detection import compute_detection_heatmap
 from app.compute.charts.heatmap import compute_heatmap
 from app.compute.charts.ko_contribution import compute_ko_contribution
 from app.compute.charts.lda import compute_ko_differential
-from app.compute.charts.ordination import compute_pca, compute_pcoa
+from app.compute.charts.ordination import (
+    PCA_FEATURE_SELECTION_METHOD,
+    compute_pca,
+    compute_pcoa,
+)
 from app.compute.charts.taxonomy.hierarchy import compute_taxonomy_hierarchy
 from app.compute.charts.taxonomy.projections import compute_taxonomy_sankey_projection
 from app.compute.charts.taxonomy.pruning import TAXONOMY_TREE_PRUNE_RULES
@@ -62,7 +66,7 @@ PROJECTION_RULES: dict[str, dict[str, Any]] = {
     key: policy.as_legacy_rule() for key, policy in PROJECTION_POLICIES.items()
 }
 
-CHART_PROJECTION_CACHE_SCHEMA = "1.2"
+CHART_PROJECTION_CACHE_SCHEMA = "1.4"
 REVISION_MATRIX_CACHE_SCHEMA = "1.1"
 REVISION_MATRIX_CACHE_SIZE = 4
 
@@ -660,15 +664,21 @@ def _compute_payload(
     if kind == "taxonomy_sankey":
         return compute_taxonomy_sankey_projection(compute_taxonomy_hierarchy(df, features))
     if kind == "pca":
-        return compute_pca(df, features, top_n=top_n)
+        try:
+            return compute_pca(df, features, top_n=top_n, include_audit=include_audit)
+        except ValueError as exc:
+            raise AnalysisScopeError(str(exc)) from exc
     if kind == "pcoa":
-        return compute_pcoa(
-            df,
-            features,
-            filter_preset=str(_policy_parameter(policy, parameters, "filterPreset")),
-            inference_min_per_group=policy.inference_min_per_group,
-            include_audit=include_audit,
-        )
+        try:
+            return compute_pcoa(
+                df,
+                features,
+                filter_preset=str(_policy_parameter(policy, parameters, "filterPreset")),
+                inference_min_per_group=policy.inference_min_per_group,
+                include_audit=include_audit,
+            )
+        except ValueError as exc:
+            raise AnalysisScopeError(str(exc)) from exc
     if kind == "heatmap":
         return compute_heatmap(
             df,
@@ -805,7 +815,7 @@ def _projection_metadata(
             "returnedFeatureCount": returned,
             "truncatedFeatureCount": max(0, source_feature_count - returned),
             "samplePointCount": len(payload.get("points") or []),
-            "filters": [{"type": "top_n_by_total_abundance", "value": top_n}],
+            "filters": [{"type": PCA_FEATURE_SELECTION_METHOD, "value": top_n}],
             "isComplete": returned >= source_feature_count,
         })
         return metadata

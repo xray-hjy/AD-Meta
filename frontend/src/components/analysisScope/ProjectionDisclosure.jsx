@@ -1,3 +1,5 @@
+import { PCA_FEATURE_SELECTION_METHOD } from '../../app/ordinationPolicy';
+
 const SCOPE_LABELS = {
   cohort: '全部样本',
   group: '分组样本',
@@ -38,17 +40,20 @@ function projectionSummary(data) {
     ];
   }
   if (projection.kind === 'pca') {
-    const selection = projection.featureSelection?.method === 'top_n_by_total_abundance'
-      ? '按总丰度排序选取'
+    const selection = projection.featureSelection?.method === PCA_FEATURE_SELECTION_METHOD
+      ? '按样本闭合后的平均相对丰度排序选取'
       : '按当前策略选取';
     const variance = Array.isArray(payload.variance) ? payload.variance : [];
     const axisSummary = variance.length >= 2
       ? `PC1 ${formatPercent(variance[0])}，PC2 ${formatPercent(variance[1])}，前两轴合计 ${formatPercent(Number(variance[0]) + Number(variance[1]))}`
       : null;
+    const samplePointCount = projection.samplePointCount;
     return [
       `${selection} ${projection.returnedFeatureCount}/${projection.sourceFeatureCount} 个${featureLabel}`,
-      `绘制 ${projection.samplePointCount || projection.sampleCount} 个样本点`,
-      `逐${featureLabel} Z-score 标准化`,
+      samplePointCount === 0
+        ? '无样本进入当前投影'
+        : `绘制 ${samplePointCount ?? projection.sampleCount} 个样本点`,
+      '所选子组成再次闭合、乘法零值替换并 CLR 变换',
       axisSummary,
     ].filter(Boolean);
   }
@@ -62,7 +67,9 @@ function projectionSummary(data) {
         ? `未启用稀有${featureLabel}过滤`
         : `相对丰度 ≥ ${formatPercent(selection.minimumRelativeAbundance)}，检出率 ≥ ${formatPercent(selection.minimumPrevalence)}`,
       `过滤前后均按样本总和闭合；平均保留质量 ${formatPercent(retainedMass.mean)}`,
-      `同一 Bray-Curtis 距离矩阵绘制 ${projection.samplePointCount || projection.sampleCount} 个样本点`,
+      projection.samplePointCount === 0
+        ? '无样本进入当前 Bray-Curtis 投影'
+        : `同一 Bray-Curtis 距离矩阵绘制 ${projection.samplePointCount ?? projection.sampleCount} 个样本点`,
     ];
     if (status === 'computed_exploratory_unadjusted') {
       const permanova = payload.permanova;
@@ -70,9 +77,17 @@ function projectionSummary(data) {
       messages.push(permanova
         ? `探索性未校正 PERMANOVA R²=${formatNumber(permanova.r2)}，F=${formatNumber(permanova.fStat)}，p=${formatNumber(permanova.pValue)}，置换 ${permanova.nPerm} 次`
         : '已计算探索性未校正 PERMANOVA');
-      messages.push(permdisp
-        ? `PERMDISP F=${formatNumber(permdisp.fStat)}，p=${formatNumber(permdisp.pValue)}，置换 ${permdisp.nPerm} 次`
-        : 'PERMDISP 结果暂不可用');
+      const permdispStatus = projection.inference?.permdispStatus;
+      if (permdisp?.interpretable === false || permdispStatus?.startsWith('not_interpretable')) {
+        messages.push('负轴校正后的组内离散距离退化，PERMDISP 不具备可解释性');
+      } else if (permdisp) {
+        messages.push(`PERMDISP（正/负轴校正）F=${formatNumber(permdisp.fStat)}，p=${formatNumber(permdisp.pValue)}，有效置换 ${permdisp.nPerm} 次`);
+        if (Number(permdisp.clippedDistanceCount || 0) > 0) {
+          messages.push(`负轴校正后有 ${permdisp.clippedDistanceCount} 个样本距离被截断为 0`);
+        }
+      } else {
+        messages.push('PERMDISP 结果暂不可用');
+      }
     } else if (status === 'not_applicable_single_group') {
       messages.push('当前为单组排序探索，不进行组间检验');
     } else if (status === 'not_applicable_minimum_group_size') {
@@ -82,7 +97,11 @@ function projectionSummary(data) {
     }
     const negativeCount = Number(payload.eigenDiagnostics?.negativeEigenvalueCount || 0);
     if (negativeCount > 0) {
-      messages.push(`存在 ${negativeCount} 个负特征值，坐标轴解释率按正特征值计算`);
+      const diagnostics = payload.eigenDiagnostics || {};
+      const ratio = Number(diagnostics.largestNegativeEigenvalueAbsoluteRatio || 0);
+      messages.push(diagnostics.interpretationStatus === 'caution_negative_eigenvalues'
+        ? `存在 ${negativeCount} 个负特征值（最大为最大正特征值的 ${formatPercent(ratio)}），排序解释应谨慎`
+        : `存在 ${negativeCount} 个负特征值，坐标轴解释率按正特征值计算`);
     }
     return messages;
   }
