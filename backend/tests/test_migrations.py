@@ -36,6 +36,18 @@ def test_empty_database_upgrades_to_head() -> None:
                 "WHERE type = 'table' AND name LIKE 'projection_audit_%'"
             )
         }
+        projection_audit_columns = {
+            row[1]
+            for row in connection.execute(
+                "PRAGMA table_info(projection_audit_artifacts)"
+            )
+        }
+        projection_audit_indexes = {
+            row[1]
+            for row in connection.execute(
+                "PRAGMA index_list(projection_audit_artifacts)"
+            )
+        }
         connection.close()
 
     assert version == HEAD_REVISION
@@ -46,6 +58,8 @@ def test_empty_database_upgrades_to_head() -> None:
     assert "analysis_artifact_samples" in analysis_tables
     assert "projection_audit_artifacts" in projection_audit_tables
     assert "projection_audit_rows" in projection_audit_tables
+    assert {"retention_class", "last_accessed_at", "expires_at"} <= projection_audit_columns
+    assert "idx_projection_audit_artifacts_expiry" in projection_audit_indexes
 
 
 def test_unversioned_legacy_database_is_stamped_once() -> None:

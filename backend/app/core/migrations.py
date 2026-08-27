@@ -10,7 +10,7 @@ from app.core.database import database_url, get_engine, init_db
 
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
 BASELINE_REVISION = "20260715_01"
-HEAD_REVISION = "20260802_01"
+HEAD_REVISION = "20260820_01"
 
 
 def alembic_config() -> Config:

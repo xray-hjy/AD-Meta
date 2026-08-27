@@ -41,6 +41,17 @@ from app.services.projection_audit_service import (
     get_projection_audit,
     get_projection_audit_options,
 )
+from app.services.projection_audit_repository import (
+    AuditArtifactIdentity,
+    begin_audit_artifact,
+    cleanup_expired_audit_artifacts,
+    complete_audit_artifact,
+    find_audit_artifact,
+)
+from app.services.full_result_service import (
+    query_complete_results,
+    stream_complete_results_csv,
+)
 
 
 def _seed_taxonomy_dataset(conn) -> None:
@@ -612,3 +623,142 @@ def test_revision_matrix_snapshot_round_trip_preserves_complete_matrix(tmp_path:
     assert restored.features == snapshot.features
     assert restored.sample_by_id == snapshot.sample_by_id
     pd.testing.assert_frame_equal(restored.matrix, snapshot.matrix)
+
+
+def test_complete_results_query_reads_immutable_sparse_rows_without_projection() -> None:
+    with TemporaryDirectory() as tmpdir:
+        db_path = Path(tmpdir) / "complete-results.sqlite3"
+        manifest = _manifest(Path(tmpdir) / "manifest.json")
+        with patch.object(database, "DB_PATH", db_path), patch.object(database, "DB_ENGINE", "sqlite"):
+            database.dispose_engine()
+            upgrade_database()
+            with database.connect() as conn:
+                _seed_taxonomy_dataset(conn)
+            sync_analysis_runs_from_manifest(manifest)
+
+            page = query_complete_results(
+                "run-projection",
+                "species",
+                query="species a",
+                sort_by="abundance",
+                sort_direction="desc",
+                limit=1,
+            )
+            ad_page = query_complete_results(
+                "run-projection",
+                "species",
+                phenotype="AD",
+            )
+            csv_payload = b"".join(
+                stream_complete_results_csv(
+                    "run-projection",
+                    "species",
+                    feature_id=str(page["items"][0]["featureId"]),
+                )
+            ).decode("utf-8-sig")
+            database.dispose_engine()
+
+    assert page["total"] == 2
+    assert page["items"] == [
+        {
+            "sampleCode": "S1",
+            "phenotype": "AD",
+            "featureId": page["items"][0]["featureId"],
+            "featureName": "Species A",
+            "taxonRank": "species",
+            "kingdom": "",
+            "phylum": "",
+            "class": "",
+            "taxOrder": "",
+            "family": "",
+            "genus": "",
+            "species": "Species A",
+            "fullTaxonomy": "k__Bacteria|s__Species A",
+            "abundance": 10.0,
+        }
+    ]
+    assert ad_page["total"] == 2
+    assert page["storageSemantics"] == {
+        "matrix": "sparse",
+        "storedRowsOnly": True,
+        "absentPairsSynthesized": False,
+        "projectionApplied": False,
+    }
+    assert "sampleCode,phenotype,featureId,featureName" in csv_payload
+    assert "Species A" in csv_payload
+
+
+def test_cleanup_deletes_only_expired_temporary_projection_read_models() -> None:
+    with TemporaryDirectory() as tmpdir:
+        db_path = Path(tmpdir) / "projection-retention.sqlite3"
+        manifest = _manifest(Path(tmpdir) / "manifest.json")
+        with patch.object(database, "DB_PATH", db_path), patch.object(database, "DB_ENGINE", "sqlite"):
+            database.dispose_engine()
+            upgrade_database()
+            with database.connect() as conn:
+                _seed_taxonomy_dataset(conn)
+            sync_analysis_runs_from_manifest(manifest)
+            with database.connect() as conn:
+                context = conn.execute(
+                    """
+                    SELECT run.id AS run_id, artifact.id AS artifact_id,
+                           revision.revision_key AS revision_key
+                    FROM analysis_runs run
+                    JOIN analysis_artifacts artifact ON artifact.analysis_run_id = run.id
+                    JOIN dataset_revisions revision ON revision.id = artifact.dataset_revision_id
+                    WHERE run.run_key = 'run-projection' AND artifact.artifact_key = 'species'
+                    """
+                ).fetchone()
+
+            expired = AuditArtifactIdentity(
+                run_id=int(context["run_id"]),
+                source_artifact_id=int(context["artifact_id"]),
+                projection_key="expired-key",
+                projection_kind="composition",
+                section_key="source",
+                source_revision_key=context["revision_key"],
+                compute_version="test",
+            )
+            retained = AuditArtifactIdentity(
+                run_id=int(context["run_id"]),
+                source_artifact_id=int(context["artifact_id"]),
+                projection_key="default-key",
+                projection_kind="composition",
+                section_key="source",
+                source_revision_key=context["revision_key"],
+                compute_version="test",
+            )
+            expired_id = begin_audit_artifact(
+                expired,
+                retention_class="temporary",
+                expires_at="2026-08-19T00:00:00+00:00",
+            )
+            retained_id = begin_audit_artifact(
+                retained,
+                retention_class="default",
+                expires_at=None,
+            )
+            for artifact_id in (expired_id, retained_id):
+                complete_audit_artifact(
+                    artifact_id,
+                    rows=[{"feature": "Species A", "status": "displayed"}],
+                    metadata={},
+                    sha256="a" * 64,
+                )
+
+            deleted = cleanup_expired_audit_artifacts(
+                now="2026-08-20T00:00:00+00:00"
+            )
+            expired_result = find_audit_artifact(expired)
+            retained_result = find_audit_artifact(retained)
+            with database.connect() as conn:
+                remaining_child_rows = conn.execute(
+                    "SELECT COUNT(*) AS value FROM projection_audit_rows"
+                ).fetchone()["value"]
+            database.dispose_engine()
+
+    assert deleted == 1
+    assert expired_result is None
+    assert retained_result is not None
+    assert retained_result["retention_class"] == "default"
+    assert remaining_child_rows == 1

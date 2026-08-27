@@ -22,7 +22,7 @@ from app.compute.charts.ko_contribution import (
 from app.compute.charts.ordination import prepare_pca_input, prepare_pcoa_input
 from app.compute.charts.taxonomy.hierarchy import compute_taxonomy_hierarchy
 from app.compute.taxonomy import short_name, taxonomy_chain
-from app.core.config import COMPUTE_VERSION
+from app.core.config import COMPUTE_VERSION, PROJECTION_CACHE_TTL_HOURS
 from app.core.database import connect
 from app.domain.analysis_scope import (
     AbundanceProjectionRequest,
@@ -30,6 +30,7 @@ from app.domain.analysis_scope import (
     ChartProjectionRequest,
     ProjectionAuditRequest,
 )
+from app.domain.projection_retention import resolve_projection_retention
 from app.services.analysis_projection_service import (
     _artifact_samples,
     _resolve_artifact,
@@ -54,6 +55,7 @@ from app.services.projection_audit_repository import (
     load_audit_rows,
     query_audit_rows_page,
     query_distinct_row_values,
+    touch_audit_artifact,
 )
 
 
@@ -638,6 +640,11 @@ def _ensure_projection_audit_artifact(
 
     section_keys = _section_keys(kind)
     section = request.section if request.section in section_keys else section_keys[0]
+    retention = resolve_projection_retention(
+        kind,
+        request,
+        ttl_hours=PROJECTION_CACHE_TTL_HOURS,
+    )
     identity = _resolve_identity(
         run_key,
         artifact_key,
@@ -647,14 +654,28 @@ def _ensure_projection_audit_artifact(
     )
     existing = find_audit_artifact(identity)
     if existing is not None and existing.get("status") == "ready":
+        touch_audit_artifact(
+            int(existing["id"]),
+            retention_class=retention.retention_class,
+            expires_at=retention.expires_at,
+        )
         return projection, existing
 
     with _build_lock(request.projectionKey, section):
         existing = find_audit_artifact(identity)
         if existing is not None and existing.get("status") == "ready":
+            touch_audit_artifact(
+                int(existing["id"]),
+                retention_class=retention.retention_class,
+                expires_at=retention.expires_at,
+            )
             return projection, existing
 
-        audit_artifact_id = begin_audit_artifact(identity)
+        audit_artifact_id = begin_audit_artifact(
+            identity,
+            retention_class=retention.retention_class,
+            expires_at=retention.expires_at,
+        )
         try:
             _, selected, frame, features = _context(run_key, artifact_key, request)
             rows = _rows_for_section(

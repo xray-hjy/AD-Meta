@@ -254,3 +254,22 @@ class ProjectionAuditRowsResponse(BaseModel):
     total: int = 0
     limit: int = 100
     offset: int = 0
+
+
+class CompleteResultPageResponse(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+    runKey: str
+    artifactKey: str
+    datasetSlug: str
+    datasetRevision: str
+    featureKind: str
+    featureLabel: str
+    columns: list[str] = Field(default_factory=list)
+    items: list[dict[str, Any]] = Field(default_factory=list)
+    total: int
+    limit: int
+    offset: int
+    filters: dict[str, Any] = Field(default_factory=dict)
+    sort: dict[str, str] = Field(default_factory=dict)
+    storageSemantics: dict[str, Any] = Field(default_factory=dict)

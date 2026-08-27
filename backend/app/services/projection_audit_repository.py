@@ -80,7 +80,12 @@ def find_audit_artifact(identity: AuditArtifactIdentity) -> dict[str, Any] | Non
     return result
 
 
-def begin_audit_artifact(identity: AuditArtifactIdentity) -> int:
+def begin_audit_artifact(
+    identity: AuditArtifactIdentity,
+    *,
+    retention_class: str = "temporary",
+    expires_at: str | None = None,
+) -> int:
     now = utcnow()
     where, params = _artifact_where(identity)
     with connect() as conn:
@@ -94,10 +99,11 @@ def begin_audit_artifact(identity: AuditArtifactIdentity) -> int:
                 """
                 UPDATE projection_audit_artifacts
                 SET status = 'building', error_message = '', updated_at = ?,
+                    last_accessed_at = ?, retention_class = ?, expires_at = ?,
                     completed_at = NULL
                 WHERE id = ?
                 """,
-                (now, artifact_id),
+                (now, now, retention_class, expires_at, artifact_id),
             )
             return artifact_id
         cursor = conn.execute(
@@ -107,8 +113,9 @@ def begin_audit_artifact(identity: AuditArtifactIdentity) -> int:
               projection_kind, section_key, source_revision_key,
               compute_version, schema_version, status, storage_uri,
               sha256, row_count, metadata_json, error_message,
+              retention_class, last_accessed_at, expires_at,
               created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'building', '', '', 0, '{}', '', ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'building', '', '', 0, '{}', '', ?, ?, ?, ?, ?)
             """,
             (
                 identity.run_id,
@@ -119,6 +126,9 @@ def begin_audit_artifact(identity: AuditArtifactIdentity) -> int:
                 identity.source_revision_key,
                 identity.compute_version,
                 identity.schema_version,
+                retention_class,
+                now,
+                expires_at,
                 now,
                 now,
             ),
@@ -164,7 +174,8 @@ def complete_audit_artifact(
             """
             UPDATE projection_audit_artifacts
             SET status = 'ready', storage_uri = ?, sha256 = ?, row_count = ?,
-                metadata_json = ?, error_message = '', updated_at = ?, completed_at = ?
+                metadata_json = ?, error_message = '', updated_at = ?,
+                last_accessed_at = ?, completed_at = ?
             WHERE id = ?
             """,
             (
@@ -172,6 +183,7 @@ def complete_audit_artifact(
                 sha256,
                 len(rows),
                 _json(metadata),
+                now,
                 now,
                 now,
                 artifact_id,
@@ -190,6 +202,55 @@ def fail_audit_artifact(artifact_id: int, error: Exception) -> None:
             """,
             (str(error)[:4000], now, artifact_id),
         )
+
+
+def touch_audit_artifact(
+    artifact_id: int,
+    *,
+    retention_class: str,
+    expires_at: str | None,
+) -> None:
+    now = utcnow()
+    with connect() as conn:
+        conn.execute(
+            """
+            UPDATE projection_audit_artifacts
+            SET last_accessed_at = ?, retention_class = ?, expires_at = ?
+            WHERE id = ? AND status = 'ready'
+            """,
+            (now, retention_class, expires_at, artifact_id),
+        )
+
+
+def cleanup_expired_audit_artifacts(
+    *,
+    limit: int = 500,
+    now: str | None = None,
+) -> int:
+    """Delete one bounded batch of expired temporary read models."""
+
+    safe_limit = max(1, min(5000, int(limit)))
+    cutoff = now or utcnow()
+    with connect() as conn:
+        rows = conn.execute(
+            """
+            SELECT id
+            FROM projection_audit_artifacts
+            WHERE retention_class = 'temporary'
+              AND expires_at IS NOT NULL
+              AND expires_at <= ?
+            ORDER BY expires_at ASC, id ASC
+            LIMIT ?
+            """,
+            (cutoff, safe_limit),
+        ).fetchall()
+        artifact_ids = [int(row["id"]) for row in rows]
+        for artifact_id in artifact_ids:
+            conn.execute(
+                "DELETE FROM projection_audit_artifacts WHERE id = ?",
+                (artifact_id,),
+            )
+    return len(artifact_ids)
 
 
 def load_audit_rows(
@@ -435,6 +496,7 @@ __all__ = [
     "AuditArtifactIdentity",
     "begin_audit_artifact",
     "complete_audit_artifact",
+    "cleanup_expired_audit_artifacts",
     "delete_audit_artifacts_for_source",
     "fail_audit_artifact",
     "find_audit_artifact",
@@ -442,4 +504,5 @@ __all__ = [
     "load_audit_rows",
     "query_distinct_row_values",
     "query_audit_rows_page",
+    "touch_audit_artifact",
 ]

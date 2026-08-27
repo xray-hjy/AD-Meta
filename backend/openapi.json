@@ -750,6 +750,92 @@
         "title": "ChartProjectionResponse",
         "type": "object"
       },
+      "CompleteResultPageResponse": {
+        "additionalProperties": true,
+        "properties": {
+          "artifactKey": {
+            "title": "Artifactkey",
+            "type": "string"
+          },
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Columns",
+            "type": "array"
+          },
+          "datasetRevision": {
+            "title": "Datasetrevision",
+            "type": "string"
+          },
+          "datasetSlug": {
+            "title": "Datasetslug",
+            "type": "string"
+          },
+          "featureKind": {
+            "title": "Featurekind",
+            "type": "string"
+          },
+          "featureLabel": {
+            "title": "Featurelabel",
+            "type": "string"
+          },
+          "filters": {
+            "additionalProperties": true,
+            "title": "Filters",
+            "type": "object"
+          },
+          "items": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "runKey": {
+            "title": "Runkey",
+            "type": "string"
+          },
+          "sort": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Sort",
+            "type": "object"
+          },
+          "storageSemantics": {
+            "additionalProperties": true,
+            "title": "Storagesemantics",
+            "type": "object"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "runKey",
+          "artifactKey",
+          "datasetSlug",
+          "datasetRevision",
+          "featureKind",
+          "featureLabel",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "CompleteResultPageResponse",
+        "type": "object"
+      },
       "DatasetResponse": {
         "properties": {
           "analysisStatus": {
@@ -1553,13 +1639,6 @@
       },
       "ValidationError": {
         "properties": {
-          "ctx": {
-            "title": "Context",
-            "type": "object"
-          },
-          "input": {
-            "title": "Input"
-          },
           "loc": {
             "items": {
               "anyOf": [
@@ -2249,6 +2328,249 @@
           }
         },
         "summary": "Chart Projection",
+        "tags": [
+          "analysis-runs"
+        ]
+      }
+    },
+    "/api/analysis-runs/{run_key}/artifacts/{artifact_key}/results": {
+      "get": {
+        "operationId": "complete_results_api_analysis_runs__run_key__artifacts__artifact_key__results_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_key",
+            "required": true,
+            "schema": {
+              "title": "Run Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "artifact_key",
+            "required": true,
+            "schema": {
+              "title": "Artifact Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Query",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sampleCode",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Samplecode",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "phenotype",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Phenotype",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "featureId",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Featureid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sortBy",
+            "required": false,
+            "schema": {
+              "default": "sampleCode",
+              "title": "Sortby",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sortDirection",
+            "required": false,
+            "schema": {
+              "default": "asc",
+              "title": "Sortdirection",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompleteResultPageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Complete Results",
+        "tags": [
+          "analysis-runs"
+        ]
+      }
+    },
+    "/api/analysis-runs/{run_key}/artifacts/{artifact_key}/results/download": {
+      "get": {
+        "operationId": "download_complete_results_api_analysis_runs__run_key__artifacts__artifact_key__results_download_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_key",
+            "required": true,
+            "schema": {
+              "title": "Run Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "artifact_key",
+            "required": true,
+            "schema": {
+              "title": "Artifact Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Query",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sampleCode",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Samplecode",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "phenotype",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Phenotype",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "featureId",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Featureid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sortBy",
+            "required": false,
+            "schema": {
+              "default": "sampleCode",
+              "title": "Sortby",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sortDirection",
+            "required": false,
+            "schema": {
+              "default": "asc",
+              "title": "Sortdirection",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Download Complete Results",
         "tags": [
           "analysis-runs"
         ]

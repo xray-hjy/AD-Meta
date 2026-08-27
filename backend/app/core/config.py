@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from dotenv import load_dotenv
-from pydantic import model_validator
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     mysql_pool_recycle: int = 1800
     stats_worker_url: str = ""
     stats_worker_timeout: int = 300
+    projection_cache_ttl_hours: int = Field(default=168, ge=1)
+    projection_cache_cleanup_interval_seconds: int = Field(default=3600, ge=60)
+    projection_cache_cleanup_batch_size: int = Field(default=500, ge=1, le=5000)
 
     @model_validator(mode="after")
     def validate_runtime(self):
@@ -63,6 +66,11 @@ MYSQL_READ_TIMEOUT = SETTINGS.mysql_read_timeout
 MYSQL_POOL_RECYCLE = SETTINGS.mysql_pool_recycle
 STATS_WORKER_URL = SETTINGS.stats_worker_url.rstrip("/")
 STATS_WORKER_TIMEOUT = SETTINGS.stats_worker_timeout
+PROJECTION_CACHE_TTL_HOURS = SETTINGS.projection_cache_ttl_hours
+PROJECTION_CACHE_CLEANUP_INTERVAL_SECONDS = (
+    SETTINGS.projection_cache_cleanup_interval_seconds
+)
+PROJECTION_CACHE_CLEANUP_BATCH_SIZE = SETTINGS.projection_cache_cleanup_batch_size
 
 COMPUTE_VERSION = "2026-08-13-ordination-v3"
 

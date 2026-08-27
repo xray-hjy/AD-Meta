@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import re
+
 from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import StreamingResponse
 
 from app.api.models import (
     AbundanceProjectionResponse,
@@ -9,6 +12,7 @@ from app.api.models import (
     AnalysisSampleDetailResponse,
     AnalysisSamplePageResponse,
     ChartProjectionResponse,
+    CompleteResultPageResponse,
     ErrorResponse,
     ProjectionAuditMetadataResponse,
     ProjectionAuditOptionsResponse,
@@ -35,6 +39,11 @@ from app.services.analysis_projection_service import (
 )
 from app.services.analysis_run_service import get_analysis_run, list_analysis_runs
 from app.services.chart_projection_service import project_chart, query_scoped_features
+from app.services.full_result_service import (
+    FullResultError,
+    query_complete_results,
+    stream_complete_results_csv,
+)
 from app.services.projection_audit_service import (
     ProjectionAuditMismatch,
     get_projection_audit,
@@ -44,6 +53,12 @@ from app.services.projection_audit_service import (
 )
 
 router = APIRouter(prefix="/api/analysis-runs", tags=["analysis-runs"])
+
+
+def _download_token(value: str) -> str:
+    """Keep Content-Disposition filenames inert and cross-platform safe."""
+
+    return re.sub(r"[^A-Za-z0-9._-]+", "-", value).strip("-._") or "analysis"
 
 
 @router.get("", response_model=list[AnalysisRunResponse], response_model_exclude_none=True)
@@ -70,6 +85,81 @@ def _projection_error(exc: Exception) -> HTTPException:
     if isinstance(exc, AnalysisArtifactNotFound):
         return HTTPException(status_code=404, detail="Analysis artifact not found")
     return HTTPException(status_code=422, detail=str(exc))
+
+
+@router.get(
+    "/{run_key}/artifacts/{artifact_key}/results",
+    response_model=CompleteResultPageResponse,
+    response_model_exclude_none=True,
+)
+def complete_results(
+    run_key: str,
+    artifact_key: str,
+    query: str = "",
+    sample_code: str = Query(default="", alias="sampleCode"),
+    phenotype: str = "",
+    feature_id: str = Query(default="", alias="featureId"),
+    sort_by: str = Query(default="sampleCode", alias="sortBy"),
+    sort_direction: str = Query(default="asc", alias="sortDirection"),
+    limit: int = Query(default=100, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+):
+    try:
+        return query_complete_results(
+            run_key,
+            artifact_key,
+            query=query,
+            sample_code=sample_code,
+            phenotype=phenotype,
+            feature_id=feature_id,
+            sort_by=sort_by,
+            sort_direction=sort_direction,
+            limit=limit,
+            offset=offset,
+        )
+    except (AnalysisRunNotFound, AnalysisArtifactNotFound, FullResultError) as exc:
+        raise _projection_error(exc) from exc
+
+
+@router.get("/{run_key}/artifacts/{artifact_key}/results/download")
+def download_complete_results(
+    run_key: str,
+    artifact_key: str,
+    query: str = "",
+    sample_code: str = Query(default="", alias="sampleCode"),
+    phenotype: str = "",
+    feature_id: str = Query(default="", alias="featureId"),
+    sort_by: str = Query(default="sampleCode", alias="sortBy"),
+    sort_direction: str = Query(default="asc", alias="sortDirection"),
+):
+    try:
+        stream = stream_complete_results_csv(
+            run_key,
+            artifact_key,
+            query=query,
+            sample_code=sample_code,
+            phenotype=phenotype,
+            feature_id=feature_id,
+            sort_by=sort_by,
+            sort_direction=sort_direction,
+        )
+        first_chunk = next(stream)
+    except (AnalysisRunNotFound, AnalysisArtifactNotFound, FullResultError) as exc:
+        raise _projection_error(exc) from exc
+
+    def response_body():
+        yield first_chunk
+        yield from stream
+
+    filename = (
+        f"{_download_token(run_key)}-{_download_token(artifact_key)}"
+        "-complete-results.csv"
+    )
+    return StreamingResponse(
+        response_body(),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.get(

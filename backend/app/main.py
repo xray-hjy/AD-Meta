@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import time
 import uuid
 from contextlib import asynccontextmanager
+from contextlib import suppress
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -16,10 +18,17 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 
 from app.api.analysis_runs import router as analysis_runs_router
 from app.api.datasets import router as datasets_router
-from app.core.config import CACHE_ROOT, DEFAULT_CORS_ORIGINS, STATS_WORKER_URL
+from app.core.config import (
+    CACHE_ROOT,
+    DEFAULT_CORS_ORIGINS,
+    PROJECTION_CACHE_CLEANUP_BATCH_SIZE,
+    PROJECTION_CACHE_CLEANUP_INTERVAL_SECONDS,
+    STATS_WORKER_URL,
+)
 from app.core.database import connect, dispose_engine
 from app.core.migrations import HEAD_REVISION, upgrade_database
 from app.services.dataset_service import cache_metrics
+from app.services.projection_audit_repository import cleanup_expired_audit_artifacts
 from app.services.statistics_worker import worker_metrics
 
 logger = logging.getLogger("ad_meta")
@@ -40,16 +49,39 @@ class RequestMetrics:
 metrics = RequestMetrics()
 
 
+async def _projection_cache_cleanup_loop() -> None:
+    while True:
+        try:
+            deleted = await asyncio.to_thread(
+                cleanup_expired_audit_artifacts,
+                limit=PROJECTION_CACHE_CLEANUP_BATCH_SIZE,
+            )
+            if deleted:
+                logger.info("Removed %s expired projection audit artifacts", deleted)
+        except Exception:
+            logger.exception("Projection audit cache cleanup failed")
+        await asyncio.sleep(PROJECTION_CACHE_CLEANUP_INTERVAL_SECONDS)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.migration_error = None
+    cleanup_task = None
     try:
         upgrade_database()
     except Exception as exc:  # keep liveness available while readiness is false
         app.state.migration_error = f"{type(exc).__name__}: {exc}"
         logger.exception("Database migration failed")
-    yield
-    dispose_engine()
+    else:
+        cleanup_task = asyncio.create_task(_projection_cache_cleanup_loop())
+    try:
+        yield
+    finally:
+        if cleanup_task is not None:
+            cleanup_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await cleanup_task
+        dispose_engine()
 
 
 app = FastAPI(title="AD-Meta API", version="0.2.0", lifespan=lifespan)
