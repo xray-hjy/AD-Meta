@@ -190,6 +190,7 @@ function BoxPlot({ data, featureLabel = '物种', featureSelectionConfig = {} })
       legend: {
         data: normalized.series.map(item => item.label),
         top: 0,
+        right: 18,
         textStyle: { color: '#475569' },
       },
       grid: { left: 70, right: 30, top: 42, bottom: 100 },
@@ -281,6 +282,16 @@ function BoxPlot({ data, featureLabel = '物种', featureSelectionConfig = {} })
         <ChartViewport variant="data" minHeight={500} preferredHeight={550}>
           <ReactECharts
             option={option}
+            exportConfig={{
+              fileName: `${featureLabel}-boxplot-${activeTransform.key}`,
+              format: 'svg',
+              fullDataZoom: true,
+              grid: { bottom: 72 },
+              widthPerCategory: 112,
+              horizontalPadding: 180,
+              maxWidth: 14000,
+            }}
+            frameActions
             opts={{ renderer: 'canvas' }}
             style={{ width: '100%', height: '100%' }}
           />

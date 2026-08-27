@@ -129,6 +129,8 @@ export default function KoContributionChart({ data }) {
       <ChartViewport variant="data" minHeight={480} preferredHeight={chartHeight}>
         <ReactECharts
           option={option}
+          exportConfig={{ fileName: 'ko-contribution', format: 'svg' }}
+          frameActions
           opts={{ renderer: 'svg' }}
           notMerge
           lazyUpdate

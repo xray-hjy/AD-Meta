@@ -156,6 +156,13 @@ function DetectionHeatmap({ data }) {
       >
         <ReactECharts
           option={option}
+          exportConfig={{
+            fileName: 'ko-detection-heatmap',
+            format: 'svg',
+            minWidth: 1600,
+            toolbox: { right: 18, top: 8 },
+          }}
+          frameActions
           opts={{ renderer: 'svg' }}
           style={{ width: '100%', height: '100%' }}
         />

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ANALYSIS_DOMAINS } from '../../app/analysisDomains';
-import homeLogo from '../../../../微脑智库-logo.svg';
+import BrandMark from '../../components/brand/BrandMark';
 
 const pipelineBranches = [
   {
@@ -38,9 +38,9 @@ export default function HomePage() {
   return (
     <div className="home-page">
       <header className="home-header">
-        <Link className="home-brand" to="/" aria-label="微脑智库首页">
-          <img className="home-brand__logo" src={homeLogo} alt="" />
-          <span className="home-brand__name">微脑智库</span>
+        <Link className="home-brand brand-link" to="/" aria-label="微脑智库首页">
+          <BrandMark size="home" />
+          <span className="home-brand__name brand-link__label">微脑智库</span>
         </Link>
         <nav className="home-nav" aria-label="主导航">
           <a href="#platform">分析模块</a>

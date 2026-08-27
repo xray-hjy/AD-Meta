@@ -32,12 +32,6 @@
   font-weight: 800;
 }
 
-.home-brand__logo {
-  width: 50px;
-  height: 50px;
-  display: block;
-}
-
 .home-brand__name {
   white-space: nowrap;
 }

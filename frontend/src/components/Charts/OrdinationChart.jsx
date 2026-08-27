@@ -256,6 +256,12 @@ function OrdinationChart({ data }) {
         <div className="ordination-chart__surface" ref={surfaceRef}>
           <ReactECharts
             option={option}
+            exportConfig={{
+              fileName: `${String(method || 'ordination').toLowerCase()}-ordination`,
+              format: 'svg',
+              toolbox: { right: 14, top: 42 },
+            }}
+            frameActions
             onChartReady={onChartReady}
             showDataTable={false}
             notMerge

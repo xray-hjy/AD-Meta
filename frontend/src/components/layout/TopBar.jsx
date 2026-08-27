@@ -2,7 +2,7 @@ import { getAnalysisDataForFeatureKind } from '../../app/analysisDomains';
 import { useColorVision } from '../../context/ColorVisionContext';
 import { Link } from 'react-router-dom';
 import AnalysisRunSelect from '../analysisRun/AnalysisRunSelect';
-import workspaceLogo from '../../../../微脑智库-logo.svg';
+import BrandMark from '../brand/BrandMark';
 
 export default function TopBar({
   featureKind,
@@ -34,9 +34,9 @@ export default function TopBar({
   return (
     <header className="app-topbar">
       <div className="workspace-branding">
-        <Link className="workspace-brand-link" to="/" aria-label="AD-Meta 首页">
-          <img className="workspace-logo" src={workspaceLogo} alt="" />
-          <span className="app-title">AD-Meta</span>
+        <Link className="workspace-brand-link brand-link" to="/" aria-label="AD-Meta 首页">
+          <BrandMark />
+          <span className="app-title brand-link__label">AD-Meta</span>
         </Link>
         <span className="workspace-branding__divider" aria-hidden="true" />
         <div className="workspace-branding__context">

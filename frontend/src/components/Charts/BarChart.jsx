@@ -175,7 +175,7 @@ export default function BarChart({ data, featureLabel = '物种' }) {
       legend: {
         data: normalized.series.map(series => series.label),
         top: 8,
-        right: 180,
+        right: 18,
         itemGap: 18,
         itemWidth: 14,
         itemHeight: 14,
@@ -281,6 +281,15 @@ export default function BarChart({ data, featureLabel = '物种' }) {
       >
         <ReactECharts
           option={option}
+          exportConfig={{
+            fileName: `${featureLabel}-abundance-comparison`,
+            format: 'svg',
+            fullDataZoom: true,
+            grid: { bottom: 102 },
+            widthPerCategory: 92,
+            horizontalPadding: 220,
+          }}
+          frameActions
           opts={{ renderer: 'svg' }}
           notMerge
           lazyUpdate

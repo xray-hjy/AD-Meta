@@ -4,6 +4,7 @@ import { useColorVision } from '../../context/ColorVisionContext';
 import useTooltip from '../../hooks/useTooltip';
 import HeatmapLightbox from './HeatmapLightbox';
 import DataTableViewport from '../data-display/DataTableViewport';
+import ChartExportAction from './ChartExportAction';
 
 const ABUNDANCE_COLORS = ['#ffffcc', '#ffeda0', '#fed976', '#feb24c', '#fd8d3c', '#fc4e2a', '#e31a1c', '#bd0026', '#800026'];
 const DIFF_COLORS = ['#2166ac', '#67a9cf', '#f7f7f7', '#ef8a62', '#b2182b'];
@@ -519,7 +520,7 @@ const HeatmapCanvas = memo(function HeatmapCanvas({
       const link = document.createElement('a');
       link.href = createSnapshot(SNAPSHOT_SCALE, true);
       const filterStr = `q${filter?.qValueMax ?? 0.05}-log2FC${filter?.log2FcMinAbs ?? 1}`;
-      const filename = `heatmap_${chartSubType}_${filterStr}_${dateStamp()}.png`;
+      const filename = `heatmap_${chartSubType}_${filterStr}_${dateStamp()}`;
       link.download = `${sanitizeFilename(filename)}.png`;
       link.click();
     } catch (error) {
@@ -592,24 +593,11 @@ const HeatmapCanvas = memo(function HeatmapCanvas({
         marginBottom: 2,
       }}>
         <div style={{ fontSize: compact ? 13 : 15, fontWeight: 600, color: '#0f172a' }}>{title}</div>
-        <button
-          type="button"
+        <ChartExportAction
           onClick={handleExport}
           disabled={exporting}
-          style={{
-            padding: compact ? '4px 8px' : '5px 10px',
-            borderRadius: 8,
-            border: '1px solid #d5dde7',
-            background: exporting ? '#f8fafc' : '#fff',
-            color: '#475569',
-            fontSize: compact ? 10 : 11,
-            fontFamily: 'inherit',
-            cursor: exporting ? 'wait' : 'pointer',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {exporting ? '导出中...' : '导出图片'}
-        </button>
+          label={exporting ? '正在导出热图' : `导出${title}`}
+        />
       </div>
       <div style={{ fontSize: compact ? 10 : 11, color: '#475569', marginBottom: 6 }}>
         {mode === 'diff'

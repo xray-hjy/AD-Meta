@@ -198,7 +198,18 @@ function PhylumChart({ data, featureKind = 'taxonomy' }) {
         ) : null}
       </div>
       <ChartViewport variant="data" minHeight={480} preferredHeight={chartHeight}>
-        <ReactECharts option={option} opts={{ renderer: 'svg' }} notMerge lazyUpdate style={{ width: '100%', height: '100%' }} />
+        <ReactECharts
+          option={option}
+          exportConfig={{
+            fileName: isKo ? 'ko-composition' : 'phylum-composition',
+            format: 'svg',
+          }}
+          frameActions
+          opts={{ renderer: 'svg' }}
+          notMerge
+          lazyUpdate
+          style={{ width: '100%', height: '100%' }}
+        />
       </ChartViewport>
     </div>
   );

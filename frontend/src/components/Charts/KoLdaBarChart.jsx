@@ -187,7 +187,12 @@ function KoLdaBarChart({ data }) {
         minHeight={520}
         preferredHeight={Math.max(520, items.length * 26 + 120)}
       >
-        <ReactECharts option={option} style={{ width: '100%', height: '100%' }} />
+        <ReactECharts
+          option={option}
+          exportConfig={{ fileName: 'ko-lda-effect-size', format: 'svg' }}
+          frameActions
+          style={{ width: '100%', height: '100%' }}
+        />
       </ChartViewport>
     </div>
   );

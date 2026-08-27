@@ -86,6 +86,12 @@ test('uses bounded rendering settings for dense sankey projections', () => {
   expect(props.option.hoverLayerThreshold).toBe(1);
   expect(props.option.series[0].emphasis.focus).toBe('adjacency');
   expect(props.option.tooltip.transitionDuration).toBe(0);
+  expect(props.exportConfig).toMatchObject({
+    fileName: 'taxonomy-sankey',
+    format: 'png',
+    minWidth: 1228,
+    minHeight: 3040,
+  });
 });
 
 test('keeps adjacency emphasis and removes only decals when color-blind mode is off', () => {
@@ -108,6 +114,15 @@ test('keeps ancestor emphasis and the reusable color-blind palette on the sunbur
   expect(props.option.series[0].emphasis.focus).toBe('ancestor');
   expect(props.option.aria.decal.show).toBe(true);
   expect(props.option.aria.decal.decals).toHaveLength(3);
+  expect(props.exportConfig).toMatchObject({
+    fileName: 'taxonomy-sunburst-overview',
+    format: 'svg',
+  });
+  const exportedOption = props.exportConfig.prepareOption(props.option);
+  expect(exportedOption.series[0].center).toEqual(['38%', '50%']);
+  expect(exportedOption.graphic).toEqual(expect.arrayContaining([
+    expect.objectContaining({ type: 'group' }),
+  ]));
 });
 
 test('shows merged category counts in sankey tooltips', () => {

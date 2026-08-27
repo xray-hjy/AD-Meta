@@ -1,7 +1,7 @@
 import { HeatmapChart } from 'echarts/charts';
-import { GridComponent, TooltipComponent, VisualMapComponent } from 'echarts/components';
+import { GridComponent, ToolboxComponent, TooltipComponent, VisualMapComponent } from 'echarts/components';
 import EChartBase, { echarts } from './EChartBase';
 
-echarts.use([GridComponent, HeatmapChart, TooltipComponent, VisualMapComponent]);
+echarts.use([GridComponent, HeatmapChart, ToolboxComponent, TooltipComponent, VisualMapComponent]);
 
 export default EChartBase;

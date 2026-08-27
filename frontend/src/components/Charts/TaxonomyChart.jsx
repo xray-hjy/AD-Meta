@@ -1052,6 +1052,7 @@ function TaxonomyChart({ data, mode = 'sunburst' }) {
             renderPhylumLegendRow(item),
             ...(item.children || []).map(child => renderPhylumLegendRow(child)),
           ])}
+          legendItems={sunburstModel?.legendItems || []}
           hasMergedPhyla={sunburstModel?.mergedPhyla?.length > 0}
         />
       ) : mode === 'radialtree' ? (

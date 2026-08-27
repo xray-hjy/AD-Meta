@@ -1,10 +1,12 @@
-import { forwardRef, useMemo, useState } from 'react';
+import { forwardRef, useCallback, useMemo, useRef, useState } from 'react';
 import ReactEChartsCore from 'echarts-for-react/lib/core';
 import * as echarts from 'echarts/core';
 import { AriaComponent } from 'echarts/components';
 import { CanvasRenderer, SVGRenderer } from 'echarts/renderers';
 import { useColorVision } from '../../context/ColorVisionContext';
 import DataTableViewport from '../data-display/DataTableViewport';
+import { exportEChart, withChartExport } from './chartExport';
+import { useChartFrameActions } from './ChartFrameActionsContext';
 
 echarts.use([AriaComponent, CanvasRenderer, SVGRenderer]);
 
@@ -74,13 +76,17 @@ const EChartBase = forwardRef(function EChartBase(
     ariaLabel = '交互式数据图表',
     dataTableModel = null,
     showDataTable = true,
+    exportConfig = null,
+    frameActions = false,
     style,
     ...props
   },
   ref
 ) {
+  const chartRef = useRef(null);
   const { colorBlindFriendly } = useColorVision();
   const [tableOpen, setTableOpen] = useState(false);
+  const [seriesMode, setSeriesMode] = useState(null);
   const accessibleOption = useMemo(() => ({
     ...option,
     aria: {
@@ -89,6 +95,19 @@ const EChartBase = forwardRef(function EChartBase(
       ...(option?.aria || {}),
     },
   }), [colorBlindFriendly, option]);
+  const renderedOption = useMemo(() => {
+    if (!frameActions) return withChartExport(accessibleOption, chartRef, exportConfig);
+    if (!accessibleOption?.toolbox) return accessibleOption;
+    const toolbox = Array.isArray(accessibleOption.toolbox)
+      ? accessibleOption.toolbox.map(item => ({ ...item, show: false }))
+      : { ...accessibleOption.toolbox, show: false };
+    return { ...accessibleOption, toolbox };
+  }, [accessibleOption, exportConfig, frameActions]);
+  const assignChartRef = useCallback(node => {
+    chartRef.current = node;
+    if (typeof ref === 'function') ref(node);
+    else if (ref) ref.current = node;
+  }, [ref]);
   const fallbackTableRows = useMemo(() => chartRowsFromOption(option), [option]);
   const tableModel = useMemo(() => {
     if (dataTableModel) {
@@ -108,6 +127,79 @@ const EChartBase = forwardRef(function EChartBase(
     };
   }, [dataTableModel, fallbackTableRows]);
   const hasDataTable = showDataTable && tableModel.columns.length > 0 && tableModel.rows.length > 0;
+  const toolbox = Array.isArray(option?.toolbox) ? option.toolbox[0] : option?.toolbox;
+  const toolboxFeatures = toolbox?.feature || {};
+  const magicTypeList = toolboxFeatures.magicType?.type;
+  const supportsLineView = Array.isArray(magicTypeList) && magicTypeList.includes('line');
+  const supportsBarView = Array.isArray(magicTypeList) && magicTypeList.includes('bar');
+  const supportsRestore = Boolean(toolboxFeatures.restore && toolboxFeatures.restore.show !== false);
+  const setSeriesType = useCallback(type => {
+    const instance = chartRef.current?.getEchartsInstance?.();
+    const series = Array.isArray(option?.series) ? option.series : [];
+    if (!instance || !series.length) return;
+    instance.setOption({ series: series.map(item => ({ ...item, type })) });
+    setSeriesMode(type);
+  }, [option?.series]);
+  const restoreChart = useCallback(() => {
+    const instance = chartRef.current?.getEchartsInstance?.();
+    instance?.dispatchAction?.({ type: 'restore' });
+    setSeriesMode(null);
+  }, []);
+  const externalActions = useMemo(() => {
+    if (!frameActions) return [];
+    const actions = [];
+    if (hasDataTable) {
+      actions.push({
+        id: 'data-table',
+        icon: 'table',
+        label: tableOpen ? '收起图表数据' : '查看图表数据',
+        pressed: tableOpen,
+        onClick: () => setTableOpen(value => !value),
+      });
+    }
+    if (supportsLineView) {
+      actions.push({
+        id: 'line-view',
+        icon: 'line',
+        label: '切换为折线图',
+        pressed: seriesMode === 'line',
+        onClick: () => setSeriesType('line'),
+      });
+    }
+    if (supportsBarView) {
+      actions.push({
+        id: 'bar-view',
+        icon: 'bar',
+        label: '切换为柱状图',
+        pressed: seriesMode === 'bar' || seriesMode == null,
+        onClick: () => setSeriesType('bar'),
+      });
+    }
+    if (supportsRestore) {
+      actions.push({ id: 'restore', icon: 'restore', label: '重置图表', onClick: restoreChart });
+    }
+    if (exportConfig) {
+      actions.push({
+        id: 'export',
+        icon: 'export',
+        label: exportConfig.title || '导出图形',
+        onClick: () => { void exportEChart(chartRef, exportConfig); },
+      });
+    }
+    return actions;
+  }, [
+    exportConfig,
+    frameActions,
+    hasDataTable,
+    restoreChart,
+    seriesMode,
+    setSeriesType,
+    supportsBarView,
+    supportsLineView,
+    supportsRestore,
+    tableOpen,
+  ]);
+  useChartFrameActions(externalActions, frameActions);
   const containerStyle = useMemo(
     () => hasDataTable ? { ...style, height: '100%' } : { height: 300, ...style },
     [hasDataTable, style]
@@ -131,9 +223,9 @@ const EChartBase = forwardRef(function EChartBase(
       data-colorblind-friendly={colorBlindFriendly}
     >
       <ReactEChartsCore
-        ref={ref}
+        ref={assignChartRef}
         echarts={echarts}
-        option={accessibleOption}
+        option={renderedOption}
         style={{ width: '100%', height: '100%' }}
         {...props}
       />
@@ -145,7 +237,11 @@ const EChartBase = forwardRef(function EChartBase(
   return (
     <div className="echart-layout" style={layoutStyle}>
       {chart}
-      <details className="chart-data-table" onToggle={event => setTableOpen(event.currentTarget.open)}>
+      <details
+        className="chart-data-table"
+        open={tableOpen}
+        onToggle={event => setTableOpen(event.currentTarget.open)}
+      >
         <summary>查看当前图表数据</summary>
         {tableOpen ? (
           <DataTableViewport
