@@ -8,6 +8,82 @@
 
 AD-Meta 只接收生物信息分析流程整理后的结构化分析结果，不读取 FASTQ、BAM、Contig 或分析工具的临时文件。
 
+## 当前 CRR 队列的官方来源
+
+### 官方项目身份
+
+当前 185 个 CRR 样本来自国家基因组科学数据中心（NGDC）GSA 项目 [CRA014435](https://ngdc.cncb.ac.cn/gsa/browse/CRA014435)，对应 BioProject [PRJCA022804](https://ngdc.cncb.ac.cn/bioproject/browse/PRJCA022804)。项目标题为 **Metagenomic analysis characterizes stage-specific gut microbiota in Alzheimer's Disease**。
+
+官方项目包含 476 名受试者，队列构成为：
+
+| 临床分组 | 样本数 |
+| --- | ---: |
+| NC | 63 |
+| SCS | 82 |
+| SCD | 90 |
+| MCI | 119 |
+| AD | 122 |
+| 合计 | 476 |
+
+### 当前 185 个样本的范围
+
+本地 KO 矩阵和当前 MAG 定量产物均包含 185 个 CRR 样本，其中 AD 122 个、NC 63 个，数量与官方项目中的 AD 和 NC 两组完全一致。因此当前系统使用的是 **CRA014435 项目的 AD/NC 子队列**，不是一个官方命名为“CRR185”的独立数据集。
+
+推荐表述：
+
+- 页面名称：`当前 AD/NC 分析结果`
+- 数据来源说明：`CRA014435（PRJCA022804）AD/NC 子队列，n=185`
+- 内部技术标识可以使用 `cra014435_ad_nc_185`，但不得把它写成官方数据集名称。
+
+这是依据官方项目统计和本地分组标签进行的交叉核对。后续接入完整临床元数据后，应继续校验每个样本的诊断分组，而不能只依赖样本数量相等。
+
+### 编号层级与样本身份
+
+GSA 中各编号的含义如下：
+
+| 编号前缀 | 含义 |
+| --- | --- |
+| PRJCA | BioProject，项目级身份 |
+| CRA | GSA study，研究数据集身份 |
+| SAMC | BioSample，生物样本身份 |
+| CRX | Experiment，测序实验身份 |
+| CRR | Run，测序运行身份 |
+
+CRR 是测序运行编号，不等同于受试者身份。后端导入和 Manifest 必须保存 `CRR -> CRX -> SAMC -> 样本别名 -> 临床分组` 的映射；若同一受试者包含多个 run，还必须保存受试者级稳定 ID，避免把 run 数误当成样本数。
+
+### 测序信息
+
+官方项目登记的数据类型为人粪便宏基因组全基因组鸟枪法测序，测序平台为 Illumina NovaSeq 6000，双端 150 bp。这里记录的是项目级测序信息；具体 run 的文件大小、校验值和下载地址应以 GSA run 清单为准。
+
+### 关联论文与下载入口
+
+项目页面当前关联的论文包括：
+
+1. [Impacts of host genetics on gut microbiome composition in Alzheimer's disease](https://doi.org/10.1186/s40168-026-02342-8)，*Microbiome*，2026；[PubMed 41782023](https://pubmed.ncbi.nlm.nih.gov/41782023/)。
+2. [Multi-omics profiling reveals gut microbiome signatures associated with cognitive decline in Alzheimer's disease](https://doi.org/10.1016/j.isci.2026.116622)，*iScience*，2026。
+
+下载与保存规则：
+
+- 原始数据、run 清单和项目元数据从 [GSA CRA014435](https://ngdc.cncb.ac.cn/gsa/browse/CRA014435) 获取。
+- 项目和样本级元数据从 [BioProject PRJCA022804](https://ngdc.cncb.ac.cn/bioproject/browse/PRJCA022804) 及其关联 BioSample 页面核对。
+- 论文优先通过 DOI 页面、PubMed 或出版社提供的开放获取入口下载。
+- 仓库只保存论文题录、DOI、项目编号和必要的可复现说明；除非许可明确允许，不把论文 PDF 直接提交到 GitHub。
+- “项目关联论文”不自动等于每张本地派生矩阵的直接方法来源。每份矩阵仍需由生信组提供生成命令、软件版本、参数和输入样本清单。
+
+### 后续接入必须保留的信息
+
+接入新的物种、KO 或 MAG 结果时，Manifest 至少应包含：
+
+- `project_accession`: `PRJCA022804`
+- `study_accession`: `CRA014435`
+- 精确的 CRR 样本清单及其数据修订版本
+- CRR、CRX、SAMC、样本别名、受试者 ID 和临床分组映射
+- 纳入与排除规则，以及 AD/NC 子队列形成方式
+- 测序平台、读长、单双端信息
+- 上游软件、版本、参数和参考数据库版本
+- 丰度或覆盖度指标的定义、单位、零值规则和归一化方式
+- 关联论文 DOI 和方法引用
+
 ## 当前已接入的分析数据
 
 ### Sample x Species
@@ -39,6 +115,16 @@ Clean Reads -> Assembly -> 基因预测与功能注释 -> Reads 定量 -> Sample
 - Sample x MAG：不同样本中的 MAG 丰度。
 - MAG x KO：不同 MAG 携带的功能信息。
 - ARG、CAZyme、BGC 和代谢功能注释结果。
+
+### 已收到的 CRR MAG 定量产物
+
+生信组已交付 185 个 CRR 样本与 872 个 MAG 的 CoverM 定量结果，包括相对丰度、平均覆盖深度、被 reads 覆盖的基因组比例、比对 reads 数和 reads/base，并同时提供宽表与统一长表。原始文件归档于：
+
+```text
+backend/storage/raw/crr-mag-quantification/
+```
+
+这表示 Sample x MAG 数据基础已经形成，但不等于 MAG 解析模块已经正式上线。正式接入仍需完成样本元数据关联、指标定义确认、数据库模型、AnalysisRun/Artifact/Manifest 登记、后端分析服务和前端模块开发。GTDB-Tk、CheckM2、dRep 与 MAG 功能注释结果仍应通过稳定 MAG 标识继续关联。
 
 在这些数据通过正式导入契约接入前，前端可以保留 MAG 解析入口和模块位置，但必须标记为“规划中”，不得展示模拟结果或暗示相关能力已经上线。
 

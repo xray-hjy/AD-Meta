@@ -23,6 +23,7 @@
 ## 开发记录
 
 - [综合更新日志](development/updates.md)
+- [2026-08-20 第二阶段开发收尾日志](development/2026-08-20-stage-two-closeout.md)：汇总分析范围、科学展示规则、投影审计、箱线图性能和缓存生命周期，并记录纳入下一阶段实施的事项。
 - [2026-08-13 箱线图选择与性能更新](development/2026-08-13-boxplot-selection-and-performance.md)
 - [2026-08-13 PCA / PCoA 排序分析模块统一优化方案](development/2026-08-13-ordination-module-optimization-plan.md)：统一排序图容器契约，并规划 PCA 主成分贡献、PCoA 组内离散、特征值诊断、筛选审计和缓存资源。
 - [2026-08-03 PCoA 稀有特征过滤与探索性推断更新](development/2026-08-03-pcoa-filtering-and-inference.md)
