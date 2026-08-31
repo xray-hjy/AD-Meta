@@ -14,8 +14,6 @@ from typing import Any
 
 from app.core.database import connect
 from app.services.analysis_projection_service import (
-    AnalysisArtifactNotFound,
-    AnalysisRunNotFound,
     _resolve_artifact,
     _resolve_run,
 )

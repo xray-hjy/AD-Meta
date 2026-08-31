@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+
 from app.domain.analysis_scope import AnalysisScope, ProjectionAuditRequest
 from app.domain.projection_retention import resolve_projection_retention
 

@@ -34,12 +34,9 @@ from app.services.chart_projection_service import (
     _write_revision_matrix_cache,
     project_chart,
 )
-from app.services.projection_audit_service import (
-    ProjectionAuditMismatch,
-    _columns_for_section,
-    _section_title,
-    get_projection_audit,
-    get_projection_audit_options,
+from app.services.full_result_service import (
+    query_complete_results,
+    stream_complete_results_csv,
 )
 from app.services.projection_audit_repository import (
     AuditArtifactIdentity,
@@ -48,9 +45,12 @@ from app.services.projection_audit_repository import (
     complete_audit_artifact,
     find_audit_artifact,
 )
-from app.services.full_result_service import (
-    query_complete_results,
-    stream_complete_results_csv,
+from app.services.projection_audit_service import (
+    ProjectionAuditMismatch,
+    _columns_for_section,
+    _section_title,
+    get_projection_audit,
+    get_projection_audit_options,
 )
 
 

@@ -157,6 +157,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/analysis-runs/{run_key}/artifacts/{artifact_key}/results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Complete Results */
+        get: operations["complete_results_api_analysis_runs__run_key__artifacts__artifact_key__results_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analysis-runs/{run_key}/artifacts/{artifact_key}/results/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Complete Results */
+        get: operations["download_complete_results_api_analysis_runs__run_key__artifacts__artifact_key__results_download_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/analysis-runs/{run_key}/artifacts/{artifact_key}/samples/query": {
         parameters: {
             query?: never;
@@ -676,6 +710,47 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /** CompleteResultPageResponse */
+        CompleteResultPageResponse: {
+            /** Artifactkey */
+            artifactKey: string;
+            /** Columns */
+            columns?: string[];
+            /** Datasetrevision */
+            datasetRevision: string;
+            /** Datasetslug */
+            datasetSlug: string;
+            /** Featurekind */
+            featureKind: string;
+            /** Featurelabel */
+            featureLabel: string;
+            /** Filters */
+            filters?: {
+                [key: string]: unknown;
+            };
+            /** Items */
+            items?: {
+                [key: string]: unknown;
+            }[];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Runkey */
+            runKey: string;
+            /** Sort */
+            sort?: {
+                [key: string]: string;
+            };
+            /** Storagesemantics */
+            storageSemantics?: {
+                [key: string]: unknown;
+            };
+            /** Total */
+            total: number;
+        } & {
+            [key: string]: unknown;
+        };
         /** DatasetResponse */
         DatasetResponse: {
             /**
@@ -1131,6 +1206,10 @@ export interface components {
         };
         /** ValidationError */
         ValidationError: {
+            /** Context */
+            ctx?: Record<string, never>;
+            /** Input */
+            input?: unknown;
             /** Location */
             loc: (string | number)[];
             /** Message */
@@ -1456,6 +1535,86 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ChartProjectionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    complete_results_api_analysis_runs__run_key__artifacts__artifact_key__results_get: {
+        parameters: {
+            query?: {
+                query?: string;
+                sampleCode?: string;
+                phenotype?: string;
+                featureId?: string;
+                sortBy?: string;
+                sortDirection?: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                run_key: string;
+                artifact_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompleteResultPageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_complete_results_api_analysis_runs__run_key__artifacts__artifact_key__results_download_get: {
+        parameters: {
+            query?: {
+                query?: string;
+                sampleCode?: string;
+                phenotype?: string;
+                featureId?: string;
+                sortBy?: string;
+                sortDirection?: string;
+            };
+            header?: never;
+            path: {
+                run_key: string;
+                artifact_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
