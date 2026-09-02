@@ -282,6 +282,7 @@ class ImportDatasetIntegrationTests(unittest.TestCase):
             missing_value_policy="error",
             minimum_group_size=2,
             group_mapping={},
+            sample_id_prefixes=[],
         )
 
     def test_formal_ko_import_publishes_worker_artifacts(self) -> None:

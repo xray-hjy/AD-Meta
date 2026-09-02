@@ -36,6 +36,24 @@ function sectionEntries(groupedCharts, section) {
   });
 }
 
+function chartStatusLabel(chart) {
+  return chart.status === 'planned' ? '规划中' : '';
+}
+
+function chartIsDisabled(chart) {
+  return chart.status === 'planned' || chart.disabled === true;
+}
+
+function ChartLabel({ chart }) {
+  const status = chartStatusLabel(chart);
+  return (
+    <span className="nav-item-label">
+      {chart.label}
+      {status ? <span className="nav-item-status">{status}</span> : null}
+    </span>
+  );
+}
+
 export default function ChartNav({ charts, activeChart, featureKind, onChange, onPrefetch }) {
   const groupedCharts = useMemo(() => groupCharts(charts), [charts]);
   const navigationSections = useMemo(() => getNavigationSections(featureKind), [featureKind]);
@@ -64,57 +82,64 @@ export default function ChartNav({ charts, activeChart, featureKind, onChange, o
   }
 
   function renderEntry(entry) {
-        if (entry.type === 'item') {
-          const { chart } = entry;
-          return (
-            <button
-              key={chart.key}
-              type="button"
-              className={`nav-item ${activeChart === chart.key ? 'nav-item--active' : ''}`}
-              onClick={() => onChange(chart.key)}
-              onMouseEnter={() => onPrefetch?.(chart.key)}
-              onFocus={() => onPrefetch?.(chart.key)}
-            >
-              <span className="nav-item-label">{chart.label}</span>
-              <span className="nav-item-hint">{chart.subtitle}</span>
-            </button>
-          );
-        }
+    if (entry.type === 'item') {
+      const { chart } = entry;
+      const disabled = chartIsDisabled(chart);
+      return (
+        <button
+          key={chart.key}
+          type="button"
+          className={`nav-item ${activeChart === chart.key ? 'nav-item--active' : ''} ${disabled ? 'nav-item--disabled' : ''}`}
+          disabled={disabled}
+          aria-disabled={disabled}
+          title={disabled ? chart.requirement || `${chart.label}：规划中` : undefined}
+          onClick={() => onChange(chart.key)}
+          onMouseEnter={() => onPrefetch?.(chart.key)}
+          onFocus={() => onPrefetch?.(chart.key)}
+        >
+          <ChartLabel chart={chart} />
+          <span className="nav-item-hint">{chart.subtitle}</span>
+        </button>
+      );
+    }
 
-        const expanded = expandedGroups.has(entry.key);
-        const groupActive = entry.children.some(child => child.key === activeChart);
+    const expanded = expandedGroups.has(entry.key);
+    const groupActive = entry.children.some(child => child.key === activeChart);
 
-        return (
-          <div className="nav-group" key={entry.key}>
-            <button
-              type="button"
-              className={`nav-item nav-item--group ${groupActive ? 'nav-item--group-active' : ''}`}
-              aria-expanded={expanded}
-              onClick={() => toggleGroup(entry.key)}
-            >
-              <span className="nav-item-label">{entry.label}</span>
-              <span className="nav-item-hint">{entry.subtitle}</span>
-            </button>
+    return (
+      <div className="nav-group" key={entry.key}>
+        <button
+          type="button"
+          className={`nav-item nav-item--group ${groupActive ? 'nav-item--group-active' : ''}`}
+          aria-expanded={expanded}
+          onClick={() => toggleGroup(entry.key)}
+        >
+          <span className="nav-item-label">{entry.label}</span>
+          <span className="nav-item-hint">{entry.subtitle}</span>
+        </button>
 
-            {expanded ? (
-              <div className="nav-sublist">
-                {entry.children.map(chart => (
-                  <button
-                    key={chart.key}
-                    type="button"
-                    className={`nav-item nav-item--child ${activeChart === chart.key ? 'nav-item--active' : ''}`}
-                    onClick={() => onChange(chart.key)}
-                    onMouseEnter={() => onPrefetch?.(chart.key)}
-                    onFocus={() => onPrefetch?.(chart.key)}
-                  >
-                    <span className="nav-item-label">{chart.label}</span>
-                    <span className="nav-item-hint">{chart.subtitle}</span>
-                  </button>
-                ))}
-              </div>
-            ) : null}
+        {expanded ? (
+          <div className="nav-sublist">
+            {entry.children.map(chart => (
+              <button
+                key={chart.key}
+                type="button"
+                className={`nav-item nav-item--child ${activeChart === chart.key ? 'nav-item--active' : ''} ${chartIsDisabled(chart) ? 'nav-item--disabled' : ''}`}
+                disabled={chartIsDisabled(chart)}
+                aria-disabled={chartIsDisabled(chart)}
+                title={chartIsDisabled(chart) ? chart.requirement || `${chart.label}：规划中` : undefined}
+                onClick={() => onChange(chart.key)}
+                onMouseEnter={() => onPrefetch?.(chart.key)}
+                onFocus={() => onPrefetch?.(chart.key)}
+              >
+                <ChartLabel chart={chart} />
+                <span className="nav-item-hint">{chart.subtitle}</span>
+              </button>
+            ))}
           </div>
-        );
+        ) : null}
+      </div>
+    );
   }
 
   return (

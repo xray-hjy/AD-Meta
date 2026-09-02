@@ -52,6 +52,7 @@ def load_manifest(manifest_path: Path = DEFAULT_MANIFEST) -> list[dict[str, Any]
                 "covariates": list(dataset.get("covariates") or []),
                 "source": dict(dataset.get("source") or {}),
                 "groupMapping": dict(dataset.get("groupMapping") or {}),
+                "sampleIdPrefixes": list(dataset.get("sampleIdPrefixes") or []),
             }
         )
 
@@ -90,6 +91,7 @@ def bootstrap_storage(
             covariates=dataset["covariates"],
             source_metadata=dataset["source"],
             group_mapping=dataset["groupMapping"],
+            sample_id_prefixes=dataset["sampleIdPrefixes"],
         )
         results.append(
             {

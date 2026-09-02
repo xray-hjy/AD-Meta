@@ -226,6 +226,7 @@ def import_dataset(
     covariates: list[str] | None = None,
     source_metadata: dict[str, Any] | None = None,
     group_mapping: dict[str, str] | None = None,
+    sample_id_prefixes: list[str] | None = None,
 ) -> int:
     """Validate, compute and atomically publish an immutable dataset revision."""
 
@@ -239,6 +240,7 @@ def import_dataset(
     covariates = list(covariates or [])
     source_metadata = dict(source_metadata or {})
     group_mapping = dict(group_mapping or {})
+    sample_id_prefixes = list(sample_id_prefixes or [])
     now = utcnow()
     started = time.perf_counter()
     revision_key = uuid.uuid4().hex
@@ -253,6 +255,7 @@ def import_dataset(
         "covariates": covariates,
         "sourceSha256": source_sha256,
         "groupMapping": group_mapping,
+        "sampleIdPrefixes": sample_id_prefixes,
     }
     params_hash = _stable_hash(parameters)
 
@@ -336,6 +339,7 @@ def import_dataset(
             missing_value_policy=missing_value_policy,
             minimum_group_size=2,
             group_mapping=group_mapping,
+            sample_id_prefixes=sample_id_prefixes,
         )
         validate_covariates(df, feature_cols, covariates)
         summary, artifacts, warnings = precompute_prepared(
@@ -394,6 +398,7 @@ def import_dataset(
             "covariates": covariates,
             "source": source_metadata,
             "groupMapping": group_mapping,
+            "sampleIdPrefixes": sample_id_prefixes,
             "computeVersion": COMPUTE_VERSION,
             "parametersHash": params_hash,
             "generatedAt": published_at,
@@ -568,6 +573,12 @@ def main() -> None:  # pragma: no cover - exercised through the packaged CLI
         default="{}",
         help='Explicit legacy group mapping as JSON, for example {"1":"AD","0":"NC"}.',
     )
+    parser.add_argument(
+        "--sample-id-prefix",
+        action="append",
+        default=[],
+        help="Include only sample IDs with this prefix; repeat for multiple prefixes.",
+    )
     args = parser.parse_args()
 
     dataset_id = import_dataset(
@@ -579,6 +590,7 @@ def main() -> None:  # pragma: no cover - exercised through the packaged CLI
         normalization=args.normalization,
         missing_value_policy=args.missing_value_policy,
         group_mapping=json.loads(args.group_mapping),
+        sample_id_prefixes=args.sample_id_prefix,
     )
     print(f"Imported dataset {dataset_id} ({args.slug})")
 

@@ -42,14 +42,14 @@ Returns all published datasets.
     "slug": "ad-nc-species",
     "name": "AD vs NC Species Abundance",
     "description": "Species abundance comparison between AD and NC groups.",
-    "sampleCount": 373,
+    "sampleCount": 185,
     "speciesCount": 9820,
     "featureCount": 9820,
     "featureKind": "taxonomy",
     "featureLabel": "物种",
     "groupCounts": {
-      "AD": 189,
-      "NC": 184
+      "AD": 122,
+      "NC": 63
     },
     "publishedAt": "2026-07-15T15:46:00Z",
     "currentRevision": "6648472a...",
@@ -74,14 +74,14 @@ Returns one published dataset.
   "slug": "ad-nc-species",
   "name": "AD vs NC Species Abundance",
   "description": "Species abundance comparison between AD and NC groups.",
-  "sampleCount": 373,
+  "sampleCount": 185,
   "speciesCount": 9820,
   "featureCount": 9820,
   "featureKind": "taxonomy",
   "featureLabel": "物种",
   "groupCounts": {
-    "AD": 189,
-    "NC": 184
+    "AD": 122,
+    "NC": 63
   },
   "publishedAt": "2026-06-01T10:00:00Z",
   "currentRevision": "d8b8...",
@@ -116,16 +116,16 @@ Returns summary-card data.
 {
   "datasetSlug": "ad-nc-species",
   "datasetName": "AD vs NC Species Abundance",
-  "totalSamples": 373,
-  "adSamples": 189,
-  "ncSamples": 184,
+  "totalSamples": 185,
+  "adSamples": 122,
+  "ncSamples": 63,
   "featureKind": "taxonomy",
   "featureLabel": "物种",
   "totalFeatures": 9820,
   "totalSpecies": 9820,
   "groupCounts": {
-    "AD": 189,
-    "NC": 184
+    "AD": 122,
+    "NC": 63
   },
   "publishedAt": "2026-06-01T10:00:00Z"
 }
@@ -441,3 +441,20 @@ Returns precomputed PCoA coordinates and PERMANOVA.
   }
 }
 ```
+
+## MAG 只读接口
+
+MAG 使用独立的版本化外部数据契约，不写入既有 taxonomy/KO revision。完整参数和科学口径见 [MAG 丰度、分类与质量接入](../guides/mag-data.md)。主要 GET 接口：
+
+| 路径 | 结果 |
+| --- | --- |
+| `/api/mag/overview` | 数据版本、指纹、样本范围、能力就绪度和溯源 |
+| `/api/mag/features` | 872-MAG 检验族上的候选分页与统计 |
+| `/api/mag/features/{mag_id}` | 单 MAG 的组间分布和样本明细 |
+| `/api/mag/heatmap` | 所选样本 × Top N MAG 丰度 |
+| `/api/mag/samples` | 样本映射比例与丰度阈值统计 |
+| `/api/mag/taxonomy` | 域至种层级的 Top N MAG 分类数量与占比 |
+| `/api/mag/quality` | 872 个代表 MAG 的 CheckM2 完整度、污染率和组装指标 |
+| `/api/mag/downloads/{kind}` | `features`、`matrix`、`samples`、`taxonomy`、`quality` 或 `provenance` 下载 |
+
+`revision` 可绑定 overview 返回的数据指纹；运行中输入变化时返回 409，避免混用不同数据版本。分类和质量覆盖全部代表 MAG，不受 disease、年龄、性别、批次或丰度阈值筛选影响。

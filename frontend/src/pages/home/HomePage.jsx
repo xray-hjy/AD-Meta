@@ -19,10 +19,10 @@ const pipelineBranches = [
   },
   {
     index: 'C',
-    status: '规划中',
+    status: '丰度、分类与质量已接入',
     title: '基因组解析宏基因组',
     steps: ['Coverage 计算', 'Binning', '质量评价', '去冗余', '分类与功能注释'],
-    result: 'Final MAGs · Taxonomy · Sample × MAG · MAG × KO',
+    result: '当前：Sample × MAG · GTDB Taxonomy · CheckM2 Quality · 规划中：MAG × KO',
   },
 ];
 
@@ -62,7 +62,7 @@ export default function HomePage() {
             <h1 id="home-title">AD-Meta</h1>
             <p className="home-hero__lead">面向 AD 脑肠轴研究的肠道宏基因组研发辅助工具</p>
             <p className="home-hero__description">
-              以宏基因组生物信息分析结果为数据基础，当前支持群落物种组成和 KO 功能层面的分析与可视化，并面向 MAG 的分类、丰度、功能及特殊功能解析进行扩展。
+              以宏基因组生物信息分析结果为数据基础，当前支持群落物种、KO 功能，以及 MAG 丰度、GTDB 分类和 CheckM2 质量的分析与可视化；MAG 功能注释与独立跨队列复现仍待数据接入。
             </p>
             <div className="home-hero__actions">
               <Link className="home-primary-action" to="/analysis/abundance">
@@ -73,9 +73,9 @@ export default function HomePage() {
             </div>
           </div>
           <div className="home-hero__status" aria-label="平台状态">
-            <span><b>2</b> 已接入分析域</span>
+            <span><b>3</b> 已接入分析域</span>
             <span><b>AD / NC</b> 对照分组</span>
-            <span><b>物种 / KO</b> 分析数据</span>
+            <span><b>物种 / KO / MAG</b> 分析数据</span>
           </div>
         </section>
 
@@ -97,6 +97,7 @@ export default function HomePage() {
                     </span>
                   </div>
                   <p>{item.description}</p>
+                  {item.route ? <Link className="analysis-button" to={item.route}>进入 MAG 解析</Link> : null}
                   <ul className="capability-item__modules" aria-label={`${item.label}包含模块`}>
                     {item.modules.map(module => (
                       <li
@@ -118,7 +119,7 @@ export default function HomePage() {
             <p className="home-eyebrow">DATA FOUNDATION</p>
             <h2>从原始测序数据到可分析结果</h2>
             <p className="home-workflow__lead">
-              原始测序数据经过统一预处理后，分别进入物种组成、群落功能和 MAG 解析流程。当前已接入物种与 KO 分析，MAG 路线按照既定技术流程持续扩展。
+              原始测序数据经过统一预处理后，分别进入物种组成、群落功能和 MAG 解析流程。当前已接入物种、KO，以及 MAG 丰度、分类和质量分析；MAG 功能注释与独立跨队列复现仍为规划中。
             </p>
           </div>
           <ol className="pipeline-foundation" aria-label="共同预处理流程">

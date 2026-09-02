@@ -140,6 +140,7 @@
   background: #ffffff;
   color: var(--color-text-muted);
   cursor: pointer;
+  text-decoration: none;
   text-align: left;
   transition: border-color 0.16s ease, background-color 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
 }
@@ -314,6 +315,30 @@
 .nav-item-hint {
   color: var(--color-text-soft);
   font-size: var(--font-size-xs);
+}
+
+.nav-item-status {
+  display: inline-flex;
+  margin-left: 6px;
+  padding: 1px 5px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text-soft);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.35;
+  vertical-align: 1px;
+}
+
+.nav-item--disabled,
+.nav-item--disabled:hover,
+.nav-item--disabled:active {
+  border-color: transparent;
+  background: transparent;
+  color: var(--color-text-soft);
+  cursor: not-allowed;
+  opacity: 0.72;
+  transform: none;
 }
 
 .chart-frame {
@@ -537,6 +562,15 @@
 .chart-viewport__canvas > * {
   width: 100%;
   height: 100%;
+}
+
+.chart-viewport--scroll {
+  display: block;
+  overflow-x: auto;
+}
+
+.chart-viewport--scroll > .chart-viewport__canvas {
+  min-width: var(--chart-viewport-min-width, 0px);
 }
 
 .chart-viewport--fit:has(.echart-layout),

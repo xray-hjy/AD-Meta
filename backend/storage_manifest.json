@@ -2,19 +2,23 @@
   "manifestVersion": "1.0",
   "analysisRuns": [
     {
-      "key": "ad-nc-community-baseline-2026-07",
-      "name": "当前 AD/NC 分析结果",
-      "description": "同一研究背景下形成的物种组成与 KO 功能分析结果；各产物按其实际样本覆盖独立登记。",
+      "key": "ad-nc-community-crr-only-2026-09",
+      "name": "当前 AD/NC CRR 分析结果",
+      "description": "物种组成与 KO 功能分析结果均限定为 CRA014435 的 AD/NC CRR 子队列。",
       "status": "published",
       "pipeline": {
         "name": "external-ad-metagenome-workflow",
         "version": "unknown"
       },
-      "parameters": {},
+      "parameters": {
+        "sampleIdPrefixes": [
+          "CRR"
+        ]
+      },
       "referenceDatabases": [],
       "provenance": {
-        "scope": "current-tracked-analysis-results",
-        "note": "Upstream workflow details and database versions require confirmation from the bioinformatics team."
+        "scope": "cra014435-ad-nc-crr-only",
+        "note": "Current published run excludes ERR and SRR accessions; upstream workflow details and database versions require confirmation from the bioinformatics team."
       },
       "artifacts": [
         {
@@ -41,11 +45,14 @@
       "abundanceScale": "unknown",
       "normalization": "unknown",
       "missingValuePolicy": "zero",
+      "sampleIdPrefixes": [
+        "CRR"
+      ],
       "covariates": [],
       "groupMapping": {},
       "source": {
         "kind": "tracked_raw",
-        "inferenceNote": "Scale and 188 missing cells require upstream confirmation."
+        "inferenceNote": "CRR-only scope is enforced at import; abundance scale requires upstream confirmation."
       }
     },
     {

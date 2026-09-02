@@ -87,6 +87,39 @@ class InputValidationTests(unittest.TestCase):
         self.assertEqual(df.attrs["validation_report"]["imputedCellCount"], 1)
         self.assertEqual(len(warnings), 1)
 
+    def test_sample_prefix_scope_filters_before_abundance_validation(self) -> None:
+        text = "\n".join(
+            [
+                "sample_id,Group,K00001",
+                "CRR1,AD,1",
+                "CRR2,AD,2",
+                "CRR3,NC,3",
+                "CRR4,NC,4",
+                "ERR1,AD,",
+                "SRR1,NC,",
+            ]
+        )
+        with TemporaryDirectory() as tmpdir:
+            df, _, warnings = prepare_dataframe(
+                self._write(text, tmpdir),
+                minimum_group_size=2,
+                sample_id_prefixes=["CRR"],
+            )
+
+        self.assertEqual(df["Sample"].tolist(), ["CRR1", "CRR2", "CRR3", "CRR4"])
+        self.assertEqual(df.attrs["validation_report"]["sampleCount"], 4)
+        self.assertEqual(df.attrs["validation_report"]["excludedSampleCount"], 2)
+        self.assertEqual(df.attrs["validation_report"]["sampleIdPrefixes"], ["CRR"])
+        self.assertEqual(df.attrs["validation_report"]["imputedCellCount"], 0)
+        self.assertEqual(len(warnings), 1)
+
+    def test_sample_prefix_scope_rejects_an_empty_selection(self) -> None:
+        self._assert_code(
+            "sample_id,Group,K00001\nERR1,AD,1\nERR2,NC,2\n",
+            "empty_sample_selection",
+            sample_id_prefixes=["CRR"],
+        )
+
     def test_enforces_group_size_and_declared_scale(self) -> None:
         text = "sample_id,Group,K00001\nA,AD,1\nB,NC,2\n"
         self._assert_code(text, "insufficient_group_size", minimum_group_size=2)

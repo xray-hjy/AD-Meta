@@ -378,6 +378,142 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/mag/downloads/{kind}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download */
+        get: operations["download_api_mag_downloads__kind__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mag/features": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Features */
+        get: operations["features_api_mag_features_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mag/features/{mag_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Distribution */
+        get: operations["distribution_api_mag_features__mag_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mag/heatmap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Heatmap */
+        get: operations["heatmap_api_mag_heatmap_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mag/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Overview */
+        get: operations["overview_api_mag_overview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mag/quality": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Quality */
+        get: operations["quality_api_mag_quality_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mag/samples": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Samples */
+        get: operations["samples_api_mag_samples_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mag/taxonomy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Taxonomy */
+        get: operations["taxonomy_api_mag_taxonomy_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -849,6 +985,381 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** MagBox */
+        MagBox: {
+            /** Group */
+            group: string;
+            /** N */
+            n: number;
+            /** Values */
+            values: number[];
+        };
+        /** MagDistributionResponse */
+        MagDistributionResponse: {
+            /** Boxes */
+            boxes: components["schemas"]["MagBox"][];
+            feature: components["schemas"]["MagFeature"];
+            provenance: components["schemas"]["MagProvenance"];
+            /** Samples */
+            samples: components["schemas"]["MagDistributionSample"][];
+        };
+        /** MagDistributionSample */
+        MagDistributionSample: {
+            /** Abundancepercent */
+            abundancePercent: number;
+            /** Age */
+            age: number;
+            /** Batch */
+            batch: string;
+            /**
+             * Disease
+             * @enum {string}
+             */
+            disease: "AD" | "NC";
+            /**
+             * Gender
+             * @enum {string}
+             */
+            gender: "F" | "M";
+            /** Mappedpercent */
+            mappedPercent: number;
+            /** Sampleid */
+            sampleId: string;
+            /** Unmappedpercent */
+            unmappedPercent: number;
+        };
+        /** MagErrorResponse */
+        MagErrorResponse: {
+            /** Detail */
+            detail: string;
+            /** Report */
+            report?: {
+                [key: string]: string;
+            } | null;
+        };
+        /** MagFeature */
+        MagFeature: {
+            /** Adabovethresholdpercent */
+            adAboveThresholdPercent: number | null;
+            /** Admeanpercent */
+            adMeanPercent: number | null;
+            /** Admedianpercent */
+            adMedianPercent: number | null;
+            /** Lengthbp */
+            lengthBp: number;
+            /** Magid */
+            magId: string;
+            /** Meandifferencepercentpoints */
+            meanDifferencePercentPoints: number | null;
+            /** Meanpercent */
+            meanPercent: number | null;
+            /** Ncabovethresholdpercent */
+            ncAboveThresholdPercent: number | null;
+            /** Ncmeanpercent */
+            ncMeanPercent: number | null;
+            /** Ncmedianpercent */
+            ncMedianPercent: number | null;
+            /** Pvalue */
+            pValue: number | null;
+            /** Qvalue */
+            qValue: number | null;
+            /** Rankbiserial */
+            rankBiserial: number | null;
+        };
+        /** MagFeaturePageResponse */
+        MagFeaturePageResponse: {
+            /** Direction */
+            direction: string;
+            /** Items */
+            items: components["schemas"]["MagFeature"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            provenance: components["schemas"]["MagProvenance"];
+            /** Query */
+            query: string;
+            /** Sortby */
+            sortBy: string;
+            /** Total */
+            total: number;
+        };
+        /** MagHeatmapResponse */
+        MagHeatmapResponse: {
+            /** Magids */
+            magIds: string[];
+            provenance: components["schemas"]["MagProvenance"];
+            /** Samples */
+            samples: components["schemas"]["MagSample"][];
+            /** Selection */
+            selection: string;
+            /** Values */
+            values: number[][];
+        };
+        /** MagOverviewResponse */
+        MagOverviewResponse: {
+            /** Batches */
+            batches: {
+                [key: string]: string | number;
+            }[];
+            /** Capabilities */
+            capabilities: {
+                [key: string]: boolean;
+            };
+            /** Options */
+            options: {
+                [key: string]: unknown;
+            };
+            provenance: components["schemas"]["MagProvenance"];
+        };
+        /** MagProvenance */
+        MagProvenance: {
+            /** Analysisversion */
+            analysisVersion: string;
+            /** Datafingerprint */
+            dataFingerprint: string;
+            /** Excludedsamplecount */
+            excludedSampleCount: number;
+            filters: components["schemas"]["MagScopeResponse"];
+            /** Groupcounts */
+            groupCounts: {
+                [key: string]: number;
+            };
+            /**
+             * Groupfield
+             * @constant
+             */
+            groupField: "disease";
+            /** Magcount */
+            magCount: number;
+            /** Mappingtolerancepercentpoints */
+            mappingTolerancePercentPoints: number;
+            /** Maxmappingerrorpercentpoints */
+            maxMappingErrorPercentPoints: number;
+            /**
+             * Provenancescope
+             * @constant
+             */
+            provenanceScope: "runtime-input-and-downstream-analysis";
+            /** Requestfingerprint */
+            requestFingerprint: string;
+            /** Samplecount */
+            sampleCount: number;
+            /** Sampleids */
+            sampleIds: string[];
+            /** Sources */
+            sources: components["schemas"]["MagSource"][];
+            /** Testedfeaturecount */
+            testedFeatureCount: number;
+            /**
+             * Unit
+             * @constant
+             */
+            unit: "%";
+            upstreamGeneration: components["schemas"]["MagUpstreamGeneration"] | null;
+            /** Version */
+            version: string;
+            /** Warnings */
+            warnings: string[];
+        };
+        /** MagQualityItem */
+        MagQualityItem: {
+            /** Codingdensity */
+            codingDensity: number;
+            /** Completenessmodel */
+            completenessModel: string;
+            /** Completenesspercent */
+            completenessPercent: number;
+            /** Contaminationpercent */
+            contaminationPercent: number;
+            /** Contign50Bp */
+            contigN50Bp: number;
+            /** Gccontent */
+            gcContent: number;
+            /** Genomesizebp */
+            genomeSizeBp: number;
+            /** Inreferenceband */
+            inReferenceBand: boolean;
+            /** Magid */
+            magId: string;
+            /** Maxcontiglengthbp */
+            maxContigLengthBp: number;
+            /** Totalcodingsequences */
+            totalCodingSequences: number;
+            /** Totalcontigs */
+            totalContigs: number;
+        };
+        /** MagQualityReferenceBand */
+        MagQualityReferenceBand: {
+            /** Label */
+            label: string;
+            /** Maximumcontaminationpercent */
+            maximumContaminationPercent: number;
+            /** Minimumcompletenesspercent */
+            minimumCompletenessPercent: number;
+        };
+        /** MagQualityResponse */
+        MagQualityResponse: {
+            /** Items */
+            items: components["schemas"]["MagQualityItem"][];
+            /** Method */
+            method: string;
+            provenance: components["schemas"]["MagProvenance"];
+            referenceBand: components["schemas"]["MagQualityReferenceBand"];
+            summary: components["schemas"]["MagQualitySummary"];
+            /** Version */
+            version: string | null;
+        };
+        /** MagQualitySummary */
+        MagQualitySummary: {
+            /** Completenessmaxpercent */
+            completenessMaxPercent: number;
+            /** Completenessminpercent */
+            completenessMinPercent: number;
+            /** Contaminationmaxpercent */
+            contaminationMaxPercent: number;
+            /** Contaminationminpercent */
+            contaminationMinPercent: number;
+            /** Referencebandcount */
+            referenceBandCount: number;
+            /** Totalmagcount */
+            totalMagCount: number;
+        };
+        /** MagSample */
+        MagSample: {
+            /** Age */
+            age: number;
+            /** Batch */
+            batch: string;
+            /**
+             * Disease
+             * @enum {string}
+             */
+            disease: "AD" | "NC";
+            /**
+             * Gender
+             * @enum {string}
+             */
+            gender: "F" | "M";
+            /** Mappedpercent */
+            mappedPercent: number;
+            /** Sampleid */
+            sampleId: string;
+            /** Unmappedpercent */
+            unmappedPercent: number;
+        };
+        /** MagSamplesResponse */
+        MagSamplesResponse: {
+            /** Items */
+            items: components["schemas"]["MagThresholdSample"][];
+            provenance: components["schemas"]["MagProvenance"];
+        };
+        /** MagScopeResponse */
+        MagScopeResponse: {
+            /** Abundancethresholdpercent */
+            abundanceThresholdPercent: number;
+            /** Agemax */
+            ageMax: number | null;
+            /** Agemin */
+            ageMin: number | null;
+            /** Batch */
+            batch: string;
+            /** Disease */
+            disease: string;
+            /** Gender */
+            gender: string;
+        };
+        /** MagSource */
+        MagSource: {
+            /** Bytes */
+            bytes: number;
+            /** File */
+            file: string;
+            /** Sha256 */
+            sha256: string;
+        };
+        /** MagTaxonomyResponse */
+        MagTaxonomyResponse: {
+            /** Distincttaxoncount */
+            distinctTaxonCount: number;
+            /** Items */
+            items: components["schemas"]["MagTaxonomySummaryItem"][];
+            /** Method */
+            method: string;
+            provenance: components["schemas"]["MagProvenance"];
+            /**
+             * Rank
+             * @enum {string}
+             */
+            rank: "domain" | "phylum" | "class" | "order" | "family" | "genus" | "species";
+            /** Resolvedmagcount */
+            resolvedMagCount: number;
+            /** Topn */
+            topN: number;
+            /** Totalmagcount */
+            totalMagCount: number;
+            /** Unresolvedmagcount */
+            unresolvedMagCount: number;
+            /** Version */
+            version: string | null;
+            /** Versionnote */
+            versionNote: string | null;
+        };
+        /** MagTaxonomySummaryItem */
+        MagTaxonomySummaryItem: {
+            /** Count */
+            count: number;
+            /** Label */
+            label: string;
+            /** Percent */
+            percent: number;
+        };
+        /** MagThresholdSample */
+        MagThresholdSample: {
+            /** Abovethresholdmagcount */
+            aboveThresholdMagCount: number;
+            /** Age */
+            age: number;
+            /** Batch */
+            batch: string;
+            /**
+             * Disease
+             * @enum {string}
+             */
+            disease: "AD" | "NC";
+            /**
+             * Gender
+             * @enum {string}
+             */
+            gender: "F" | "M";
+            /** Mappedpercent */
+            mappedPercent: number;
+            /** Sampleid */
+            sampleId: string;
+            /** Unmappedpercent */
+            unmappedPercent: number;
+        };
+        /** MagUpstreamGeneration */
+        MagUpstreamGeneration: {
+            /** Bamcaching */
+            bamCaching: string;
+            /** Basis */
+            basis: string;
+            /** Genomeinputmode */
+            genomeInputMode: string;
+            /** Mapper */
+            mapper: string;
+            /** Methods */
+            methods: string[];
+            /** Minimumcoveredfraction */
+            minimumCoveredFraction: number;
+            /** Outputformat */
+            outputFormat: string;
+            /** Tool */
+            tool: string;
+            /** Toolversion */
+            toolVersion: string;
         };
         /** ProjectionAuditMetadataResponse */
         ProjectionAuditMetadataResponse: {
@@ -2012,6 +2523,395 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+        };
+    };
+    download_api_mag_downloads__kind__get: {
+        parameters: {
+            query?: {
+                query?: string;
+                sortBy?: "magId" | "meanPercent" | "adMeanPercent" | "ncMeanPercent" | "meanDifferencePercentPoints" | "qValue" | "rankBiserial";
+                direction?: "asc" | "desc";
+                view?: "features" | "distribution" | "heatmap" | "taxonomy" | "quality" | "mapping";
+                topN?: number;
+                magId?: string;
+                limit?: number;
+                offset?: number;
+                revision?: string;
+                disease?: "" | "AD" | "NC";
+                gender?: "" | "F" | "M";
+                batch?: "" | "1" | "2" | "3" | "4" | "5";
+                ageMin?: number | null;
+                ageMax?: number | null;
+                abundanceThresholdPercent?: number;
+            };
+            header?: never;
+            path: {
+                kind: "features" | "matrix" | "samples" | "taxonomy" | "quality" | "provenance";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                    "text/csv": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    features_api_mag_features_get: {
+        parameters: {
+            query?: {
+                query?: string;
+                sortBy?: "magId" | "meanPercent" | "adMeanPercent" | "ncMeanPercent" | "meanDifferencePercentPoints" | "qValue" | "rankBiserial";
+                direction?: "asc" | "desc";
+                limit?: number;
+                offset?: number;
+                revision?: string;
+                disease?: "" | "AD" | "NC";
+                gender?: "" | "F" | "M";
+                batch?: "" | "1" | "2" | "3" | "4" | "5";
+                ageMin?: number | null;
+                ageMax?: number | null;
+                abundanceThresholdPercent?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagFeaturePageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    distribution_api_mag_features__mag_id__get: {
+        parameters: {
+            query?: {
+                revision?: string;
+                disease?: "" | "AD" | "NC";
+                gender?: "" | "F" | "M";
+                batch?: "" | "1" | "2" | "3" | "4" | "5";
+                ageMin?: number | null;
+                ageMax?: number | null;
+                abundanceThresholdPercent?: number;
+            };
+            header?: never;
+            path: {
+                mag_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagDistributionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    heatmap_api_mag_heatmap_get: {
+        parameters: {
+            query?: {
+                topN?: number;
+                revision?: string;
+                disease?: "" | "AD" | "NC";
+                gender?: "" | "F" | "M";
+                batch?: "" | "1" | "2" | "3" | "4" | "5";
+                ageMin?: number | null;
+                ageMax?: number | null;
+                abundanceThresholdPercent?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagHeatmapResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    overview_api_mag_overview_get: {
+        parameters: {
+            query?: {
+                revision?: string;
+                disease?: "" | "AD" | "NC";
+                gender?: "" | "F" | "M";
+                batch?: "" | "1" | "2" | "3" | "4" | "5";
+                ageMin?: number | null;
+                ageMax?: number | null;
+                abundanceThresholdPercent?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagOverviewResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    quality_api_mag_quality_get: {
+        parameters: {
+            query?: {
+                revision?: string;
+                disease?: "" | "AD" | "NC";
+                gender?: "" | "F" | "M";
+                batch?: "" | "1" | "2" | "3" | "4" | "5";
+                ageMin?: number | null;
+                ageMax?: number | null;
+                abundanceThresholdPercent?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagQualityResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    samples_api_mag_samples_get: {
+        parameters: {
+            query?: {
+                revision?: string;
+                disease?: "" | "AD" | "NC";
+                gender?: "" | "F" | "M";
+                batch?: "" | "1" | "2" | "3" | "4" | "5";
+                ageMin?: number | null;
+                ageMax?: number | null;
+                abundanceThresholdPercent?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagSamplesResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    taxonomy_api_mag_taxonomy_get: {
+        parameters: {
+            query?: {
+                rank?: "domain" | "phylum" | "class" | "order" | "family" | "genus" | "species";
+                topN?: number;
+                revision?: string;
+                disease?: "" | "AD" | "NC";
+                gender?: "" | "F" | "M";
+                batch?: "" | "1" | "2" | "3" | "4" | "5";
+                ageMin?: number | null;
+                ageMax?: number | null;
+                abundanceThresholdPercent?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagTaxonomyResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
                 };
             };
         };

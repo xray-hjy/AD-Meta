@@ -1,6 +1,6 @@
 # AD-Meta
 
-AD-Meta 是一个面向阿尔茨海默病（Alzheimer's Disease, AD）脑肠轴研究的肠道宏基因组研发辅助工具。系统以宏基因组生物信息分析结果为数据基础，当前支持群落物种组成和 KO 功能层面的分析与可视化，并面向 MAG（Metagenome-Assembled Genomes，宏基因组组装基因组）的分类、丰度、功能及特殊功能解析进行扩展。
+AD-Meta 是一个面向阿尔茨海默病（Alzheimer's Disease, AD）脑肠轴研究的肠道宏基因组研发辅助工具。系统以宏基因组生物信息分析结果为数据基础，当前支持群落物种组成、KO 功能，以及 MAG（Metagenome-Assembled Genomes，宏基因组组装基因组）丰度、GTDB 分类和 CheckM2 质量的分析与可视化。MAG 功能注释及独立跨队列复现仍待数据接入。
 
 项目采用 React/Vite 前端、FastAPI 后端与内网 R/Bioconductor 统计 worker。后端以不可变 revision 原子发布预计算结果，前端通过只读 API 完成交互式分析展示。
 
@@ -66,6 +66,17 @@ npm run dev:frontend
 
 MySQL 本地连接参数模板见 [`.env.example`](.env.example)，完整步骤见
 [本地运行与数据导入](docs/guides/runbook.md)。
+
+## MAG 数据接入
+
+将外部交付的 `ADMetaData` 文件夹放在项目根目录即可使用默认配置，也可在
+`.env` 中设置 `AD_META_MAG_DATA_ROOT` 为其他数据包目录。相对路径始终基于项目根目录解析。
+默认应用只读 `development_input/mag_v2`，不改写数据、不在业务请求中访问 `source_data`、不导入既有物种/KO 表。
+数据包已同时排除在 Git 和 Docker 构建上下文之外。
+
+若交付包只有 `mag_v1`，先运行一次 `npm run prepare:mag:v2`，由只读源结果生成经 872-MAG ID 核验的分类、质量与来源清单；该命令不覆盖已有版本。再运行 `npm run validate:mag`，验证通过后按上述方式启动服务，打开
+`http://127.0.0.1:3000/analysis/mag`。无需重新 bootstrap 原有数据。
+完整说明和 API 参数见 [MAG 丰度、分类与质量接入](docs/guides/mag-data.md)。
 
 Windows 下使用两个终端分别启动后端与前端，具体命令见 [运行手册](docs/guides/runbook.md)。
 

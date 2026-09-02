@@ -24,9 +24,9 @@ import LoadingState from '../components/ui/LoadingState';
 import MainWorkspace from '../components/layout/MainWorkspace';
 import Sidebar from '../components/layout/Sidebar';
 import TopBar from '../components/layout/TopBar';
+import CompleteResultsPanel from '../components/data-display/CompleteResultsPanel';
 import useActiveChart from '../hooks/useActiveChart';
 import useChartData from '../hooks/useChartData';
-import useDatasets from '../hooks/useDatasets';
 import useDatasetSummary from '../hooks/useDatasetSummary';
 import useAnalysisRuns from '../hooks/useAnalysisRuns';
 import useAnalysisSamples from '../hooks/useAnalysisSamples';
@@ -86,9 +86,8 @@ function renderChartComponent(chartType, chartData, summary) {
   return <Suspense fallback={<LoadingState />}>{chart}</Suspense>;
 }
 
-function App() {
+function App({ datasetsState, onDomainChange }) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const datasetsState = useDatasets();
   const runsState = useAnalysisRuns();
   const requestedRun = searchParams.get('run') || '';
   const requestedDataset = searchParams.get('dataset') || '';
@@ -458,7 +457,7 @@ function App() {
         layout={activeChartMeta?.layout || 'fit'}
         controls={projectionControls}
         disclosure={projectionDisclosure}
-        audit={projectionAudit}
+        audit={<>{projectionAudit}{activeRun && activeArtifact ? <CompleteResultsPanel key={`${activeRun.key}:${activeArtifact.key}`} runKey={activeRun.key} artifactKey={activeArtifact.key} /> : null}</>}
         loadingState={projectionKind ? <ProjectionLoadingState /> : null}
       >
         {chartBody}
@@ -487,6 +486,7 @@ function App() {
           charts={charts}
           activeChart={activeChart}
           onDatasetChange={changeDataset}
+          onDomainChange={onDomainChange}
           onChartChange={setActiveChart}
           onChartPrefetch={prefetchChart}
         />

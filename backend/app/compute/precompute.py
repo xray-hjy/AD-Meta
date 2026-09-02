@@ -55,6 +55,7 @@ def precompute_all(
     missing_value_policy: str = "error",
     minimum_group_size: int = 1,
     group_mapping: dict[str, str] | None = None,
+    sample_id_prefixes: list[str] | None = None,
 ) -> tuple[dict, dict[str, Any], list[str]]:
     """为一个数据集生成所有需要缓存的图表 payload。
 
@@ -76,6 +77,7 @@ def precompute_all(
         missing_value_policy=missing_value_policy,
         minimum_group_size=minimum_group_size,
         group_mapping=group_mapping,
+        sample_id_prefixes=sample_id_prefixes,
     )
     return precompute_prepared(
         df,

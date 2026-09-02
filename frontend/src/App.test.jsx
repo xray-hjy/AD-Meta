@@ -270,7 +270,7 @@ test('separates the desktop sidebar and main content into independent scroll reg
   expect(document.querySelector('main.main-content')?.getAttribute('data-scroll-region')).toBe('main');
 });
 
-test('keeps future analysis domains visible but disabled', async () => {
+test('switches MAG inside the analysis workspace and synchronizes its navigation', async () => {
   render(<App />);
 
   await waitFor(() => {
@@ -278,7 +278,22 @@ test('keeps future analysis domains visible but disabled', async () => {
   });
 
   expect(screen.getByRole('button', { name: /物种-功能联合/ }).disabled).toBe(true);
-  expect(screen.getByRole('button', { name: /MAG 解析/ }).disabled).toBe(true);
+  const magButton = screen.getByRole('button', { name: /MAG 解析/ });
+  expect(screen.queryByRole('link', { name: /MAG 解析/ })).toBeNull();
+
+  fireEvent.click(magButton);
+
+  expect(await screen.findByLabelText('MAG 模块数据就绪度')).toBeTruthy();
+  expect(document.querySelector('.app-subtitle')?.textContent).toBe('MAG 解析');
+  expect(screen.getByRole('navigation', { name: '图表导航' })).toBeTruthy();
+  expect(window.location.pathname).toBe('/analysis/abundance');
+  expect(new URLSearchParams(window.location.search).get('domain')).toBe('mag');
+  expect(screen.getByRole('button', { name: /丰度与候选列表/ })).toHaveClass('nav-item--active');
+
+  fireEvent.click(screen.getByRole('button', { name: /群落功能/ }));
+
+  await screen.findByText('高丰度 KO');
+  expect(new URLSearchParams(window.location.search).has('domain')).toBe(false);
 });
 
 test('uses the dedicated KO contribution projection instead of taxonomy composition', async () => {

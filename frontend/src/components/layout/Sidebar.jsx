@@ -8,6 +8,7 @@ export default function Sidebar({
   charts,
   activeChart,
   onDatasetChange,
+  onDomainChange,
   onChartChange,
   onChartPrefetch,
 }) {
@@ -30,6 +31,7 @@ export default function Sidebar({
           datasets={datasets}
           featureKind={summary?.featureKind}
           onDatasetChange={onDatasetChange}
+          onDomainChange={onDomainChange}
         />
       </section>
 

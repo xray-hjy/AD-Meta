@@ -95,6 +95,7 @@ def prepare_dataframe(
     missing_value_policy: str = "error",
     minimum_group_size: int = 1,
     group_mapping: dict[str, str] | None = None,
+    sample_id_prefixes: list[str] | None = None,
 ) -> tuple[pd.DataFrame, list[str], list[str]]:
     """Read, validate and normalize one AD/NC abundance matrix.
 
@@ -180,6 +181,35 @@ def prepare_dataframe(
                 values=invalid_targets,
             )
         groups = groups.replace(normalized_mapping)
+
+    normalized_prefixes = tuple(
+        dict.fromkeys(
+            prefix
+            for prefix in (
+                str(value).strip().upper() for value in (sample_id_prefixes or [])
+            )
+            if prefix
+        )
+    )
+    excluded_sample_count = 0
+    if normalized_prefixes:
+        selected = samples.str.upper().str.startswith(normalized_prefixes)
+        if not selected.any():
+            _fail(
+                "empty_sample_selection",
+                "No samples matched the configured sample ID prefixes.",
+                sampleIdPrefixes=list(normalized_prefixes),
+            )
+        excluded_sample_count = int((~selected).sum())
+        df = df.loc[selected].reset_index(drop=True)
+        samples = samples.loc[selected].reset_index(drop=True)
+        groups = groups.loc[selected].reset_index(drop=True)
+        warnings.append(
+            "Selected "
+            f"{len(df)} sample(s) with sample ID prefixes "
+            f"{', '.join(normalized_prefixes)}; excluded {excluded_sample_count}."
+        )
+
     invalid_groups = sorted(set(groups) - {AD, NC})
     if invalid_groups:
         _fail(
@@ -277,6 +307,8 @@ def prepare_dataframe(
                 "abundanceScale": abundance_scale,
                 "missingValuePolicy": missing_value_policy,
                 "groupMapping": group_mapping or {},
+                "sampleIdPrefixes": list(normalized_prefixes),
+                "excludedSampleCount": excluded_sample_count,
                 "inferenceEligible": abundance_scale != "unknown" and missing_count == 0 and min(group_counts.values()) >= 5,
             },
         }

@@ -10,6 +10,8 @@
     "dev:frontend": "npm --prefix frontend start",
     "migrate:sqlite-to-mysql": "cd backend && .venv/bin/python -m app.cli.migrate_sqlite_to_mysql",
     "bootstrap:storage": "cd backend && .venv/bin/python -m app.cli.bootstrap_storage",
+    "validate:mag": "cd backend && .venv/bin/python -m app.cli.validate_mag",
+    "prepare:mag:v2": "cd backend && .venv/bin/python -m app.cli.prepare_mag_v2",
     "prepare:runtime": "cd backend && .venv/bin/python -m app.cli.prepare_runtime",
     "sync:analysis": "cd backend && .venv/bin/python -m app.cli.sync_analysis_manifest",
     "migrate": "cd backend && .venv/bin/python -m alembic upgrade head",

@@ -17,6 +17,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 
 from app.api.analysis_runs import router as analysis_runs_router
 from app.api.datasets import router as datasets_router
+from app.api.mag import router as mag_router
 from app.core.config import (
     CACHE_ROOT,
     DEFAULT_CORS_ORIGINS,
@@ -27,6 +28,7 @@ from app.core.config import (
 from app.core.database import connect, dispose_engine
 from app.core.migrations import HEAD_REVISION, upgrade_database
 from app.services.dataset_service import cache_metrics
+from app.services.mag_data_service import MagDataError
 from app.services.projection_audit_repository import cleanup_expired_audit_artifacts
 from app.services.statistics_worker import worker_metrics
 
@@ -300,5 +302,11 @@ def internal_metrics():
     )
 
 
+@app.exception_handler(MagDataError)
+async def mag_data_error_handler(request: Request, exc: MagDataError):
+    return JSONResponse(status_code=503, content={"detail": str(exc), "report": exc.report})
+
+
+app.include_router(mag_router)
 app.include_router(datasets_router)
 app.include_router(analysis_runs_router)

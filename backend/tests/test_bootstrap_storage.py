@@ -31,6 +31,7 @@ class BootstrapStorageTests(unittest.TestCase):
                         "AD002,AD,9,3",
                         "NC001,NC,1,8",
                         "NC002,NC,2,7",
+                        "ERR001,AD,",
                     ]
                 ),
                 encoding="utf-8",
@@ -57,6 +58,7 @@ class BootstrapStorageTests(unittest.TestCase):
                                 "name": "AD vs NC Species Abundance",
                                 "description": "Species abundance comparison between AD and NC groups.",
                                 "file": "storage/raw/ad-nc-species/raw.csv",
+                                "sampleIdPrefixes": ["AD", "NC"],
                             },
                             {
                                 "slug": "ad-nc-ko-abundance",

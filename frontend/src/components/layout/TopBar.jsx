@@ -7,6 +7,7 @@ import BrandMark from '../brand/BrandMark';
 export default function TopBar({
   featureKind,
   summary,
+  workspaceSubtitle = '群落物种与功能分析',
   runs = [],
   runsLoading = false,
   runsError = null,
@@ -41,7 +42,7 @@ export default function TopBar({
         <span className="workspace-branding__divider" aria-hidden="true" />
         <div className="workspace-branding__context">
           <span className="workspace-kicker">分析工作区</span>
-          <span className="app-subtitle">群落物种与功能分析</span>
+          <span className="app-subtitle">{workspaceSubtitle}</span>
         </div>
       </div>
       <div className="topbar-context">

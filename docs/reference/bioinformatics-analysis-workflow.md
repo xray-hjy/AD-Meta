@@ -71,9 +71,9 @@ Contigs
 
 该矩阵是当前“群落功能”分析域的数据基础，支持 KO 组成、检出情况和组间差异分析。后续可以增加 KEGG Pathway 或 Module 解释，但不得将群落层面的 KO 相关性表述为具体物种的功能归属。
 
-### 3.2 Genome-resolved Metagenomics（尚未接入工具）
+### 3.2 Genome-resolved Metagenomics（部分接入）
 
-该方向从组装结果中恢复 MAG（Metagenome-Assembled Genome）。当前项目尚未获得可供工具正式接入的 MAG 分析结果，因此相关前端入口只能标记为“规划中”。
+该方向从组装结果中恢复 MAG（Metagenome-Assembled Genome）。当前工具已接入 872 个去冗余代表 MAG 的 Sample × MAG 丰度、GTDB 分类和 CheckM2 质量；MAG 功能注释和独立跨队列复现仍未接入。
 
 规划流程为：
 
@@ -90,9 +90,9 @@ Contigs
 
 分箱综合利用 Contig 的序列组成特征和跨样本 Coverage 模式。CheckM2 用于评价完整度、污染度和基因组大小；dRep 用于去除重复或高度相似的基因组。
 
-## 4. MAG 水平解析（未来扩展）
+## 4. MAG 水平解析
 
-获得经过质量筛选和去冗余的 Final MAGs 后，可形成四类下游分析。
+经过质量筛选和去冗余的 Final MAGs 可形成四类下游分析；以下同时注明当前工具接入边界。
 
 ### 4.1 分类与系统发育
 
@@ -104,7 +104,7 @@ Final MAGs
   → MAG × Taxonomy
 ```
 
-该分析结果描述每个 MAG 的分类层级和 MAG 之间的进化关系。
+GTDB 分类层级已经接入；IQ-TREE/iTOL 系统发育结果尚未作为稳定数据产品接入。
 
 ### 4.2 MAG 丰度
 
@@ -115,7 +115,7 @@ Final MAGs + Clean Reads
   → Sample × MAG
 ```
 
-该分析结果描述不同样本中 MAG 的存在情况和丰度，可用于 AD/NC 组间比较。
+Sample × MAG 相对丰度已经接入，可用于当前 CRA014435 AD/NC 子队列的探索性组间比较。
 
 ### 4.3 MAG 功能注释
 
@@ -143,9 +143,9 @@ Final MAGs
 | --- | --- | --- | --- |
 | Sample × Species | 样本中的物种丰度 | 已接入 | 群落物种 |
 | Sample × KO | 样本中的群落整体 KO 丰度 | 已接入 | 群落功能 |
-| Final MAGs | 质量筛选、优化和去冗余后的 MAG 集合 | 规划中 | MAG 解析 |
-| MAG × Taxonomy | MAG 分类与系统发育信息 | 规划中 | MAG 解析 |
-| Sample × MAG | 样本中的 MAG 丰度 | 规划中 | MAG 解析 |
+| Final MAGs / MAG Quality | 质量筛选、优化和去冗余后的代表 MAG 与 CheckM2 指标 | 已接入 872 个 | MAG 解析 |
+| MAG × Taxonomy | GTDB 分类信息；系统发育树尚未接入 | 分类已接入 | MAG 解析 |
+| Sample × MAG | 样本中的 MAG 丰度 | 已接入 185×872 | MAG 解析 |
 | MAG × KO | 每个 MAG 携带的 KO 功能 | 规划中 | MAG 解析、物种-功能联合 |
 | ARG / CAZyme / BGC 等 | MAG 的特殊功能注释 | 规划中 | MAG 解析 |
 
@@ -154,7 +154,7 @@ Final MAGs
 1. 页面上的“群落物种”和“群落功能”是两个分析域，不应把两张导入矩阵误称为两个正式研究数据集。
 2. 物种和 KO 数据可以覆盖不同的样本子集，所有图表必须使用当前分析矩阵实际包含的样本数和 AD/NC 分组数。
 3. `Sample × KO` 只描述群落整体功能；没有 `MAG × KO` 或其他可靠归属证据时，不得声称功能来自某个具体物种。
-4. MAG 入口可以提前纳入稳定信息架构，但在数据未接入前必须保持禁用或“规划中”状态。
+4. MAG 模块必须按数据就绪度逐项启用；未接入的功能注释和跨队列复现继续保持禁用或“规划中”状态。
 5. 新增分析数据类型时，应先定义导入契约、数据库模型和后端预计算，再注册前端分析模块；不得在页面组件中直接拼接原始分析文件。
 
 ## 7. 整体数据流

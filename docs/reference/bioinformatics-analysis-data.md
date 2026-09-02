@@ -94,6 +94,9 @@ CRR 是测序运行编号，不等同于受试者身份。后端导入和 Manife
 Clean Reads -> Kraken2 分类 -> Bracken 丰度校正 -> Sample x Species
 ```
 
+当前发布范围限定为 CRA014435 的 185 个 CRR AD/NC 样本（AD 122、NC 63）。
+原始交付表中的 ERR 与 SRR 行保留用于来源审计，但不会进入当前物种数据集、缓存或分析运行。
+
 它支持群落物种组成概览、AD/NC 物种分布与差异分析、分类层级关系可视化，以及基于物种矩阵的样本结构与距离分析。
 
 ### Sample x KO
@@ -104,9 +107,11 @@ Clean Reads -> Kraken2 分类 -> Bracken 丰度校正 -> Sample x Species
 Clean Reads -> Assembly -> 基因预测与功能注释 -> Reads 定量 -> Sample x KO
 ```
 
+当前发布范围同样为上述 185 个 CRR AD/NC 样本。
+
 它描述群落整体功能组成，支持 KO 丰度、检出情况和组间差异分析，并可继续扩展 KO 到 KEGG Pathway 或 Module 的解释。`Sample x KO` 不能单独证明某项功能来自某个具体物种。
 
-## 规划接入的 MAG 分析数据
+## MAG 分析数据与接入状态
 
 基因组解析宏基因组流程计划形成以下结构化分析结果：
 
@@ -116,7 +121,7 @@ Clean Reads -> Assembly -> 基因预测与功能注释 -> Reads 定量 -> Sample
 - MAG x KO：不同 MAG 携带的功能信息。
 - ARG、CAZyme、BGC 和代谢功能注释结果。
 
-### 已收到的 CRR MAG 定量产物
+### 已接入的 CRR MAG 数据
 
 生信组已交付 185 个 CRR 样本与 872 个 MAG 的 CoverM 定量结果，包括相对丰度、平均覆盖深度、被 reads 覆盖的基因组比例、比对 reads 数和 reads/base，并同时提供宽表与统一长表。原始文件归档于：
 
@@ -124,9 +129,9 @@ Clean Reads -> Assembly -> 基因预测与功能注释 -> Reads 定量 -> Sample
 backend/storage/raw/crr-mag-quantification/
 ```
 
-这表示 Sample x MAG 数据基础已经形成，但不等于 MAG 解析模块已经正式上线。正式接入仍需完成样本元数据关联、指标定义确认、数据库模型、AnalysisRun/Artifact/Manifest 登记、后端分析服务和前端模块开发。GTDB-Tk、CheckM2、dRep 与 MAG 功能注释结果仍应通过稳定 MAG 标识继续关联。
+当前运行版本 `mag_v2` 已将 Sample × MAG 丰度、GTDB-Tk 分类和 CheckM2 质量通过同一组 872 个代表 MAG ID 关联，并在 `/analysis/mag` 提供丰度、分类、质量和技术质控视图。运行时只读版本化 `development_input`，不直接读取生信源目录。
 
-在这些数据通过正式导入契约接入前，前端可以保留 MAG 解析入口和模块位置，但必须标记为“规划中”，不得展示模拟结果或暗示相关能力已经上线。
+MAG × KO、ARG、CAZyme、BGC 等功能注释尚未交付为可关联的数据产品；当前 185 个样本又都来自 CRA014435 的 AD/NC 子队列，因此 MAG 功能注释和独立跨队列复现仍必须标记为“规划中”，不得展示模拟结果。GTDB-Tk 与 GTDB reference release 版本也仍需补充到来源清单。
 
 ## 前端分析域约定
 
@@ -135,6 +140,6 @@ backend/storage/raw/crr-mag-quantification/
 1. 群落物种：组成概览、分布与差异、分类层级、样本结构。
 2. 群落功能：功能概览、检出与差异、样本结构、通路解释。
 3. 物种-功能联合：规划中的样本层面关联分析；相关关系不得表述为功能归属。
-4. MAG 解析：规划中的质量、分类与系统发育、丰度、功能及特殊功能分析。
+4. MAG 解析：已接入丰度、GTDB 分类、CheckM2 质量和技术质控；功能注释与独立跨队列复现规划中。
 
 分析域是长期信息架构。新增分析数据类型时，应扩展导入契约、数据库模型、后端预计算和图表注册配置，不应在页面组件中临时拼接数据或增加孤立入口。

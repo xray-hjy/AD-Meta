@@ -24,5 +24,7 @@ test('presents the community analysis domains and planned extensions', () => {
   expect(screen.getByText('Sample × KO')).toBeTruthy();
   expect(screen.getByText('Raw FASTQ')).toBeTruthy();
   expect(screen.getByText('Coverage 计算')).toBeTruthy();
-  expect(screen.getByText(/Final MAGs/)).toBeTruthy();
+  expect(screen.getByText('丰度、分类与质量已接入')).toBeTruthy();
+  expect(screen.getByText(/当前：Sample × MAG/)).toBeTruthy();
+  expect(screen.getByRole('link', { name: '进入 MAG 解析' }).getAttribute('href')).toBe('/analysis/mag');
 });

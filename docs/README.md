@@ -10,14 +10,15 @@
 ## 使用指南
 
 - [本地运行与数据导入](guides/runbook.md)：环境安装、服务启动、数据导入、缓存重建和部署。
+- [MAG 丰度、分类与质量接入](guides/mag-data.md)：外部数据配置、`mag_v2` 准备与校验、MAG 工作区、统计边界和下载 API。
 
 ## 技术参考
 
 - [API 契约](reference/api.md)：公开只读接口与图表 payload。
 - [数据库契约](reference/database.md)：科学数据表、应用支撑表和导入约束。
 - [AnalysisRun、Artifact 与 Manifest 数据契约](reference/analysis-run-artifact-manifest.md)：生信组、标志物组与 AD-Meta 之间的分析结果交付规范草案。
-- [AD 宏基因组生物信息分析流程摘要](reference/bioinformatics-analysis-workflow.md)：从 Raw FASTQ 到物种、KO 和未来 MAG 分析结果的上游流程。
-- [生物信息流程与分析数据接入](reference/bioinformatics-analysis-data.md)：分析数据接入边界、科学表述和未来 MAG 扩展约定。
+- [AD 宏基因组生物信息分析流程摘要](reference/bioinformatics-analysis-workflow.md)：从 Raw FASTQ 到物种、KO 和 MAG 分析结果的上游流程。
+- [生物信息流程与分析数据接入](reference/bioinformatics-analysis-data.md)：分析数据接入边界、科学表述和 MAG 扩展约定。
 - [图表分析策略与投影契约](reference/chart-analysis-policies.md)：分析范围、计算参数、展示上限及各类图表的专属科学策略。
 
 ## 开发记录
