@@ -8,6 +8,7 @@ Create the backend virtual environment once. On macOS/Linux:
 cd backend
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements-dev.txt
+cd ..
 ```
 
 On Windows PowerShell:
@@ -16,6 +17,7 @@ On Windows PowerShell:
 cd backend
 py -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+cd ..
 ```
 
 Install frontend dependencies once:
@@ -23,6 +25,7 @@ Install frontend dependencies once:
 ```bash
 cd frontend
 npm install
+cd ..
 ```
 
 Restore the statistics worker's locked R 4.5.2 / Bioconductor 3.21 environment
@@ -84,11 +87,15 @@ On Windows PowerShell, use the same `renv::run()` command for the worker,
 then start the application processes in two more terminals:
 
 ```powershell
-# Terminal 1
+# Terminal 1, from the repository root
+cd stats-worker
+Rscript -e 'renv::run("server.R", project = ".")'
+
+# Terminal 2, from the repository root
 cd backend
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 
-# Terminal 2
+# Terminal 3, from the repository root
 cd frontend
 $env:BROWSER='none'
 $env:HOST='127.0.0.1'
