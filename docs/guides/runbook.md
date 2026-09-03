@@ -25,6 +25,16 @@ cd frontend
 npm install
 ```
 
+Restore the statistics worker's locked R 4.5.2 / Bioconductor 3.21 environment
+once. The first command installs `renv` only when it is not already available:
+
+```bash
+cd stats-worker
+Rscript -e 'if (!requireNamespace("renv", quietly = TRUE)) install.packages("renv", repos = "https://cloud.r-project.org")'
+Rscript -e 'renv::restore(project = ".", lockfile = "renv.lock", prompt = FALSE)'
+cd ..
+```
+
 Make sure the locally installed MySQL server is running, then verify it:
 
 ```bash
@@ -56,17 +66,22 @@ This reads `backend/storage_manifest.json`, imports each file under
 JSON under `backend/storage/cache/`. Run it again after pulling changes that
 update `COMPUTE_VERSION` or chart precomputation logic.
 
-Start the backend and frontend in two terminals:
+Start the statistics worker, backend and frontend in three terminals:
 
 ```bash
 # Terminal 1
+cd stats-worker
+Rscript -e 'renv::run("server.R", project = ".")'
+
+# Terminal 2, from the repository root
 npm run dev:backend
 
-# Terminal 2
+# Terminal 3, from the repository root
 npm run dev:frontend
 ```
 
-On Windows PowerShell, use:
+On Windows PowerShell, use the same `renv::run()` command for the worker,
+then start the application processes in two more terminals:
 
 ```powershell
 # Terminal 1
@@ -83,21 +98,8 @@ npm start
 
 The site is available at `http://127.0.0.1:3000`. The backend API is
 available at `http://127.0.0.1:8000`, and its OpenAPI page is at
-`http://127.0.0.1:8000/docs`.
-
-Start the backend:
-
-```bash
-cd backend
-.venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
-```
-
-Start the frontend:
-
-```bash
-cd frontend
-npm start
-```
+`http://127.0.0.1:8000/docs`. The statistics worker listens on
+`http://127.0.0.1:8001` and should be reachable only by the backend host.
 
 Vite proxies `/api` to `http://127.0.0.1:8000` in development. For another API
 host, set `VITE_API_BASE_URL`.
@@ -188,15 +190,14 @@ AD_META_DB_ENGINE=sqlite .venv/bin/python -m unittest tests.test_precompute test
 
 The root verification and real-browser gates are:
 
-All of these commands require Node.js 22 or newer, matching CI and the frontend
-build image.
+All of these commands require Node.js 22 or newer, matching CI.
 
 ```bash
 npm run verify
 npm run verify:full
-npm run verify:containers
 npm --prefix frontend exec -- playwright install chromium
 npm run test:e2e
+cd stats-worker && Rscript -e 'renv::run("tests/model_smoke.R", project = ".")'
 ```
 
 The E2E command uses dedicated ports `18000/14173`, a temporary SQLite database,
@@ -210,8 +211,8 @@ tests in the same change. Pure internal refactors should keep API payloads and
 
 ## Database Mode
 
-MySQL is the default for local development, Docker, and production-style runs.
-The built-in defaults match the MySQL service in `docker-compose.yml`:
+MySQL is the default for local development and production-style runs. Configure
+the locally installed or externally managed server through `.env`:
 
 ```bash
 export AD_META_DB_ENGINE=mysql
@@ -242,37 +243,28 @@ export AD_META_DB_ENGINE=sqlite
 export AD_META_DB_PATH=storage/ad_meta.sqlite3
 ```
 
-## Production-Style Docker Run
+## Production-Style Native Run
 
-Compose starts a health-checked MySQL 8.4 service and an internal-only R worker by default.
-`backend-init` completes schema and data preparation once before the backend starts. The
-backend, worker and Nginx containers run as non-root with read-only root filesystems.
-
-```bash
-docker compose up --build
-```
-
-For a non-Compose deployment with multiple backend replicas, run the initializer once:
+Use a dedicated non-root MySQL account and set `AD_META_ENVIRONMENT=production`.
+Restore and supervise the R worker as described above, keeping port `8001`
+restricted to the backend host. Before starting one or more backend replicas,
+run the initializer exactly once:
 
 ```bash
+npm run prepare:runtime
 cd backend
-.venv/bin/python -m app.cli.prepare_runtime
-.venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+.venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-The site is served at:
+Build the frontend into `frontend/dist/` and serve that directory with the host's
+web server or static hosting platform:
 
-```text
-http://localhost:8080
+```bash
+npm run build
 ```
 
-The frontend container serves static files through Nginx. Requests under
-`/api/` are proxied to the backend container.
-
-Use `docker compose --profile external-mysql up backend-external stats-worker`
-for an externally managed MySQL host. Its `backend-external-init` dependency performs
-the same one-time preparation. Production mode rejects a blank password or the MySQL
-root account.
+Set `VITE_API_BASE_URL` at build time when the API is not exposed under the same
+origin. Production mode rejects a blank MySQL password or the root account.
 
 ## Public Data Contract
 

@@ -150,5 +150,7 @@ build_router <- function() {
 }
 
 if (sys.nframe() == 0) {
-  build_router()$run(host = "0.0.0.0", port = 8001)
+  worker_host <- Sys.getenv("AD_META_STATS_WORKER_HOST", "127.0.0.1")
+  worker_port <- as.integer(Sys.getenv("AD_META_STATS_WORKER_PORT", "8001"))
+  build_router()$run(host = worker_host, port = worker_port)
 }

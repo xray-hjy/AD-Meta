@@ -27,7 +27,6 @@
     "lint": "cd backend && .venv/bin/python -m ruff check app tests && npm --prefix ../frontend run lint",
     "typecheck": "cd backend && .venv/bin/python -m mypy app && npm --prefix ../frontend run typecheck",
     "verify": "npm run lint && npm run typecheck && npm run test:backend && npm run test:frontend && npm run build",
-    "verify:full": "npm run verify && npm run test:coverage && npm run check:openapi && npm run audit && npm run test:e2e",
-    "verify:containers": "bash scripts/verify-containers.sh"
+    "verify:full": "npm run verify && npm run test:coverage && npm run check:openapi && npm run audit && npm run test:e2e"
   }
 }

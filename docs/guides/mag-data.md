@@ -112,5 +112,6 @@ CSV 每行带数据指纹、范围指纹、scopeJson 和单位，范围指纹与
 代码仓库未复制数据包内容，也未新增包依赖或改变既有 `COMPUTE_VERSION`。
 原有物种/KO 工作区的“完整结果查询与下载”调用交接已有的 artifact-scoped 接口；独立查询、不继承图表筛选，不为稀疏存储缺失组合补零。
 
-容器部署时应自行以只读卷挂载外部数据包，并显式设置 `AD_META_MAG_DATA_ROOT` 为容器内挂载目录、`AD_META_MAG_DATA_VERSION` 为已核验版本。
-当前 Compose 默认不挂载该数据包；没有数据时 MAG 返回清晰 503，不阻塞原有服务。此轮不包含容器部署验证。
+部署时应把外部数据包保留在代码仓库之外，通过 `.env` 显式设置
+`AD_META_MAG_DATA_ROOT` 为主机上的只读目录、`AD_META_MAG_DATA_VERSION` 为已核验版本。
+没有数据时 MAG 返回清晰 503，不阻塞原有服务。

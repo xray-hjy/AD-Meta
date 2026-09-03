@@ -81,7 +81,7 @@ def _relative_to_backend(path: Path) -> str:
     try:
         return str(resolved.relative_to(backend_root.resolve()))
     except ValueError:
-        # Docker volumes and operator-configured storage roots may live outside
+        # Operator-configured storage roots may live outside
         # the application directory. Absolute paths remain confined by the
         # dataset service to the configured revision cache root before reads.
         return str(resolved)
