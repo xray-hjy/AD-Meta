@@ -83,4 +83,24 @@ describe('ProjectionDisclosure ordination summaries', () => {
     expect(screen.getByText('负轴校正后的组内离散距离退化，PERMDISP 不具备可解释性')).toBeInTheDocument();
     expect(screen.queryByText(/PERMDISP（正\/负轴校正）F=/)).not.toBeInTheDocument();
   });
+
+  it('explains a PCoA whose samples all have zero pairwise distance', () => {
+    const data = baseData('pcoa');
+    data.projection.featureSelection = {
+      preset: 'unfiltered',
+      retainedMass: { mean: 1 },
+    };
+    data.projection.inference = {
+      permanovaStatus: 'not_interpretable_no_between_sample_distance_variation',
+    };
+    data.payload = {
+      permanova: { r2: 0, fStat: null, pValue: null, nPerm: 0 },
+    };
+
+    render(<ProjectionDisclosure data={data} />);
+
+    expect(screen.getByText(
+      '所有样本间距离均为零，PERMANOVA 的 pseudo-F 与置换 p 值不可解释'
+    )).toBeInTheDocument();
+  });
 });

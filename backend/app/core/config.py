@@ -36,6 +36,10 @@ class Settings(BaseSettings):
     projection_cache_ttl_hours: int = Field(default=168, ge=1)
     projection_cache_cleanup_interval_seconds: int = Field(default=3600, ge=60)
     projection_cache_cleanup_batch_size: int = Field(default=500, ge=1, le=5000)
+    projection_file_cache_max_entry_bytes: int = Field(default=64 * 1024 * 1024, ge=1024)
+    projection_file_cache_max_total_bytes: int = Field(default=512 * 1024 * 1024, ge=1024)
+    projection_file_cache_max_files: int = Field(default=5000, ge=1)
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
 
     @model_validator(mode="after")
     def validate_runtime(self):
@@ -45,6 +49,11 @@ class Settings(BaseSettings):
             raise ValueError("AD_META_MAG_DATA_VERSION must use the form 'mag_vN'.")
         if self.db_engine not in {"mysql", "sqlite"}:
             raise ValueError("AD_META_DB_ENGINE must be either 'mysql' or 'sqlite'.")
+        if self.projection_file_cache_max_entry_bytes > self.projection_file_cache_max_total_bytes:
+            raise ValueError(
+                "AD_META_PROJECTION_FILE_CACHE_MAX_ENTRY_BYTES must not exceed "
+                "AD_META_PROJECTION_FILE_CACHE_MAX_TOTAL_BYTES."
+            )
         if self.environment.strip().lower() == "production" and self.db_engine == "mysql":
             if self.mysql_user.strip().lower() == "root":
                 raise ValueError("Production MySQL must not use the root account.")
@@ -77,6 +86,9 @@ PROJECTION_CACHE_CLEANUP_INTERVAL_SECONDS = (
     SETTINGS.projection_cache_cleanup_interval_seconds
 )
 PROJECTION_CACHE_CLEANUP_BATCH_SIZE = SETTINGS.projection_cache_cleanup_batch_size
+PROJECTION_FILE_CACHE_MAX_ENTRY_BYTES = SETTINGS.projection_file_cache_max_entry_bytes
+PROJECTION_FILE_CACHE_MAX_TOTAL_BYTES = SETTINGS.projection_file_cache_max_total_bytes
+PROJECTION_FILE_CACHE_MAX_FILES = SETTINGS.projection_file_cache_max_files
 
 COMPUTE_VERSION = "2026-08-13-ordination-v3"
 
@@ -96,6 +108,7 @@ PUBLIC_CHART_TYPES = {
 }
 
 DEFAULT_CORS_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
+    origin.strip()
+    for origin in SETTINGS.cors_origins.split(",")
+    if origin.strip()
 ]

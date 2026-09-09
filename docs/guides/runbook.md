@@ -69,6 +69,12 @@ This reads `backend/storage_manifest.json`, imports each file under
 JSON under `backend/storage/cache/`. Run it again after pulling changes that
 update `COMPUTE_VERSION` or chart precomputation logic.
 
+Raw duplicate headers fail validation by default. A dataset may set
+`duplicateFeaturePolicy` to `coalesce_equal_selected` only for a documented
+source defect: the importer then compares every duplicate feature value inside
+the configured sample scope and coalesces the columns only when they are equal.
+Any conflicting value still stops publication.
+
 Start the statistics worker, backend and frontend in three terminals:
 
 ```bash

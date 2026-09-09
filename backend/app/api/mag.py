@@ -5,13 +5,17 @@ import json
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
 from app.api.mag_models import (
+    MagCrosswalkPageResponse,
     MagDistributionResponse,
     MagErrorResponse,
     MagFeaturePageResponse,
     MagHeatmapResponse,
+    MagLineageClusterDetailResponse,
+    MagLineageClusterPageResponse,
+    MagLineageResponse,
     MagOverviewResponse,
     MagQualityResponse,
     MagSamplesResponse,
@@ -46,6 +50,12 @@ Data = Annotated[service.MagDataset, Depends(dataset)]
 Scope = Annotated[service.MagScope, Depends(selection)]
 SortBy = Literal["magId", "meanPercent", "adMeanPercent", "ncMeanPercent", "meanDifferencePercentPoints", "qValue", "rankBiserial"]
 TaxonomyRank = Literal["domain", "phylum", "class", "order", "family", "genus", "species"]
+MappingStatus = Literal[
+    "",
+    "matched_exact_ncbi_species_taxid",
+    "ncbi_species_taxid_not_observed_in_reads",
+    "no_gtdb_reference",
+]
 
 
 @router.get("/overview", response_model=MagOverviewResponse)
@@ -98,14 +108,87 @@ def quality(data: Data, scope: Scope):
     return service.quality_summary(data, scope)
 
 
+@router.get("/lineage/clusters", response_model=MagLineageClusterPageResponse)
+def lineage_clusters(
+    data: Data,
+    scope: Scope,
+    query: str = Query(default="", max_length=200),
+    mapping_status: Annotated[MappingStatus, Query(alias="mappingStatus")] = "",
+    low_ani_only: bool = Query(default=False, alias="lowAniOnly"),
+    sort_by: Annotated[
+        Literal[
+            "clusterId", "representativeMag", "memberCount", "sourceSampleCount", "aniMin", "aniMax",
+            "below095AniCount", "completenessPercent", "contaminationPercent",
+        ],
+        Query(alias="sortBy"),
+    ] = "memberCount",
+    direction: Literal["asc", "desc"] = "desc",
+    limit: int = Query(default=25, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+):
+    return service.lineage_cluster_page(
+        data, scope, query=query, mapping_status=mapping_status, low_ani_only=low_ani_only,
+        sort_by=sort_by, direction=direction, limit=limit, offset=offset,
+    )
+
+
+@router.get("/lineage/clusters/{cluster_id}", response_model=MagLineageClusterDetailResponse)
+def lineage_cluster(
+    cluster_id: str,
+    data: Data,
+    scope: Scope,
+    query: str = Query(default="", max_length=200),
+    member_disease: Literal["", "AD", "NC"] = Query(default="", alias="memberDisease"),
+    source_group: Literal["", "CHN", "CHN2"] = Query(default="", alias="sourceGroup"),
+    low_ani_only: bool = Query(default=False, alias="lowAniOnly"),
+    sort_by: Annotated[
+        Literal["memberMag", "memberSourceSampleId", "memberToRepAni", "memberToRepAlignmentCoverage"],
+        Query(alias="sortBy"),
+    ] = "memberToRepAni",
+    direction: Literal["asc", "desc"] = "asc",
+    limit: int = Query(default=25, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+):
+    try:
+        return service.lineage_cluster_detail(
+            data, scope, cluster_id, query=query, disease=member_disease, group=source_group,
+            low_ani_only=low_ani_only, sort_by=sort_by, direction=direction, limit=limit, offset=offset,
+        )
+    except KeyError as exc:
+        raise HTTPException(404, "dRep 聚类不存在。") from exc
+
+
+@router.get("/lineage/mags/{mag_id}", response_model=MagLineageResponse)
+def lineage_mag(mag_id: str, data: Data, scope: Scope):
+    try:
+        return service.mag_lineage(data, scope, mag_id)
+    except KeyError as exc:
+        raise HTTPException(404, "MAG ID 不存在于 lineage。") from exc
+
+
+@router.get("/crosswalk", response_model=MagCrosswalkPageResponse)
+def crosswalk(
+    data: Data,
+    scope: Scope,
+    query: str = Query(default="", max_length=200),
+    mapping_status: Annotated[MappingStatus, Query(alias="mappingStatus")] = "",
+    limit: int = Query(default=25, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+):
+    return service.crosswalk_page(
+        data, scope, query=query, mapping_status=mapping_status, limit=limit, offset=offset,
+    )
+
+
 @router.get("/downloads/{kind}", response_class=StreamingResponse,
-            responses={200: {"content": {"text/csv": {}, "application/json": {}}}})
+            responses={200: {"content": {"text/csv": {}, "text/tab-separated-values": {}, "application/json": {}}}})
 def download(
-    kind: Literal["features", "matrix", "samples", "taxonomy", "quality", "provenance"], data: Data, scope: Scope,
+    kind: Literal["features", "matrix", "samples", "taxonomy", "quality", "provenance", "lineage", "crosswalk"], data: Data, scope: Scope,
     query: str = Query(default="", max_length=200),
     sort_by: Annotated[SortBy, Query(alias="sortBy")] = "meanPercent",
     direction: Literal["asc", "desc"] = "desc",
     view: Literal["features", "distribution", "heatmap", "taxonomy", "quality", "mapping"] = "features",
+    rank: TaxonomyRank = "phylum",
     top_n: int = Query(default=20, alias="topN", ge=1, le=50),
     mag_id: str = Query(default="", alias="magId", max_length=200),
     limit: int = Query(default=25, ge=1, le=100),
@@ -113,6 +196,14 @@ def download(
 ):
     audit = service.provenance(data, scope)
     token = f"{data.version}-{kind}-{audit['requestFingerprint'][:12]}"
+    if kind in {"lineage", "crosswalk"}:
+        manifest_sha = audit["manifest"]["sha256"] or ""
+        return FileResponse(
+            service.raw_download_path(data, kind),
+            media_type="text/tab-separated-values; charset=utf-8",
+            filename=f"{token}.tsv",
+            headers={"X-Data-Fingerprint": data.fingerprint, "X-MAG-Manifest-SHA256": manifest_sha},
+        )
     if kind == "provenance":
         display: dict = {"view": view, "featureQuery": query, "sortBy": sort_by, "direction": direction,
                          "pageLimit": limit, "pageOffset": offset, "topN": top_n, "selectedMagId": mag_id}
@@ -127,6 +218,9 @@ def download(
                 raise HTTPException(404, "MAG ID 不存在。")
             display["displayedMagIds"] = [mag_id]
         elif view == "taxonomy":
+            taxonomy_projection = service.taxonomy_summary(data, scope, rank=rank, top_n=top_n)
+            display["taxonomyRank"] = rank
+            display["displayedTaxa"] = [item["label"] for item in taxonomy_projection["items"]]
             display["displayedMagIds"] = list(data.mag_ids) if data.taxonomy else []
             display["taxonomyScope"] = "all representative MAGs; independent of sample filters"
         elif view == "quality":

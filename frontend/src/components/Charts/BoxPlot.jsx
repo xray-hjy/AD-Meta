@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ReactECharts from './CartesianEChart';
 import ChartViewport from './ChartViewport';
+import { escapeTooltipText } from '../../utils/tooltipHtml';
 
 const FALLBACK_SERIES = [
   { key: 'AD', label: 'AD', color: '#e74c3c' },
@@ -179,12 +180,12 @@ function BoxPlot({ data, featureLabel = '物种', featureSelectionConfig = {} })
         textStyle: { color: '#f1f5f9', fontSize: 12 },
         formatter(params) {
           if (params.seriesType === 'scatter') {
-            return `<b>${params.data.group} - ${params.data.feature}</b><br/>样本编号: ${params.data.sample || '未知'}<br/>离群点: ${fmtNum(params.data.value[1], activeTransform.key)}`;
+            return `<b>${escapeTooltipText(params.data.group)} - ${escapeTooltipText(params.data.feature)}</b><br/>样本编号: ${escapeTooltipText(params.data.sample || '未知')}<br/>离群点: ${fmtNum(params.data.value[1], activeTransform.key)}`;
           }
           const box = params.data;
           const item = available[params.dataIndex];
           const detectionNote = item?.detectedInScope === false ? '<br/><b>当前范围未检出</b>' : '';
-          return `<b>${params.seriesName} - ${item?.shortName || params.name}</b><br/>上限: ${fmtNum(box[4], activeTransform.key)}<br/>Q3: ${fmtNum(box[3], activeTransform.key)}<br/><b>中位数: ${fmtNum(box[2], activeTransform.key)}</b><br/>Q1: ${fmtNum(box[1], activeTransform.key)}<br/>下限: ${fmtNum(box[0], activeTransform.key)}${detectionNote}`;
+          return `<b>${escapeTooltipText(params.seriesName)} - ${escapeTooltipText(item?.shortName || params.name)}</b><br/>上限: ${fmtNum(box[4], activeTransform.key)}<br/>Q3: ${fmtNum(box[3], activeTransform.key)}<br/><b>中位数: ${fmtNum(box[2], activeTransform.key)}</b><br/>Q1: ${fmtNum(box[1], activeTransform.key)}<br/>下限: ${fmtNum(box[0], activeTransform.key)}${detectionNote}`;
         },
       },
       legend: {

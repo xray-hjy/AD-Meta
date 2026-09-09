@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import ReactECharts from './CartesianEChart';
 import ChartViewport from './ChartViewport';
+import { escapeTooltipText } from '../../utils/tooltipHtml';
 
 const FALLBACK_COLORS = ['#e74c3c', '#2ecc71', '#2563eb', '#f59e0b'];
 const BAR_HEIGHT = 22;
@@ -90,7 +91,7 @@ function PhylumChart({ data, featureKind = 'taxonomy' }) {
         formatter(params) {
           const item = chartItems[params?.[0]?.dataIndex ?? 0];
           if (!item) return '';
-          return [`<b>${item.label}</b>`, ...params.map(entry => `${entry.marker}${entry.seriesName}: ${formatPercent(entry.value)}`)].join('<br/>');
+          return [`<b>${escapeTooltipText(item.label)}</b>`, ...params.map(entry => `${entry.marker}${escapeTooltipText(entry.seriesName)}: ${formatPercent(entry.value)}`)].join('<br/>');
         },
       },
       legend: {

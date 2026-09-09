@@ -53,6 +53,9 @@ def load_manifest(manifest_path: Path = DEFAULT_MANIFEST) -> list[dict[str, Any]
                 "source": dict(dataset.get("source") or {}),
                 "groupMapping": dict(dataset.get("groupMapping") or {}),
                 "sampleIdPrefixes": list(dataset.get("sampleIdPrefixes") or []),
+                "duplicateFeaturePolicy": str(
+                    dataset.get("duplicateFeaturePolicy") or "reject"
+                ).strip(),
             }
         )
 
@@ -92,6 +95,7 @@ def bootstrap_storage(
             source_metadata=dataset["source"],
             group_mapping=dataset["groupMapping"],
             sample_id_prefixes=dataset["sampleIdPrefixes"],
+            duplicate_feature_policy=dataset["duplicateFeaturePolicy"],
         )
         results.append(
             {

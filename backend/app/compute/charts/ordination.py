@@ -198,6 +198,7 @@ def _empty_pca_payload(
     zero_total_samples: list[str],
     zero_after_selection: int,
     include_audit: bool,
+    selected_sample_count: int = 0,
 ) -> dict:
     ranked = prepared["selectedFeatures"]
     source_rows = prepared["sourceRows"]
@@ -217,7 +218,7 @@ def _empty_pca_payload(
         },
         "sampleFiltering": {
             "sourceSampleCount": len(df),
-            "selectedSampleCount": 0,
+            "selectedSampleCount": selected_sample_count,
             "validTotalSampleCount": int(len(source_rows)),
             "zeroTotalSampleCount": len(zero_total_samples),
             "excludedZeroTotalSamples": zero_total_samples,
@@ -279,6 +280,13 @@ def compute_pca(
     composition = selected_relative[usable] / selected_mass[usable, None]
     replaced, replaced_cells = _multiplicative_zero_replacement(composition)
     clr = np.log(replaced) - np.log(replaced).mean(axis=1, keepdims=True)
+    if float(np.var(clr, axis=0).sum()) <= 1e-12:
+        return _empty_pca_payload(
+            df, prepared, top_n,
+            "not_interpretable_no_between_sample_variation",
+            zero_total_samples, int((~usable).sum()), include_audit,
+            selected_sample_count=usable_count,
+        )
     n_components = min(PCA_MAX_COMPONENTS, clr.shape[0], clr.shape[1])
     model = PCA(n_components=n_components, svd_solver="full")
     coords = model.fit_transform(clr)
@@ -354,8 +362,17 @@ def _permanova(distance: np.ndarray, groups: np.ndarray, n_perm: int = 999, seed
 
     triu = np.triu_indices(n, 1)
     ss_total = float(d2[triu].sum() / n)
+    if ss_total <= 1e-12:
+        return {
+            "r2": 0.0,
+            "pValue": None,
+            "fStat": None,
+            "nPerm": 0,
+            "interpretable": False,
+            "status": "not_interpretable_no_between_sample_distance_variation",
+        }
 
-    def calc(labels: np.ndarray) -> tuple[float, float]:
+    def calc(labels: np.ndarray) -> tuple[float | None, float]:
         """给一组标签计算 F statistic 和 R²。"""
 
         ss_within = 0.0
@@ -368,21 +385,32 @@ def _permanova(distance: np.ndarray, groups: np.ndarray, n_perm: int = 999, seed
         ss_between = ss_total - ss_within
         df_between = len(np.unique(labels)) - 1
         df_within = n - len(np.unique(labels))
-        if ss_total <= 1e-12 or df_between <= 0 or df_within <= 0:
-            return 0.0, 0.0
+        if df_between <= 0 or df_within <= 0:
+            return None, 0.0
         ms_between = ss_between / df_between
         ms_within = ss_within / df_within
-        f_stat = ms_between / ms_within if ms_within > 1e-12 else 0.0
+        if ms_within <= 1e-12:
+            return None, float(ss_between / ss_total)
+        f_stat = ms_between / ms_within
         return float(f_stat), float(ss_between / ss_total)
 
     obs_f, obs_r2 = calc(groups)
+    if obs_f is None:
+        return {
+            "r2": obs_r2,
+            "pValue": None,
+            "fStat": None,
+            "nPerm": 0,
+            "interpretable": False,
+            "status": "not_interpretable_degenerate_within_group_variation",
+        }
     rng = np.random.default_rng(seed)
     count = 0
     for _ in range(n_perm):
         # 置换组标签，统计随机标签下 F 值大于等于观察值的次数。
         perm = rng.permutation(groups)
         perm_f, _ = calc(perm)
-        if perm_f >= obs_f:
+        if perm_f is not None and perm_f >= obs_f:
             count += 1
     return {
         "r2": obs_r2,
@@ -809,7 +837,11 @@ def compute_pcoa(
             else None
         )
         permanova["distanceFingerprint"] = distance_fingerprint
-        permanova_status = "computed_exploratory_unadjusted"
+        permanova_status = (
+            "computed_exploratory_unadjusted"
+            if permanova.get("interpretable", True)
+            else str(permanova.get("status") or "not_interpretable")
+        )
         if permdisp is None:
             permdisp_status = "not_applicable_no_positive_pcoa_axes"
         else:

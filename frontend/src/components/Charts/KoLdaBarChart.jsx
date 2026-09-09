@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import ReactECharts from './CartesianEChart';
 import ChartViewport from './ChartViewport';
+import { escapeTooltipText } from '../../utils/tooltipHtml';
 
 const GROUP_COLORS = {
   AD: '#e74c3c',
@@ -91,8 +92,8 @@ function KoLdaBarChart({ data }) {
           const point = params.data || {};
           const effectSize = Number(point.effectSize ?? point.value ?? 0);
           return `
-            <b>${point.koName || point.koId || ''}</b><br/>
-            富集组: ${point.groupLabel || ''}<br/>
+            <b>${escapeTooltipText(point.koName || point.koId)}</b><br/>
+            富集组: ${escapeTooltipText(point.groupLabel)}<br/>
             rank-biserial 效应量: ${formatNumber(effectSize)}<br/>
             p 值: ${formatNumber(point.pValue)}<br/>
             q 值: ${formatNumber(point.qValue)}<br/>

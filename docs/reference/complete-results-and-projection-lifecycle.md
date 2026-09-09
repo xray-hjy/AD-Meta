@@ -65,6 +65,11 @@ GET /api/analysis-runs/{runKey}/artifacts/{artifactKey}/results/download
 | `AD_META_PROJECTION_CACHE_TTL_HOURS` | `168` | 临时投影滑动过期时长 |
 | `AD_META_PROJECTION_CACHE_CLEANUP_INTERVAL_SECONDS` | `3600` | 自动清理间隔 |
 | `AD_META_PROJECTION_CACHE_CLEANUP_BATCH_SIZE` | `500` | 单次最多清理的 Artifact 数 |
+| `AD_META_PROJECTION_FILE_CACHE_MAX_ENTRY_BYTES` | `67108864` | 单个可再生投影 JSON 的最大字节数 |
+| `AD_META_PROJECTION_FILE_CACHE_MAX_TOTAL_BYTES` | `536870912` | `projections` 下 chart/abundance JSON 的总字节上限 |
+| `AD_META_PROJECTION_FILE_CACHE_MAX_FILES` | `5000` | `projections` 下 chart/abundance JSON 的文件数上限 |
+
+同一个 TTL 也用于 MySQL 模式的可再生 chart/abundance JSON。读取时会拒绝并删除过期或超大条目；成功写入后按修改时间淘汰最旧条目，直到文件数与总字节数都回到上限。SQLite 仍不创建这些文件缓存。矩阵与 feature catalog 的 NPZ 不在此策略内。
 
 为避免误删无法可靠判定身份的历史记录，迁移前已有且 `expires_at` 为空的记录会被保守保留；它们在按新计算身份重建后进入正式生命周期。
 

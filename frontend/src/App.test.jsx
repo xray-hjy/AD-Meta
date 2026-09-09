@@ -268,6 +268,8 @@ test('separates the desktop sidebar and main content into independent scroll reg
 
   expect(document.querySelector('aside.sidebar')?.getAttribute('data-scroll-region')).toBe('sidebar');
   expect(document.querySelector('main.main-content')?.getAttribute('data-scroll-region')).toBe('main');
+  expect(document.querySelector('.mobile-result-jump')?.getAttribute('href')).toBe('#analysis-results');
+  expect(document.querySelector('main.main-content')?.id).toBe('analysis-results');
 });
 
 test('switches MAG inside the analysis workspace and synchronizes its navigation', async () => {

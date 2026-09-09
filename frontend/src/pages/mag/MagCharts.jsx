@@ -2,8 +2,8 @@ import { useMemo } from 'react';
 import CartesianEChart from '../../components/Charts/CartesianEChart';
 import HeatmapEChart from '../../components/Charts/HeatmapEChart';
 import ChartViewport from '../../components/Charts/ChartViewport';
+import { GROUP_COLORS } from '../../components/Charts/groupPalette';
 
-const GROUP_COLORS = { AD: '#c05a48', NC: '#357e96' };
 export const number = value => value == null ? '—' : Number(value).toLocaleString('en-US', { maximumSignificantDigits: 4 });
 const shortMag = id => id.replace(/__(CRR\d+)_cleanbin_/, ' · ');
 const tooltip = { trigger: 'item', renderMode: 'richText', confine: true };

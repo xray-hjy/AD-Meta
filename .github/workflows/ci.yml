@@ -93,6 +93,7 @@ jobs:
       AD_META_MYSQL_USER: ad_meta
       AD_META_MYSQL_PASSWORD: test-password
       AD_META_MYSQL_DATABASE: ad_meta_test
+      AD_META_CI_MYSQL_INTEGRATION: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

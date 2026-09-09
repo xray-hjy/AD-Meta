@@ -191,6 +191,22 @@ def test_pca_returns_an_explicit_empty_projection_after_feature_selection() -> N
     assert payload["sampleFiltering"]["zeroAfterFeatureSelectionSampleCount"] == 2
 
 
+def test_pca_marks_constant_compositions_as_not_interpretable() -> None:
+    frame = pd.DataFrame({
+        "Sample": [f"S{index}" for index in range(6)],
+        "Group": ["AD"] * 3 + ["NC"] * 3,
+        "f1": [1.0] * 6,
+        "f2": [1.0] * 6,
+    })
+
+    payload = compute_pca(frame, ["f1", "f2"])
+
+    assert payload["projectionStatus"] == "not_interpretable_no_between_sample_variation"
+    assert payload["variance"] == []
+    assert payload["points"] == []
+    assert payload["sampleFiltering"]["selectedSampleCount"] == 6
+
+
 def test_ordination_input_errors_are_exposed_as_scope_errors() -> None:
     frame = pd.DataFrame({
         "Sample": ["S1", "S2", "S3"],
@@ -228,6 +244,41 @@ def test_pcoa_only_runs_group_inference_when_both_groups_have_three_samples() ->
     assert valid_payload["permanova"]["distanceFingerprint"] == valid_payload["distanceFingerprint"]
     assert valid_payload["permdisp"]["distanceFingerprint"] == valid_payload["distanceFingerprint"]
     assert valid_payload["eigenDiagnostics"]["varianceBasis"] == "positive_eigenvalues"
+
+
+def test_permanova_marks_zero_within_group_variation_as_not_interpretable() -> None:
+    frame = pd.DataFrame({
+        "Sample": [f"S{index}" for index in range(6)],
+        "Group": ["AD"] * 3 + ["NC"] * 3,
+        "f1": [1.0] * 3 + [0.0] * 3,
+        "f2": [0.0] * 3 + [1.0] * 3,
+    })
+
+    payload = compute_pcoa(frame, ["f1", "f2"], filter_preset="unfiltered")
+
+    assert payload["permanovaStatus"] == "not_interpretable_degenerate_within_group_variation"
+    assert payload["permanova"]["r2"] == pytest.approx(1.0)
+    assert payload["permanova"]["fStat"] is None
+    assert payload["permanova"]["pValue"] is None
+    assert payload["permanova"]["nPerm"] == 0
+
+
+def test_permanova_distinguishes_zero_distance_between_all_samples() -> None:
+    frame = pd.DataFrame({
+        "Sample": [f"S{index}" for index in range(6)],
+        "Group": ["AD"] * 3 + ["NC"] * 3,
+        "f1": [1.0] * 6,
+        "f2": [1.0] * 6,
+    })
+
+    payload = compute_pcoa(frame, ["f1", "f2"], filter_preset="unfiltered")
+
+    assert payload["permanovaStatus"] == (
+        "not_interpretable_no_between_sample_distance_variation"
+    )
+    assert payload["permanova"]["r2"] == 0.0
+    assert payload["permanova"]["fStat"] is None
+    assert payload["permanova"]["pValue"] is None
 
 
 def test_pcoa_handles_an_empty_positive_eigenspectrum_explicitly() -> None:

@@ -33,6 +33,46 @@ class InputValidationTests(unittest.TestCase):
             "duplicate_columns",
         )
 
+    def test_rejects_exact_duplicate_source_headers_before_pandas_mangles_them(self) -> None:
+        error = self._assert_code(
+            "sample_id,Group,K00001,K00001\nA,AD,1,9\nB,NC,2,8\n",
+            "duplicate_columns",
+        )
+        self.assertEqual(error.details["columns"], ["K00001"])
+        self.assertEqual(error.details["columnIndices"], {"K00001": [3, 4]})
+
+    def test_explicitly_coalesces_equal_duplicate_features_after_sample_selection(self) -> None:
+        text = (
+            "sample_id,Group,K00001,K00001\n"
+            "CRR1,AD,1,1\nCRR2,NC,2,2\nSRR1,AD,3,9\n"
+        )
+        with TemporaryDirectory() as tmpdir:
+            df, feature_cols, warnings = prepare_dataframe(
+                self._write(text, tmpdir),
+                sample_id_prefixes=["CRR"],
+                duplicate_feature_policy="coalesce_equal_selected",
+            )
+        self.assertEqual(feature_cols, ["K00001"])
+        self.assertEqual(df["K00001"].tolist(), [1, 2])
+        self.assertTrue(any("Coalesced equivalent duplicate" in warning for warning in warnings))
+
+    def test_explicit_duplicate_coalescing_rejects_conflicting_selected_values(self) -> None:
+        self._assert_code(
+            "sample_id,Group,K00001,K00001\nCRR1,AD,1,8\nCRR2,NC,2,2\n",
+            "conflicting_duplicate_columns",
+            sample_id_prefixes=["CRR"],
+            duplicate_feature_policy="coalesce_equal_selected",
+        )
+
+    def test_explicit_duplicate_coalescing_does_not_treat_text_as_zero(self) -> None:
+        self._assert_code(
+            "sample_id,Group,K00001,K00001\nCRR1,AD,0,bad\nCRR2,NC,2,2\n",
+            "non_numeric_abundance",
+            missing_value_policy="zero",
+            sample_id_prefixes=["CRR"],
+            duplicate_feature_policy="coalesce_equal_selected",
+        )
+
     def test_rejects_duplicate_and_empty_samples(self) -> None:
         self._assert_code(
             "sample_id,Group,K00001\nA,AD,1\nA,NC,2\n",

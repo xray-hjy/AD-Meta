@@ -3,7 +3,6 @@ from __future__ import annotations
 import hashlib
 import json
 import math
-import uuid
 from collections import defaultdict
 from functools import lru_cache
 from pathlib import Path
@@ -13,6 +12,8 @@ from app.core import database
 from app.core.config import CACHE_ROOT
 from app.core.database import connect
 from app.domain.analysis_scope import AbundanceProjectionRequest, AnalysisScope
+from app.services.projection_file_cache import read_json as read_cached_json
+from app.services.projection_file_cache import write_json as write_cached_json
 
 
 class AnalysisRunNotFound(LookupError):
@@ -51,10 +52,7 @@ def _aggregate_cache_path(identity: dict[str, Any]) -> Path | None:
 def _read_aggregate_cache(path: Path | None) -> list[dict[str, Any]] | None:
     if path is None:
         return None
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (FileNotFoundError, OSError, json.JSONDecodeError):
-        return None
+    payload = read_cached_json(path)
     rows = payload.get("rows") if isinstance(payload, dict) else None
     return rows if isinstance(rows, list) else None
 
@@ -62,16 +60,7 @@ def _read_aggregate_cache(path: Path | None) -> list[dict[str, Any]] | None:
 def _write_aggregate_cache(path: Path | None, rows: list[dict[str, Any]]) -> None:
     if path is None:
         return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_name(f"{path.name}.{uuid.uuid4().hex}.tmp")
-    try:
-        temporary.write_text(
-            json.dumps({"schemaVersion": "1.0", "rows": rows}, ensure_ascii=False),
-            encoding="utf-8",
-        )
-        temporary.replace(path)
-    finally:
-        temporary.unlink(missing_ok=True)
+    write_cached_json(path, {"schemaVersion": "1.0", "rows": rows})
 
 
 def _resolve_run(conn, run_key: str):

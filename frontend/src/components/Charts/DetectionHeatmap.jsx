@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import ReactECharts from './HeatmapEChart';
 import ChartViewport from './ChartViewport';
+import { escapeTooltipText } from '../../utils/tooltipHtml';
 
 const ABUNDANCE_COLORS = ['#ffffcc', '#ffeda0', '#fed976', '#feb24c', '#fd8d3c', '#fc4e2a', '#e31a1c', '#bd0026', '#800026'];
 
@@ -51,8 +52,8 @@ function DetectionHeatmap({ data }) {
         formatter(params) {
           const point = params.data || {};
           return `
-            <b>${point.koName || point.koId || ''}</b><br/>
-            组别: ${point.group || ''}<br/>
+            <b>${escapeTooltipText(point.koName || point.koId)}</b><br/>
+            组别: ${escapeTooltipText(point.group)}<br/>
             检出样本数: ${point.detectedSamples}/${point.sampleCount}<br/>
             检出率: ${pct(point.value?.[2])}<br/>
             AD-NC rateGap: ${Number(point.rateGap || 0).toFixed(4)}

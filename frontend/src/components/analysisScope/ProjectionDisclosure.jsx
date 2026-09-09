@@ -51,7 +51,9 @@ function projectionSummary(data) {
     return [
       `${selection} ${projection.returnedFeatureCount}/${projection.sourceFeatureCount} 个${featureLabel}`,
       samplePointCount === 0
-        ? '无样本进入当前投影'
+        ? projection.projectionStatus === 'not_interpretable_no_between_sample_variation'
+          ? '当前样本组成没有可解释的样本间变异，PCA 未计算'
+          : '无样本进入当前投影'
         : `绘制 ${samplePointCount ?? projection.sampleCount} 个样本点`,
       '所选子组成再次闭合、乘法零值替换并 CLR 变换',
       axisSummary,
@@ -88,6 +90,10 @@ function projectionSummary(data) {
       } else {
         messages.push('PERMDISP 结果暂不可用');
       }
+    } else if (status === 'not_interpretable_degenerate_within_group_variation') {
+      messages.push('组内距离方差为零，PERMANOVA 的 pseudo-F 与置换 p 值不可解释');
+    } else if (status === 'not_interpretable_no_between_sample_distance_variation') {
+      messages.push('所有样本间距离均为零，PERMANOVA 的 pseudo-F 与置换 p 值不可解释');
     } else if (status === 'not_applicable_single_group') {
       messages.push('当前为单组排序探索，不进行组间检验');
     } else if (status === 'not_applicable_minimum_group_size') {

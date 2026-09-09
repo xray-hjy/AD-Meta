@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import ReactECharts from './CartesianEChart';
 import ChartViewport from './ChartViewport';
 import DataTableViewport from '../data-display/DataTableViewport';
+import { escapeTooltipText } from '../../utils/tooltipHtml';
 
 const COLORS = { AD: '#e74c3c', NC: '#2ecc71' };
 const DEFAULT_TOP_N = 20;
@@ -10,7 +11,7 @@ function formatTaxonomy(fullName) {
   if (!fullName) return '';
   return String(fullName)
     .split('|')
-    .map(part => part.replace(/^([a-z])__/, (_, level) => `${level}: `))
+    .map(part => escapeTooltipText(part.replace(/^([a-z])__/, (_, level) => `${level}: `)))
     .join('<br/>');
 }
 
@@ -151,10 +152,10 @@ export default function BarChart({ data, featureLabel = '物种' }) {
           const item = normalized.items[params?.[0]?.dataIndex ?? 0];
           if (!item) return '';
           const lines = [
-            `<b>${item.feature}</b>`,
+            `<b>${escapeTooltipText(item.feature)}</b>`,
             item.fullName && item.fullName !== item.feature ? formatTaxonomy(item.fullName) : '',
           ].filter(Boolean);
-          params.forEach(entry => lines.push(`${entry.marker}${entry.seriesName}: ${compactNumber(entry.value)}`));
+          params.forEach(entry => lines.push(`${entry.marker}${escapeTooltipText(entry.seriesName)}: ${compactNumber(entry.value)}`));
           return lines.join('<br/>');
         },
       },

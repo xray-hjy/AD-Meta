@@ -5,6 +5,7 @@ import useTooltip from '../../hooks/useTooltip';
 import HeatmapLightbox from './HeatmapLightbox';
 import DataTableViewport from '../data-display/DataTableViewport';
 import ChartExportAction from './ChartExportAction';
+import { escapeTooltipText } from '../../utils/tooltipHtml';
 
 const ABUNDANCE_COLORS = ['#ffffcc', '#ffeda0', '#fed976', '#feb24c', '#fd8d3c', '#fc4e2a', '#e31a1c', '#bd0026', '#800026'];
 const DIFF_COLORS = ['#2166ac', '#67a9cf', '#f7f7f7', '#ef8a62', '#b2182b'];
@@ -544,7 +545,7 @@ const HeatmapCanvas = memo(function HeatmapCanvas({
     if (!stat) return null;
     const tax = formatTaxonomy(stat.fullName || colLabels[hit.j] || `列 ${hit.j + 1}`);
     const lines = [
-      tax,
+      escapeTooltipText(tax),
       `q = ${formatP(stat.qValue ?? stat.p)}`,
       `p = ${formatP(stat.pValue ?? stat.p)}`,
       `log2FC = ${fmt(stat.log2FC, 3)}`,
@@ -552,8 +553,8 @@ const HeatmapCanvas = memo(function HeatmapCanvas({
     if (mode === 'diff') {
       lines.push(`AD−NC = ${fmt(value, 4)}`);
     } else {
-      lines.push(`样本: ${rowLabels[hit.i]}`, `log10(丰度+1) = ${fmt(value, 4)}`);
-      if (rowGroups?.[hit.i]) lines.push(`分组: ${rowGroups[hit.i]}`);
+      lines.push(`样本: ${escapeTooltipText(rowLabels[hit.i])}`, `log10(丰度+1) = ${fmt(value, 4)}`);
+      if (rowGroups?.[hit.i]) lines.push(`分组: ${escapeTooltipText(rowGroups[hit.i])}`);
     }
     return lines.join('<br/>');
   }, [cols, colLabels, layout, matrix, mode, rowGroups, rowLabels, rows, stats]);

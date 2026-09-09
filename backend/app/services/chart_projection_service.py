@@ -54,6 +54,8 @@ from app.services.analysis_projection_service import (
     _revision_series_sample_ids,
     _select_scope_samples,
 )
+from app.services.projection_file_cache import read_json as read_cached_json
+from app.services.projection_file_cache import write_json as write_cached_json
 from app.services.scoped_feature_catalog_service import (
     ScopedFeatureCatalog,
     get_scoped_feature_catalog,
@@ -178,10 +180,7 @@ def _write_revision_matrix_cache(
 def _read_projection_cache(path: Path | None) -> dict[str, Any] | None:
     if path is None:
         return None
-    try:
-        cached = json.loads(path.read_text(encoding="utf-8"))
-    except (FileNotFoundError, OSError, json.JSONDecodeError):
-        return None
+    cached = read_cached_json(path)
     if not isinstance(cached, dict):
         return None
     if cached.get("schemaVersion") != CHART_PROJECTION_CACHE_SCHEMA:
@@ -193,22 +192,10 @@ def _read_projection_cache(path: Path | None) -> dict[str, Any] | None:
 def _write_projection_cache(path: Path | None, payload: dict[str, Any]) -> None:
     if path is None:
         return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_name(f"{path.name}.{uuid.uuid4().hex}.tmp")
-    try:
-        temporary.write_text(
-            json.dumps(
-                {
-                    "schemaVersion": CHART_PROJECTION_CACHE_SCHEMA,
-                    "projection": payload,
-                },
-                ensure_ascii=False,
-            ),
-            encoding="utf-8",
-        )
-        temporary.replace(path)
-    finally:
-        temporary.unlink(missing_ok=True)
+    write_cached_json(
+        path,
+        {"schemaVersion": CHART_PROJECTION_CACHE_SCHEMA, "projection": payload},
+    )
 
 
 def _validate_projection(
@@ -1026,6 +1013,7 @@ def _compute_chart_projection(
             **projection_metadata,
             "featureSelection": payload_metadata.get("featureSelection"),
             "preprocessing": payload_metadata.get("preprocessing"),
+            "projectionStatus": payload_metadata.get("projectionStatus"),
             "inference": {
                 "permanovaStatus": payload_metadata.get("permanovaStatus"),
                 "permdispStatus": payload_metadata.get("permdispStatus"),

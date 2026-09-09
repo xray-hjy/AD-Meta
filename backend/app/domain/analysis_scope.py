@@ -13,7 +13,7 @@ class AnalysisScope(BaseModel):
 
     mode: ScopeMode = "cohort"
     groups: list[GroupCode] = Field(default_factory=list)
-    sampleCodes: list[str] = Field(default_factory=list)
+    sampleCodes: list[str] = Field(default_factory=list, max_length=500)
 
     @model_validator(mode="after")
     def validate_selection(self):
@@ -49,7 +49,7 @@ class FeatureSelection(BaseModel):
     mode: Literal["ranked", "explicit"] = "ranked"
     ranking: Literal["mean_abundance"] = "mean_abundance"
     limit: int = Field(default=30, ge=1, le=500)
-    featureIds: list[str] = Field(default_factory=list)
+    featureIds: list[str] = Field(default_factory=list, max_length=500)
 
     @model_validator(mode="after")
     def validate_features(self):
@@ -133,7 +133,7 @@ class ScopedFeatureRequest(BaseModel):
 
     scope: AnalysisScope = Field(default_factory=AnalysisScope)
     query: str = ""
-    featureIds: list[str] = Field(default_factory=list)
+    featureIds: list[str] = Field(default_factory=list, max_length=500)
     limit: int = Field(default=50, ge=1, le=200)
     offset: int = Field(default=0, ge=0)
 

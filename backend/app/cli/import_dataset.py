@@ -186,8 +186,9 @@ def _validation_error_text(exc: Exception) -> str:
 
 
 def _prune_old_revisions(dataset_id: int, current_revision_id: int) -> None:
-    """Keep the newest successful immutable revisions and their cache trees."""
+    """Keep the newest revisions plus every revision pinned by an analysis."""
 
+    directories: list[Path] = []
     with connect() as conn:
         rows = conn.execute(
             """
@@ -197,7 +198,16 @@ def _prune_old_revisions(dataset_id: int, current_revision_id: int) -> None:
             """,
             (dataset_id,),
         ).fetchall()
-        obsolete = [row for row in rows if int(row["id"]) != current_revision_id][RETAIN_SUCCESSFUL_REVISIONS - 1 :]
+        protected_rows = conn.execute(
+            """
+            SELECT DISTINCT dataset_revision_id
+            FROM analysis_artifacts
+            WHERE dataset_revision_id IS NOT NULL
+            """
+        ).fetchall()
+        protected_ids = {int(row["dataset_revision_id"]) for row in protected_rows}
+        older = [row for row in rows if int(row["id"]) != current_revision_id][RETAIN_SUCCESSFUL_REVISIONS - 1 :]
+        obsolete = [row for row in older if int(row["id"]) not in protected_ids]
         for row in obsolete:
             artifact = conn.execute(
                 "SELECT cache_path FROM revision_chart_artifacts WHERE revision_id = ? LIMIT 1",
@@ -207,11 +217,19 @@ def _prune_old_revisions(dataset_id: int, current_revision_id: int) -> None:
                 path = Path(artifact["cache_path"])
                 if not path.is_absolute():
                     path = Path(__file__).resolve().parents[2] / path
-                try:
-                    shutil.rmtree(path.parent)
-                except FileNotFoundError:
-                    pass
+                directories.append(path.parent)
             conn.execute("DELETE FROM dataset_revisions WHERE id = ?", (row["id"],))
+
+    # Database references are committed first. A filesystem cleanup failure may
+    # leave recoverable stale cache files, but must never invalidate a published
+    # revision or turn a successful import into a failed publication.
+    for directory in directories:
+        try:
+            shutil.rmtree(directory)
+        except FileNotFoundError:
+            pass
+        except OSError:
+            logger.exception("Failed to remove obsolete revision cache %s", directory)
 
 
 def import_dataset(
@@ -227,6 +245,7 @@ def import_dataset(
     source_metadata: dict[str, Any] | None = None,
     group_mapping: dict[str, str] | None = None,
     sample_id_prefixes: list[str] | None = None,
+    duplicate_feature_policy: str = "reject",
 ) -> int:
     """Validate, compute and atomically publish an immutable dataset revision."""
 
@@ -256,6 +275,7 @@ def import_dataset(
         "sourceSha256": source_sha256,
         "groupMapping": group_mapping,
         "sampleIdPrefixes": sample_id_prefixes,
+        "duplicateFeaturePolicy": duplicate_feature_policy,
     }
     params_hash = _stable_hash(parameters)
 
@@ -340,6 +360,7 @@ def import_dataset(
             minimum_group_size=2,
             group_mapping=group_mapping,
             sample_id_prefixes=sample_id_prefixes,
+            duplicate_feature_policy=duplicate_feature_policy,
         )
         validate_covariates(df, feature_cols, covariates)
         summary, artifacts, warnings = precompute_prepared(
@@ -505,7 +526,14 @@ def import_dataset(
                 (published_at, job_id),
             )
 
-        _prune_old_revisions(dataset_id, revision_id)
+        try:
+            _prune_old_revisions(dataset_id, revision_id)
+        except Exception:
+            logger.exception(
+                "Published dataset %s revision %s, but revision retention cleanup failed",
+                slug,
+                revision_key,
+            )
         _log_import_event(
             slug=slug,
             revision=revision_key,
@@ -579,6 +607,12 @@ def main() -> None:  # pragma: no cover - exercised through the packaged CLI
         default=[],
         help="Include only sample IDs with this prefix; repeat for multiple prefixes.",
     )
+    parser.add_argument(
+        "--duplicate-feature-policy",
+        choices=["reject", "coalesce_equal_selected"],
+        default="reject",
+        help="Explicitly coalesce duplicate feature columns only when selected values are equal.",
+    )
     args = parser.parse_args()
 
     dataset_id = import_dataset(
@@ -591,6 +625,7 @@ def main() -> None:  # pragma: no cover - exercised through the packaged CLI
         missing_value_policy=args.missing_value_policy,
         group_mapping=json.loads(args.group_mapping),
         sample_id_prefixes=args.sample_id_prefix,
+        duplicate_feature_policy=args.duplicate_feature_policy,
     )
     print(f"Imported dataset {dataset_id} ({args.slug})")
 

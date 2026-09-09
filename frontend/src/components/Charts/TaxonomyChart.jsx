@@ -15,6 +15,7 @@ import {
   resolveTreemapCanvasSize,
 } from './taxonomyViewportPolicy';
 import { useColorVision } from '../../context/ColorVisionContext';
+import { escapeTooltipText } from '../../utils/tooltipHtml';
 
 const SUNBURST_COLORS = [
   '#3B82F6',
@@ -130,11 +131,11 @@ function tooltipHtml(params) {
   const ratio = formatPercent(payload.ratio);
   const mergedCount = Number(payload.mergedCount || 0);
   return `
-    <b>${params.name}</b><br/>
-    ${chain ? `${chain}<br/>` : ''}
+    <b>${escapeTooltipText(params.name)}</b><br/>
+    ${chain ? `${escapeTooltipText(chain)}<br/>` : ''}
     丰度: ${formatValue(params.value)}
     ${ratio ? `<br/>占父级: ${ratio}` : ''}
-    ${payload.mergedPhylaNames ? `<br/>合并门级: ${payload.mergedPhylaNames}` : ''}
+    ${payload.mergedPhylaNames ? `<br/>合并门级: ${escapeTooltipText(payload.mergedPhylaNames)}` : ''}
     ${mergedCount ? `<br/>合并小分类: ${mergedCount}` : ''}
   `;
 }
@@ -851,7 +852,7 @@ function TaxonomyChart({ data, mode = 'sunburst' }) {
             }
             const mergedCount = Number(params.data?.mergedCount || 0);
             return [
-              `<b>${params.data?.label || params.name}</b>`,
+              `<b>${escapeTooltipText(params.data?.label || params.name)}</b>`,
               `丰度: ${formatValue(params.data?.value)}`,
               mergedCount > 0 ? `合并小分类: ${mergedCount}` : null,
             ].filter(Boolean).join('<br/>');

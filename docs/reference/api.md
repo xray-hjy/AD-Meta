@@ -455,6 +455,10 @@ MAG 使用独立的版本化外部数据契约，不写入既有 taxonomy/KO rev
 | `/api/mag/samples` | 样本映射比例与丰度阈值统计 |
 | `/api/mag/taxonomy` | 域至种层级的 Top N MAG 分类数量与占比 |
 | `/api/mag/quality` | 872 个代表 MAG 的 CheckM2 完整度、污染率和组装指标 |
-| `/api/mag/downloads/{kind}` | `features`、`matrix`、`samples`、`taxonomy`、`quality` 或 `provenance` 下载 |
+| `/api/mag/lineage/clusters` | v3 dRep 聚类摘要、筛选、排序与分页 |
+| `/api/mag/lineage/clusters/{cluster_id}` | v3 单聚类成员与来源证据分页 |
+| `/api/mag/lineage/mags/{mag_id}` | v3 单成员 MAG 到代表 MAG 与 crosswalk 的追溯 |
+| `/api/mag/crosswalk` | v3 代表 MAG 物种映射状态筛选与分页 |
+| `/api/mag/downloads/{kind}` | `features`、`matrix`、`samples`、`taxonomy`、`quality`、`provenance`、`lineage` 或 `crosswalk` 下载 |
 
-`revision` 可绑定 overview 返回的数据指纹；运行中输入变化时返回 409，避免混用不同数据版本。分类和质量覆盖全部代表 MAG，不受 disease、年龄、性别、批次或丰度阈值筛选影响。
+`revision` 可绑定 overview 返回的数据指纹；运行中输入变化时返回 409，避免混用不同数据版本。分类、质量、lineage 和 crosswalk 覆盖全部代表 MAG，不受样本筛选影响。lineage/crosswalk 列表单次最多返回 100 行，原始 TSV 下载保留交付文件内容并附带数据指纹与 manifest SHA-256 响应头。

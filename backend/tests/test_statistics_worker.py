@@ -45,8 +45,10 @@ class StatisticsWorkerTests(unittest.TestCase):
         response = Mock()
         response.raise_for_status.return_value = None
         response.json.return_value = {
+            "jobId": "a" * 32,
             "method": "ANCOM-BC2",
             "modelFormula": "Group + Age",
+            "alpha": 0.05,
             "items": [
                 {
                     "featureId": "K00001",
@@ -101,7 +103,46 @@ class StatisticsWorkerTests(unittest.TestCase):
         for payload in invalid_payloads:
             with self.subTest(payload=payload):
                 with self.assertRaises(statistics_worker.FormalAnalysisError):
-                    statistics_worker._validated_result(payload, "ancombc2", "Group")
+                    statistics_worker._validated_result(
+                        payload, "ancombc2", "Group", ["K00001"], "a" * 32, 0.05
+                    )
+
+    def test_rejects_worker_results_not_bound_to_the_request(self) -> None:
+        valid = {
+            "jobId": "a" * 32,
+            "method": "ANCOM-BC2",
+            "modelFormula": "Group",
+            "alpha": 0.05,
+            "items": [{"featureId": "K00001", "pValue": 0.1, "qValue": 0.2, "effectSize": 1}],
+        }
+        cases = [
+            {**valid, "jobId": "b" * 32},
+            {**valid, "method": "unrelated"},
+            {**valid, "modelFormula": "Wrong"},
+            {**valid, "alpha": 0.1},
+            {**valid, "items": [{**valid["items"][0], "featureId": "not-requested"}]},
+            {**valid, "items": valid["items"] * 2},
+        ]
+        for payload in cases:
+            with self.subTest(payload=payload):
+                with self.assertRaises(statistics_worker.FormalAnalysisError):
+                    statistics_worker._validated_result(
+                        payload, "ancombc2", "Group", ["K00001"], "a" * 32, 0.05
+                    )
+
+    def test_accepts_documented_method_alias_and_partial_feature_results(self) -> None:
+        payload = {
+            "jobId": "a" * 32,
+            "method": "MaAsLin2",
+            "modelFormula": "Group",
+            "alpha": 0.05,
+            "items": [{"featureId": "K00001", "pValue": 0.1, "qValue": 0.2, "effectSize": 1}],
+        }
+        result = statistics_worker._validated_result(
+            payload, "maaslin2", "Group", ["K00001", "K00002"], "a" * 32, 0.05
+        )
+        self.assertEqual(result["method"], "MaAsLin2")
+        self.assertEqual(len(result["items"]), 1)
 
     def test_wraps_worker_transport_failures(self) -> None:
         with patch.object(statistics_worker, "STATS_WORKER_URL", "http://stats-worker:8001"), patch.object(

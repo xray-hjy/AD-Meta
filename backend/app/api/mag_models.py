@@ -31,6 +31,13 @@ class MagUpstreamGeneration(BaseModel):
     basis: str
 
 
+class MagManifestReference(BaseModel):
+    file: str | None
+    sha256: str | None
+    buildDate: str | None
+    status: str | None
+
+
 class MagProvenance(BaseModel):
     version: str
     analysisVersion: str
@@ -51,6 +58,7 @@ class MagProvenance(BaseModel):
     mappingTolerancePercentPoints: float
     maxMappingErrorPercentPoints: float
     warnings: list[str]
+    manifest: MagManifestReference
 
 
 class MagOverviewResponse(BaseModel):
@@ -188,6 +196,137 @@ class MagQualityResponse(BaseModel):
     referenceBand: MagQualityReferenceBand
     method: str
     version: str | None
+
+
+class MagLineageClusterSummary(BaseModel):
+    clusterId: str
+    representativeMag: str
+    memberCount: int
+    sourceSampleCount: int
+    adMemberCount: int
+    ncMemberCount: int
+    sourceGroups: list[str]
+    aniMin: float
+    aniMax: float
+    alignmentCoverageMin: float
+    alignmentCoverageMax: float
+    below095AniCount: int
+    gtdbSpecies: str | None
+    completenessPercent: float | None
+    contaminationPercent: float | None
+    mappingStatus: str | None
+
+
+class MagLineageDatasetSummary(BaseModel):
+    memberMagCount: int
+    representativeMagCount: int
+    secondaryClusterCount: int
+    sourceSampleCount: int
+    below095AniCount: int
+
+
+class MagLineageClusterPageResponse(BaseModel):
+    provenance: MagProvenance
+    items: list[MagLineageClusterSummary]
+    total: int
+    limit: int
+    offset: int
+    query: str
+    mappingStatus: str
+    lowAniOnly: bool
+    sortBy: str
+    direction: str
+    summary: MagLineageDatasetSummary
+
+
+class MagLineageMember(BaseModel):
+    clusterId: str
+    representativeMag: str
+    memberMag: str
+    isRepresentative: bool
+    clusterMemberCount: int
+    representativeSourceSampleId: str
+    representativeSampleName: str
+    representativeSampleAccession: str
+    representativeDisease: Literal["AD", "NC"]
+    representativeGroup: Literal["CHN", "CHN2"]
+    representativeHpcBatch: str
+    memberSourceSampleId: str
+    memberSampleName: str
+    memberSampleAccession: str
+    memberDisease: Literal["AD", "NC"]
+    memberGroup: Literal["CHN", "CHN2"]
+    memberHpcBatch: str
+    memberToRepAni: float
+    memberToRepAlignmentCoverage: float
+    aniDirection: Literal["representative_reference__member_query"]
+    memberCompletenessPercent: float
+    memberContaminationPercent: float
+    representativeCompletenessPercent: float
+    representativeContaminationPercent: float
+    representativeScore: float
+    secondaryClusterDistanceThreshold: float
+    equivalentAniThreshold: float
+    clusterMethod: Literal["average"]
+    comparisonAlgorithm: Literal["fastANI"]
+    primaryCluster: str
+
+
+class MagLineageClusterDetailResponse(BaseModel):
+    provenance: MagProvenance
+    cluster: MagLineageClusterSummary
+    items: list[MagLineageMember]
+    total: int
+    limit: int
+    offset: int
+    query: str
+    disease: str
+    group: str
+    lowAniOnly: bool
+    sortBy: str
+    direction: str
+
+
+class MagCrosswalkItem(BaseModel):
+    magId: str
+    gtdbSpecies: str | None
+    gtdbClassification: str | None
+    gtdbReferenceAccession: str | None
+    gtdbReferenceSourceField: str | None
+    gtdbReferenceAni: float | None
+    gtdbReferenceAf: float | None
+    gtdbClassificationMethod: str | None
+    referenceNcbiTaxid: str | None
+    ncbiSpeciesTaxid: str | None
+    ncbiOrganismName: str | None
+    ncbiTaxonomy: str | None
+    krakenSpeciesId: str | None
+    krakenSpeciesName: str | None
+    krakenMpaSpeciesLabel: str | None
+    mappingMethod: str | None
+    mappingLevel: str | None
+    mappingConfidence: str | None
+    mappingStatus: str
+
+
+class MagCrosswalkPageResponse(BaseModel):
+    provenance: MagProvenance
+    items: list[MagCrosswalkItem]
+    total: int
+    limit: int
+    offset: int
+    query: str
+    mappingStatus: str
+    statusCounts: dict[str, int]
+
+
+class MagLineageResponse(BaseModel):
+    provenance: MagProvenance
+    queriedMagId: str
+    queryRole: Literal["representative", "member"]
+    cluster: MagLineageClusterSummary
+    member: MagLineageMember
+    crosswalk: MagCrosswalkItem | None
 
 
 class MagErrorResponse(BaseModel):

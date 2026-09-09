@@ -129,6 +129,7 @@ build_router <- function() {
       items <- if (payload$method == "ancombc2") run_ancombc2(validated, payload) else run_maaslin2(validated, payload)
       q_values <- vapply(items, function(item) item$qValue, numeric(1))
       list(
+        jobId = payload$jobId,
         method = if (payload$method == "ancombc2") "ANCOM-BC2" else "MaAsLin2",
         modelFormula = payload$formula,
         alpha = as.numeric(payload$alpha %||% 0.05),

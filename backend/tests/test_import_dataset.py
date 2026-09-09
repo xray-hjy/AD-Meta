@@ -255,6 +255,56 @@ class ImportDatasetIntegrationTests(unittest.TestCase):
         self.assertEqual(revision_statuses, ["published", "failed"])
         self.assertTrue(old_artifact_exists)
 
+    def test_post_commit_retention_failure_keeps_new_revision_published(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            db_path = root / "db.sqlite3"
+            cache_root = root / "cache"
+            csv_path = root / "species.csv"
+            csv_path.write_text(
+                "sample_id,Group,k__Bacteria|s__Target\n"
+                "AD1,AD,2\nAD2,AD,3\nNC1,NC,1\nNC2,NC,1\n",
+                encoding="utf-8",
+            )
+            with patch.object(database, "DB_PATH", db_path), patch.object(
+                database, "DB_ENGINE", "sqlite"
+            ), patch.object(import_module, "CACHE_ROOT", cache_root), patch.object(
+                import_module, "_relative_to_backend", lambda path: str(path)
+            ):
+                import_module.import_dataset(csv_path, "retention-failure", "Initial")
+                with patch.object(
+                    import_module,
+                    "_prune_old_revisions",
+                    side_effect=OSError("simulated cleanup failure"),
+                ):
+                    dataset_id = import_module.import_dataset(
+                        csv_path, "retention-failure", "Published despite cleanup failure"
+                    )
+
+                raw = sqlite3.connect(db_path)
+                raw.row_factory = sqlite3.Row
+                dataset = raw.execute(
+                    "SELECT status, current_revision_id FROM datasets WHERE id = ?",
+                    (dataset_id,),
+                ).fetchone()
+                revision = raw.execute(
+                    "SELECT status FROM dataset_revisions WHERE id = ?",
+                    (dataset["current_revision_id"],),
+                ).fetchone()
+                paths = [
+                    row["cache_path"]
+                    for row in raw.execute(
+                        "SELECT cache_path FROM revision_chart_artifacts WHERE revision_id = ?",
+                        (dataset["current_revision_id"],),
+                    )
+                ]
+                artifact_files_exist = bool(paths) and all(Path(path).is_file() for path in paths)
+                raw.close()
+
+        self.assertEqual(dataset["status"], "published")
+        self.assertEqual(revision["status"], "published")
+        self.assertTrue(artifact_files_exist)
+
     def test_import_parses_the_source_table_once(self) -> None:
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
@@ -283,6 +333,7 @@ class ImportDatasetIntegrationTests(unittest.TestCase):
             minimum_group_size=2,
             group_mapping={},
             sample_id_prefixes=[],
+            duplicate_feature_policy="reject",
         )
 
     def test_formal_ko_import_publishes_worker_artifacts(self) -> None:
@@ -368,6 +419,60 @@ class ImportDatasetIntegrationTests(unittest.TestCase):
             ).fetchone()[0]
             raw.close()
         self.assertEqual(revision_count, 3)
+
+    def test_retention_preserves_revision_referenced_by_published_analysis(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            db_path = root / "db.sqlite3"
+            cache_root = root / "cache"
+            csv_path = root / "species.csv"
+            csv_path.write_text(
+                "sample_id,Group,k__Bacteria|s__Target\n"
+                "AD1,AD,2\nAD2,AD,3\nNC1,NC,1\nNC2,NC,1\n",
+                encoding="utf-8",
+            )
+            with patch.object(database, "DB_PATH", db_path), patch.object(
+                database, "DB_ENGINE", "sqlite"
+            ), patch.object(import_module, "CACHE_ROOT", cache_root), patch.object(
+                import_module, "_relative_to_backend", lambda path: str(path)
+            ):
+                dataset_id = import_module.import_dataset(csv_path, "pinned", "Revision 0")
+                with database.connect() as conn:
+                    revision_id = int(conn.execute(
+                        "SELECT current_revision_id FROM datasets WHERE id = ?", (dataset_id,)
+                    ).fetchone()["current_revision_id"])
+                    now = database.utcnow()
+                    run = conn.execute(
+                        """INSERT INTO analysis_runs
+                        (run_key, name, status, manifest_version, manifest_sha256, created_at)
+                        VALUES (?, ?, 'published', '1.0', ?, ?)""",
+                        ("pinned-run", "Pinned run", "a" * 64, now),
+                    )
+                    conn.execute(
+                        """INSERT INTO analysis_artifacts
+                        (analysis_run_id, artifact_key, artifact_type, dataset_id,
+                         dataset_revision_id, created_at)
+                        VALUES (?, 'species', 'species_abundance', ?, ?, ?)""",
+                        (int(run.lastrowid), dataset_id, revision_id, now),
+                    )
+                for index in range(1, 4):
+                    csv_path.write_text(csv_path.read_text().replace("AD1,AD,2", f"AD1,AD,{index + 2}"))
+                    import_module.import_dataset(csv_path, "pinned", f"Revision {index}")
+
+                with database.connect() as conn:
+                    ids = {
+                        int(row["id"])
+                        for row in conn.execute(
+                            "SELECT id FROM dataset_revisions WHERE dataset_id = ?", (dataset_id,)
+                        ).fetchall()
+                    }
+                    pinned = conn.execute(
+                        "SELECT dataset_revision_id FROM analysis_artifacts WHERE artifact_key = 'species'"
+                    ).fetchone()["dataset_revision_id"]
+
+        self.assertIn(revision_id, ids)
+        self.assertEqual(pinned, revision_id)
+        self.assertEqual(len(ids), 4)
 
     def test_rejects_missing_and_unsupported_sources(self) -> None:
         with TemporaryDirectory() as tmpdir:

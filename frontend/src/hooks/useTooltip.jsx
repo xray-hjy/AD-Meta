@@ -1,5 +1,6 @@
 import { useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { sanitizeTooltipHtml } from '../utils/tooltipHtml';
 
 /** Shared tooltip hook for canvas and D3 chart components. */
 export function resolveTooltipPosition({
@@ -31,7 +32,7 @@ export default function useTooltip() {
   const show = useCallback((html) => {
     if (!ref.current) return;
     ref.current.style.opacity = 1;
-    ref.current.innerHTML = html;
+    ref.current.innerHTML = sanitizeTooltipHtml(html);
   }, []);
 
   const move = useCallback((event) => {

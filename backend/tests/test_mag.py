@@ -1,6 +1,8 @@
 import csv
+import hashlib
 import io
 import json
+import shutil
 from pathlib import Path
 
 import numpy as np
@@ -148,6 +150,105 @@ def client_v2(package, monkeypatch):
     return TestClient(app)
 
 
+@pytest.fixture
+def package_v3(package):
+    prepare_mag_v2.build(package, "mag_v1", "mag_v2", service.MagContract(4, 3, 2, 2))
+    source = package / "development_input" / "mag_v2"
+    root = package / "development_input" / "mag_v3"
+    shutil.copytree(source, root)
+    (root / service.V2_MANIFEST).unlink()
+
+    lineage_rows = []
+    lineage_specs = [
+        ("c1", "MAG_A", "MAG_A", "CRR1", "NC", "CHN", 1.0, True, 2),
+        ("c1", "MAG_A", "MEMBER_X", "CRR2", "NC", "CHN2", 0.949, False, 2),
+        ("c2", "MAG_B", "MAG_B", "CRR3", "AD", "CHN", 1.0, True, 1),
+        ("c3", "MAG_C", "MAG_C", "CRR4", "AD", "CHN2", 1.0, True, 1),
+    ]
+    for cluster_id, representative, member, sample, disease, group, ani, is_rep, count in lineage_specs:
+        row = {column: "" for column in service.HEADERS[service.LINEAGE]}
+        row.update({
+            "cluster_id": cluster_id, "representative_mag": representative, "member_mag": member,
+            "is_representative": str(is_rep).lower(), "cluster_member_count": str(count),
+            "representative_source_sample_id": "CRR1" if representative == "MAG_A" else sample,
+            "representative_sample_name": "rep", "representative_sample_accession": "SAMC_REP",
+            "representative_disease": "NC" if representative == "MAG_A" else disease,
+            "representative_group": "CHN", "representative_hpc_batch": "1",
+            "member_source_sample_id": sample, "member_sample_name": sample.lower(),
+            "member_sample_accession": f"SAMC_{sample}", "member_disease": disease,
+            "member_group": group, "member_hpc_batch": "1", "member_to_rep_ani": str(ani),
+            "member_to_rep_alignment_coverage": "0.8", "ani_direction": "representative_reference__member_query",
+            "member_completeness_percent": "90", "member_contamination_percent": "2",
+            "representative_completeness_percent": "95", "representative_contamination_percent": "1",
+            "representative_score": "85", "secondary_cluster_distance_threshold": "0.05",
+            "equivalent_ani_threshold": "0.95", "cluster_method": "average",
+            "comparison_algorithm": "fastANI", "primary_cluster": cluster_id.removeprefix("c"),
+        })
+        lineage_rows.append(row)
+    with (root / service.LINEAGE).open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=service.HEADERS[service.LINEAGE], delimiter="\t")
+        writer.writeheader()
+        writer.writerows(lineage_rows)
+
+    crosswalk_rows = []
+    statuses = list(service.MAPPING_STATUSES)
+    for mag_id, status in zip(("MAG_A", "MAG_B", "MAG_C"), statuses, strict=True):
+        row = {column: "" for column in service.HEADERS[service.CROSSWALK]}
+        row.update({
+            "MAG_ID": mag_id, "gtdb_species": f"Species {mag_id}", "gtdb_classification": "d__Bacteria;s__Species",
+            "gtdb_reference_accession": "GCA_1" if status != "no_gtdb_reference" else "",
+            "gtdb_reference_ani": "97" if status != "no_gtdb_reference" else "",
+            "gtdb_reference_af": "0.8" if status != "no_gtdb_reference" else "",
+            "ncbi_species_taxid": "123" if status != "no_gtdb_reference" else "",
+            "ncbi_organism_name": "Species A" if status != "no_gtdb_reference" else "",
+            "kraken_species_id": "123" if status == "matched_exact_ncbi_species_taxid" else "",
+            "kraken_species_name": "Species A" if status == "matched_exact_ncbi_species_taxid" else "",
+            "mapping_confidence": "exact" if status == "matched_exact_ncbi_species_taxid" else "unresolved",
+            "mapping_status": status,
+        })
+        crosswalk_rows.append(row)
+    with (root / service.CROSSWALK).open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=service.HEADERS[service.CROSSWALK], delimiter="\t")
+        writer.writeheader()
+        writer.writerows(crosswalk_rows)
+
+    for name in (service.PACKAGE_README, service.INTEGRATION_PLAN, service.QA_REPORT):
+        path = root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(f"fixture {name}\n", encoding="utf-8")
+    manifest_files = []
+    for name in service.V3_FILES:
+        if name == service.V3_MANIFEST:
+            continue
+        content = (root / name).read_bytes()
+        manifest_files.append({"path": name, "bytes": len(content), "sha256": hashlib.sha256(content).hexdigest()})
+    manifest = {
+        "version": "mag_v3", "representativeMagCount": 3, "memberMagCount": 4,
+        "secondaryClusterCount": 3, "buildDate": "2026-09-07", "status": "validated_self_contained_handoff",
+        "tools": {"taxonomy": {"name": "GTDB-Tk", "version": "2.7.2", "databaseRelease": "R232"},
+                  "quality": {"name": "CheckM2", "version": "1.1.0"}},
+        "files": manifest_files,
+    }
+    (root / service.V3_MANIFEST).write_text(json.dumps(manifest), encoding="utf-8")
+    return package
+
+
+V3_CONTRACT = service.MagContract(
+    4, 3, 2, 2, members=4, clusters=3, low_ani_members=1,
+    crosswalk_exact=1, crosswalk_not_observed=1, crosswalk_unresolved=1,
+)
+
+
+@pytest.fixture
+def client_v3(package_v3, monkeypatch):
+    monkeypatch.setattr(
+        mag.service,
+        "load_mag_dataset",
+        lambda: load_fixture_original(package_v3, V3_CONTRACT, version="mag_v3"),
+    )
+    return TestClient(app)
+
+
 def test_api_pagination_downloads_audit_and_revision_guard(client):
     first = client.get("/api/mag/features?limit=1&sortBy=magId&direction=asc").json()
     second = client.get("/api/mag/features?limit=1&offset=1&sortBy=magId&direction=asc").json()
@@ -227,7 +328,7 @@ def test_configured_version_selects_matching_directory(package):
 
 def test_v2_taxonomy_quality_api_and_downloads(client_v2):
     overview = client_v2.get("/api/mag/overview").json()
-    assert overview["capabilities"] == {"taxonomy": True, "quality": True}
+    assert overview["capabilities"] == {"taxonomy": True, "quality": True, "lineage": False, "crosswalk": False}
     taxonomy = client_v2.get("/api/mag/taxonomy?rank=species&topN=5").json()
     assert taxonomy["totalMagCount"] == 3
     assert taxonomy["resolvedMagCount"] == 2
@@ -239,6 +340,11 @@ def test_v2_taxonomy_quality_api_and_downloads(client_v2):
     assert len(quality["items"]) == 3
     taxonomy_csv = client_v2.get("/api/mag/downloads/taxonomy")
     quality_csv = client_v2.get("/api/mag/downloads/quality")
+    phylum = client_v2.get("/api/mag/downloads/provenance?view=taxonomy&rank=phylum&topN=5").json()
+    genus = client_v2.get("/api/mag/downloads/provenance?view=taxonomy&rank=genus&topN=5").json()
+    assert phylum["display"]["taxonomyRank"] == "phylum"
+    assert genus["display"]["taxonomyRank"] == "genus"
+    assert phylum["projectionFingerprint"] != genus["projectionFingerprint"]
     assert len(list(csv.DictReader(io.StringIO(taxonomy_csv.content.decode("utf-8-sig"))))) == 3
     assert len(list(csv.DictReader(io.StringIO(quality_csv.content.decode("utf-8-sig"))))) == 3
 
@@ -246,3 +352,62 @@ def test_v2_taxonomy_quality_api_and_downloads(client_v2):
 def test_version_rejects_path_escape(package):
     with pytest.raises(service.MagDataError, match="版本名格式"):
         service.load_mag_dataset(package, service.MagContract(4, 3, 2, 2), version="../mag_v1")
+
+
+def test_v3_loader_validates_lineage_crosswalk_and_package_manifest(package_v3):
+    data = service.load_mag_dataset(package_v3, V3_CONTRACT, version="mag_v3")
+    assert len(data.lineage) == 4
+    assert len(data.crosswalk) == 3
+    assert sum(row["memberToRepAni"] < 0.95 for row in data.lineage) == 1
+    audit = service.provenance(data, service.MagScope())
+    assert audit["manifest"]["status"] == "validated_self_contained_handoff"
+    assert audit["analysisVersion"] == "mag-exploration-v3"
+    assert any("不是独立外部验证队列" in warning for warning in audit["warnings"])
+    assert any("不证明 reads 已直接比对" in warning for warning in audit["warnings"])
+
+
+def test_v3_lineage_crosswalk_api_pagination_filters_and_raw_downloads(client_v3):
+    overview = client_v3.get("/api/mag/overview").json()
+    assert overview["capabilities"] == {"taxonomy": True, "quality": True, "lineage": True, "crosswalk": True}
+    revision = overview["provenance"]["dataFingerprint"]
+
+    clusters = client_v3.get("/api/mag/lineage/clusters?limit=1&lowAniOnly=true").json()
+    assert clusters["total"] == 1
+    assert clusters["items"][0]["clusterId"] == "c1"
+    assert clusters["summary"] == {
+        "memberMagCount": 4, "representativeMagCount": 3, "secondaryClusterCount": 3,
+        "sourceSampleCount": 4, "below095AniCount": 1,
+    }
+    detail = client_v3.get("/api/mag/lineage/clusters/c1?limit=1&sortBy=memberToRepAni").json()
+    assert detail["total"] == 2
+    assert detail["items"][0]["memberMag"] == "MEMBER_X"
+    trace = client_v3.get("/api/mag/lineage/mags/MEMBER_X").json()
+    assert trace["queryRole"] == "member"
+    assert trace["member"]["memberToRepAni"] == 0.949
+    assert trace["crosswalk"]["mappingStatus"] == "matched_exact_ncbi_species_taxid"
+
+    crosswalk = client_v3.get("/api/mag/crosswalk?mappingStatus=ncbi_species_taxid_not_observed_in_reads").json()
+    assert crosswalk["total"] == 1
+    assert crosswalk["statusCounts"] == {
+        "matched_exact_ncbi_species_taxid": 1,
+        "ncbi_species_taxid_not_observed_in_reads": 1,
+        "no_gtdb_reference": 1,
+    }
+    lineage_download = client_v3.get(f"/api/mag/downloads/lineage?revision={revision}")
+    crosswalk_download = client_v3.get(f"/api/mag/downloads/crosswalk?revision={revision}")
+    assert lineage_download.status_code == 200
+    assert lineage_download.headers["content-type"].startswith("text/tab-separated-values")
+    assert lineage_download.headers["x-data-fingerprint"] == revision
+    assert len(list(csv.DictReader(io.StringIO(lineage_download.text), delimiter="\t"))) == 4
+    assert len(list(csv.DictReader(io.StringIO(crosswalk_download.text), delimiter="\t"))) == 3
+    assert client_v3.get("/api/mag/lineage/clusters?limit=101").status_code == 422
+    assert client_v3.get("/api/mag/crosswalk?mappingStatus=invalid").status_code == 422
+    assert client_v3.get("/api/mag/lineage/mags/unknown").status_code == 404
+
+
+def test_v3_manifest_hash_mismatch_fails_closed(package_v3):
+    service.load_mag_dataset(package_v3, V3_CONTRACT, version="mag_v3")
+    path = package_v3 / "development_input" / "mag_v3" / service.CROSSWALK
+    path.write_text(path.read_text(encoding="utf-8") + "\n", encoding="utf-8")
+    with pytest.raises(service.MagDataError, match="bytes|SHA-256"):
+        service.load_mag_dataset(package_v3, V3_CONTRACT, version="mag_v3")

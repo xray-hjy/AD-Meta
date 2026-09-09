@@ -378,6 +378,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/mag/crosswalk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Crosswalk */
+        get: operations["crosswalk_api_mag_crosswalk_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/mag/downloads/{kind}": {
         parameters: {
             query?: never;
@@ -438,6 +455,57 @@ export interface paths {
         };
         /** Heatmap */
         get: operations["heatmap_api_mag_heatmap_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mag/lineage/clusters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lineage Clusters */
+        get: operations["lineage_clusters_api_mag_lineage_clusters_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mag/lineage/clusters/{cluster_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lineage Cluster */
+        get: operations["lineage_cluster_api_mag_lineage_clusters__cluster_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mag/lineage/mags/{mag_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lineage Mag */
+        get: operations["lineage_mag_api_mag_lineage_mags__mag_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -995,6 +1063,67 @@ export interface components {
             /** Values */
             values: number[];
         };
+        /** MagCrosswalkItem */
+        MagCrosswalkItem: {
+            /** Gtdbclassification */
+            gtdbClassification: string | null;
+            /** Gtdbclassificationmethod */
+            gtdbClassificationMethod: string | null;
+            /** Gtdbreferenceaccession */
+            gtdbReferenceAccession: string | null;
+            /** Gtdbreferenceaf */
+            gtdbReferenceAf: number | null;
+            /** Gtdbreferenceani */
+            gtdbReferenceAni: number | null;
+            /** Gtdbreferencesourcefield */
+            gtdbReferenceSourceField: string | null;
+            /** Gtdbspecies */
+            gtdbSpecies: string | null;
+            /** Krakenmpaspecieslabel */
+            krakenMpaSpeciesLabel: string | null;
+            /** Krakenspeciesid */
+            krakenSpeciesId: string | null;
+            /** Krakenspeciesname */
+            krakenSpeciesName: string | null;
+            /** Magid */
+            magId: string;
+            /** Mappingconfidence */
+            mappingConfidence: string | null;
+            /** Mappinglevel */
+            mappingLevel: string | null;
+            /** Mappingmethod */
+            mappingMethod: string | null;
+            /** Mappingstatus */
+            mappingStatus: string;
+            /** Ncbiorganismname */
+            ncbiOrganismName: string | null;
+            /** Ncbispeciestaxid */
+            ncbiSpeciesTaxid: string | null;
+            /** Ncbitaxonomy */
+            ncbiTaxonomy: string | null;
+            /** Referencencbitaxid */
+            referenceNcbiTaxid: string | null;
+        };
+        /** MagCrosswalkPageResponse */
+        MagCrosswalkPageResponse: {
+            /** Items */
+            items: components["schemas"]["MagCrosswalkItem"][];
+            /** Limit */
+            limit: number;
+            /** Mappingstatus */
+            mappingStatus: string;
+            /** Offset */
+            offset: number;
+            provenance: components["schemas"]["MagProvenance"];
+            /** Query */
+            query: string;
+            /** Statuscounts */
+            statusCounts: {
+                [key: string]: number;
+            };
+            /** Total */
+            total: number;
+        };
         /** MagDistributionResponse */
         MagDistributionResponse: {
             /** Boxes */
@@ -1097,6 +1226,211 @@ export interface components {
             /** Values */
             values: number[][];
         };
+        /** MagLineageClusterDetailResponse */
+        MagLineageClusterDetailResponse: {
+            cluster: components["schemas"]["MagLineageClusterSummary"];
+            /** Direction */
+            direction: string;
+            /** Disease */
+            disease: string;
+            /** Group */
+            group: string;
+            /** Items */
+            items: components["schemas"]["MagLineageMember"][];
+            /** Limit */
+            limit: number;
+            /** Lowanionly */
+            lowAniOnly: boolean;
+            /** Offset */
+            offset: number;
+            provenance: components["schemas"]["MagProvenance"];
+            /** Query */
+            query: string;
+            /** Sortby */
+            sortBy: string;
+            /** Total */
+            total: number;
+        };
+        /** MagLineageClusterPageResponse */
+        MagLineageClusterPageResponse: {
+            /** Direction */
+            direction: string;
+            /** Items */
+            items: components["schemas"]["MagLineageClusterSummary"][];
+            /** Limit */
+            limit: number;
+            /** Lowanionly */
+            lowAniOnly: boolean;
+            /** Mappingstatus */
+            mappingStatus: string;
+            /** Offset */
+            offset: number;
+            provenance: components["schemas"]["MagProvenance"];
+            /** Query */
+            query: string;
+            /** Sortby */
+            sortBy: string;
+            summary: components["schemas"]["MagLineageDatasetSummary"];
+            /** Total */
+            total: number;
+        };
+        /** MagLineageClusterSummary */
+        MagLineageClusterSummary: {
+            /** Admembercount */
+            adMemberCount: number;
+            /** Alignmentcoveragemax */
+            alignmentCoverageMax: number;
+            /** Alignmentcoveragemin */
+            alignmentCoverageMin: number;
+            /** Animax */
+            aniMax: number;
+            /** Animin */
+            aniMin: number;
+            /** Below095Anicount */
+            below095AniCount: number;
+            /** Clusterid */
+            clusterId: string;
+            /** Completenesspercent */
+            completenessPercent: number | null;
+            /** Contaminationpercent */
+            contaminationPercent: number | null;
+            /** Gtdbspecies */
+            gtdbSpecies: string | null;
+            /** Mappingstatus */
+            mappingStatus: string | null;
+            /** Membercount */
+            memberCount: number;
+            /** Ncmembercount */
+            ncMemberCount: number;
+            /** Representativemag */
+            representativeMag: string;
+            /** Sourcegroups */
+            sourceGroups: string[];
+            /** Sourcesamplecount */
+            sourceSampleCount: number;
+        };
+        /** MagLineageDatasetSummary */
+        MagLineageDatasetSummary: {
+            /** Below095Anicount */
+            below095AniCount: number;
+            /** Membermagcount */
+            memberMagCount: number;
+            /** Representativemagcount */
+            representativeMagCount: number;
+            /** Secondaryclustercount */
+            secondaryClusterCount: number;
+            /** Sourcesamplecount */
+            sourceSampleCount: number;
+        };
+        /** MagLineageMember */
+        MagLineageMember: {
+            /**
+             * Anidirection
+             * @constant
+             */
+            aniDirection: "representative_reference__member_query";
+            /** Clusterid */
+            clusterId: string;
+            /** Clustermembercount */
+            clusterMemberCount: number;
+            /**
+             * Clustermethod
+             * @constant
+             */
+            clusterMethod: "average";
+            /**
+             * Comparisonalgorithm
+             * @constant
+             */
+            comparisonAlgorithm: "fastANI";
+            /** Equivalentanithreshold */
+            equivalentAniThreshold: number;
+            /** Isrepresentative */
+            isRepresentative: boolean;
+            /** Membercompletenesspercent */
+            memberCompletenessPercent: number;
+            /** Membercontaminationpercent */
+            memberContaminationPercent: number;
+            /**
+             * Memberdisease
+             * @enum {string}
+             */
+            memberDisease: "AD" | "NC";
+            /**
+             * Membergroup
+             * @enum {string}
+             */
+            memberGroup: "CHN" | "CHN2";
+            /** Memberhpcbatch */
+            memberHpcBatch: string;
+            /** Membermag */
+            memberMag: string;
+            /** Membersampleaccession */
+            memberSampleAccession: string;
+            /** Membersamplename */
+            memberSampleName: string;
+            /** Membersourcesampleid */
+            memberSourceSampleId: string;
+            /** Membertorepalignmentcoverage */
+            memberToRepAlignmentCoverage: number;
+            /** Membertorepani */
+            memberToRepAni: number;
+            /** Primarycluster */
+            primaryCluster: string;
+            /** Representativecompletenesspercent */
+            representativeCompletenessPercent: number;
+            /** Representativecontaminationpercent */
+            representativeContaminationPercent: number;
+            /**
+             * Representativedisease
+             * @enum {string}
+             */
+            representativeDisease: "AD" | "NC";
+            /**
+             * Representativegroup
+             * @enum {string}
+             */
+            representativeGroup: "CHN" | "CHN2";
+            /** Representativehpcbatch */
+            representativeHpcBatch: string;
+            /** Representativemag */
+            representativeMag: string;
+            /** Representativesampleaccession */
+            representativeSampleAccession: string;
+            /** Representativesamplename */
+            representativeSampleName: string;
+            /** Representativescore */
+            representativeScore: number;
+            /** Representativesourcesampleid */
+            representativeSourceSampleId: string;
+            /** Secondaryclusterdistancethreshold */
+            secondaryClusterDistanceThreshold: number;
+        };
+        /** MagLineageResponse */
+        MagLineageResponse: {
+            cluster: components["schemas"]["MagLineageClusterSummary"];
+            crosswalk: components["schemas"]["MagCrosswalkItem"] | null;
+            member: components["schemas"]["MagLineageMember"];
+            provenance: components["schemas"]["MagProvenance"];
+            /** Queriedmagid */
+            queriedMagId: string;
+            /**
+             * Queryrole
+             * @enum {string}
+             */
+            queryRole: "representative" | "member";
+        };
+        /** MagManifestReference */
+        MagManifestReference: {
+            /** Builddate */
+            buildDate: string | null;
+            /** File */
+            file: string | null;
+            /** Sha256 */
+            sha256: string | null;
+            /** Status */
+            status: string | null;
+        };
         /** MagOverviewResponse */
         MagOverviewResponse: {
             /** Batches */
@@ -1133,6 +1467,7 @@ export interface components {
             groupField: "disease";
             /** Magcount */
             magCount: number;
+            manifest: components["schemas"]["MagManifestReference"];
             /** Mappingtolerancepercentpoints */
             mappingTolerancePercentPoints: number;
             /** Maxmappingerrorpercentpoints */
@@ -2527,6 +2862,56 @@ export interface operations {
             };
         };
     };
+    crosswalk_api_mag_crosswalk_get: {
+        parameters: {
+            query?: {
+                query?: string;
+                mappingStatus?: "" | "matched_exact_ncbi_species_taxid" | "ncbi_species_taxid_not_observed_in_reads" | "no_gtdb_reference";
+                limit?: number;
+                offset?: number;
+                revision?: string;
+                disease?: "" | "AD" | "NC";
+                gender?: "" | "F" | "M";
+                batch?: "" | "1" | "2" | "3" | "4" | "5";
+                ageMin?: number | null;
+                ageMax?: number | null;
+                abundanceThresholdPercent?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagCrosswalkPageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
     download_api_mag_downloads__kind__get: {
         parameters: {
             query?: {
@@ -2534,6 +2919,7 @@ export interface operations {
                 sortBy?: "magId" | "meanPercent" | "adMeanPercent" | "ncMeanPercent" | "meanDifferencePercentPoints" | "qValue" | "rankBiserial";
                 direction?: "asc" | "desc";
                 view?: "features" | "distribution" | "heatmap" | "taxonomy" | "quality" | "mapping";
+                rank?: "domain" | "phylum" | "class" | "order" | "family" | "genus" | "species";
                 topN?: number;
                 magId?: string;
                 limit?: number;
@@ -2548,7 +2934,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                kind: "features" | "matrix" | "samples" | "taxonomy" | "quality" | "provenance";
+                kind: "features" | "matrix" | "samples" | "taxonomy" | "quality" | "provenance" | "lineage" | "crosswalk";
             };
             cookie?: never;
         };
@@ -2562,6 +2948,7 @@ export interface operations {
                 content: {
                     "application/json": unknown;
                     "text/csv": unknown;
+                    "text/tab-separated-values": unknown;
                 };
             };
             /** @description Validation Error */
@@ -2708,6 +3095,163 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MagHeatmapResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    lineage_clusters_api_mag_lineage_clusters_get: {
+        parameters: {
+            query?: {
+                query?: string;
+                mappingStatus?: "" | "matched_exact_ncbi_species_taxid" | "ncbi_species_taxid_not_observed_in_reads" | "no_gtdb_reference";
+                lowAniOnly?: boolean;
+                sortBy?: "clusterId" | "representativeMag" | "memberCount" | "sourceSampleCount" | "aniMin" | "aniMax" | "below095AniCount" | "completenessPercent" | "contaminationPercent";
+                direction?: "asc" | "desc";
+                limit?: number;
+                offset?: number;
+                revision?: string;
+                disease?: "" | "AD" | "NC";
+                gender?: "" | "F" | "M";
+                batch?: "" | "1" | "2" | "3" | "4" | "5";
+                ageMin?: number | null;
+                ageMax?: number | null;
+                abundanceThresholdPercent?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagLineageClusterPageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    lineage_cluster_api_mag_lineage_clusters__cluster_id__get: {
+        parameters: {
+            query?: {
+                query?: string;
+                memberDisease?: "" | "AD" | "NC";
+                sourceGroup?: "" | "CHN" | "CHN2";
+                lowAniOnly?: boolean;
+                sortBy?: "memberMag" | "memberSourceSampleId" | "memberToRepAni" | "memberToRepAlignmentCoverage";
+                direction?: "asc" | "desc";
+                limit?: number;
+                offset?: number;
+                revision?: string;
+                disease?: "" | "AD" | "NC";
+                gender?: "" | "F" | "M";
+                batch?: "" | "1" | "2" | "3" | "4" | "5";
+                ageMin?: number | null;
+                ageMax?: number | null;
+                abundanceThresholdPercent?: number;
+            };
+            header?: never;
+            path: {
+                cluster_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagLineageClusterDetailResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    lineage_mag_api_mag_lineage_mags__mag_id__get: {
+        parameters: {
+            query?: {
+                revision?: string;
+                disease?: "" | "AD" | "NC";
+                gender?: "" | "F" | "M";
+                batch?: "" | "1" | "2" | "3" | "4" | "5";
+                ageMin?: number | null;
+                ageMax?: number | null;
+                abundanceThresholdPercent?: number;
+            };
+            header?: never;
+            path: {
+                mag_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagLineageResponse"];
                 };
             };
             /** @description Validation Error */

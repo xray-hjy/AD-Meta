@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import ReactECharts from './CartesianEChart';
 import ChartViewport from './ChartViewport';
+import { escapeTooltipText } from '../../utils/tooltipHtml';
 
 const FALLBACK_COLORS = ['#e74c3c', '#2ecc71', '#2563eb', '#f59e0b'];
 const BAR_HEIGHT = 16;
@@ -36,8 +37,8 @@ export default function KoContributionChart({ data }) {
           const item = items[params?.[0]?.dataIndex ?? 0];
           if (!item) return '';
           return [
-            `<b>${item.feature}</b>`,
-            ...params.map(entry => `${entry.marker}${entry.seriesName}: ${formatPercent(entry.value, 3)}`),
+            `<b>${escapeTooltipText(item.feature)}</b>`,
+            ...params.map(entry => `${entry.marker}${escapeTooltipText(entry.seriesName)}: ${formatPercent(entry.value, 3)}`),
           ].join('<br/>');
         },
       },

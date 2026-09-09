@@ -7,7 +7,6 @@ reduce data for interactive rendering.
 
 from __future__ import annotations
 
-import csv
 import io
 from collections.abc import Iterator
 from typing import Any
@@ -17,6 +16,7 @@ from app.services.analysis_projection_service import (
     _resolve_artifact,
     _resolve_run,
 )
+from app.services.csv_export import SpreadsheetSafeDictWriter
 
 
 class FullResultError(ValueError):
@@ -307,7 +307,7 @@ def stream_complete_results_csv(
             params,
         )
         buffer = io.StringIO()
-        writer = csv.DictWriter(buffer, fieldnames=definition["columns"])
+        writer = SpreadsheetSafeDictWriter(buffer, definition["columns"])
         writer.writeheader()
         yield ("\ufeff" + buffer.getvalue()).encode("utf-8")
         while True:

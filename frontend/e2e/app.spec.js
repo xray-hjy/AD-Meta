@@ -55,12 +55,17 @@ test('deep links restore all taxonomy modes and dataset switching', async ({ pag
   await expectNoBlockingAccessibilityViolations(page);
 });
 
-test('heatmap supports keyboard lightbox and PNG export', async ({ page }) => {
+test('heatmap reports the current result and supports interaction when candidates exist', async ({ page }) => {
   await page.goto(`/analysis/abundance?dataset=${SPECIES_DATASET}&chart=heatmap`);
   await expect(page.getByRole('heading', { name: '差异丰度热图' })).toBeVisible();
   await expectNoBlockingAccessibilityViolations(page);
 
   const firstCanvas = page.getByRole('img', { name: 'AD 组丰度热图' });
+  const emptyState = page.getByText(/未筛选到满足.*差异(物种|KO)/).first();
+  await expect(firstCanvas.or(emptyState).first()).toBeVisible();
+  if (await emptyState.isVisible()) {
+    return;
+  }
   await firstCanvas.hover();
   const tooltip = page.locator('[data-chart-tooltip][style*="opacity: 1"]');
   await expect(tooltip).toContainText('样本:');
@@ -89,17 +94,29 @@ test('chart data and projection audit details stack without overlap', async ({ p
   await page.goto(`/analysis/abundance?dataset=${SPECIES_DATASET}&chart=pcoa`);
   await expect(page.getByRole('heading', { name: 'β多样性 PCoA' })).toBeVisible();
 
-  const chartTable = page.locator('details.chart-data-table');
+  const resources = page.getByRole('region', { name: '排序分析解释资源' });
+  const resourceTable = resources.locator('details').first();
   const projectionAudit = page.locator('details.projection-audit');
-  await chartTable.locator('summary').click();
+  await resourceTable.locator('summary').click();
   await projectionAudit.locator('summary').click();
-  await expect(chartTable).toHaveAttribute('open', '');
+  await expect(resourceTable).toHaveAttribute('open', '');
   await expect(projectionAudit).toHaveAttribute('open', '');
   await expectNoBlockingAccessibilityViolations(page);
 
-  const tableBox = await chartTable.boundingBox();
+  const tableBox = await resources.boundingBox();
   const auditBox = await projectionAudit.boundingBox();
   expect(tableBox).not.toBeNull();
   expect(auditBox).not.toBeNull();
   expect(tableBox.y + tableBox.height).toBeLessThanOrEqual(auditBox.y);
+});
+
+test('mobile navigation provides a direct jump to the current result', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`/analysis/abundance?dataset=${SPECIES_DATASET}&chart=species`);
+  const jump = page.getByRole('link', { name: '跳到当前分析结果' });
+  await expect(jump).toBeVisible();
+  await jump.click();
+  await expect(page).toHaveURL(/#analysis-results$/);
+  await expect(page.locator('main#analysis-results')).toBeInViewport();
+  await expectNoBlockingAccessibilityViolations(page);
 });

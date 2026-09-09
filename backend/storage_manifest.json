@@ -45,6 +45,7 @@
       "abundanceScale": "unknown",
       "normalization": "unknown",
       "missingValuePolicy": "zero",
+      "duplicateFeaturePolicy": "coalesce_equal_selected",
       "sampleIdPrefixes": [
         "CRR"
       ],
@@ -52,7 +53,7 @@
       "groupMapping": {},
       "source": {
         "kind": "tracked_raw",
-        "inferenceNote": "CRR-only scope is enforced at import; abundance scale requires upstream confirmation."
+        "inferenceNote": "CRR-only scope is enforced at import; abundance scale requires upstream confirmation. The duplicated uncultured_Mediterranean_phage source columns are coalesced only after their selected CRR values are verified equal."
       }
     },
     {

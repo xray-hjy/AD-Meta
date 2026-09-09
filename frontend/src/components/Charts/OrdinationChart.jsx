@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactECharts from './CartesianEChart';
 import ChartViewport from './ChartViewport';
 import OrdinationResources from './OrdinationResources';
+import { escapeTooltipText } from '../../utils/tooltipHtml';
 
 const GROUP_COLORS = {
   AD: '#e74c3c',
@@ -123,6 +124,7 @@ function OrdinationChart({ data }) {
     ellipses: dataEllipses,
     method,
     variance,
+    projectionStatus,
   } = data || {};
   const points = useMemo(
     () => Array.isArray(dataPoints) ? dataPoints : [],
@@ -186,8 +188,8 @@ function OrdinationChart({ data }) {
           const item = params.data || [];
           if (!Array.isArray(item) || item.length < 4) return '';
           return `
-            <b>${item[2] || ''}</b><br/>
-            分组: ${item[3] || ''}<br/>
+            <b>${escapeTooltipText(item[2])}</b><br/>
+            分组: ${escapeTooltipText(item[3])}<br/>
             ${axisPrefix} 1: ${Number(item[0]).toFixed(4)}<br/>
             ${axisPrefix} 2: ${Number(item[1]).toFixed(4)}
           `;
@@ -241,7 +243,10 @@ function OrdinationChart({ data }) {
   }, [bounds, ellipses, method, points, showEllipses, variance]);
 
   if (!option) {
-    return <div className="placeholder"><p>暂无降维分析数据</p></div>;
+    const message = projectionStatus === 'not_interpretable_no_between_sample_variation'
+      ? '当前样本组成没有可解释的样本间变异，无法计算 PCA。'
+      : '暂无降维分析数据';
+    return <div className="placeholder"><p>{message}</p></div>;
   }
 
   return (

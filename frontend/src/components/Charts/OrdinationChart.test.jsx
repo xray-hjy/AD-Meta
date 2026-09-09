@@ -35,11 +35,29 @@ test('renders grouped points, data-distribution ellipses and bounded axes', () =
   expect(option.yAxis.name).toBe('Axis 2 (20.0%)');
   expect(option.series).toHaveLength(3);
   expect(option.tooltip.formatter({ data: [2, 1, 'AD01', 'AD'] })).toContain('AD01');
+  const hostile = option.tooltip.formatter({
+    data: [2, 1, '<img src=x onerror="bad()">', '<svg onload="bad()">'],
+  });
+  expect(hostile).toContain('&lt;img');
+  expect(hostile).toContain('&lt;svg');
+  expect(hostile).not.toContain('<img');
+  expect(hostile).toContain('<b>');
   const props = chartProps.mock.calls.at(-1)[0];
   expect(props.notMerge).toBe(true);
   expect(props.showDataTable).toBe(false);
   expect(props.option.toolbox.feature.restore).toBeTruthy();
   expect(props.option.toolbox.feature.saveAsImage).toBeTruthy();
+});
+
+test('explains a PCA with no between-sample variation', () => {
+  render(<OrdinationChart data={{
+    method: 'PCA',
+    projectionStatus: 'not_interpretable_no_between_sample_variation',
+    variance: [],
+    points: [],
+    ellipses: [],
+  }} />);
+  expect(screen.getByText('当前样本组成没有可解释的样本间变异，无法计算 PCA。')).toBeTruthy();
 });
 
 test('replaces stale group series when the analysis scope changes', () => {

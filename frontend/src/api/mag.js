@@ -54,7 +54,31 @@ export function getMagQuality(params, options) {
   return fetchJson(`/api/mag/quality?${magParams(params)}`, options);
 }
 
-/** @param {'features' | 'matrix' | 'samples' | 'taxonomy' | 'quality' | 'provenance'} kind @param {MagParams} params */
+/** @param {MagParams} params @param {FetchJsonOptions} [options]
+ * @returns {Promise<import('./generated').components['schemas']['MagLineageClusterPageResponse']>} */
+export function getMagLineageClusters(params, options) {
+  return fetchJson(`/api/mag/lineage/clusters?${magParams(params)}`, options);
+}
+
+/** @param {string} clusterId @param {MagParams} params @param {FetchJsonOptions} [options]
+ * @returns {Promise<import('./generated').components['schemas']['MagLineageClusterDetailResponse']>} */
+export function getMagLineageCluster(clusterId, params, options) {
+  return fetchJson(`/api/mag/lineage/clusters/${encodeURIComponent(clusterId)}?${magParams(params)}`, options);
+}
+
+/** @param {string} magId @param {MagParams} params @param {FetchJsonOptions} [options]
+ * @returns {Promise<import('./generated').components['schemas']['MagLineageResponse']>} */
+export function getMagLineage(magId, params, options) {
+  return fetchJson(`/api/mag/lineage/mags/${encodeURIComponent(magId)}?${magParams(params)}`, options);
+}
+
+/** @param {MagParams} params @param {FetchJsonOptions} [options]
+ * @returns {Promise<import('./generated').components['schemas']['MagCrosswalkPageResponse']>} */
+export function getMagCrosswalk(params, options) {
+  return fetchJson(`/api/mag/crosswalk?${magParams(params)}`, options);
+}
+
+/** @param {'features' | 'matrix' | 'samples' | 'taxonomy' | 'quality' | 'provenance' | 'lineage' | 'crosswalk'} kind @param {MagParams} params */
 export function magDownloadUrl(kind, params) {
   return `${import.meta.env.VITE_API_BASE_URL || ''}/api/mag/downloads/${kind}?${magParams(params)}`;
 }

@@ -7,18 +7,33 @@ import MagWorkspacePage from './MagWorkspacePage';
 
 vi.mock('../../api/mag', async importOriginal => ({ ...await importOriginal(),
   getMagOverview: vi.fn(), getMagFeatures: vi.fn(), getMagDistribution: vi.fn(), getMagHeatmap: vi.fn(), getMagSamples: vi.fn(),
-  getMagTaxonomy: vi.fn(), getMagQuality: vi.fn(),
+  getMagTaxonomy: vi.fn(), getMagQuality: vi.fn(), getMagLineageClusters: vi.fn(), getMagLineageCluster: vi.fn(),
+  getMagLineage: vi.fn(), getMagCrosswalk: vi.fn(),
 }));
 vi.mock('./MagCharts', () => ({ default: ({ view }) => <div data-testid={`chart-${view}`} /> }));
 
-const audit = { version: 'mag_v2', analysisVersion: 'v2', dataFingerprint: 'sha123', requestFingerprint: 'scope123', sampleCount: 185,
+const audit = { version: 'mag_v3', analysisVersion: 'v3', dataFingerprint: 'sha123', requestFingerprint: 'scope123', sampleCount: 185,
   groupCounts: { AD: 122, NC: 63 }, magCount: 872, testedFeatureCount: 872, filters: { abundanceThresholdPercent: 0 }, sampleIds: ['CRR1'], sources: [], warnings: [] };
 const item = { magId: 'MAG_A', lengthBp: 1000, adMeanPercent: 2, ncMeanPercent: 1, qValue: 0.1 };
+const clusterSummary = { clusterId: '100_1', representativeMag: 'MAG_A', memberCount: 2, sourceSampleCount: 2,
+  adMemberCount: 1, ncMemberCount: 1, sourceGroups: ['CHN', 'CHN2'], aniMin: 0.949, aniMax: 1,
+  alignmentCoverageMin: 0.5, alignmentCoverageMax: 1, below095AniCount: 1, gtdbSpecies: 'Species A',
+  completenessPercent: 95, contaminationPercent: 2, mappingStatus: 'matched_exact_ncbi_species_taxid' };
+const member = { clusterId: '100_1', representativeMag: 'MAG_A', memberMag: 'MEMBER_A', isRepresentative: false,
+  clusterMemberCount: 2, representativeSourceSampleId: 'CRR2', representativeSampleName: 's2', representativeSampleAccession: 'a2',
+  representativeDisease: 'AD', representativeGroup: 'CHN2', representativeHpcBatch: '2', memberSourceSampleId: 'CRR1',
+  memberSampleName: 's1', memberSampleAccession: 'a1', memberDisease: 'NC', memberGroup: 'CHN', memberHpcBatch: '1',
+  memberToRepAni: 0.949, memberToRepAlignmentCoverage: 0.5, aniDirection: 'representative_reference__member_query',
+  memberCompletenessPercent: 90, memberContaminationPercent: 3, representativeCompletenessPercent: 95,
+  representativeContaminationPercent: 2, representativeScore: 85, secondaryClusterDistanceThreshold: 0.05,
+  equivalentAniThreshold: 0.95, clusterMethod: 'average', comparisonAlgorithm: 'fastANI', primaryCluster: '100' };
+const crosswalkItem = { magId: 'MAG_A', gtdbSpecies: 'Species A', gtdbReferenceAccession: 'GCA_1', ncbiSpeciesTaxid: '123',
+  ncbiOrganismName: 'Species A', krakenSpeciesName: 'Species A', mappingStatus: 'matched_exact_ncbi_species_taxid' };
 
 beforeEach(() => {
   vi.clearAllMocks();
   api.getMagOverview.mockImplementation(async scope => ({ provenance: { ...audit, sampleCount: scope.ageMin === '120' ? 0 : 185 },
-    batches: [], capabilities: { taxonomy: true, quality: true }, options: { genders: ['F', 'M'], batches: ['1', '2'], ageMin: 60, ageMax: 89 } }));
+    batches: [], capabilities: { taxonomy: true, quality: true, lineage: true, crosswalk: true }, options: { genders: ['F', 'M'], batches: ['1', '2'], ageMin: 60, ageMax: 89 } }));
   api.getMagFeatures.mockImplementation(async params => ({ provenance: audit, total: params.query ? 1 : 872, items: [{ ...item, magId: params.offset ? 'MAG_B' : 'MAG_A' }] }));
   api.getMagDistribution.mockResolvedValue({ provenance: audit, feature: item, samples: [], boxes: [] });
   api.getMagHeatmap.mockResolvedValue({ provenance: audit, magIds: ['MAG_A'], samples: [], values: [], selection: 'Top N' });
@@ -28,6 +43,12 @@ beforeEach(() => {
   api.getMagQuality.mockResolvedValue({ provenance: audit, items: [{ magId: 'MAG_A', completenessPercent: 95, contaminationPercent: 2, contigN50Bp: 500,
     genomeSizeBp: 1000, totalContigs: 10, inReferenceBand: true }], summary: { totalMagCount: 3, referenceBandCount: 2, completenessMinPercent: 80,
     completenessMaxPercent: 95, contaminationMinPercent: 2, contaminationMaxPercent: 6 }, referenceBand: { label: '参考区间（非 MIMAG 高质量判定）' }, method: 'CheckM2', version: '1.1.0' });
+  api.getMagLineageClusters.mockResolvedValue({ provenance: audit, items: [clusterSummary], total: 1, limit: 25, offset: 0,
+    summary: { memberMagCount: 8548, representativeMagCount: 872, secondaryClusterCount: 872, sourceSampleCount: 185, below095AniCount: 24 } });
+  api.getMagLineageCluster.mockResolvedValue({ provenance: audit, cluster: clusterSummary, items: [member], total: 2, limit: 25, offset: 0 });
+  api.getMagLineage.mockResolvedValue({ provenance: audit, queriedMagId: 'MEMBER_A', queryRole: 'member', cluster: clusterSummary, member, crosswalk: crosswalkItem });
+  api.getMagCrosswalk.mockResolvedValue({ provenance: audit, items: [crosswalkItem], total: 872, limit: 25, offset: 0,
+    statusCounts: { matched_exact_ncbi_species_taxid: 266, ncbi_species_taxid_not_observed_in_reads: 577, no_gtdb_reference: 29 } });
 });
 
 const datasets = [
@@ -54,7 +75,7 @@ test('uses button-based module switching and keeps the MAG analysis navigation i
   expect(within(summary).getByText('NC 组')).toBeTruthy();
 
   expect(document.querySelector('.app-subtitle')).toHaveTextContent('MAG 解析');
-  expect(screen.getByRole('option', { name: '当前 MAG 分析结果（mag_v2）' })).toBeTruthy();
+  expect(screen.getByRole('option', { name: '当前 MAG 分析结果（mag_v3）' })).toBeTruthy();
   expect(screen.getByText('结果已就绪')).toHaveClass('topbar-status');
   expect(screen.getByText('运行 185 样本 · 当前结果覆盖 185')).toHaveClass('topbar-context__scope');
   expect(screen.getByRole('checkbox', { name: '色盲友好' }).closest('label')).toHaveClass('colorblind-toggle');
@@ -63,17 +84,17 @@ test('uses button-based module switching and keeps the MAG analysis navigation i
   const navigation = screen.getByRole('navigation', { name: '图表导航' });
   expect(within(navigation).getByText('丰度分析')).toBeTruthy();
   expect(within(navigation).getByText('注释解析')).toBeTruthy();
-  expect(within(navigation).getByText('质量与复现')).toBeTruthy();
+  expect(within(navigation).getByText('质量与来源')).toBeTruthy();
   expect(within(navigation).getByText('技术质控')).toBeTruthy();
   expect(within(navigation).getByRole('button', { name: /MAG 分类/ })).not.toBeDisabled();
   expect(within(navigation).getByRole('button', { name: /MAG 功能注释.*规划中/ })).toBeDisabled();
   expect(within(navigation).getByRole('button', { name: /MAG 质量/ })).not.toBeDisabled();
-  expect(within(navigation).getByRole('button', { name: /跨队列复现.*规划中/ })).toBeDisabled();
+  expect(within(navigation).getByRole('button', { name: /来源与去冗余/ })).not.toBeDisabled();
   expect(within(navigation).getByRole('button', { name: /丰度与候选列表/ })).toHaveClass('nav-item--active');
   expect(within(navigation).getByRole('button', { name: /映射与丰度阈值/ })).not.toBeDisabled();
   expect(navigation.querySelectorAll('.nav-item')).toHaveLength(8);
-  expect(screen.getByText('已接入：丰度分析、MAG分类、MAG质量、技术质控')).toBeTruthy();
-  expect(screen.getByText('待核验：MAG功能注释、跨队列复现')).toBeTruthy();
+  expect(screen.getByText('已接入：丰度分析、MAG分类、MAG质量、来源与去冗余、技术质控')).toBeTruthy();
+  expect(screen.getByText('待核验：MAG功能注释、独立外部队列验证')).toBeTruthy();
 
   fireEvent.click(screen.getByRole('button', { name: /群落功能/ }));
   expect(onDatasetChange).toHaveBeenCalledWith('ad-nc-ko-abundance');
@@ -149,4 +170,23 @@ test('invalid data package is shown as an error with no false chart or download'
   await screen.findByText(/MAG 数据校验失败/);
   expect(screen.queryByTestId('chart-features')).toBeNull();
   expect(screen.queryByRole('link', { name: '下载全部候选 CSV' })).toBeNull();
+});
+
+test('renders paginated lineage, evidence chain and explicit crosswalk states', async () => {
+  mount();
+  await screen.findByTestId('chart-features');
+  fireEvent.click(screen.getByRole('button', { name: /来源与去冗余/ }));
+
+  expect(await screen.findByText('8,548')).toBeTruthy();
+  expect(screen.getByText('24')).toBeTruthy();
+  expect(screen.getByText(/Group 仅为 CHN\/CHN2 来源组/)).toBeTruthy();
+  expect(screen.getByRole('link', { name: '下载原始 lineage TSV' }).getAttribute('href')).toContain('revision=sha123');
+  expect(screen.getByRole('link', { name: '下载原始 crosswalk TSV' }).getAttribute('href')).toContain('revision=sha123');
+  expect(await screen.findByRole('button', { name: 'MEMBER_A' })).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'MEMBER_A' }));
+  expect(await screen.findByRole('region', { name: '单 MAG 证据链' })).toHaveTextContent('实际 ANI 0.949');
+  expect(screen.getByRole('region', { name: '单 MAG 证据链' })).toHaveTextContent('跨队列验证');
+  expect(screen.getByRole('region', { name: 'MAG 物种 crosswalk，可横向滚动' })).toHaveTextContent('精确匹配');
+  expect(api.getMagLineageClusters).toHaveBeenCalledWith(expect.objectContaining({ limit: 25, offset: 0 }), expect.anything());
+  expect(api.getMagLineageCluster).toHaveBeenCalledWith('100_1', expect.objectContaining({ limit: 25 }), expect.anything());
 });

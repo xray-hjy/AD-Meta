@@ -10,10 +10,11 @@ import numpy as np
 import pandas as pd
 
 from .common import AD, FEATURE_META, KO_RE, NC
-from .io import read_table
+from .io import read_table, read_table_header
 
 ABUNDANCE_SCALES = {"counts", "relative_abundance", "normalized_abundance", "unknown"}
 MISSING_VALUE_POLICIES = {"error", "zero"}
+DUPLICATE_FEATURE_POLICIES = {"reject", "coalesce_equal_selected"}
 
 
 class InputValidationError(ValueError):
@@ -96,6 +97,7 @@ def prepare_dataframe(
     minimum_group_size: int = 1,
     group_mapping: dict[str, str] | None = None,
     sample_id_prefixes: list[str] | None = None,
+    duplicate_feature_policy: str = "reject",
 ) -> tuple[pd.DataFrame, list[str], list[str]]:
     """Read, validate and normalize one AD/NC abundance matrix.
 
@@ -105,10 +107,111 @@ def prepare_dataframe(
 
     policy = InputPolicy(abundance_scale, missing_value_policy, minimum_group_size)
     policy.validate()
+    if duplicate_feature_policy not in DUPLICATE_FEATURE_POLICIES:
+        _fail(
+            "invalid_duplicate_feature_policy",
+            f"Unsupported duplicate feature policy: {duplicate_feature_policy}",
+            allowed=sorted(DUPLICATE_FEATURE_POLICIES),
+        )
     warnings: list[str] = []
+    source_columns = read_table_header(path)
+    normalized_source_columns = [column.strip() for column in source_columns]
+    duplicate_source_columns = sorted({
+        column for column in normalized_source_columns
+        if column and normalized_source_columns.count(column) > 1
+    })
+    if duplicate_source_columns and duplicate_feature_policy == "reject":
+        _fail(
+            "duplicate_columns",
+            "Column names must be unique before table parsing.",
+            columns=duplicate_source_columns,
+            columnIndices={
+                column: [index + 1 for index, value in enumerate(normalized_source_columns) if value == column]
+                for column in duplicate_source_columns
+            },
+        )
     df = read_table(path)
 
-    normalized_columns = [str(col).strip() for col in df.columns]
+    if duplicate_source_columns:
+        non_features = [
+            column for column in duplicate_source_columns
+            if not (column.startswith("k__") or KO_RE.fullmatch(column))
+        ]
+        if non_features:
+            _fail(
+                "duplicate_columns",
+                "Only duplicate feature columns can use the explicit coalescing policy.",
+                columns=non_features,
+            )
+        sample_index = next(
+            (
+                index for index, column in enumerate(normalized_source_columns)
+                if column in {"sample_id", "Sample"}
+            ),
+            None,
+        )
+        normalized_prefixes_for_comparison = tuple(
+            prefix
+            for prefix in (
+                str(value).strip().upper() for value in (sample_id_prefixes or [])
+            )
+            if prefix
+        )
+        comparison_rows = pd.Series(True, index=df.index)
+        if sample_index is not None and normalized_prefixes_for_comparison:
+            comparison_rows = (
+                df.iloc[:, sample_index]
+                .astype(str)
+                .str.strip()
+                .str.upper()
+                .str.startswith(normalized_prefixes_for_comparison)
+            )
+        dropped_indices: set[int] = set()
+        for column in duplicate_source_columns:
+            indices = [
+                index for index, value in enumerate(normalized_source_columns)
+                if value == column
+            ]
+            baseline_raw = df.loc[comparison_rows].iloc[:, indices[0]]
+            baseline = pd.to_numeric(baseline_raw, errors="coerce")
+            if bool((baseline.isna() & baseline_raw.notna()).any()):
+                _fail(
+                    "non_numeric_abundance",
+                    "Duplicate feature columns must be numeric before coalescing.",
+                    column=column,
+                    columnIndex=indices[0] + 1,
+                )
+            if missing_value_policy == "zero":
+                baseline = baseline.fillna(0)
+            for index in indices[1:]:
+                candidate_raw = df.loc[comparison_rows].iloc[:, index]
+                candidate = pd.to_numeric(candidate_raw, errors="coerce")
+                if bool((candidate.isna() & candidate_raw.notna()).any()):
+                    _fail(
+                        "non_numeric_abundance",
+                        "Duplicate feature columns must be numeric before coalescing.",
+                        column=column,
+                        columnIndex=index + 1,
+                    )
+                if missing_value_policy == "zero":
+                    candidate = candidate.fillna(0)
+                equal = baseline.eq(candidate) | (baseline.isna() & candidate.isna())
+                if not bool(equal.all()):
+                    _fail(
+                        "conflicting_duplicate_columns",
+                        "Duplicate feature columns differ inside the selected sample scope.",
+                        column=column,
+                        columnIndices=[value + 1 for value in indices],
+                    )
+                dropped_indices.add(index)
+        kept_indices = [index for index in range(len(normalized_source_columns)) if index not in dropped_indices]
+        df = df.iloc[:, kept_indices].copy()
+        normalized_source_columns = [normalized_source_columns[index] for index in kept_indices]
+        warnings.append(
+            "Coalesced equivalent duplicate feature columns after verifying all selected sample values."
+        )
+
+    normalized_columns = normalized_source_columns
     duplicate_columns = sorted({col for col in normalized_columns if normalized_columns.count(col) > 1})
     if duplicate_columns:
         _fail(
@@ -308,6 +411,7 @@ def prepare_dataframe(
                 "missingValuePolicy": missing_value_policy,
                 "groupMapping": group_mapping or {},
                 "sampleIdPrefixes": list(normalized_prefixes),
+                "duplicateFeaturePolicy": duplicate_feature_policy,
                 "excludedSampleCount": excluded_sample_count,
                 "inferenceEligible": abundance_scale != "unknown" and missing_count == 0 and min(group_counts.values()) >= 5,
             },

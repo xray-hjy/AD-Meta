@@ -581,6 +581,7 @@
             "items": {
               "type": "string"
             },
+            "maxItems": 500,
             "title": "Samplecodes",
             "type": "array"
           }
@@ -995,6 +996,7 @@
             "items": {
               "type": "string"
             },
+            "maxItems": 500,
             "title": "Featureids",
             "type": "array"
           },
@@ -1061,6 +1063,281 @@
           "values"
         ],
         "title": "MagBox",
+        "type": "object"
+      },
+      "MagCrosswalkItem": {
+        "properties": {
+          "gtdbClassification": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gtdbclassification"
+          },
+          "gtdbClassificationMethod": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gtdbclassificationmethod"
+          },
+          "gtdbReferenceAccession": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gtdbreferenceaccession"
+          },
+          "gtdbReferenceAf": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gtdbreferenceaf"
+          },
+          "gtdbReferenceAni": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gtdbreferenceani"
+          },
+          "gtdbReferenceSourceField": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gtdbreferencesourcefield"
+          },
+          "gtdbSpecies": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gtdbspecies"
+          },
+          "krakenMpaSpeciesLabel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Krakenmpaspecieslabel"
+          },
+          "krakenSpeciesId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Krakenspeciesid"
+          },
+          "krakenSpeciesName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Krakenspeciesname"
+          },
+          "magId": {
+            "title": "Magid",
+            "type": "string"
+          },
+          "mappingConfidence": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mappingconfidence"
+          },
+          "mappingLevel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mappinglevel"
+          },
+          "mappingMethod": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mappingmethod"
+          },
+          "mappingStatus": {
+            "title": "Mappingstatus",
+            "type": "string"
+          },
+          "ncbiOrganismName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ncbiorganismname"
+          },
+          "ncbiSpeciesTaxid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ncbispeciestaxid"
+          },
+          "ncbiTaxonomy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ncbitaxonomy"
+          },
+          "referenceNcbiTaxid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Referencencbitaxid"
+          }
+        },
+        "required": [
+          "magId",
+          "gtdbSpecies",
+          "gtdbClassification",
+          "gtdbReferenceAccession",
+          "gtdbReferenceSourceField",
+          "gtdbReferenceAni",
+          "gtdbReferenceAf",
+          "gtdbClassificationMethod",
+          "referenceNcbiTaxid",
+          "ncbiSpeciesTaxid",
+          "ncbiOrganismName",
+          "ncbiTaxonomy",
+          "krakenSpeciesId",
+          "krakenSpeciesName",
+          "krakenMpaSpeciesLabel",
+          "mappingMethod",
+          "mappingLevel",
+          "mappingConfidence",
+          "mappingStatus"
+        ],
+        "title": "MagCrosswalkItem",
+        "type": "object"
+      },
+      "MagCrosswalkPageResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MagCrosswalkItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "mappingStatus": {
+            "title": "Mappingstatus",
+            "type": "string"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/MagProvenance"
+          },
+          "query": {
+            "title": "Query",
+            "type": "string"
+          },
+          "statusCounts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Statuscounts",
+            "type": "object"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "provenance",
+          "items",
+          "total",
+          "limit",
+          "offset",
+          "query",
+          "mappingStatus",
+          "statusCounts"
+        ],
+        "title": "MagCrosswalkPageResponse",
         "type": "object"
       },
       "MagDistributionResponse": {
@@ -1422,6 +1699,569 @@
         "title": "MagHeatmapResponse",
         "type": "object"
       },
+      "MagLineageClusterDetailResponse": {
+        "properties": {
+          "cluster": {
+            "$ref": "#/components/schemas/MagLineageClusterSummary"
+          },
+          "direction": {
+            "title": "Direction",
+            "type": "string"
+          },
+          "disease": {
+            "title": "Disease",
+            "type": "string"
+          },
+          "group": {
+            "title": "Group",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MagLineageMember"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "lowAniOnly": {
+            "title": "Lowanionly",
+            "type": "boolean"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/MagProvenance"
+          },
+          "query": {
+            "title": "Query",
+            "type": "string"
+          },
+          "sortBy": {
+            "title": "Sortby",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "provenance",
+          "cluster",
+          "items",
+          "total",
+          "limit",
+          "offset",
+          "query",
+          "disease",
+          "group",
+          "lowAniOnly",
+          "sortBy",
+          "direction"
+        ],
+        "title": "MagLineageClusterDetailResponse",
+        "type": "object"
+      },
+      "MagLineageClusterPageResponse": {
+        "properties": {
+          "direction": {
+            "title": "Direction",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MagLineageClusterSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "lowAniOnly": {
+            "title": "Lowanionly",
+            "type": "boolean"
+          },
+          "mappingStatus": {
+            "title": "Mappingstatus",
+            "type": "string"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/MagProvenance"
+          },
+          "query": {
+            "title": "Query",
+            "type": "string"
+          },
+          "sortBy": {
+            "title": "Sortby",
+            "type": "string"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/MagLineageDatasetSummary"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "provenance",
+          "items",
+          "total",
+          "limit",
+          "offset",
+          "query",
+          "mappingStatus",
+          "lowAniOnly",
+          "sortBy",
+          "direction",
+          "summary"
+        ],
+        "title": "MagLineageClusterPageResponse",
+        "type": "object"
+      },
+      "MagLineageClusterSummary": {
+        "properties": {
+          "adMemberCount": {
+            "title": "Admembercount",
+            "type": "integer"
+          },
+          "alignmentCoverageMax": {
+            "title": "Alignmentcoveragemax",
+            "type": "number"
+          },
+          "alignmentCoverageMin": {
+            "title": "Alignmentcoveragemin",
+            "type": "number"
+          },
+          "aniMax": {
+            "title": "Animax",
+            "type": "number"
+          },
+          "aniMin": {
+            "title": "Animin",
+            "type": "number"
+          },
+          "below095AniCount": {
+            "title": "Below095Anicount",
+            "type": "integer"
+          },
+          "clusterId": {
+            "title": "Clusterid",
+            "type": "string"
+          },
+          "completenessPercent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completenesspercent"
+          },
+          "contaminationPercent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contaminationpercent"
+          },
+          "gtdbSpecies": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gtdbspecies"
+          },
+          "mappingStatus": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mappingstatus"
+          },
+          "memberCount": {
+            "title": "Membercount",
+            "type": "integer"
+          },
+          "ncMemberCount": {
+            "title": "Ncmembercount",
+            "type": "integer"
+          },
+          "representativeMag": {
+            "title": "Representativemag",
+            "type": "string"
+          },
+          "sourceGroups": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Sourcegroups",
+            "type": "array"
+          },
+          "sourceSampleCount": {
+            "title": "Sourcesamplecount",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "clusterId",
+          "representativeMag",
+          "memberCount",
+          "sourceSampleCount",
+          "adMemberCount",
+          "ncMemberCount",
+          "sourceGroups",
+          "aniMin",
+          "aniMax",
+          "alignmentCoverageMin",
+          "alignmentCoverageMax",
+          "below095AniCount",
+          "gtdbSpecies",
+          "completenessPercent",
+          "contaminationPercent",
+          "mappingStatus"
+        ],
+        "title": "MagLineageClusterSummary",
+        "type": "object"
+      },
+      "MagLineageDatasetSummary": {
+        "properties": {
+          "below095AniCount": {
+            "title": "Below095Anicount",
+            "type": "integer"
+          },
+          "memberMagCount": {
+            "title": "Membermagcount",
+            "type": "integer"
+          },
+          "representativeMagCount": {
+            "title": "Representativemagcount",
+            "type": "integer"
+          },
+          "secondaryClusterCount": {
+            "title": "Secondaryclustercount",
+            "type": "integer"
+          },
+          "sourceSampleCount": {
+            "title": "Sourcesamplecount",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "memberMagCount",
+          "representativeMagCount",
+          "secondaryClusterCount",
+          "sourceSampleCount",
+          "below095AniCount"
+        ],
+        "title": "MagLineageDatasetSummary",
+        "type": "object"
+      },
+      "MagLineageMember": {
+        "properties": {
+          "aniDirection": {
+            "const": "representative_reference__member_query",
+            "title": "Anidirection",
+            "type": "string"
+          },
+          "clusterId": {
+            "title": "Clusterid",
+            "type": "string"
+          },
+          "clusterMemberCount": {
+            "title": "Clustermembercount",
+            "type": "integer"
+          },
+          "clusterMethod": {
+            "const": "average",
+            "title": "Clustermethod",
+            "type": "string"
+          },
+          "comparisonAlgorithm": {
+            "const": "fastANI",
+            "title": "Comparisonalgorithm",
+            "type": "string"
+          },
+          "equivalentAniThreshold": {
+            "title": "Equivalentanithreshold",
+            "type": "number"
+          },
+          "isRepresentative": {
+            "title": "Isrepresentative",
+            "type": "boolean"
+          },
+          "memberCompletenessPercent": {
+            "title": "Membercompletenesspercent",
+            "type": "number"
+          },
+          "memberContaminationPercent": {
+            "title": "Membercontaminationpercent",
+            "type": "number"
+          },
+          "memberDisease": {
+            "enum": [
+              "AD",
+              "NC"
+            ],
+            "title": "Memberdisease",
+            "type": "string"
+          },
+          "memberGroup": {
+            "enum": [
+              "CHN",
+              "CHN2"
+            ],
+            "title": "Membergroup",
+            "type": "string"
+          },
+          "memberHpcBatch": {
+            "title": "Memberhpcbatch",
+            "type": "string"
+          },
+          "memberMag": {
+            "title": "Membermag",
+            "type": "string"
+          },
+          "memberSampleAccession": {
+            "title": "Membersampleaccession",
+            "type": "string"
+          },
+          "memberSampleName": {
+            "title": "Membersamplename",
+            "type": "string"
+          },
+          "memberSourceSampleId": {
+            "title": "Membersourcesampleid",
+            "type": "string"
+          },
+          "memberToRepAlignmentCoverage": {
+            "title": "Membertorepalignmentcoverage",
+            "type": "number"
+          },
+          "memberToRepAni": {
+            "title": "Membertorepani",
+            "type": "number"
+          },
+          "primaryCluster": {
+            "title": "Primarycluster",
+            "type": "string"
+          },
+          "representativeCompletenessPercent": {
+            "title": "Representativecompletenesspercent",
+            "type": "number"
+          },
+          "representativeContaminationPercent": {
+            "title": "Representativecontaminationpercent",
+            "type": "number"
+          },
+          "representativeDisease": {
+            "enum": [
+              "AD",
+              "NC"
+            ],
+            "title": "Representativedisease",
+            "type": "string"
+          },
+          "representativeGroup": {
+            "enum": [
+              "CHN",
+              "CHN2"
+            ],
+            "title": "Representativegroup",
+            "type": "string"
+          },
+          "representativeHpcBatch": {
+            "title": "Representativehpcbatch",
+            "type": "string"
+          },
+          "representativeMag": {
+            "title": "Representativemag",
+            "type": "string"
+          },
+          "representativeSampleAccession": {
+            "title": "Representativesampleaccession",
+            "type": "string"
+          },
+          "representativeSampleName": {
+            "title": "Representativesamplename",
+            "type": "string"
+          },
+          "representativeScore": {
+            "title": "Representativescore",
+            "type": "number"
+          },
+          "representativeSourceSampleId": {
+            "title": "Representativesourcesampleid",
+            "type": "string"
+          },
+          "secondaryClusterDistanceThreshold": {
+            "title": "Secondaryclusterdistancethreshold",
+            "type": "number"
+          }
+        },
+        "required": [
+          "clusterId",
+          "representativeMag",
+          "memberMag",
+          "isRepresentative",
+          "clusterMemberCount",
+          "representativeSourceSampleId",
+          "representativeSampleName",
+          "representativeSampleAccession",
+          "representativeDisease",
+          "representativeGroup",
+          "representativeHpcBatch",
+          "memberSourceSampleId",
+          "memberSampleName",
+          "memberSampleAccession",
+          "memberDisease",
+          "memberGroup",
+          "memberHpcBatch",
+          "memberToRepAni",
+          "memberToRepAlignmentCoverage",
+          "aniDirection",
+          "memberCompletenessPercent",
+          "memberContaminationPercent",
+          "representativeCompletenessPercent",
+          "representativeContaminationPercent",
+          "representativeScore",
+          "secondaryClusterDistanceThreshold",
+          "equivalentAniThreshold",
+          "clusterMethod",
+          "comparisonAlgorithm",
+          "primaryCluster"
+        ],
+        "title": "MagLineageMember",
+        "type": "object"
+      },
+      "MagLineageResponse": {
+        "properties": {
+          "cluster": {
+            "$ref": "#/components/schemas/MagLineageClusterSummary"
+          },
+          "crosswalk": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MagCrosswalkItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "member": {
+            "$ref": "#/components/schemas/MagLineageMember"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/MagProvenance"
+          },
+          "queriedMagId": {
+            "title": "Queriedmagid",
+            "type": "string"
+          },
+          "queryRole": {
+            "enum": [
+              "representative",
+              "member"
+            ],
+            "title": "Queryrole",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provenance",
+          "queriedMagId",
+          "queryRole",
+          "cluster",
+          "member",
+          "crosswalk"
+        ],
+        "title": "MagLineageResponse",
+        "type": "object"
+      },
+      "MagManifestReference": {
+        "properties": {
+          "buildDate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Builddate"
+          },
+          "file": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File"
+          },
+          "sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sha256"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "required": [
+          "file",
+          "sha256",
+          "buildDate",
+          "status"
+        ],
+        "title": "MagManifestReference",
+        "type": "object"
+      },
       "MagOverviewResponse": {
         "properties": {
           "batches": {
@@ -1498,6 +2338,9 @@
           "magCount": {
             "title": "Magcount",
             "type": "integer"
+          },
+          "manifest": {
+            "$ref": "#/components/schemas/MagManifestReference"
           },
           "mappingTolerancePercentPoints": {
             "title": "Mappingtolerancepercentpoints",
@@ -1584,7 +2427,8 @@
           "provenanceScope",
           "mappingTolerancePercentPoints",
           "maxMappingErrorPercentPoints",
-          "warnings"
+          "warnings",
+          "manifest"
         ],
         "title": "MagProvenance",
         "type": "object"
@@ -2599,6 +3443,7 @@
             "items": {
               "type": "string"
             },
+            "maxItems": 500,
             "title": "Featureids",
             "type": "array"
           },
@@ -4275,6 +5120,206 @@
         "summary": "Ready"
       }
     },
+    "/api/mag/crosswalk": {
+      "get": {
+        "operationId": "crosswalk_api_mag_crosswalk_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "query",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 200,
+              "title": "Query",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "mappingStatus",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "matched_exact_ncbi_species_taxid",
+                "ncbi_species_taxid_not_observed_in_reads",
+                "no_gtdb_reference"
+              ],
+              "title": "Mappingstatus",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "disease",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "AD",
+                "NC"
+              ],
+              "title": "Disease",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "gender",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "F",
+                "M"
+              ],
+              "title": "Gender",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "batch",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "1",
+                "2",
+                "3",
+                "4",
+                "5"
+              ],
+              "title": "Batch",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ageMin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 120,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Agemin"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ageMax",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 120,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Agemax"
+            }
+          },
+          {
+            "in": "query",
+            "name": "abundanceThresholdPercent",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100,
+              "minimum": 0,
+              "title": "Abundancethresholdpercent",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagCrosswalkPageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Crosswalk",
+        "tags": [
+          "mag"
+        ]
+      }
+    },
     "/api/mag/downloads/{kind}": {
       "get": {
         "operationId": "download_api_mag_downloads__kind__get",
@@ -4290,7 +5335,9 @@
                 "samples",
                 "taxonomy",
                 "quality",
-                "provenance"
+                "provenance",
+                "lineage",
+                "crosswalk"
               ],
               "title": "Kind",
               "type": "string"
@@ -4355,6 +5402,25 @@
                 "mapping"
               ],
               "title": "View",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "rank",
+            "required": false,
+            "schema": {
+              "default": "phylum",
+              "enum": [
+                "domain",
+                "phylum",
+                "class",
+                "order",
+                "family",
+                "genus",
+                "species"
+              ],
+              "title": "Rank",
               "type": "string"
             }
           },
@@ -4516,7 +5582,8 @@
           "200": {
             "content": {
               "application/json": {},
-              "text/csv": {}
+              "text/csv": {},
+              "text/tab-separated-values": {}
             },
             "description": "Successful Response"
           },
@@ -5080,6 +6147,673 @@
           }
         },
         "summary": "Heatmap",
+        "tags": [
+          "mag"
+        ]
+      }
+    },
+    "/api/mag/lineage/clusters": {
+      "get": {
+        "operationId": "lineage_clusters_api_mag_lineage_clusters_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "query",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 200,
+              "title": "Query",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "mappingStatus",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "matched_exact_ncbi_species_taxid",
+                "ncbi_species_taxid_not_observed_in_reads",
+                "no_gtdb_reference"
+              ],
+              "title": "Mappingstatus",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "lowAniOnly",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Lowanionly",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sortBy",
+            "required": false,
+            "schema": {
+              "default": "memberCount",
+              "enum": [
+                "clusterId",
+                "representativeMag",
+                "memberCount",
+                "sourceSampleCount",
+                "aniMin",
+                "aniMax",
+                "below095AniCount",
+                "completenessPercent",
+                "contaminationPercent"
+              ],
+              "title": "Sortby",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "direction",
+            "required": false,
+            "schema": {
+              "default": "desc",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "title": "Direction",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "disease",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "AD",
+                "NC"
+              ],
+              "title": "Disease",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "gender",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "F",
+                "M"
+              ],
+              "title": "Gender",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "batch",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "1",
+                "2",
+                "3",
+                "4",
+                "5"
+              ],
+              "title": "Batch",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ageMin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 120,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Agemin"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ageMax",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 120,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Agemax"
+            }
+          },
+          {
+            "in": "query",
+            "name": "abundanceThresholdPercent",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100,
+              "minimum": 0,
+              "title": "Abundancethresholdpercent",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagLineageClusterPageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Lineage Clusters",
+        "tags": [
+          "mag"
+        ]
+      }
+    },
+    "/api/mag/lineage/clusters/{cluster_id}": {
+      "get": {
+        "operationId": "lineage_cluster_api_mag_lineage_clusters__cluster_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "cluster_id",
+            "required": true,
+            "schema": {
+              "title": "Cluster Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 200,
+              "title": "Query",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "memberDisease",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "AD",
+                "NC"
+              ],
+              "title": "Memberdisease",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sourceGroup",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "CHN",
+                "CHN2"
+              ],
+              "title": "Sourcegroup",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "lowAniOnly",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Lowanionly",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sortBy",
+            "required": false,
+            "schema": {
+              "default": "memberToRepAni",
+              "enum": [
+                "memberMag",
+                "memberSourceSampleId",
+                "memberToRepAni",
+                "memberToRepAlignmentCoverage"
+              ],
+              "title": "Sortby",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "direction",
+            "required": false,
+            "schema": {
+              "default": "asc",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "title": "Direction",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "disease",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "AD",
+                "NC"
+              ],
+              "title": "Disease",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "gender",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "F",
+                "M"
+              ],
+              "title": "Gender",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "batch",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "1",
+                "2",
+                "3",
+                "4",
+                "5"
+              ],
+              "title": "Batch",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ageMin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 120,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Agemin"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ageMax",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 120,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Agemax"
+            }
+          },
+          {
+            "in": "query",
+            "name": "abundanceThresholdPercent",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100,
+              "minimum": 0,
+              "title": "Abundancethresholdpercent",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagLineageClusterDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Lineage Cluster",
+        "tags": [
+          "mag"
+        ]
+      }
+    },
+    "/api/mag/lineage/mags/{mag_id}": {
+      "get": {
+        "operationId": "lineage_mag_api_mag_lineage_mags__mag_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mag_id",
+            "required": true,
+            "schema": {
+              "title": "Mag Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "disease",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "AD",
+                "NC"
+              ],
+              "title": "Disease",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "gender",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "F",
+                "M"
+              ],
+              "title": "Gender",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "batch",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "1",
+                "2",
+                "3",
+                "4",
+                "5"
+              ],
+              "title": "Batch",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ageMin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 120,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Agemin"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ageMax",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 120,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Agemax"
+            }
+          },
+          {
+            "in": "query",
+            "name": "abundanceThresholdPercent",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100,
+              "minimum": 0,
+              "title": "Abundancethresholdpercent",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagLineageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Lineage Mag",
         "tags": [
           "mag"
         ]

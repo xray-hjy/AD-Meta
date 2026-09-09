@@ -34,6 +34,23 @@ def read_table(path: Path) -> pd.DataFrame:
     raise ValueError(f"Unsupported file type: {suffix}")
 
 
+def read_table_header(path: Path) -> list[str]:
+    """Read the source header without allowing pandas to mangle duplicates."""
+
+    suffix = path.suffix.lower()
+    if suffix in {".xlsx", ".xls"}:
+        header = pd.read_excel(path, engine="openpyxl", header=None, nrows=1)
+    elif suffix == ".csv":
+        header = pd.read_csv(path, header=None, nrows=1)
+    elif suffix == ".tsv":
+        header = pd.read_csv(path, sep="\t", header=None, nrows=1)
+    else:
+        raise ValueError(f"Unsupported file type: {suffix}")
+    if header.empty:
+        return []
+    return ["" if pd.isna(value) else str(value) for value in header.iloc[0].tolist()]
+
+
 def jsonable(value: Any) -> Any:
     """把计算结果递归转换成 JSON 可以安全写出的基础类型。
 

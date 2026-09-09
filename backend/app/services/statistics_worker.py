@@ -65,14 +65,46 @@ def build_differential_request(
     }
 
 
-def _validated_result(payload: Any, expected_method: str, formula: str) -> dict[str, Any]:
+def _canonical_method(value: Any) -> str:
+    normalized = "".join(character for character in str(value).lower() if character.isalnum())
+    return {"ancombc2": "ancombc2", "maaslin2": "maaslin2"}.get(normalized, normalized)
+
+
+def _validated_result(
+    payload: Any,
+    expected_method: str,
+    formula: str,
+    expected_features: list[str],
+    job_id: str,
+    expected_alpha: float,
+) -> dict[str, Any]:
     if not isinstance(payload, dict) or not isinstance(payload.get("items"), list):
         raise FormalAnalysisError("Statistics worker returned an invalid response contract")
+    if payload.get("jobId") != job_id:
+        raise FormalAnalysisError("Statistics worker response does not match the requested job")
+    if _canonical_method(payload.get("method")) != _canonical_method(expected_method):
+        raise FormalAnalysisError("Statistics worker response method does not match the request")
+    if payload.get("modelFormula") != formula:
+        raise FormalAnalysisError("Statistics worker response formula does not match the request")
+    try:
+        alpha = float(payload.get("alpha"))
+    except (TypeError, ValueError) as exc:
+        raise FormalAnalysisError("Statistics worker response has an invalid alpha") from exc
+    if not math.isfinite(alpha) or alpha != expected_alpha:
+        raise FormalAnalysisError("Statistics worker response alpha does not match the request")
+    allowed_features = set(expected_features)
+    returned_features: set[str] = set()
     items = []
     for index, item in enumerate(payload["items"]):
         if not isinstance(item, dict) or not item.get("featureId"):
             raise FormalAnalysisError(f"Statistics worker item {index} is invalid")
         normalized = dict(item)
+        feature_id = str(normalized["featureId"])
+        if feature_id not in allowed_features:
+            raise FormalAnalysisError(f"Statistics worker item {index} is not part of the request")
+        if feature_id in returned_features:
+            raise FormalAnalysisError(f"Statistics worker item {index} duplicates featureId={feature_id}")
+        returned_features.add(feature_id)
         for key in ("pValue", "qValue", "effectSize"):
             try:
                 value = float(normalized[key])
@@ -85,10 +117,10 @@ def _validated_result(payload: Any, expected_method: str, formula: str) -> dict[
             raise FormalAnalysisError(f"Statistics worker item {index} has an invalid probability")
         items.append(normalized)
     return {
-        "method": payload.get("method", expected_method),
+        "method": payload["method"],
         "inferenceLevel": "formal_compositional_model",
-        "modelFormula": payload.get("modelFormula", formula),
-        "alpha": float(payload.get("alpha", 0.05)),
+        "modelFormula": formula,
+        "alpha": alpha,
         "items": items,
         "summary": payload.get("summary", {"testedCount": len(items)}),
     }
@@ -125,7 +157,14 @@ def run_formal_differential(
             payload = response.json()
         except (httpx.HTTPError, ValueError) as exc:
             raise FormalAnalysisError(f"Statistics worker failed: {exc}") from exc
-        return _validated_result(payload, request["method"], request["formula"])
+        return _validated_result(
+            payload,
+            request["method"],
+            request["formula"],
+            request["features"],
+            request["jobId"],
+            request["alpha"],
+        )
     except Exception:
         WORKER_METRICS["failures"] += 1
         raise

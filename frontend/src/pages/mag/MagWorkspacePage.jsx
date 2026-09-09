@@ -24,6 +24,7 @@ import LoadingState from '../../components/ui/LoadingState';
 import ErrorState from '../../components/ui/ErrorState';
 
 const MagChart = lazy(() => import('./MagCharts'));
+const MagLineageView = lazy(() => import('./MagLineageView'));
 const number = value => value == null ? '—' : Number(value).toLocaleString('en-US', { maximumSignificantDigits: 4 });
 const DEFAULT_SCOPE = { disease: '', gender: '', batch: '', ageMin: '', ageMax: '', abundanceThresholdPercent: '0' };
 const MAG_VIEWS = [
@@ -52,11 +53,11 @@ const MAG_VIEWS = [
     requirement: '当前数据版本需包含与 872 个代表 MAG 一一对应的 CheckM2 质量表。',
   },
   {
-    key: 'replication',
-    label: '跨队列复现',
-    subtitle: '不同队列中的效应与丰度一致性',
-    status: 'planned',
-    requirement: '需稳定 dRep cluster ID、至少两个独立队列及一致的分组分析口径。',
+    key: 'lineage',
+    label: '来源与去冗余',
+    subtitle: 'dRep 代表关系、来源追溯与物种映射',
+    capability: 'lineage',
+    requirement: '当前数据版本需包含已核验的 lineage 与 species taxonomy crosswalk。',
   },
   { key: 'mapping', label: '映射与丰度阈值', subtitle: '样本映射比例与阈值统计' },
 ];
@@ -154,6 +155,7 @@ function WorkspaceResults({ overview, scope, view, setView }) {
   const mapping = useQuery({ queryKey: ['mag', 'samples', params], queryFn: ({ signal }) => getMagSamples(params, { signal }), enabled: view === 'mapping' });
   const taxonomy = useQuery({ queryKey: ['mag', 'taxonomy', staticParams.revision, taxonomyRank], queryFn: ({ signal }) => getMagTaxonomy({ ...staticParams, rank: taxonomyRank, topN: 20 }, { signal }), enabled: view === 'taxonomy' });
   const quality = useQuery({ queryKey: ['mag', 'quality', staticParams.revision], queryFn: ({ signal }) => getMagQuality(staticParams, { signal }), enabled: view === 'quality' });
+  if (view === 'lineage') return <Suspense fallback={<LoadingState message="正在加载来源与去冗余视图..." />}><MagLineageView overview={overview} /></Suspense>;
   const active = { features, distribution, heatmap, taxonomy, quality, mapping }[view];
   const data = active.data;
   const audit = data?.provenance || overview.provenance;
@@ -253,13 +255,15 @@ export default function MagWorkspacePage({ datasets = [], onDatasetChange, onDom
     '丰度分析',
     overview.data?.capabilities?.taxonomy ? 'MAG分类' : null,
     overview.data?.capabilities?.quality ? 'MAG质量' : null,
+    overview.data?.capabilities?.lineage ? '来源与去冗余' : null,
     '技术质控',
   ].filter(Boolean).join('、');
   const pendingLabels = [
     overview.data && !overview.data.capabilities?.taxonomy ? 'MAG分类' : null,
     'MAG功能注释',
     overview.data && !overview.data.capabilities?.quality ? 'MAG质量' : null,
-    '跨队列复现',
+    overview.data && !overview.data.capabilities?.lineage ? '来源与去冗余' : null,
+    '独立外部队列验证',
   ].filter(Boolean).join('、');
   const summary = audit ? {
     featureKind: 'mag',
@@ -310,7 +314,7 @@ export default function MagWorkspacePage({ datasets = [], onDatasetChange, onDom
       {overview.isPending ? <LoadingState message="正在校验 MAG 数据包与样本范围..." /> : overview.error ? <ErrorState message={overview.error.message} onRetry={overview.refetch} /> : <>
         {SAMPLE_SCOPED_VIEWS.has(view) ? <section className="mag-filter-panel"><ScopeForm value={scope} options={overview.data.options} onApply={setScope} />
           <p className="mag-muted">丰度阈值只用于“超过阈值”的比例和数量统计，不定义生物学检出；原始丰度和组间检验保持不变。年龄、性别、批次均在同一筛选范围内比较。</p>
-        </section> : <section className="mag-filter-panel"><p className="mag-muted">当前为 MAG 级注释视图，覆盖全部 872 个代表 MAG，不使用 disease、年龄、性别、批次或丰度阈值筛选。</p></section>}
+        </section> : view === 'lineage' ? null : <section className="mag-filter-panel"><p className="mag-muted">当前为 MAG 级注释视图，覆盖全部 872 个代表 MAG，不使用 disease、年龄、性别、批次或丰度阈值筛选。</p></section>}
         {audit.warnings.filter(w => w.includes('全部为 100%') || w.includes('少于 2')).map(w => <p className="mag-inline-notice" key={w}>{w}</p>)}
         <WorkspaceResults key={JSON.stringify([scope, audit.dataFingerprint])} overview={overview.data} scope={scope} view={view} setView={setView} />
       </>}

@@ -10,6 +10,6 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src/api/generated.ts", "src/api/*.js"],
+  "include": ["src/api/generated.ts", "src/api/*.js", "src/utils/*.js"],
   "exclude": ["src/api/*.test.js"]
 }

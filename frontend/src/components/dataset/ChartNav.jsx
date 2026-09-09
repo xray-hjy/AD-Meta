@@ -144,6 +144,7 @@ export default function ChartNav({ charts, activeChart, featureKind, onChange, o
 
   return (
     <nav className="nav-list" aria-label="图表导航">
+      <a className="mobile-result-jump" href="#analysis-results">跳到当前分析结果</a>
       {navigationSections.map(section => {
         const entries = sectionEntries(groupedCharts, section);
         if (entries.length === 0) return null;
