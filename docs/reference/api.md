@@ -461,4 +461,4 @@ MAG 使用独立的版本化外部数据契约，不写入既有 taxonomy/KO rev
 | `/api/mag/crosswalk` | v3 代表 MAG 物种映射状态筛选与分页 |
 | `/api/mag/downloads/{kind}` | `features`、`matrix`、`samples`、`taxonomy`、`quality`、`provenance`、`lineage` 或 `crosswalk` 下载 |
 
-`revision` 可绑定 overview 返回的数据指纹；运行中输入变化时返回 409，避免混用不同数据版本。分类、质量、lineage 和 crosswalk 覆盖全部代表 MAG，不受样本筛选影响。lineage/crosswalk 列表单次最多返回 100 行，原始 TSV 下载保留交付文件内容并附带数据指纹与 manifest SHA-256 响应头。
+`revision` 可绑定 overview 返回的数据指纹；运行中输入变化时返回 409，避免混用不同数据版本。`provenance.storageBackend` 明确返回当前读取的是 `package` 还是 `database`，两种模式保持相同的数据指纹和响应契约。分类、质量、lineage 和 crosswalk 覆盖全部代表 MAG，不受样本筛选影响。lineage/crosswalk 列表单次最多返回 100 行，原始 TSV 下载保留交付文件内容并附带数据指纹与 manifest SHA-256 响应头。

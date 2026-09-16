@@ -11,6 +11,7 @@
     "migrate:sqlite-to-mysql": "cd backend && .venv/bin/python -m app.cli.migrate_sqlite_to_mysql",
     "bootstrap:storage": "cd backend && .venv/bin/python -m app.cli.bootstrap_storage",
     "validate:mag": "cd backend && .venv/bin/python -m app.cli.validate_mag",
+    "import:mag:database": "cd backend && .venv/bin/python -m app.cli.import_mag_database",
     "prepare:mag:v2": "cd backend && .venv/bin/python -m app.cli.prepare_mag_v2",
     "prepare:runtime": "cd backend && .venv/bin/python -m app.cli.prepare_runtime",
     "sync:analysis": "cd backend && .venv/bin/python -m app.cli.sync_analysis_manifest",

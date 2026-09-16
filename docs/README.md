@@ -10,7 +10,7 @@
 ## 使用指南
 
 - [本地运行与数据导入](guides/runbook.md)：环境安装、服务启动、数据导入、缓存重建和部署。
-- [MAG 丰度、分类与质量接入](guides/mag-data.md)：外部数据配置、`mag_v2` 准备与校验、MAG 工作区、统计边界和下载 API。
+- [MAG 丰度、分类与质量接入](guides/mag-data.md)：外部数据配置、MySQL 导入、版本校验、MAG 工作区、统计边界和下载 API。
 
 ## 技术参考
 

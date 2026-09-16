@@ -179,6 +179,7 @@ class MagDataset:
     annotation_manifest: dict[str, Any] | None
     lineage: tuple[dict[str, Any], ...]
     crosswalk: tuple[dict[str, Any], ...]
+    storage_backend: str = "package"
 
 
 def _require(condition: bool, file: str, expected: str, actual: Any, version: str = DEFAULT_VERSION) -> None:
@@ -223,11 +224,17 @@ def load_mag_dataset(
     package_root: Path | None = None,
     contract: MagContract = DEFAULT_CONTRACT,
     version: str | None = None,
+    storage_backend: str | None = None,
 ) -> MagDataset:
-    configured = package_root if package_root is not None else SETTINGS.mag_data_root
     configured_version = version or SETTINGS.mag_data_version
     if not re.fullmatch(r"mag_v[1-9]\d*", configured_version):
         raise MagDataError(".", "版本名格式 mag_vN", configured_version, configured_version)
+    selected_backend = storage_backend or SETTINGS.mag_storage_backend
+    if package_root is None and selected_backend == "database":
+        from app.services.mag_database_service import load_mag_dataset_from_database
+
+        return load_mag_dataset_from_database(configured_version)
+    configured = package_root if package_root is not None else SETTINGS.mag_data_root
     package = configured if configured.is_absolute() else BACKEND_ROOT.parent / configured
     root = package / "development_input" / configured_version
     return _load_snapshot(root, _signatures(root, configured_version), contract, configured_version)
@@ -537,9 +544,14 @@ def _load_snapshot(root: Path, signatures: tuple, contract: MagContract, version
             f"mapping_status 计数 {contract.crosswalk_exact}/{contract.crosswalk_not_observed}/{contract.crosswalk_unresolved}",
             dict(status_counts))
         crosswalk = tuple(crosswalk_rows)
+    input_manifest = {
+        row[0]: dict(zip(headers[MANIFEST], row, strict=True))
+        for row in tables[MANIFEST]
+    }
     samples = []
     for i, sid in enumerate(sample_ids):
         row = metadata[sid]
+        input_row = input_manifest[sid]
         age = float(numbers(row["Age"], METADATA))
         require(0 <= age <= 120, METADATA, "0–120 岁", age)
         require(row["Gender"] in {"F", "M"}, METADATA, "Gender: F/M", row["Gender"])
@@ -548,6 +560,9 @@ def _load_snapshot(root: Path, signatures: tuple, contract: MagContract, version
             "sampleId": sid, "disease": row["disease"], "age": age,
             "gender": row["Gender"], "batch": row["HPC_Batch"],
             "mappedPercent": float(mapping_values[i, 1]), "unmappedPercent": float(mapping_values[i, 0]),
+            "sampleName": row["Sample_name"], "accession": row["Accession"],
+            "sourceGroup": row["Group"], "r1Uri": input_row["R1"],
+            "r2Uri": input_row["R2"], "covermLabel": input_row["CoverMLabel"],
         })
     matrix.setflags(write=False)
     return MagDataset(root, version, sample_ids, mag_ids, matrix, tuple(samples), tuple(int(n) for n in lengths),
@@ -604,6 +619,7 @@ def provenance(data: MagDataset, scope: MagScope) -> dict[str, Any]:
         warnings.append("所选范围至少一组少于 2 个样本，p/q 值及秩效应量不计算。")
     return {
         "version": data.version, "analysisVersion": analysis_version,
+        "storageBackend": data.storage_backend,
         "dataFingerprint": data.fingerprint, "requestFingerprint": hashlib.sha256(request.encode()).hexdigest(),
         "unit": "%", "groupField": "disease", "filters": scope.as_dict(),
         "sampleCount": len(indices), "excludedSampleCount": len(data.samples) - len(indices),

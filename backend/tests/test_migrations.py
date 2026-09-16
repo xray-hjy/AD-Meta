@@ -48,6 +48,12 @@ def test_empty_database_upgrades_to_head() -> None:
                 "PRAGMA index_list(projection_audit_artifacts)"
             )
         }
+        mag_tables = {
+            row[0]
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE 'mag_%'"
+            )
+        }
         connection.close()
 
     assert version == HEAD_REVISION
@@ -60,6 +66,18 @@ def test_empty_database_upgrades_to_head() -> None:
     assert "projection_audit_rows" in projection_audit_tables
     assert {"retention_class", "last_accessed_at", "expires_at"} <= projection_audit_columns
     assert "idx_projection_audit_artifacts_expiry" in projection_audit_indexes
+    assert {
+        "mag_dataset_versions",
+        "mag_package_files",
+        "mag_samples",
+        "mag_representatives",
+        "mag_taxonomy",
+        "mag_quality",
+        "mag_abundances",
+        "mag_clusters",
+        "mag_cluster_members",
+        "mag_species_crosswalk",
+    } <= mag_tables
 
 
 def test_unversioned_legacy_database_is_stamped_once() -> None:

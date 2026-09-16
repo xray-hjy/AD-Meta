@@ -69,6 +69,25 @@ This reads `backend/storage_manifest.json`, imports each file under
 JSON under `backend/storage/cache/`. Run it again after pulling changes that
 update `COMPUTE_VERSION` or chart precomputation logic.
 
+Import each validated MAG package after the Alembic migration, then select the
+database backend in `.env`:
+
+```bash
+npm run import:mag:database -- --version mag_v2
+npm run import:mag:database -- --version mag_v3
+```
+
+```dotenv
+AD_META_MAG_DATA_ROOT=ADMetaData
+AD_META_MAG_DATA_VERSION=mag_v2
+AD_META_MAG_STORAGE_BACKEND=database
+```
+
+The importer validates the package and manifest before opening the write
+transaction. Re-running an identical version is a no-op; reusing a version name
+with a different fingerprint is rejected. Keep the package directory because it
+remains the provenance source and supplies unchanged raw lineage/crosswalk downloads.
+
 Raw duplicate headers fail validation by default. A dataset may set
 `duplicateFeaturePolicy` to `coalesce_equal_selected` only for a documented
 source defect: the importer then compares every duplicate feature value inside

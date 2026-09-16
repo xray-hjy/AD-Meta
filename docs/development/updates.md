@@ -2,6 +2,14 @@
 
 > 最新开发说明见 [MAG 丰度、分类与质量接入](../guides/mag-data.md)；上阶段交接见 [2026-08-20 第二阶段开发收尾日志](2026-08-20-stage-two-closeout.md)。
 
+## 2026-09-13：MAG 版本化关系数据库
+
+- 新增 Alembic `20260912_01` 迁移，以 10 张独立关系表持久化 MAG 数据版本、包文件哈希、样本、代表 MAG、丰度、GTDB 分类、CheckM2 质量、dRep 聚类/成员和 taxonomy crosswalk。
+- 数据库以 `mag_vN` 和源数据指纹作为不可变身份；同版本同指纹重复导入保持幂等，同版本不同指纹拒绝覆盖，避免历史科学证据被静默改写。
+- 新增 `npm run import:mag:database -- --version mag_vN`：先按原数据包契约校验，再在单个事务中写入并核对各表行数，全部通过后才把版本标记为 `ready`。
+- MAG API 可通过 `AD_META_MAG_STORAGE_BACKEND=database` 从数据库重建与文件模式相同的 `MagDataset`；溯源新增 `storageBackend`，原始 lineage/crosswalk 下载仍指向受 manifest 校验的数据包文件。
+- 本机 MySQL 已导入 `mag_v2` 与 `mag_v3`；运行后端切换为 database 存储，但展示版本仍保持 `mag_v2`，未提前启用 v3。
+
 ## 2026-09-09：MAG v3 候选数据前后端接入
 
 - 将完整、自包含的 `mag_v3` 目录复制到版本化 MAG 数据根目录；运行时仍默认使用 `mag_v2`，待项目负责人验收后再显式切换。

@@ -19,6 +19,29 @@ isolated backend for unit tests.
 `ref_study` is an auxiliary scientific table that stores citation/study metadata
 once and is referenced by `ref_sample_info` and `ad_disease_marker`.
 
+## MAG Version Tables
+
+MAG storage is independent from Species/KO revisions because CoverM MAG percentages,
+GTDB annotations, CheckM2 quality, dRep relationships, and taxonomy crosswalks have
+different identities and scientific constraints.
+
+| Table | Purpose |
+|---|---|
+| `mag_dataset_versions` | Immutable `mag_vN` identity, source root, package fingerprint, manifest, counts, validation result and import status. |
+| `mag_package_files` | Relative path, SHA-256 and byte count for every file contributing to the version. |
+| `mag_samples` | Ordered sample identity, disease, source group, batch, demographic fields, CoverM mapping percentages and input references. |
+| `mag_representatives` | Ordered representative MAG IDs and genome lengths. |
+| `mag_abundances` | Dense `Sample × representative MAG` CoverM percentages; all values, including zeros, are retained. |
+| `mag_taxonomy` | One GTDB classification record per representative MAG. |
+| `mag_quality` | One CheckM2 quality record per representative MAG. |
+| `mag_clusters` | One normalized dRep secondary cluster and its representative-level parameters. |
+| `mag_cluster_members` | Member-to-cluster/source relation with directional ANI, alignment coverage and member quality. |
+| `mag_species_crosswalk` | One identifier-level GTDB/NCBI/Kraken-Bracken crosswalk record per representative MAG. |
+
+`disease` remains the AD/NC analysis field. `source_group` preserves CHN/CHN2
+provenance and is not an independent validation cohort. Crosswalk rows are identifier
+mappings, not evidence that reads were directly aligned to a particular MAG.
+
 ## Application Support Tables
 
 | Table | Purpose |
@@ -41,3 +64,6 @@ once and is referenced by `ref_sample_info` and `ad_disease_marker`.
 - Imports write `storage/staging/<revision>` first and switch `datasets.current_revision_id` only after cache and database validation succeed.
 - The default retention policy keeps the latest three successful revisions and all failed job metadata.
 - Alembic owns production schema versioning; SQLAlchemy 2 supplies SQLite/MySQL pooling and transaction boundaries.
+- MAG imports validate the complete package before writing, use one transaction per version, and mark the version `ready` only after exact row-count verification.
+- A `version_key` cannot be overwritten with a different fingerprint. Re-importing the same version and fingerprint is idempotent.
+- The selected MAG storage backend is reported as `storageBackend` in API provenance; switching package/database backends does not change the source data fingerprint.

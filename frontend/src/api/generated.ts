@@ -1485,6 +1485,11 @@ export interface components {
             sampleIds: string[];
             /** Sources */
             sources: components["schemas"]["MagSource"][];
+            /**
+             * Storagebackend
+             * @enum {string}
+             */
+            storageBackend: "package" | "database";
             /** Testedfeaturecount */
             testedFeatureCount: number;
             /**

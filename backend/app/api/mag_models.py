@@ -41,6 +41,7 @@ class MagManifestReference(BaseModel):
 class MagProvenance(BaseModel):
     version: str
     analysisVersion: str
+    storageBackend: Literal["package", "database"]
     dataFingerprint: str
     requestFingerprint: str
     unit: Literal["%"]

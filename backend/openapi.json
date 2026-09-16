@@ -2377,6 +2377,14 @@
             "title": "Sources",
             "type": "array"
           },
+          "storageBackend": {
+            "enum": [
+              "package",
+              "database"
+            ],
+            "title": "Storagebackend",
+            "type": "string"
+          },
           "testedFeatureCount": {
             "title": "Testedfeaturecount",
             "type": "integer"
@@ -2411,6 +2419,7 @@
         "required": [
           "version",
           "analysisVersion",
+          "storageBackend",
           "dataFingerprint",
           "requestFingerprint",
           "unit",

@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     storage_root: Path = BACKEND_ROOT / "storage"
     mag_data_root: Path = Path("ADMetaData")
     mag_data_version: str = "mag_v2"
+    mag_storage_backend: str = "package"
     db_path: Path | None = None
     db_engine: str = "mysql"
     mysql_host: str = "127.0.0.1"
@@ -45,8 +46,11 @@ class Settings(BaseSettings):
     def validate_runtime(self):
         self.db_engine = self.db_engine.strip().lower()
         self.mag_data_version = self.mag_data_version.strip()
+        self.mag_storage_backend = self.mag_storage_backend.strip().lower()
         if not re.fullmatch(r"mag_v[1-9]\d*", self.mag_data_version):
             raise ValueError("AD_META_MAG_DATA_VERSION must use the form 'mag_vN'.")
+        if self.mag_storage_backend not in {"package", "database"}:
+            raise ValueError("AD_META_MAG_STORAGE_BACKEND must be 'package' or 'database'.")
         if self.db_engine not in {"mysql", "sqlite"}:
             raise ValueError("AD_META_DB_ENGINE must be either 'mysql' or 'sqlite'.")
         if self.projection_file_cache_max_entry_bytes > self.projection_file_cache_max_total_bytes:

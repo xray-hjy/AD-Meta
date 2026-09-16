@@ -4,6 +4,7 @@
 
 交付包不进入代码仓库；放在项目根目录的 `ADMetaData/` 可直接使用。
 其他位置在被 Git 忽略的 `.env` 配置 `AD_META_MAG_DATA_ROOT`（数据包根目录，不是具体 `mag_vN`）。输入版本由 `AD_META_MAG_DATA_VERSION` 配置，必须使用 `mag_vN` 格式，默认 `mag_v2`。`mag_v3` 已作为完整候选目录接入代码契约，但必须在项目负责人验收后才显式切换。
+`AD_META_MAG_STORAGE_BACKEND` 可设为 `package` 或 `database`。首次部署保持 `package`，完成数据库迁移和对应版本导入后可切为 `database`；切换存储后 API 契约和科学计算不变。
 相对路径基于项目根目录而非启动 cwd。配置更改后重启后端。
 
 运行时只读取 `development_input/mag_v2` 中八个输入：
@@ -20,9 +21,19 @@
 `npm run prepare:mag:v2` 是显式的数据准备步骤：只读 `mag_v1`、GTDB-Tk 汇总和 CheckM2 报告，核验 872 个 MAG ID、基因组长度及数值范围后创建全新的 `mag_v2`；目标已存在时拒绝覆盖。业务 API 不读取 `source_data`，`mag_v1` 和源文件均不修改。
 不将 R1/R2 原始路径和 Sample_name 等非必要元数据暴露到前端。
 
-运行 `npm run validate:mag` 进行只读校验（Windows 可在激活后端虚拟环境后，进入 `backend` 运行 `python -m app.cli.validate_mag`）。
-CLI 不连接数据库、不写缓存；成功退出 0，失败退出 1 并输出文件、预期/实际、影响、复现与处理建议。
+运行 `npm run validate:mag` 对当前所选存储后端进行只读校验（Windows 可在激活后端虚拟环境后，进入 `backend` 运行 `python -m app.cli.validate_mag`）。
+`package` 模式只读校验数据包；`database` 模式从数据库重建完整数据集后校验 API 概览。成功退出 0，失败退出 1 并输出版本、预期/实际、影响、复现与处理建议。
 API 异常返回 503 及同样的报告，不回退到旧 MAG 缓存、不影响原有物种/KO 服务。
+
+将已核验版本导入数据库：
+
+```bash
+npm run migrate
+npm run import:mag:database -- --version mag_v2
+npm run import:mag:database -- --version mag_v3
+```
+
+导入器始终先从只读包加载并执行全部数据契约，再事务性写入数据库。只有各关系表计数全部一致时版本状态才变为 `ready`；同一 `mag_vN` 的不同指纹禁止覆盖，应建立新版本。数据库导入完成后可在 `.env` 设置 `AD_META_MAG_STORAGE_BACKEND=database` 并重启后端。
 
 校验范围：精确表头、185×872 维度、CRR/MAG 唯一性和集合关联、`disease` AD 122 / NC 63、有限非负百分比、年龄/性别/批次、正整数长度；分类和质量表必须各有 872 个唯一 MAG，且与丰度矩阵完全同集。v3 还按 manifest 校验整个包的字节数与 SHA-256，并校验 8,548 个唯一成员、872 个聚类/代表、185 个来源样本、24 条实际 ANI＜0.95 记录和 crosswalk 的 266/577/29 状态计数。
 质量输入还校验完整度 50–100%、污染率 0–10%、密度/GC 0–1、正整数长度/计数，以及 CheckM2 Genome_Size 与 mag_length 完全一致。
@@ -107,13 +118,13 @@ OpenAPI 为字段、枚举和响应类型的精确依据。
 
 ## 兼容和复现
 
-MAG 采用版本化文件的只读适配器，复用共享 BH 函数、图表框架、展示披露和分页组件，不将 lineage/crosswalk 并入 taxonomy/KO revision 表，也不将未知分类的 MAG 强行写入确定映射。
-与既有持久化 ProjectionAudit 不同，MAG 溯源由文件内容 SHA-256、分析版本、范围参数与展示选择重建；可下载 JSON，但**不创建既有数据库审计记录**。`mag_v2` 继承已确认的 CoverM 0.8.0、strobealign、minimum covered fraction 0 和 dense 输出参数，并记录 CheckM2 1.1.0；这些参数按版本固化，不从 `source_data` 运行时读取。
+MAG 同时支持版本化文件适配器和版本化关系数据库，二者重建同一 `MagDataset`，复用共享 BH 函数、图表框架、展示披露和分页组件。MAG 使用独立 `mag_*` 表，不将 lineage/crosswalk 混入 Species/KO revision 表，也不将未知分类的 MAG 强行写入确定映射。
+MAG 数据库保存源文件 SHA-256、manifest、样本与代表 MAG 顺序、完整稠密丰度、分类、质量、聚类成员和 crosswalk。原数据包仍是导入证据和原始 TSV 下载来源，不因数据库导入而删除。与既有持久化 ProjectionAudit 不同，当前 MAG 溯源仍由数据版本指纹、分析版本、范围参数与展示选择重建，不写入既有 projection audit 表。`mag_v2` 继承已确认的 CoverM 0.8.0、strobealign、minimum covered fraction 0 和 dense 输出参数，并记录 CheckM2 1.1.0；这些参数按版本固化，不从 `source_data` 运行时读取。
 
 `source_data/data/abundance/metric_definitions.tsv` 当前缺少 TSV 分隔符，不能作为结构化字段定义直接解析。它不影响上述稳定输入；如后续接入覆盖度等辅助指标，应由数据维护方生成新版本的规范字段与溯源清单，不修改现有版本。
 
-文件缓存以路径、尺寸、纳秒 mtime/ctime、inode 标识快照，最多缓存 2 个数据快照和 16 个统计范围。
-内容指纹覆盖八个文件；文件缺失/变化会重新校验，不继续服务已失效快照。
+文件模式以路径、尺寸、纳秒 mtime/ctime、inode 标识快照，最多缓存 2 个数据快照；数据库模式按版本 ID 和数据指纹缓存最多 4 个重建快照。统计范围缓存策略保持不变。
+内容指纹覆盖版本要求的全部文件；文件导入前缺失或变化会失败。数据库版本只允许从已通过该校验的快照创建，并保存同一数据指纹。
 前端先取得 overview 指纹，再把该 `revision` 传给图表和下载；指纹变化返回 409，要求刷新。
 CSV 每行带数据指纹、范围指纹、scopeJson 和单位，范围指纹与 JSON 可关联。
 
@@ -121,5 +132,5 @@ CSV 每行带数据指纹、范围指纹、scopeJson 和单位，范围指纹与
 原有物种/KO 工作区的“完整结果查询与下载”调用交接已有的 artifact-scoped 接口；独立查询、不继承图表筛选，不为稀疏存储缺失组合补零。
 
 部署时应把外部数据包保留在代码仓库之外，通过 `.env` 显式设置
-`AD_META_MAG_DATA_ROOT` 为主机上的只读目录、`AD_META_MAG_DATA_VERSION` 为已核验版本。
+`AD_META_MAG_DATA_ROOT` 为主机上的只读目录、`AD_META_MAG_DATA_VERSION` 为已核验版本，并在完成导入后设置 `AD_META_MAG_STORAGE_BACKEND=database`。
 没有数据时 MAG 返回清晰 503，不阻塞原有服务。
