@@ -1,3 +1,5 @@
+import ChartExportMenu from './ChartExportMenu';
+
 const ICON_PATHS = {
   table: (
     <>
@@ -18,6 +20,7 @@ const ICON_PATHS = {
       <path d="M5.5 6.5A8 8 0 1 1 4 13" />
     </>
   ),
+  expand: <path d="M9 4H4v5m0-5 6 6m5-6h5v5m0-5-6 6M4 15v5h5m-5 0 6-6m10 1v5h-5m5 0-6-6" />,
   export: (
     <>
       <path d="M12 3v11m0 0 4-4m-4 4-4-4M4 19h16" />
@@ -25,25 +28,31 @@ const ICON_PATHS = {
   ),
 };
 
-export default function ChartFrameActionGroup({ actions = [] }) {
+export default function ChartFrameActionGroup({ actions = [], ariaLabel = '图表操作' }) {
   if (!actions.length) return null;
 
   return (
-    <div className="chart-frame-actions" role="toolbar" aria-label="图表操作">
-      {actions.map(action => (
+    <div className="chart-frame-actions" role="toolbar" aria-label={ariaLabel}>
+      {actions.map(action => action.id === 'export' && action.supportsCustomSize
+        ? <ChartExportMenu key={action.id} action={action} /> : (
         <button
           key={action.id}
           type="button"
-          className="chart-frame-actions__button"
+          className={`chart-frame-actions__button${action.alternateIcon ? ' chart-frame-actions__button--type' : ''}`}
+          data-alternate-active={action.alternateIcon ? Boolean(action.alternateActive) : undefined}
           onClick={action.onClick}
           disabled={action.disabled}
           aria-label={action.label}
           aria-pressed={action.pressed == null ? undefined : action.pressed}
           title={action.label}
         >
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          {action.alternateIcon ? <span className="chart-type-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" className="chart-type-icon__bar">{ICON_PATHS[action.icon]}</svg>
+            <svg viewBox="0 0 24 24" className="chart-type-icon__line">{ICON_PATHS[action.alternateIcon]}</svg>
+          </span> : <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             {ICON_PATHS[action.icon] || ICON_PATHS.export}
-          </svg>
+          </svg>}
+          {action.text ? <span>{action.text}</span> : null}
         </button>
       ))}
     </div>

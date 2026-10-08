@@ -1,0 +1,167 @@
+.dataset-description-card { margin-bottom: 18px; }
+.mag-workspace .dataset-description-card { margin-bottom: 0; }
+.dataset-description-card > .chart-frame__header:has([aria-expanded="false"]) { border-bottom: 0; }
+.dataset-description-card__toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--workspace-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.dataset-description-card__toggle > div { min-width: 0; }
+.dataset-description-card__toggle:focus-visible { outline: 2px solid var(--workspace-accent); outline-offset: 6px; border-radius: 4px; }
+.dataset-description-card__state { display: flex; align-items: center; gap: 6px; flex-shrink: 0; color: var(--color-text-muted); font-size: 12px; }
+.dataset-description-card__state svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.5; transition: transform 140ms ease; }
+.dataset-description-card__state svg.is-open { transform: rotate(90deg); }
+.dataset-description-card__body[hidden] { display: none; }
+
+.dataset-description {
+  padding: 18px 20px;
+  background: #fff;
+  color: var(--workspace-ink);
+}
+
+.dataset-description__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.dataset-description__eyebrow {
+  color: var(--workspace-accent);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.dataset-description h3,
+.dataset-description p {
+  margin: 0;
+}
+
+.dataset-description h3 {
+  margin-top: 3px;
+  font-size: 17px;
+}
+
+.dataset-description__name {
+  margin-top: 4px !important;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.dataset-description__message {
+  margin-top: 12px !important;
+  color: #526178;
+  font-size: 12px;
+}
+
+.dataset-description__facts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
+  margin: 14px 0 0;
+}
+
+.dataset-description__facts > div {
+  min-width: 0;
+  padding: 10px 11px;
+  border: 1px solid #e2eaf2;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.dataset-description__facts dt {
+  color: #687991;
+  font-size: 11px;
+}
+
+.dataset-description__facts dd {
+  margin: 4px 0 0;
+  color: #24364b;
+  font-size: 13px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.dataset-semantics-notice {
+  color: #5b6471;
+  font-weight: 700;
+}
+
+.dataset-description__source {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid #dce5ef;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.dataset-description__source h4 {
+  margin: 0 0 9px;
+  color: #24364b;
+  font-size: 12px;
+}
+
+.dataset-description__source dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 18px;
+  margin: 0;
+}
+
+.dataset-description__source dl > div { min-width: 0; }
+.dataset-description__source dt { color: #687991; font-size: 11px; }
+.dataset-description__source dd { margin: 3px 0 0; font-size: 12px; overflow-wrap: anywhere; }
+.dataset-description__source a { color: var(--workspace-accent); }
+.dataset-description__citation { display: block; margin-top: 3px; color: #64748b; font-size: 11px; }
+
+.dataset-description__version {
+  margin-top: 13px;
+  color: #53657b;
+  font-size: 11px;
+}
+
+.dataset-description__version summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.dataset-description__version dl {
+  display: grid;
+  gap: 7px;
+  margin: 10px 0 0;
+}
+
+.dataset-description__version dl > div {
+  display: grid;
+  grid-template-columns: 126px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.dataset-description__version dt {
+  color: #687991;
+}
+
+.dataset-description__version dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1000px) {
+  .dataset-description__facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 600px) {
+  .dataset-description__facts { grid-template-columns: 1fr; }
+  .dataset-description__source dl { grid-template-columns: 1fr; }
+  .dataset-description__version dl > div { grid-template-columns: 1fr; gap: 2px; }
+}

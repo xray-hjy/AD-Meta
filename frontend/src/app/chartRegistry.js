@@ -42,7 +42,8 @@ function selectControl(key, label, defaultValue, options, purpose = 'analysis') 
 }
 
 function topNPresetControl(label, defaultValue, options, purpose = 'display') {
-  return selectControl('topN', label, defaultValue, options, purpose);
+  return { ...rangeControl(label, defaultValue, Math.max(...options), purpose),
+    min: purpose === 'feature_selection' ? 2 : 1, presets: options };
 }
 
 function analysisPolicy({

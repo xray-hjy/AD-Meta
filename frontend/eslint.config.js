@@ -5,7 +5,7 @@ import globals from 'globals';
 
 export default [
   {
-    ignores: ['build/**', 'dist/**', 'coverage/**', 'output/**', 'src/api/generated.ts'],
+    ignores: ['.tmp/**', 'build/**', 'dist/**', 'coverage/**', 'output/**', 'src/api/generated.ts'],
   },
   js.configs.recommended,
   {

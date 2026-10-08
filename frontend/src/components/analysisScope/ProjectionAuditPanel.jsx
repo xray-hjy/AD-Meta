@@ -4,7 +4,8 @@ import useProjectionAuditOptions from '../../hooks/useProjectionAuditOptions';
 import AuditFilterSelect from './AuditFilterSelect';
 import ScopedSampleList from './ScopedSampleList';
 import PaginationControls from '../data-display/PaginationControls';
-import DataTableViewport from '../data-display/DataTableViewport';
+import DataTableViewport, { QUERY_TABLE_PAGE_SIZE } from '../data-display/DataTableViewport';
+import ResultDisclosure from '../data-display/ResultDisclosure';
 
 const PRIMARY_SECTION = {
   abundance: 'selection',
@@ -200,7 +201,7 @@ export default function ProjectionAuditPanel({
   const [enabledOptionFields, setEnabledOptionFields] = useState([]);
   const [sort, setSort] = useState({ by: '', direction: 'asc' });
   const [offset, setOffset] = useState(0);
-  const limit = 100;
+  const limit = QUERY_TABLE_PAGE_SIZE;
 
   useEffect(() => {
     setSection(PRIMARY_SECTION[projectionKind] || 'selection');
@@ -301,8 +302,7 @@ export default function ProjectionAuditPanel({
     || Object.values(filterDraft).some(Boolean);
 
   return (
-    <details className="projection-audit" onToggle={event => setOpen(event.currentTarget.open)}>
-      <summary>查看筛选与合并明细</summary>
+    <ResultDisclosure title="查看筛选与合并明细" summary="当前图表的筛选与聚合记录" className="projection-audit" onToggle={event => setOpen(event.currentTarget.open)}>
       {open ? (
         <div className="projection-audit__content">
           <p className="projection-audit__context">明细与当前图表参数及投影版本一致。</p>
@@ -417,7 +417,18 @@ export default function ProjectionAuditPanel({
             <div className="projection-audit__message">正在生成当前投影的可追溯明细...</div>
           ) : null}
           {!state.error && !state.loading ? (
-            <DataTableViewport ariaLabel="筛选与合并明细数据，可滚动">
+            <DataTableViewport
+              ariaLabel="筛选与合并明细数据，可滚动"
+              resizable
+              pageKey={`${section}:${offset}`}
+              pagination={<PaginationControls
+                page={currentPage}
+                pageCount={pageCount}
+                onPageChange={nextPage => setOffset((nextPage - 1) * limit)}
+                disabled={state.fetching}
+                ariaLabel="筛选与合并明细分页"
+              />}
+            >
                 <thead>
                   <tr>
                     {columns.map(column => {
@@ -461,15 +472,8 @@ export default function ProjectionAuditPanel({
                 </tbody>
             </DataTableViewport>
           ) : null}
-          <PaginationControls
-            page={currentPage}
-            pageCount={pageCount}
-            onPageChange={nextPage => setOffset((nextPage - 1) * limit)}
-            disabled={state.fetching}
-            ariaLabel="筛选与合并明细分页"
-          />
         </div>
       ) : null}
-    </details>
+    </ResultDisclosure>
   );
 }

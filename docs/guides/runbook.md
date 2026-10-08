@@ -28,12 +28,30 @@ npm install
 cd ..
 ```
 
+Root npm commands select the backend virtual environment's Windows or Unix
+Python executable automatically. On Windows, `Start-ADMeta.ps1` also uses a
+project-local Node runtime under `frontend/.tmp/runtime/` when installed:
+
+```powershell
+.\Start-ADMeta.ps1 prepare
+# Run the following in separate terminals:
+.\Start-ADMeta.ps1 backend
+.\Start-ADMeta.ps1 frontend
+.\Start-ADMeta.ps1 worker
+# Run the normal verification gate:
+.\Start-ADMeta.ps1 verify
+```
+
+The backend startup command prepares an empty database from the tracked raw
+files, or synchronizes analysis registrations for an existing published dataset.
+
 Restore the statistics worker's locked R 4.5.2 / Bioconductor 3.21 environment
 once. The first command installs `renv` only when it is not already available:
 
 ```bash
 cd stats-worker
 Rscript -e 'if (!requireNamespace("renv", quietly = TRUE)) install.packages("renv", repos = "https://cloud.r-project.org")'
+Rscript -e 'writeLines("source(\"renv/activate.R\")", ".Rprofile")'
 Rscript -e 'renv::restore(project = ".", lockfile = "renv.lock", prompt = FALSE)'
 cd ..
 ```
@@ -99,7 +117,7 @@ Start the statistics worker, backend and frontend in three terminals:
 ```bash
 # Terminal 1
 cd stats-worker
-Rscript -e 'renv::run("server.R", project = ".")'
+Rscript server.R
 
 # Terminal 2, from the repository root
 npm run dev:backend
@@ -108,13 +126,13 @@ npm run dev:backend
 npm run dev:frontend
 ```
 
-On Windows PowerShell, use the same `renv::run()` command for the worker,
+On Windows PowerShell, use the same `Rscript server.R` command for the worker,
 then start the application processes in two more terminals:
 
 ```powershell
 # Terminal 1, from the repository root
 cd stats-worker
-Rscript -e 'renv::run("server.R", project = ".")'
+Rscript server.R
 
 # Terminal 2, from the repository root
 cd backend
@@ -229,7 +247,7 @@ npm run verify
 npm run verify:full
 npm --prefix frontend exec -- playwright install chromium
 npm run test:e2e
-cd stats-worker && Rscript -e 'renv::run("tests/model_smoke.R", project = ".")'
+cd stats-worker && Rscript tests/model_smoke.R
 ```
 
 The E2E command uses dedicated ports `18000/14173`, a temporary SQLite database,

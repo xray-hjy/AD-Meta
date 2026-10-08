@@ -95,7 +95,7 @@ beforeEach(() => {
         reason: 'category_top_n_aggregation',
       }],
       total: 1,
-      limit: 100,
+      limit: 300,
       offset: 0,
     },
     loading: false,
@@ -127,7 +127,7 @@ describe('ProjectionAuditPanel', () => {
         'run-1',
         'ko-abundance',
         'composition',
-        expect.objectContaining({ section: 'aggregation', limit: 100, offset: 0 }),
+        expect.objectContaining({ section: 'aggregation', limit: 300, offset: 0 }),
         true,
       );
     });
@@ -162,7 +162,7 @@ describe('ProjectionAuditPanel', () => {
     expect(useScopedAnalysisSamples).toHaveBeenLastCalledWith(
       'run-1',
       'ko-abundance',
-      expect.objectContaining({ scope: baseProps.projectionRequest.scope, limit: 50 }),
+      expect.objectContaining({ scope: baseProps.projectionRequest.scope, limit: 200 }),
       false,
     );
     fireEvent.click(await screen.findByText('查看参与样本（185）'));
@@ -170,7 +170,7 @@ describe('ProjectionAuditPanel', () => {
       expect(useScopedAnalysisSamples).toHaveBeenLastCalledWith(
         'run-1',
         'ko-abundance',
-        expect.objectContaining({ scope: baseProps.projectionRequest.scope, limit: 50 }),
+        expect.objectContaining({ scope: baseProps.projectionRequest.scope, limit: 200 }),
         true,
       );
     });
@@ -304,7 +304,7 @@ describe('ProjectionAuditPanel', () => {
         sampleScope: { mode: 'cohort', sampleCount: 3, groupCounts: { AD: 2, NC: 1 } },
         items: [{ feature: 'Species A', reason: 'within_top_n_by_mean_relative_abundance' }],
         total: 1,
-        limit: 100,
+        limit: 300,
         offset: 0,
       },
       loading: false,

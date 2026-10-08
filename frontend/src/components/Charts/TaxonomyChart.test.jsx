@@ -92,6 +92,7 @@ test('uses bounded rendering settings for dense sankey projections', () => {
     minWidth: 1228,
     minHeight: 3040,
   });
+  expect(props.frameActions).toBe(true);
 });
 
 test('keeps adjacency emphasis and removes only decals when color-blind mode is off', () => {
@@ -118,6 +119,7 @@ test('keeps ancestor emphasis and the reusable color-blind palette on the sunbur
     fileName: 'taxonomy-sunburst-overview',
     format: 'svg',
   });
+  expect(props.frameActions).toBe(true);
   const exportedOption = props.exportConfig.prepareOption(props.option);
   expect(exportedOption.series[0].center).toEqual(['38%', '50%']);
   expect(exportedOption.graphic).toEqual(expect.arrayContaining([

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import ReactECharts from './CartesianEChart';
+import BoxScatterChart from './BoxScatterChart';
 import ChartViewport from './ChartViewport';
-import { escapeTooltipText } from '../../utils/tooltipHtml';
 
 const FALLBACK_SERIES = [
   { key: 'AD', label: 'AD', color: '#e74c3c' },
@@ -74,21 +73,6 @@ function normalizeBoxplot(data) {
   };
 }
 
-function fmtNum(value, transformKey) {
-  const number = Number(value) || 0;
-  if (transformKey === 'log') return number.toFixed(4);
-  if (number >= 1e6) return `${(number / 1e6).toFixed(2)}M`;
-  if (number >= 1e3) return `${(number / 1e3).toFixed(2)}K`;
-  return number.toFixed(2);
-}
-
-function colorWithAlpha(color, alpha = 0.24) {
-  const match = String(color || '').match(/^#([0-9a-f]{6})$/i);
-  if (!match) return color;
-  const value = Number.parseInt(match[1], 16);
-  return `rgba(${(value >> 16) & 255}, ${(value >> 8) & 255}, ${value & 255}, ${alpha})`;
-}
-
 function visibleItemCount(width, total) {
   if (!total) return 0;
   const estimated = Math.floor((Math.max(width, 720) - 110) / 112);
@@ -129,124 +113,9 @@ function BoxPlot({ data, featureLabel = '物种', featureSelectionConfig = {} })
     || normalized.transforms[0]
     || DEFAULT_TRANSFORMS[0];
 
-  const option = useMemo(() => {
-    if (!available.length || !normalized.series.length) return null;
-    const categories = available.map(item => String(item.featureId || item.fullName));
-    const itemByFeatureId = new Map(categories.map((featureId, index) => [featureId, available[index]]));
-    const boxSeries = [];
-    const scatterSeries = [];
-    normalized.series.forEach((seriesItem, seriesIndex) => {
-      const color = seriesItem.color || FALLBACK_SERIES[seriesIndex % FALLBACK_SERIES.length].color;
-      const boxes = available.map(item => (
-        item.values?.[seriesItem.key]?.[activeTransform.key]?.box || [0, 0, 0, 0, 0]
-      ));
-      const outliers = [];
-      available.forEach(item => {
-        const points = item.values?.[seriesItem.key]?.[activeTransform.key]?.outlierPoints || [];
-        points.forEach(point => outliers.push({
-          value: [String(item.featureId || item.fullName), point.value],
-          sample: point.sample,
-          feature: item.shortName,
-          group: seriesItem.label,
-        }));
-      });
-      const boxItemStyle = {
-        color: colorWithAlpha(color),
-        borderColor: color,
-        borderWidth: 2,
-      };
-      boxSeries.push({
-        name: seriesItem.label,
-        type: 'boxplot',
-        data: boxes,
-        itemStyle: boxItemStyle,
-        emphasis: { itemStyle: boxItemStyle },
-        boxWidth: [12, 22],
-      });
-      scatterSeries.push({
-        name: `${seriesItem.label} 离群点`,
-        type: 'scatter',
-        data: outliers,
-        symbolSize: 7,
-        itemStyle: { color, borderColor: color, borderWidth: 1 },
-      });
-    });
-    return {
-      animationDurationUpdate: 320,
-      tooltip: {
-        trigger: 'item',
-        backgroundColor: 'rgba(30,41,59,0.92)',
-        borderColor: 'transparent',
-        textStyle: { color: '#f1f5f9', fontSize: 12 },
-        formatter(params) {
-          if (params.seriesType === 'scatter') {
-            return `<b>${escapeTooltipText(params.data.group)} - ${escapeTooltipText(params.data.feature)}</b><br/>样本编号: ${escapeTooltipText(params.data.sample || '未知')}<br/>离群点: ${fmtNum(params.data.value[1], activeTransform.key)}`;
-          }
-          const box = params.data;
-          const item = available[params.dataIndex];
-          const detectionNote = item?.detectedInScope === false ? '<br/><b>当前范围未检出</b>' : '';
-          return `<b>${escapeTooltipText(params.seriesName)} - ${escapeTooltipText(item?.shortName || params.name)}</b><br/>上限: ${fmtNum(box[4], activeTransform.key)}<br/>Q3: ${fmtNum(box[3], activeTransform.key)}<br/><b>中位数: ${fmtNum(box[2], activeTransform.key)}</b><br/>Q1: ${fmtNum(box[1], activeTransform.key)}<br/>下限: ${fmtNum(box[0], activeTransform.key)}${detectionNote}`;
-        },
-      },
-      legend: {
-        data: normalized.series.map(item => item.label),
-        top: 0,
-        right: 18,
-        textStyle: { color: '#475569' },
-      },
-      grid: { left: 70, right: 30, top: 42, bottom: 100 },
-      xAxis: {
-        type: 'category',
-        data: categories,
-        axisLabel: {
-          rotate: 35,
-          fontSize: 10,
-          color(value) {
-            return itemByFeatureId.get(String(value))?.detectedInScope === false ? '#94a3b8' : '#64748b';
-          },
-          interval: 0,
-          formatter(value) {
-            const item = itemByFeatureId.get(String(value));
-            if (!item) return value;
-            return item.detectedInScope === false ? `${item.shortName}（未检出）` : item.shortName;
-          },
-        },
-      },
-      yAxis: {
-        type: 'value',
-        name: activeTransform.label,
-        axisLabel: {
-          color: '#475569',
-          formatter: value => fmtNum(value, activeTransform.key),
-        },
-        splitLine: { lineStyle: { color: '#f1f5f9' } },
-      },
-      dataZoom: [
-        {
-          type: 'inside',
-          xAxisIndex: 0,
-          filterMode: 'none',
-          startValue: 0,
-          endValue: Math.max(0, visibleCount - 1),
-        },
-        {
-          type: 'slider',
-          xAxisIndex: 0,
-          filterMode: 'none',
-          startValue: 0,
-          endValue: Math.max(0, visibleCount - 1),
-          bottom: 18,
-          height: 18,
-          brushSelect: false,
-          showDetail: false,
-          borderColor: '#d7e0ec',
-          fillerColor: 'rgba(37, 99, 235, 0.12)',
-          handleStyle: { color: '#2563eb', borderColor: '#2563eb' },
-        },
-      ],
-      series: [...boxSeries, ...scatterSeries],
-    };
-  }, [activeTransform, available, normalized.series, visibleCount]);
+  const model = useMemo(() => ({
+    available, series: normalized.series, activeTransform, visibleCount,
+  }), [activeTransform, available, normalized.series, visibleCount]);
 
   const densityMessage = available.length > strongWarningThreshold
     ? `共 ${available.length} 个${featureLabel}，绘制内容较多，拖动或缩放时可能出现短暂延迟。`
@@ -279,10 +148,11 @@ function BoxPlot({ data, featureLabel = '物种', featureSelectionConfig = {} })
           ) : null}
         </div>
       </div>
-      {option ? (
+      {available.length && normalized.series.length ? (
         <ChartViewport variant="data" minHeight={500} preferredHeight={550}>
-          <ReactECharts
-            option={option}
+          <BoxScatterChart
+            model={model}
+            boxStyleConfig={{ key: 'species-boxplot', pointLabel: '离群点', pointDescription: '显示或隐藏箱须范围外的离群样本点；不改变箱线统计' }}
             exportConfig={{
               fileName: `${featureLabel}-boxplot-${activeTransform.key}`,
               format: 'svg',

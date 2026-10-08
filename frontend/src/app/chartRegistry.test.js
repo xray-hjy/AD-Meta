@@ -68,9 +68,10 @@ describe('chart analysis-scope capabilities', () => {
       ]);
 
     const pcaTopN = getChartDefinition('pca').analysisPolicy.controls[0];
-    expect(pcaTopN.input).toBe('select');
+    expect(pcaTopN.input).toBe('range');
     expect(pcaTopN.purpose).toBe('feature_selection');
-    expect(pcaTopN.options.map(option => option.value)).toEqual([50, 100, 200, 500]);
+    expect(pcaTopN.presets).toEqual([50, 100, 200, 500]);
+    expect(pcaTopN).toMatchObject({ min: 2, max: 500 });
 
     const pcoaControls = getChartDefinition('pcoa').analysisPolicy.controls;
     expect(pcoaControls.find(control => control.key === 'topN')).toBeUndefined();

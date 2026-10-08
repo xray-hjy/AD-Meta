@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactECharts from './CartesianEChart';
 import ChartViewport from './ChartViewport';
 import OrdinationResources from './OrdinationResources';
+import ChartSupplement from './ChartSupplement';
 import { escapeTooltipText } from '../../utils/tooltipHtml';
 
 const GROUP_COLORS = {
@@ -275,7 +276,7 @@ function OrdinationChart({ data }) {
           />
         </div>
       </ChartViewport>
-      <OrdinationResources data={data} />
+      <ChartSupplement><OrdinationResources data={data} /></ChartSupplement>
     </div>
   );
 }

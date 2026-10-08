@@ -1,0 +1,55 @@
+.zoomable-chart { width: 100%; min-width: 0; }
+.chart-zoom-toolbar-row { display: flex; justify-content: flex-end; padding: 8px 0 12px; }
+.chart-zoom-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; max-width: 100%; box-sizing: border-box; padding: 5px 7px; font-size: 11px; color: var(--color-text-main); background: var(--color-bg-panel); background: color-mix(in srgb, var(--workspace-header-background) 82%, transparent); border: 1px solid color-mix(in srgb, var(--workspace-accent) 16%, var(--color-border)); border-radius: 9px; backdrop-filter: blur(14px) saturate(125%); box-shadow: inset 0 1px 0 #ffffff45, 0 3px 12px #15233808; }
+.chart-zoom-toolbar button { display: inline-flex; align-items: center; justify-content: center; gap: 4px; box-sizing: border-box; height: 30px; font: inherit; color: var(--color-text-muted); background: transparent; border: 1px solid transparent; border-radius: 6px; padding: 0 7px; cursor: pointer; transition: background-color 120ms, color 120ms, box-shadow 120ms; }
+.chart-zoom-toolbar button svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.chart-zoom-toolbar button:hover:not(:disabled) { background: var(--workspace-accent-soft); color: var(--workspace-accent); }
+.chart-zoom-toolbar button:active:not(:disabled) { background: color-mix(in srgb, var(--workspace-accent) 20%, transparent); box-shadow: inset 0 1px 3px #15233815; }
+.chart-zoom-toolbar button[aria-pressed=true] { color: var(--workspace-accent); background: var(--color-bg-panel); border-color: color-mix(in srgb, var(--workspace-accent) 14%, transparent); box-shadow: 0 1px 4px #15233812; }
+.chart-zoom-toolbar button:disabled { opacity: .3; cursor: default; }
+.chart-zoom-toolbar button:focus-visible, .chart-zoom-slider__thumb:focus-visible { outline: 2px solid var(--workspace-accent); outline-offset: 2px; }
+.chart-zoom-toolbar__fit { display: inline-flex; flex: 0 0 auto; gap: 2px; padding: 2px; border-radius: 7px; background: color-mix(in srgb, var(--color-text-muted) 7%, transparent); }
+.chart-zoom-toolbar__native { min-width: 22px; font-size: 11px; font-weight: 600; letter-spacing: .02em; }
+.chart-zoom-toolbar__divider { width: 1px; height: 20px; background: color-mix(in srgb, var(--color-text-muted) 18%, transparent); }
+.chart-zoom-toolbar__scale { display: flex; align-items: center; gap: 5px; flex: 1; min-width: 222px; }
+.chart-zoom-toolbar .chart-zoom-toolbar__step { flex: 0 0 30px; width: 30px; padding: 0; border-radius: 50%; background: color-mix(in srgb, var(--color-bg-panel) 65%, transparent); border-color: color-mix(in srgb, var(--color-text-muted) 12%, transparent); }
+.chart-zoom-slider { position: relative; display: flex; align-items: center; width: 114px; min-width: 80px; height: 32px; flex: 1; touch-action: none; user-select: none; cursor: pointer; }
+.chart-zoom-slider__track { position: relative; flex: 1; height: 4px; border-radius: 99px; background: color-mix(in srgb, var(--color-text-muted) 20%, transparent); }
+.chart-zoom-slider__range { position: absolute; height: 100%; border-radius: inherit; background: var(--workspace-accent); opacity: .8; }
+.chart-zoom-slider__thumb { display: block; width: 16px; height: 16px; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--workspace-accent) 23%, var(--color-border)); background: var(--color-bg-panel); box-shadow: 0 1px 4px #15233826, inset 0 1px 0 #ffffff70; cursor: grab; }
+.chart-zoom-slider__thumb:active { cursor: grabbing; box-shadow: 0 0 0 4px var(--workspace-accent-soft), 0 1px 4px #15233826; }
+.chart-zoom-toolbar__value { display: flex; align-items: center; flex: 0 0 61px; width: 61px; height: 29px; box-sizing: border-box; padding: 0 5px; border: 1px solid color-mix(in srgb, var(--workspace-accent) 14%, transparent); border-radius: 6px; background: color-mix(in srgb, var(--color-bg-panel) 65%, transparent); color: var(--color-text-muted); font-size: 10px; }
+.chart-zoom-toolbar__value input { width: 100%; min-width: 0; padding: 0; border: 0; outline: 0; font: inherit; font-size: 11px; font-variant-numeric: tabular-nums; text-align: center; color: var(--color-text-main); background: transparent; }
+.chart-zoom-toolbar__value:focus-within { border-color: var(--workspace-accent); box-shadow: 0 0 0 2px var(--workspace-accent-soft); }
+@media (max-width: 560px) { .chart-zoom-toolbar { width: 100%; } .chart-zoom-toolbar__divider { display: none; } .chart-zoom-toolbar__scale { min-width: 200px; } }
+@media (prefers-reduced-motion: reduce) { .chart-zoom-toolbar button { transition: none; } }
+.zoomable-chart__viewport { position: relative; overflow: hidden; width: 100%; height: clamp(450px, 65vh, 720px); outline-offset: -2px; }
+.zoomable-chart__viewport.is-panning { cursor: grab; touch-action: none; }
+.zoomable-chart__viewport.is-panning:active { cursor: grabbing; }
+.chart-navigation-dock { position: absolute; right: 8px; bottom: 8px; z-index: 2; display: flex; align-items: flex-end; justify-content: flex-end; gap: 10px; flex-wrap: wrap-reverse; max-width: calc(100% - 16px); cursor: default; }
+.chart-minimap { width: var(--chart-minimap-width, 188px); flex: 0 0 auto; padding: 6px; box-sizing: border-box; border: 1px solid var(--color-border); border-radius: 5px; background: color-mix(in srgb, var(--workspace-header-background) 78%, transparent); backdrop-filter: blur(10px); }
+.chart-minimap.is-collapsed { width: auto; }
+.chart-minimap__toggle { display: flex; align-items: center; justify-content: space-between; gap: 18px; border: 0; background: transparent; color: var(--color-text-main); width: 100%; padding: 2px 3px 5px; font-size: 11px; cursor: pointer; }
+.chart-minimap svg { display: block; width: 100%; height: auto; aspect-ratio: 174 / 116; cursor: crosshair; touch-action: none; }
+.chart-minimap__hint { display: block; padding-top: 4px; text-align: center; color: var(--color-text-muted); font-size: 10px; }
+.chart-pan-joystick { width: 96px; flex: 0 0 96px; display: grid; justify-items: center; gap: 5px; color: var(--color-text-muted); user-select: none; }
+.chart-pan-joystick__title { font-size: 10px; }
+.chart-pan-joystick__pad { position: relative; width: 86px; height: 86px; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--workspace-accent) 18%, transparent); background: color-mix(in srgb, var(--workspace-header-background) 50%, transparent); backdrop-filter: blur(10px); box-shadow: 0 2px 12px #00000009; }
+.chart-pan-joystick__pad.is-active { border-color: var(--workspace-accent); }
+.chart-pan-joystick__pad button { position: absolute; display: grid; place-items: center; padding: 0; color: inherit; background: transparent; border: 0; cursor: pointer; touch-action: none; border-radius: 50%; }
+.chart-pan-joystick__direction { width: 26px; height: 26px; }
+.chart-pan-joystick__direction.is-up { left: 30px; top: 1px; }
+.chart-pan-joystick__direction.is-right { right: 1px; top: 30px; }
+.chart-pan-joystick__direction.is-down { left: 30px; bottom: 1px; }
+.chart-pan-joystick__direction.is-left { left: 1px; top: 30px; }
+.chart-pan-joystick__pad button:is(:hover, .is-held):not(:disabled) { background: var(--workspace-accent-soft); color: var(--workspace-accent); }
+.chart-pan-joystick__pad button:disabled { opacity: .25; cursor: default; }
+.chart-pan-joystick__pad button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+.chart-pan-joystick__pad .chart-pan-joystick__thumb { left: 28px; top: 28px; width: 30px; height: 30px; border: 1px solid color-mix(in srgb, var(--workspace-accent) 22%, transparent); background: color-mix(in srgb, var(--workspace-header-background) 74%, transparent); cursor: grab; }
+.chart-pan-joystick__thumb:active { cursor: grabbing; }
+.chart-pan-joystick__thumb[aria-pressed=true] { color: var(--workspace-accent); box-shadow: 0 0 0 2px var(--workspace-accent-soft); }
+.chart-pan-joystick__hint { color: var(--color-text-muted); font-size: 9px; line-height: 1.65; text-align: center; }
+.mag-heatmap-svg { display: block; width: 100%; height: 100%; color: var(--color-text-muted); user-select: none; }
+.mag-heatmap-tooltip { position: absolute; pointer-events: none; z-index: 3; max-width: min(360px, 90%); padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-bg-panel); color: var(--color-text-main); box-shadow: 0 4px 16px #0002; font-size: 11px; line-height: 1.7; overflow-wrap: anywhere; }
+.mag-heatmap-tooltip strong { display: block; }
+.mag-heatmap-transpose-motion { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }

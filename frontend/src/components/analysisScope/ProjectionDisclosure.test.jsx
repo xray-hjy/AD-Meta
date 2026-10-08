@@ -18,6 +18,22 @@ function projectionData(kind, projection = {}) {
 }
 
 describe('ProjectionDisclosure', () => {
+  it('distinguishes a single MAG from the cohort samples without implying omitted MAG results', () => {
+    const data = projectionData('mag_distribution', { sampleCount: 185, groupCounts: { AD: 122, NC: 63 },
+      sourceFeatureCount: 872, returnedFeatureCount: 1, truncatedFeatureCount: 871 });
+    const { rerender } = render(<ProjectionDisclosure data={data} />);
+    expect(screen.getByText('样本范围：全部样本')).toBeInTheDocument();
+    expect(screen.getByText('样本数：185（AD 122 · NC 63）')).toBeInTheDocument();
+    expect(screen.getByText('当前选中 1 个 MAG')).toBeInTheDocument();
+    expect(screen.getByText('每个散点代表一个样本的丰度')).toBeInTheDocument();
+    expect(screen.queryByText(/871|1\/872/)).toBeNull();
+    rerender(<ProjectionDisclosure data={{ ...data, scope: { mode: 'subset' },
+      projection: { ...data.projection, sampleCount: 40, groupCounts: { AD: 20, NC: 20 } } }} />);
+    expect(screen.getByText('样本范围：当前筛选样本')).toBeInTheDocument();
+    expect(screen.getByText('样本数：40（AD 20 · NC 20）')).toBeInTheDocument();
+    expect(screen.queryByText('样本范围：全部样本')).toBeNull();
+  });
+
   it('separates heatmap eligibility from its display cap', () => {
     render(
       <ProjectionDisclosure
@@ -30,7 +46,7 @@ describe('ProjectionDisclosure', () => {
 
     expect(screen.getByText(/筛得 137 个满足/)).toBeInTheDocument();
     expect(screen.getByText(/展示排名前 50 个/)).toBeInTheDocument();
-    expect(screen.getByText('上游标准化方式待确认')).toBeInTheDocument();
+    expect(screen.getByText('丰度尺度：未提供 · 标准化方法：未提供')).toBeInTheDocument();
   });
 
   it('describes PCoA as exploratory when inference is not applicable', () => {

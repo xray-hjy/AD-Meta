@@ -1,0 +1,55 @@
+{
+  "observed_on": "2026-10-01",
+  "timezone": "Asia/Shanghai",
+  "method": "Read visible official web pages through browser; downloaded metadata XLSX using the GSA page download control",
+  "pages": [
+    {
+      "url": "https://ngdc.cncb.ac.cn/gsa/browse/CRA014435",
+      "project_accession": "PRJCA022804",
+      "study_accession": "CRA014435",
+      "title": "Metagenomic analysis characterizes stage-specific gut microbiota in Alzheimer's Disease",
+      "release_date": "2025-03-28",
+      "file_count_displayed": 952,
+      "file_size_displayed_GB": 2815.57,
+      "https_download_root_displayed": "https://download.cncb.ac.cn/gsa4/CRA014435",
+      "ftp_download_root_displayed": "ftp://download.big.ac.cn/gsa4/CRA014435"
+    },
+    {
+      "url": "https://ngdc.cncb.ac.cn/bioproject/browse/PRJCA022804",
+      "project_accession": "PRJCA022804",
+      "biosample_count": 476,
+      "gsa_studies": ["CRA014435"],
+      "description_participant_count": 476,
+      "description_stage_counts": {"NC": 63, "SCS": 82, "SCD": 90, "MCI": 119, "AD": 122},
+      "release_date": "2025-03-28",
+      "submission_date": "2024-01-12",
+      "submitting_institution": "Fudan University",
+      "publications_listed": [
+        {"title": "Impacts of host genetics on gut microbiome composition in Alzheimer's disease", "doi": "10.1186/s40168-026-02342-8", "year": 2026},
+        {"title": "Multi-omics profiling reveals gut microbiome signatures associated with cognitive decline in Alzheimer's disease", "doi": "10.1016/j.isci.2026.116622", "year": 2026}
+      ]
+    },
+    {
+      "url": "https://ngdc.cncb.ac.cn/biosample/browse/SAMC3310212",
+      "biosample_accession": "SAMC3310212",
+      "sample_alias": "B2642",
+      "sample_title": "Human gut metagenome from AD sample",
+      "host_age": 78,
+      "collection_date": "2022-05-01",
+      "project_accession": "PRJCA022804",
+      "study_accession": "CRA014435",
+      "host_subject_id_visible": false,
+      "scope": "One BioSample page spot check; completeness across 476 samples checked against downloaded XLSX"
+    }
+  ],
+  "source_paper": {
+    "url": "https://www.nature.com/articles/s41380-025-02973-7",
+    "title": "Metagenomic analysis characterizes stage-specific gut microbiota in Alzheimer's disease",
+    "journal": "Molecular Psychiatry",
+    "published_on": "2025-03-31",
+    "doi": "10.1038/s41380-025-02973-7",
+    "data_availability_project_accession": "PRJCA022804",
+    "verification_method": "Publisher search result including article metadata and Data availability section",
+    "relationship": "The paper explicitly deposits its cohort reads under PRJCA022804; the team's matrix-generation pipeline still requires separate confirmation"
+  }
+}

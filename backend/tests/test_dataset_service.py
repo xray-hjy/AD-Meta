@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import sqlite3
 import unittest
@@ -9,7 +10,106 @@ from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 from app.core import database
-from app.services import dataset_service
+from app.services import dataset_description_service, dataset_service
+
+
+class DatasetDescriptionVersionTests(unittest.TestCase):
+    def test_description_uses_revision_facts_without_inheriting_current_file(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            db_path = root / "datasets.sqlite3"
+            with patch.object(database, "DB_PATH", db_path), patch.object(database, "DB_ENGINE", "sqlite"):
+                database.dispose_engine()
+                database.init_db()
+                with database.connect() as conn:
+                    dataset_id = conn.execute(
+                        """
+                        INSERT INTO datasets (
+                          slug, name, status, original_filename, feature_count,
+                          sample_count, created_at, updated_at
+                        ) VALUES ('demo', 'Demo', 'published', 'current.csv', 5, 2, 'now', 'now')
+                        """
+                    ).lastrowid
+                    old_revision_id = conn.execute(
+                        """
+                        INSERT INTO dataset_revisions (
+                          dataset_id, revision_key, status, source_sha256, source_file_size,
+                          compute_version, params_hash, validation_json, created_at
+                        ) VALUES (?, 'rev-a', 'published', ?, 10, 'v1', ?, ?, 'now')
+                        """,
+                        (
+                            dataset_id, "a" * 64, "c" * 64,
+                            json.dumps({
+                                "sampleCount": 2, "featureCount": 3,
+                                "excludedSampleCount": 1, "sampleIdPrefixes": ["CRR"],
+                                "groupMapping": {"1": "AD"}, "duplicateFeaturePolicy": "reject",
+                            }),
+                        ),
+                    ).lastrowid
+                    current_revision_id = conn.execute(
+                        """
+                        INSERT INTO dataset_revisions (
+                          dataset_id, revision_key, status, source_sha256, source_file_size,
+                          compute_version, params_hash, validation_json, created_at
+                        ) VALUES (?, 'rev-b', 'published', ?, 20, 'v1', ?, ?, 'now')
+                        """,
+                        (dataset_id, "b" * 64, "d" * 64, json.dumps({"featureCount": 5})),
+                    ).lastrowid
+                    conn.execute(
+                        "UPDATE datasets SET current_revision_id = ? WHERE id = ?",
+                        (current_revision_id, dataset_id),
+                    )
+                    for sample_code, phenotype in (("S1", "AD"), ("S2", "NC")):
+                        conn.execute(
+                            """
+                            INSERT INTO revision_sample_info (
+                              revision_id, dataset_id, sample_code, phenotype
+                            ) VALUES (?, ?, ?, ?)
+                            """,
+                            (old_revision_id, dataset_id, sample_code, phenotype),
+                        )
+                    for sample_code, phenotype in (("S1", "AD"), ("S3", "NC")):
+                        conn.execute(
+                            """
+                            INSERT INTO revision_sample_info (
+                              revision_id, dataset_id, sample_code, phenotype
+                            ) VALUES (?, ?, ?, ?)
+                            """,
+                            (current_revision_id, dataset_id, sample_code, phenotype),
+                        )
+
+                registry_path = root / "verified_cohorts.json"
+                registry_path.write_text(json.dumps({"cohorts": [{
+                    "cohortId": "verified-test",
+                    "sampleSetSha256": hashlib.sha256(b"S1\nS2").hexdigest(),
+                    "sampleCount": 2,
+                    "groupCounts": {"AD": 1, "NC": 1},
+                    "repository": "Test repository",
+                    "studyAccession": "TEST1",
+                    "studyUrl": "https://example.org/study",
+                    "projectAccession": "TEST2",
+                    "projectUrl": "https://example.org/project",
+                    "verifiedOn": "2026-10-01",
+                    "publication": None,
+                }]}), encoding="utf-8")
+
+                with patch.object(dataset_description_service, "VERIFIED_COHORTS_PATH", registry_path):
+                    old = dataset_description_service.get_dataset_description("demo", "rev-a")
+                    self.assertEqual(old["sampleCount"], 2)
+                    self.assertEqual(old["featureCount"], 3)
+                    self.assertEqual(old["groupCounts"], {"AD": 1, "NC": 1})
+                    self.assertEqual(old["sampleIdPrefixes"], ["CRR"])
+                    self.assertEqual(old["excludedSampleCount"], 1)
+                    self.assertEqual(old["sourceSha256"], "a" * 64)
+                    self.assertIsNone(old["sourceFileName"])
+                    self.assertEqual(old["cohortSource"]["studyAccession"], "TEST1")
+                    self.assertNotIn("sections", old)
+                    current = dataset_description_service.get_dataset_description("demo", "rev-b")
+                    self.assertEqual(current["sourceFileName"], "current.csv")
+                    self.assertEqual(current["featureCount"], 5)
+                    self.assertIsNone(current["cohortSource"])
+                    self.assertIsNone(dataset_description_service.get_dataset_description("demo", "missing"))
+                database.dispose_engine()
 
 
 class ReadChartPathCompatibilityTests(unittest.TestCase):

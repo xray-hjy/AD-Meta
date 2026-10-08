@@ -103,6 +103,9 @@ test('renders heatmap panels as canvas instead of SVG rect grids', () => {
   expect(screen.getByText('NC 组丰度热图')).toBeTruthy();
   expect(screen.getByText('AD + NC 合并丰度热图（层次聚类）')).toBeTruthy();
   expect(screen.getByText('差异热图 (AD − NC 平均 log 丰度)')).toBeTruthy();
+  const adToolbar = screen.getByRole('toolbar', { name: 'AD 组丰度热图操作' });
+  expect(adToolbar.querySelector('button[aria-label="放大AD 组丰度热图"]')).toBeTruthy();
+  expect(adToolbar.querySelector('button[aria-label="导出AD 组丰度热图"]')).toBeTruthy();
 
   expect(document.querySelectorAll('canvas')).toHaveLength(4);
   expect(document.querySelectorAll('svg rect')).toHaveLength(0);
@@ -134,7 +137,7 @@ test('reports the global color-blind preference on all four heatmaps', () => {
   expect(screen.queryByText(/色盲友好纹理已开启/)).toBeNull();
 });
 
-test('limits the difference heatmap table to the first 25 rows and 20 columns', () => {
+test('defaults to 20 visible rows and allows expansion without dropping heatmap rows or columns', () => {
   const matrix = Array.from({ length: 30 }, (_, rowIndex) => (
     Array.from({ length: 24 }, (_, columnIndex) => rowIndex * 100 + columnIndex)
   ));
@@ -152,13 +155,14 @@ test('limits the difference heatmap table to the first 25 rows and 20 columns', 
 
   const details = screen.getByText('查看差异热图 (AD − NC 平均 log 丰度)数据表')
     .closest('details');
-  expect(details.querySelectorAll('tbody tr')).toHaveLength(25);
-  expect(details.querySelectorAll('thead th')).toHaveLength(21);
-  expect(details.textContent).toContain('差异行 25');
-  expect(details.textContent).not.toContain('差异行 26');
-  expect(details.textContent).toContain('物种 20');
-  expect(details.textContent).not.toContain('物种 21');
-  expect(details.textContent).toContain('仅展示前 25 行、20 列');
+  const viewport = details.querySelector('.data-table-viewport');
+  expect(viewport).toHaveAttribute('data-visible-rows', '20');
+  expect(details.querySelectorAll('tbody tr')).toHaveLength(30);
+  expect(details.querySelectorAll('thead th')).toHaveLength(25);
+  fireEvent.click(screen.getByRole('button', { name: '展开至30行', hidden: true }));
+  expect(viewport).toHaveAttribute('data-visible-rows', '30');
+  expect(details.textContent).toContain('差异行 30');
+  expect(details.textContent).toContain('物种 24');
 });
 
 test('places combined dendrograms to the right and below the heatmap grid', () => {

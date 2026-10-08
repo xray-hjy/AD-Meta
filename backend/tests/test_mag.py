@@ -8,6 +8,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 from fastapi.testclient import TestClient
+from scipy.cluster.hierarchy import leaves_list
 from scipy.stats import mannwhitneyu
 
 from app.api import mag
@@ -117,14 +118,24 @@ def test_invalid_input_fails_closed_including_after_cached_load(package, name, o
         load(package)
 
 
-def test_missing_file_counts_and_path_escape(package):
+def test_missing_file_counts(package):
     with pytest.raises(service.MagDataError, match="872"):
         service.load_mag_dataset(package, version="mag_v1")
     path = package / "development_input" / "mag_v1" / service.LENGTHS
     path.unlink()
     with pytest.raises(service.MagDataError, match="存在且可读"):
         load(package)
-    path.symlink_to(Path(__file__))
+
+
+def test_path_escape(package):
+    path = package / "development_input" / "mag_v1" / service.LENGTHS
+    path.unlink()
+    try:
+        path.symlink_to(Path(__file__))
+    except OSError as exc:
+        if getattr(exc, "winerror", None) == 1314:
+            pytest.skip("Windows requires Developer Mode or symlink privileges for this check.")
+        raise
     with pytest.raises(service.MagDataError, match="路径越界"):
         load(package)
 
@@ -289,12 +300,114 @@ def test_api_pagination_downloads_audit_and_revision_guard(client):
 
 
 @pytest.mark.parametrize("path", [
-    "features?limit=101", "features?offset=-1", "features?sortBy=invalid",
+    "features?limit=301", "features?offset=-1", "features?sortBy=invalid",
     "overview?ageMin=80&ageMax=60", "overview?ageMin=nan", "overview?batch=99",
-    "overview?abundanceThresholdPercent=-1", "heatmap?topN=51",
+    "overview?abundanceThresholdPercent=-1", "heatmap?topN=1001", "heatmap?topN=-1",
+    "heatmap?minMean=nan", "heatmap?sampleOrder=invalid", "heatmap?maxQ=2",
 ])
 def test_api_rejects_invalid_parameters(client, path):
     assert client.get(f"/api/mag/{path}").status_code == 422
+
+
+def test_heatmap_filters_before_display_limit_and_preserves_test_family(client):
+    result = client.get("/api/mag/heatmap?sampleThreshold=3&minSamplePercent=50&topN=1").json()
+    assert result["magIds"] == ["MAG_C"]
+    assert result["selectionAudit"]["matchedCount"] == 2
+    assert result["selectionAudit"]["omittedCount"] == 1
+    assert result["selectionAudit"]["exclusions"][-1]["count"] == 1
+    assert result["provenance"]["testedFeatureCount"] == 3
+    reference = client.get("/api/mag/features").json()["items"][0]
+    assert result["features"][0]["qValue"] == reference["qValue"]
+    # The global technical threshold cannot silently become a heatmap filter.
+    assert client.get("/api/mag/heatmap?abundanceThresholdPercent=99&topN=0").json()["magIds"] == ["MAG_C", "MAG_A", "MAG_B"]
+
+
+def test_heatmap_all_rows_variance_and_empty_scope(client):
+    assert len(client.get("/api/mag/heatmap?topN=100").json()["magIds"]) == 3
+    variance = client.get("/api/mag/heatmap?heatmapMode=variance&topN=0").json()
+    assert set(variance["magIds"]) == {"MAG_A", "MAG_C"}
+    assert variance["selectionAudit"]["exclusions"][-1] == {"reason": "零变异 MAG", "count": 1}
+    empty = client.get("/api/mag/heatmap?ageMin=90&sampleOrder=cluster&rowOrder=cluster&colorMode=rowZ").json()
+    assert empty["magIds"] == [] and empty["displayValues"] == []
+
+
+def test_heatmap_manual_candidates_and_invalid_ids(client):
+    result = client.get("/api/mag/heatmap", params={"heatmapMode": "candidate", "candidateKind": "manual", "heatmapIds": "MAG_A,MAG_C,MAG_A", "topN": 0}).json()
+    assert result["magIds"] == ["MAG_A", "MAG_C"]
+    empty = client.get("/api/mag/heatmap?heatmapMode=candidate&candidateKind=manual").json()
+    assert empty["magIds"] == [] and empty["warnings"]
+    assert client.get("/api/mag/heatmap?heatmapMode=candidate&candidateKind=manual&heatmapIds=UNKNOWN").status_code == 422
+    no_hits = client.get("/api/mag/heatmap?heatmapMode=candidate&maxQ=0").json()
+    assert no_hits["magIds"] == []
+    single_group = client.get("/api/mag/heatmap?heatmapMode=candidate&disease=AD").json()
+    assert single_group["magIds"] == [] and single_group["warnings"]
+
+
+def test_heatmap_z_score_constant_rows_and_raw_values(client):
+    result = client.get("/api/mag/heatmap?topN=0&colorMode=rowZ").json()
+    raw, display = np.asarray(result["values"]), np.asarray(result["displayValues"])
+    column = result["magIds"].index("MAG_A")
+    log = np.log10(1 + raw[:, column])
+    np.testing.assert_allclose(display[:, column], (log - log.mean()) / log.std())
+    assert result["constantMagIds"] == ["MAG_B"]
+    assert (display[:, result["magIds"].index("MAG_B")] == 0).all()
+    assert result["warnings"]
+    assert raw[0, column] == 6  # raw AD / CRR3 value retained
+
+
+def test_heatmap_quality_conditions_use_verified_annotations(client_v3):
+    result = client_v3.get("/api/mag/heatmap?topN=0&minCompleteness=90&maxContamination=5").json()
+    assert set(result["magIds"]) == {"MAG_A", "MAG_C"}
+    assert result["selectionAudit"]["exclusions"][1]["count"] == 1
+
+
+def test_heatmap_clustering_keeps_id_value_alignment_and_is_reproducible(client):
+    first = client.get("/api/mag/heatmap?topN=0&colorMode=rowZ&rowOrder=cluster&sampleOrder=withinGroup").json()
+    second = client.get("/api/mag/heatmap?topN=0&colorMode=rowZ&rowOrder=cluster&sampleOrder=withinGroup").json()
+    assert first["magIds"] == second["magIds"] and first["samples"] == second["samples"]
+    assert [s["disease"] for s in first["samples"]] == ["AD", "AD", "NC", "NC"]
+    source = {"CRR1": {"MAG_A": 1, "MAG_B": 0, "MAG_C": 9}, "CRR2": {"MAG_A": 3, "MAG_B": 0, "MAG_C": 17},
+              "CRR3": {"MAG_A": 6, "MAG_B": 0, "MAG_C": 24}, "CRR4": {"MAG_A": 10, "MAG_B": 0, "MAG_C": 30}}
+    for s, row in zip(first["samples"], first["values"], strict=True):
+        assert row == [source[s["sampleId"]][mag_id] for mag_id in first["magIds"]]
+    full = client.get("/api/mag/heatmap?topN=0&sampleOrder=cluster").json()
+    assert set(s["sampleId"] for s in full["samples"]) == set(source)
+    assert first["projectionFingerprint"] != full["projectionFingerprint"]
+    def leaves(tree):
+        order = leaves_list(np.asarray(tree["merges"])) if tree["merges"] else range(len(tree["leafIds"]))
+        return [tree["leafIds"][i] for i in order]
+
+    assert first["dendrograms"] == second["dendrograms"]
+    assert first["dendrograms"]["metric"] == "euclidean"
+    assert first["dendrograms"]["linkage"] == "average"
+    assert leaves(first["dendrograms"]["mags"]) == first["magIds"]
+    sample_trees = first["dendrograms"]["samples"]
+    assert [tree["group"] for tree in sample_trees] == ["AD", "NC"]
+    assert [id_ for tree in sample_trees for id_ in leaves(tree)] == [s["sampleId"] for s in first["samples"]]
+    assert leaves(full["dendrograms"]["samples"][0]) == [s["sampleId"] for s in full["samples"]]
+    assert len(full["dendrograms"]["samples"][0]["merges"]) == len(full["samples"]) - 1
+
+
+def test_heatmap_dendrograms_are_absent_without_clustering_and_safe_for_singletons(client):
+    plain = client.get("/api/mag/heatmap?topN=1").json()
+    assert plain["dendrograms"]["mags"] is None
+    assert plain["dendrograms"]["samples"] == []
+    single = client.get("/api/mag/heatmap?topN=1&rowOrder=cluster&ageMin=74&sampleOrder=cluster").json()
+    assert single["dendrograms"]["mags"]["merges"] == []
+    for tree in single["dendrograms"]["samples"]:
+        assert len(tree["merges"]) == max(0, len(tree["leafIds"]) - 1)
+
+
+def test_heatmap_exports_selected_raw_matrix_and_exact_method_audit(client):
+    params = {"view": "heatmap", "topN": 0, "heatmapMode": "candidate", "candidateKind": "manual", "heatmapIds": "MAG_A", "colorMode": "rowZ", "sampleOrder": "withinGroup"}
+    result = client.get("/api/mag/heatmap", params=params).json()
+    audit = client.get("/api/mag/downloads/provenance", params=params).json()
+    assert audit["display"]["displayedMagIds"] == result["magIds"]
+    assert audit["display"]["heatmapSettings"] == result["settings"]
+    assert audit["display"]["methods"] == result["methods"]
+    csv_rows = list(csv.DictReader(io.StringIO(client.get("/api/mag/downloads/heatmap", params=params).content.decode("utf-8-sig"))))
+    assert "MAG_C" not in csv_rows[0] and float(csv_rows[0]["MAG_A"]) in {6, 10}
+    assert csv_rows[0]["projectionFingerprint"] == result["projectionFingerprint"]
 
 
 def test_data_failure_reports_without_impacting_liveness(package, client):
@@ -335,6 +448,16 @@ def test_v2_taxonomy_quality_api_and_downloads(client_v2):
     assert taxonomy["unresolvedMagCount"] == 1
     assert sum(item["count"] for item in taxonomy["items"]) == 3
     quality = client_v2.get("/api/mag/quality").json()
+    catalog = client_v2.get("/api/mag/catalog?disease=AD&ageMin=120").json()
+    assert catalog["scopeKind"] == "catalog"
+    assert catalog["total"] == 3
+    assert catalog["provenance"]["sampleCount"] == 4
+    by_id = {row["magId"]: row for row in catalog["items"]}
+    assert by_id["MAG_A"]["taxonomy"]["closestAni"] == 99
+    assert by_id["MAG_B"]["taxonomy"]["closestReference"] is None
+    assert by_id["MAG_A"]["quality"]["contigN50Bp"] == 500
+    assert by_id["MAG_A"]["taxonomy"]["class"] == "C1"
+    assert client_v2.get("/api/mag/catalog?revision=stale").status_code == 409
     assert quality["summary"]["referenceBandCount"] == 2
     assert quality["referenceBand"]["label"].endswith("非 MIMAG 高质量判定）")
     assert len(quality["items"]) == 3
@@ -347,6 +470,62 @@ def test_v2_taxonomy_quality_api_and_downloads(client_v2):
     assert phylum["projectionFingerprint"] != genus["projectionFingerprint"]
     assert len(list(csv.DictReader(io.StringIO(taxonomy_csv.content.decode("utf-8-sig"))))) == 3
     assert len(list(csv.DictReader(io.StringIO(quality_csv.content.decode("utf-8-sig"))))) == 3
+
+
+def test_feature_annotations_join_by_mag_id_and_preserve_missing_species(client_v2):
+    rows = {row["magId"]: row for row in client_v2.get("/api/mag/features").json()["items"]}
+    assert rows["MAG_A"]["taxonomyName"] == "S1"
+    assert rows["MAG_A"]["taxonomyRank"] == "species"
+    assert rows["MAG_A"]["completenessPercent"] == 95
+    assert rows["MAG_B"]["taxonomyName"] == "G2"
+    assert rows["MAG_B"]["taxonomyRank"] == "genus"
+    assert rows["MAG_B"]["contaminationPercent"] == 6
+    csv_rows = list(csv.DictReader(io.StringIO(client_v2.get("/api/mag/downloads/features").content.decode("utf-8-sig"))))
+    assert json.loads(next(row for row in csv_rows if row["magId"] == "MAG_A")["taxonomy"])["species"] == "S1"
+
+
+def test_feature_annotations_remain_missing_when_inputs_are_not_provided(client):
+    missing = client.get("/api/mag/features/MAG_A").json()["feature"]
+    assert missing["taxonomy"] == {}
+    assert missing["completenessPercent"] is None
+
+
+def test_classification_search_precedes_pagination_and_preserves_bh_family(client_v2):
+    full = {row["magId"]: row for row in client_v2.get("/api/mag/features").json()["items"]}
+    response = client_v2.get("/api/mag/features", params={"query": " p1 ", "limit": 1, "offset": 1}).json()
+    assert response["total"] == 2  # A and B share a phylum; neither MAG ID contains P1.
+    assert len(response["items"]) == 1
+    assert response["provenance"]["testedFeatureCount"] == 3
+    row = response["items"][0]
+    assert row["qValue"] == full[row["magId"]]["qValue"]
+    for query, expected in (("s1", "MAG_A"), ("g2", "MAG_B"), ("mag_c", "MAG_C")):
+        match = client_v2.get("/api/mag/features", params={"query": query}).json()
+        assert [item["magId"] for item in match["items"]] == [expected]
+    exported = client_v2.get("/api/mag/downloads/features", params={"query": "P1", "limit": 1, "offset": 1, "topN": 1})
+    assert {item["magId"] for item in csv.DictReader(io.StringIO(exported.content.decode("utf-8-sig")))} == {"MAG_A", "MAG_B"}
+    chart = client_v2.get("/api/mag/downloads/provenance", params={"view": "features", "query": "g2", "topN": 20}).json()
+    assert chart["display"]["displayedMagIds"] == ["MAG_B"]
+    assert client_v2.get("/api/mag/features", params={"query": "does-not-exist"}).json()["total"] == 0
+
+
+def test_chart_provenance_does_not_follow_result_list_page_or_sort(client):
+    first = client.get("/api/mag/downloads/provenance?view=features&topN=2&limit=1&offset=0").json()
+    second = client.get("/api/mag/downloads/provenance?view=features&topN=2&limit=1&offset=2&sortBy=qValue&direction=asc").json()
+    assert first["display"]["displayedMagIds"] == second["display"]["displayedMagIds"] == ["MAG_C", "MAG_A"]
+    assert first["display"]["pageOffset"] != second["display"]["pageOffset"]
+    assert second["display"]["chartSortBy"] == "meanPercent"
+    restricted = client.get("/api/mag/downloads/provenance?view=features&topN=1&query=MAG_A&chartSortBy=adMeanPercent").json()
+    assert restricted["display"]["displayedMagIds"] == ["MAG_A"]
+    assert restricted["display"]["chartSortBy"] == "adMeanPercent"
+    exported = client.get("/api/mag/downloads/features?view=features&topN=1&offset=2&limit=1")
+    assert len(list(csv.DictReader(io.StringIO(exported.content.decode("utf-8-sig"))))) == 3
+
+
+def test_all_chart_provenance_retains_search_and_ranking(client):
+    audit = client.get("/api/mag/downloads/provenance?view=features&topN=0&limit=1&offset=2").json()
+    assert audit["display"]["displayedMagIds"] == ["MAG_C", "MAG_A", "MAG_B"]
+    selected = client.get("/api/mag/downloads/provenance?view=features&topN=0&query=MAG_A").json()
+    assert selected["display"]["displayedMagIds"] == ["MAG_A"]
 
 
 def test_version_rejects_path_escape(package):
@@ -400,7 +579,7 @@ def test_v3_lineage_crosswalk_api_pagination_filters_and_raw_downloads(client_v3
     assert lineage_download.headers["x-data-fingerprint"] == revision
     assert len(list(csv.DictReader(io.StringIO(lineage_download.text), delimiter="\t"))) == 4
     assert len(list(csv.DictReader(io.StringIO(crosswalk_download.text), delimiter="\t"))) == 3
-    assert client_v3.get("/api/mag/lineage/clusters?limit=101").status_code == 422
+    assert client_v3.get("/api/mag/lineage/clusters?limit=301").status_code == 422
     assert client_v3.get("/api/mag/crosswalk?mappingStatus=invalid").status_code == 422
     assert client_v3.get("/api/mag/lineage/mags/unknown").status_code == 404
 
@@ -411,3 +590,11 @@ def test_v3_manifest_hash_mismatch_fails_closed(package_v3):
     path.write_text(path.read_text(encoding="utf-8") + "\n", encoding="utf-8")
     with pytest.raises(service.MagDataError, match="bytes|SHA-256"):
         service.load_mag_dataset(package_v3, V3_CONTRACT, version="mag_v3")
+
+
+@pytest.mark.parametrize("endpoint", ["features", "lineage/clusters", "lineage/clusters/c1", "crosswalk"])
+def test_query_lists_accept_300_rows_and_reject_larger_pages(client_v3, endpoint):
+    response = client_v3.get(f"/api/mag/{endpoint}?limit=300")
+    assert response.status_code == 200
+    assert response.json()["limit"] == 300
+    assert client_v3.get(f"/api/mag/{endpoint}?limit=301").status_code == 422

@@ -1,6 +1,8 @@
+import StyledSelect from '../ui/StyledSelect';
 import { useEffect, useMemo, useState } from 'react';
 import useDebouncedValue from '../../hooks/useDebouncedValue';
 import useScopedFeatures from '../../hooks/useScopedFeatures';
+import EntityAutocomplete from '../ui/EntityAutocomplete';
 
 function normalizeFeature(item) {
   return {
@@ -174,7 +176,7 @@ export default function BoxplotFeatureSelector({
       {value.mode === 'ranked' ? (
         <div className="boxplot-feature-selector__ranked">
           <label htmlFor="boxplot-ranked-limit">参与计算的{featureLabel}数</label>
-          <select
+          <StyledSelect
             id="boxplot-ranked-limit"
             value={value.limit || defaultLimit}
             onChange={event => onChange(current => ({
@@ -183,19 +185,27 @@ export default function BoxplotFeatureSelector({
             }))}
           >
             {rankedLimits.map(limit => <option key={limit} value={limit}>Top {limit}</option>)}
-          </select>
+          </StyledSelect>
           <span>按当前分析范围内的平均丰度排名；切换范围时重新排名。</span>
         </div>
       ) : (
         <div className="boxplot-feature-selector__custom">
           <div className="boxplot-feature-selector__lookup">
             <label htmlFor="boxplot-feature-search">检索全部{featureLabel}</label>
-            <input
+            <EntityAutocomplete
               id="boxplot-feature-search"
-              type="search"
+              label={`检索全部${featureLabel}`}
               value={search}
               placeholder={`输入${featureLabel}名称`}
-              onChange={event => setSearch(event.target.value)}
+              onChange={setSearch}
+              onSelect={id => { const feature = candidates.find(item => item.featureId === id); if (feature) addFeature(feature); }}
+              items={!featuresState.fetching && debouncedSearch === search.trim() ? candidates.map(feature => ({ key: feature.featureId, value: feature.featureId,
+                label: feature.fullName, detail: `${feature.featureId} · 检出 ${feature.detectedSampleCount} 样本 · ${formatPercent(feature.prevalence)}`,
+                kind: selectedIds.has(feature.featureId) ? '已在选择池' : featureLabel })).slice(0, 20) : []}
+              total={totalCount}
+              loading={featuresState.fetching || debouncedSearch !== search.trim()}
+              error={featuresState.error}
+              note={`完整${featureLabel}目录 · 选择加入候选池，应用后更新图表`}
             />
             <p className="boxplot-feature-selector__status" aria-live="polite">
               {featuresState.error

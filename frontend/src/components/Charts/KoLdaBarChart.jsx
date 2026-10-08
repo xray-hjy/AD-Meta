@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import ReactECharts from './CartesianEChart';
-import ChartViewport from './ChartViewport';
+import ZoomableGroupedBarChart from './ZoomableGroupedBarChart';
+
 import { escapeTooltipText } from '../../utils/tooltipHtml';
 
 const GROUP_COLORS = {
@@ -59,113 +59,34 @@ function KoLdaBarChart({ data }) {
     return { ...fallback, ...(data?.summary || {}) };
   }, [data?.summary, items]);
 
-  const option = useMemo(() => {
-    if (!items.length) return null;
-
-    const chartItems = items.map(item => ({
-      ...item,
-      koId: item.koId || item.koName || '',
-      koName: item.koName || item.koId || '',
-      enrichedGroup: item.enrichedGroup === 'NC' ? 'NC' : 'AD',
-      effectSize: Number(
-        item.effectSize
-        ?? ((item.enrichedGroup === 'NC' ? -1 : 1) * Number(item.ldaScore || 0))
-      ),
-      pValue: Number(item.pValue || 1),
-      qValue: Number(item.qValue ?? item.pValue ?? 1),
-      log2FC: Number(item.log2FC || 0),
-      meanAD: Number(item.meanAD || 0),
-      meanNC: Number(item.meanNC || 0),
-    }));
-    const maxAbsScore = Math.max(...chartItems.map(item => Math.abs(item.effectSize)), 1);
-    const axisLimit = Number((maxAbsScore * 1.12).toFixed(2));
-
-    return {
-      animation: false,
-      tooltip: {
-        trigger: 'item',
-        backgroundColor: 'rgba(15, 23, 42, 0.94)',
-        borderColor: 'transparent',
-        textStyle: { color: '#f8fafc', fontSize: 12 },
-        extraCssText: 'border-radius:8px; padding:10px 14px;',
-        formatter(params) {
-          const point = params.data || {};
-          const effectSize = Number(point.effectSize ?? point.value ?? 0);
-          return `
-            <b>${escapeTooltipText(point.koName || point.koId)}</b><br/>
-            富集组: ${escapeTooltipText(point.groupLabel)}<br/>
-            rank-biserial 效应量: ${formatNumber(effectSize)}<br/>
-            p 值: ${formatNumber(point.pValue)}<br/>
-            q 值: ${formatNumber(point.qValue)}<br/>
-            log2FC: ${formatNumber(point.log2FC)}<br/>
-            AD 均值: ${compactNumber(point.meanAD)}<br/>
-            NC 均值: ${compactNumber(point.meanNC)}
-          `;
-        },
-      },
-      grid: { top: 24, left: 92, right: 48, bottom: 40, containLabel: true },
-      xAxis: {
-        type: 'value',
-        name: 'NC 富集 ← rank-biserial effect → AD 富集',
-        nameLocation: 'middle',
-        nameGap: 28,
-        min: -axisLimit,
-        max: axisLimit,
-        axisLabel: {
-          color: '#64748b',
-          formatter(value) {
-            return formatNumber(Math.abs(value), 1);
-          },
-        },
-        axisLine: { lineStyle: { color: '#cbd5e1' } },
-        splitLine: { lineStyle: { color: '#e2e8f0', type: 'dashed' } },
-      },
-      yAxis: {
-        type: 'category',
-        data: chartItems.map(item => item.koId),
-        inverse: true,
-        axisLabel: { color: '#334155', fontSize: 11, fontWeight: 600 },
-        axisLine: { lineStyle: { color: '#cbd5e1' } },
-      },
-      series: [
-        {
-          name: 'rank-biserial effect',
-          type: 'bar',
-          barMaxWidth: 18,
-          data: chartItems.map(item => ({
-            value: item.effectSize,
-            effectSize: item.effectSize,
-            koId: item.koId,
-            koName: item.koName,
-            enrichedGroup: item.enrichedGroup,
-            groupLabel: `${item.enrichedGroup} 富集`,
-            pValue: item.pValue,
-            qValue: item.qValue,
-            log2FC: item.log2FC,
-            meanAD: item.meanAD,
-            meanNC: item.meanNC,
-            itemStyle: {
-              color: GROUP_COLORS[item.enrichedGroup],
-              borderRadius: item.enrichedGroup === 'NC' ? [5, 0, 0, 5] : [0, 5, 5, 0],
-            },
-            label: { position: item.enrichedGroup === 'NC' ? 'left' : 'right' },
-          })),
-          label: {
-            show: true,
-            position: 'right',
-            color: '#334155',
-            fontSize: 10,
-            formatter(params) {
-              const point = params.data || {};
-              return formatNumber(point.effectSize ?? params.value, 2);
-            },
-          },
-        },
-      ],
-    };
+  const model = useMemo(() => {
+    const chartItems = items.map(item => ({ ...item,
+      id: item.koId || item.koName, label: item.koId || item.koName,
+      fullName: item.koName || item.koId, enrichedGroup: item.enrichedGroup === 'NC' ? 'NC' : 'AD',
+      effectSize: Number(item.effectSize ?? ((item.enrichedGroup === 'NC' ? -1 : 1) * Number(item.ldaScore || 0))),
+      pValue: Number(item.pValue ?? 1), qValue: Number(item.qValue ?? item.pValue ?? 1),
+      log2FC: Number(item.log2FC ?? 0), meanAD: Number(item.meanAD ?? 0), meanNC: Number(item.meanNC ?? 0),
+    })).map(item => ({ ...item, values: { AD: item.enrichedGroup === 'AD' ? item.effectSize : null,
+      NC: item.enrichedGroup === 'NC' ? item.effectSize : null } }));
+    const limit = Number((Math.max(1, ...chartItems.map(item => Math.abs(item.effectSize))) * 1.12).toFixed(2));
+    return { title: 'KO 差异特征效应', featureLabel: 'KO', nameColumn: 'KO 名称',
+      items: chartItems, series: ['AD', 'NC'].map(group => ({ key: group, label: `${group} 富集`, color: GROUP_COLORS[group] })),
+      overlapSeries: true, barGap: '-100%', zeroLine: true,
+      axisName: 'NC 富集 ← rank-biserial effect → AD 富集', axisMin: -limit, axisMax: limit,
+      formatAxis: value => formatNumber(Math.abs(value), 1), formatValue: value => formatNumber(value, 2),
+      pointOptions: item => ({ ...item, label: { position: item.effectSize < 0 ? 'left' : 'right' },
+        itemStyle: { color: GROUP_COLORS[item.enrichedGroup], borderRadius: item.effectSize < 0 ? [5, 0, 0, 5] : [0, 5, 5, 0] } }),
+      tooltipAppearance: 'light', tooltipFormatter: params => {
+        const entry = Array.isArray(params) ? params[0] : params;
+        const item = chartItems[entry?.dataIndex];
+        if (!item) return '';
+        return `<b>${escapeTooltipText(item.label)} · ${escapeTooltipText(item.fullName)}</b><br/>
+          富集组: ${item.enrichedGroup} 富集<br/>rank-biserial 效应量: ${formatNumber(item.effectSize)}<br/>
+          p 值: ${formatNumber(item.pValue)}<br/>q 值: ${formatNumber(item.qValue)}<br/>
+          log2FC: ${formatNumber(item.log2FC)}<br/>AD 均值: ${compactNumber(item.meanAD)}<br/>NC 均值: ${compactNumber(item.meanNC)}`;
+      } };
   }, [items]);
-
-  if (!option) {
+  if (!model.items.length) {
     return (
       <div className="placeholder">
         <p>没有 KO 通过 BH-FDR 校正阈值</p>
@@ -183,20 +104,12 @@ function KoLdaBarChart({ data }) {
         <span><b style={{ color: GROUP_TEXT_COLORS.NC }}>NC 富集:</b> {summary.ncEnrichedCount}</span>
         <span><b>展示 AD Top {summary.adDisplayedCount} + NC Top {summary.ncDisplayedCount}</b></span>
       </div>
-      <ChartViewport
-        variant="data"
-        minHeight={520}
-        preferredHeight={Math.max(520, items.length * 26 + 120)}
-      >
-        <ReactECharts
-          option={option}
-          exportConfig={{ fileName: 'ko-lda-effect-size', format: 'svg' }}
-          frameActions
-          style={{ width: '100%', height: '100%' }}
-        />
-      </ChartViewport>
+      <ZoomableGroupedBarChart model={model}
+        barStyleConfig={{ key: 'function-ko-effect', allowLine: false, allowOrientation: false }}
+        exportConfig={{ title: '导出图像', fileName: 'ko-rank-biserial-effect-size', format: 'svg' }} />
     </div>
   );
 }
 
 export default KoLdaBarChart;
+

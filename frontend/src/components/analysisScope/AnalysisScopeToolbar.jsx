@@ -1,4 +1,7 @@
+import StyledSelect from '../ui/StyledSelect';
 import { useEffect, useMemo, useState } from 'react';
+import { EntityCombobox } from '../ui/EntityAutocomplete';
+import AnalysisTopNControl from './AnalysisTopNControl';
 import {
   normalizeAnalysisParameters,
   scopeForMode,
@@ -12,6 +15,9 @@ const MODE_OPTIONS = [
   { key: 'subset', label: '自定义子集' },
   { key: 'sample', label: '单个样本' },
 ];
+const EMPTY_PARAMETERS = {};
+const EMPTY_CONTROLS = [];
+const DEFAULT_SUPPORTED_SCOPES = ['cohort', 'group', 'subset', 'sample'];
 
 function selectedMode(scope) {
   return scope.mode === 'group' ? scope.groups[0] : scope.mode;
@@ -20,28 +26,27 @@ function selectedMode(scope) {
 export default function AnalysisScopeToolbar({
   scope,
   topN,
-  parameters = {},
+  parameters = EMPTY_PARAMETERS,
   samples,
   samplesLoading,
   featureLabel,
-  supportedScopes = ['cohort', 'group', 'subset', 'sample'],
-  controls = [],
+  supportedScopes = DEFAULT_SUPPORTED_SCOPES,
+  controls = EMPTY_CONTROLS,
   scopeRequirement = '',
   analysisPolicy = null,
   chartControls = null,
+  showTopN = true,
   onChange,
 }) {
   const [query, setQuery] = useState('');
   const [draftCodes, setDraftCodes] = useState(scope.sampleCodes);
   const [selectionMode, setSelectionMode] = useState(selectedMode(scope));
-  const [draftTopN, setDraftTopN] = useState(topN);
   const [draftParameters, setDraftParameters] = useState(parameters);
 
   useEffect(() => {
     setDraftCodes(scope.sampleCodes);
     setSelectionMode(selectedMode(scope));
   }, [scope]);
-  useEffect(() => setDraftTopN(topN), [topN]);
   useEffect(() => setDraftParameters(parameters), [parameters]);
 
   const filteredSamples = useMemo(() => {
@@ -89,7 +94,6 @@ export default function AnalysisScopeToolbar({
     const normalized = normalizeAnalysisParameters(resolvedPolicy, topN, parameters);
     const parametersChanged = JSON.stringify(normalized.parameters) !== JSON.stringify(parameters);
     if (normalized.topN === Number(topN) && !parametersChanged) return;
-    setDraftTopN(normalized.topN);
     setDraftParameters(normalized.parameters);
     onChange(scope, normalized.topN, normalized.parameters);
   }, [onChange, parameters, resolvedPolicy, scope, topN]);
@@ -141,53 +145,8 @@ export default function AnalysisScopeToolbar({
           </div>
         </div>
 
-        {topNControl ? <div className="projection-controls__top-n">
-          <label htmlFor="projection-top-n">
-            {topNControl.label || `Top N ${featureLabel}`}
-            <small aria-hidden="true">{topNControl.purpose === 'feature_selection' ? '计算参数' : '展示设置'}</small>
-          </label>
-          {topNControl.input === 'select' ? (
-            <select
-              id="projection-top-n"
-              aria-label={topNControl.label || `Top N ${featureLabel}`}
-              value={draftTopN}
-              onChange={event => {
-                const nextValue = Number(event.target.value);
-                setDraftTopN(nextValue);
-                commit(scope, nextValue);
-              }}
-            >
-              {(topNControl.options || []).map(option => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </select>
-          ) : <>
-            <input
-              id="projection-top-n"
-              type="range"
-              min={topNControl.min || 1}
-              max={topNControl.max || 500}
-              value={draftTopN}
-              onChange={event => setDraftTopN(Number(event.target.value))}
-              onPointerUp={event => commit(scope, Number(event.currentTarget.value))}
-              onKeyUp={event => commit(scope, Number(event.currentTarget.value))}
-            />
-            <input
-              type="number"
-              min={topNControl.min || 1}
-              max={topNControl.max || 500}
-              value={draftTopN}
-              aria-label={`Top N ${featureLabel}`}
-              onChange={event => {
-                setDraftTopN(Math.max(topNControl.min || 1, Math.min(topNControl.max || 500, Number(event.target.value) || 1)));
-              }}
-              onBlur={event => commit(scope, Number(event.currentTarget.value))}
-              onKeyDown={event => {
-                if (event.key === 'Enter') commit(scope, Number(event.currentTarget.value));
-              }}
-            />
-          </>}
-        </div> : null}
+        {showTopN ? <AnalysisTopNControl control={topNControl} value={topN} featureLabel={featureLabel}
+          onChange={next => commit(scope, next)} /> : null}
       </div>
 
       {parameterControls.length ? (
@@ -198,7 +157,7 @@ export default function AnalysisScopeToolbar({
               <label key={control.key}>
                 <span>{control.label}<small aria-hidden="true">分析筛选</small></span>
                 {control.input === 'select' ? (
-                  <select
+                  <StyledSelect
                     aria-label={control.label}
                     value={value}
                     onChange={event => {
@@ -214,7 +173,7 @@ export default function AnalysisScopeToolbar({
                     {(control.options || []).map(option => (
                       <option key={option.value} value={option.value}>{option.label}</option>
                     ))}
-                  </select>
+                  </StyledSelect>
                 ) : null}
               </label>
             );
@@ -239,22 +198,19 @@ export default function AnalysisScopeToolbar({
       {currentScopeSupported && mode === 'sample' ? (
         <div className="projection-sample-picker">
           <label htmlFor="single-analysis-sample">选择样本</label>
-          <select
+          <EntityCombobox
             id="single-analysis-sample"
+            label="选择样本"
             value={scope.mode === 'sample' ? scope.sampleCodes[0] || '' : ''}
             disabled={samplesLoading}
-            onChange={event => {
-              const sampleCode = event.target.value;
+            loading={samplesLoading}
+            placeholder={samplesLoading ? '正在读取样本...' : '搜索并选择样本'}
+            entries={samples.map(sample => ({ key: sample.sampleCode, value: sample.sampleCode, label: sample.sampleCode,
+              detail: `${sample.sampleCode} · ${sample.phenotype}`, kind: sample.phenotype, aliases: [sample.phenotype] }))}
+            onChange={sampleCode => {
               if (sampleCode) commit({ mode: 'sample', groups: [], sampleCodes: [sampleCode] });
             }}
-          >
-            <option value="">{samplesLoading ? '正在读取样本...' : '请选择样本'}</option>
-            {samples.map(sample => (
-              <option key={sample.sampleCode} value={sample.sampleCode}>
-                {sample.sampleCode} · {sample.phenotype}
-              </option>
-            ))}
-          </select>
+          />
         </div>
       ) : null}
 

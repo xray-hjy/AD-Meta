@@ -1,0 +1,61 @@
+.mag-processing {
+  --mag-processing-line: color-mix(in srgb, var(--workspace-accent) 22%, var(--color-border));
+  border: 1px solid var(--mag-processing-line);
+  border-radius: 12px;
+  background: var(--color-bg-panel);
+  color: var(--color-text-main);
+  overflow: hidden;
+}
+.mag-processing *, .mag-processing *::before, .mag-processing *::after { box-sizing: border-box; }
+.mag-processing__header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; padding: 10px 18px; background: var(--workspace-header-background); border-bottom: 1px solid var(--mag-processing-line); }
+.mag-processing__header h2 { margin: 0; font-size: 14px; font-weight: 600; }
+.mag-processing__header > span { color: var(--color-text-muted); font-size: 12px; }
+.mag-processing__flow { position: relative; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; padding: 14px 18px 0; }
+.mag-processing__flow::after { content: ''; position: absolute; left: 18px; right: 18px; bottom: 0; height: 2px; background: var(--mag-processing-line); pointer-events: none; }
+.mag-processing__step { position: relative; isolation: isolate; z-index: 1; min-width: 0; padding: 12px 12px 20px; border: 0; border-radius: 4px; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+/* Glass is local to each step: no translation or layout change on hover. */
+.mag-processing__step::before { content: ''; position: absolute; inset: 0; z-index: -1; border: 1px solid color-mix(in srgb, var(--workspace-accent) 18%, transparent); border-radius: 4px; background: color-mix(in srgb, var(--workspace-header-background) 78%, transparent); backdrop-filter: blur(12px) saturate(1.15); opacity: 0; pointer-events: none; }
+.mag-processing__step:hover::before, .mag-processing__step:focus-visible::before { opacity: 1; }
+.mag-processing__step[aria-expanded=true] { background: color-mix(in srgb, var(--workspace-header-background) 48%, transparent); }
+/* The selected segment and the full baseline share the same bottom edge. */
+.mag-processing__step::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--workspace-accent); opacity: 0; pointer-events: none; }
+.mag-processing__step[aria-expanded=true]::after { opacity: 1; }
+.mag-processing__step[aria-expanded=true] .mag-processing__step-heading > span:first-child { color: var(--workspace-accent); }
+.mag-processing__step-heading { display: flex; align-items: center; justify-content: space-between; gap: 5px; margin-bottom: 8px; color: var(--color-text-muted); font-size: 12px; }
+.mag-processing__check { color: var(--workspace-accent); }
+.mag-processing__value { display: block; margin-bottom: 5px; font-size: 23px; font-weight: 500; line-height: 1.3; font-variant-numeric: tabular-nums; }
+.mag-processing__value--word { font-size: 20px; line-height: 1.5; }
+.mag-processing__caption { display: block; color: var(--color-text-muted); font-size: 12px; }
+.mag-processing__connector { position: absolute; right: -8px; top: 49%; color: var(--color-text-muted); pointer-events: none; }
+.mag-processing__context { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 14px; margin: 0; padding: 8px 18px 10px; color: var(--color-text-muted); font-size: 12px; }
+.mag-processing__detail { padding: 14px 18px; border-top: 1px solid var(--mag-processing-line); background: color-mix(in srgb, var(--workspace-header-background) 34%, var(--color-bg-panel)); animation: mag-processing-reveal 160ms ease-out; }
+.mag-processing__detail[hidden] { display: none; }
+.mag-processing__detail-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 9px; }
+.mag-processing__detail-heading h3 { margin: 0; color: var(--color-text-main); font-size: 13px; font-weight: 500; }
+.mag-processing__close { padding: 0 5px; border: 0; border-radius: 4px; background: transparent; color: var(--color-text-muted); font-size: 20px; cursor: pointer; }
+.mag-processing__facts { display: flex; flex-wrap: wrap; gap: 7px 22px; font-size: 12px; }
+.mag-processing__detail p, .mag-processing__methods p { margin: 9px 0 0; color: var(--color-text-muted); font-size: 12px; line-height: 1.6; }
+.mag-processing__quality-bar { height: 5px; margin-top: 10px; overflow: hidden; border-radius: 3px; background: var(--mag-processing-line); }
+.mag-processing__quality-bar > span { display: block; height: 100%; background: var(--workspace-accent); opacity: .65; }
+.mag-processing__detail-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 14px; margin-top: 12px; padding-top: 9px; border-top: 1px solid var(--mag-processing-line); color: var(--color-text-muted); font-size: 12px; overflow-wrap: anywhere; }
+.mag-processing__link { display: inline-flex; align-items: center; gap: 5px; border: 0; padding: 0; background: transparent; color: var(--workspace-accent); font: inherit; font-size: 12px; text-decoration: none; cursor: pointer; }
+.mag-processing__link:hover { text-decoration: underline; }
+.mag-processing__methods { padding: 9px 18px; border-top: 1px solid var(--mag-processing-line); color: var(--color-text-muted); font-size: 12px; }
+.mag-processing__methods summary { width: fit-content; cursor: pointer; }
+.mag-processing__methods code { overflow-wrap: anywhere; }
+.mag-processing__methods > .mag-processing__link { margin-top: 10px; }
+.mag-processing__step:focus-visible, .mag-processing__link:focus-visible, .mag-processing__close:focus-visible, .mag-processing__methods summary:focus-visible { outline: 2px solid var(--workspace-accent); outline-offset: 2px; }
+@keyframes mag-processing-reveal { from { opacity: .25; } to { opacity: 1; } }
+@media (max-width: 680px) {
+  .mag-processing__flow { grid-template-columns: 1fr; gap: 12px; padding: 12px 14px 0; }
+  .mag-processing__flow::after { left: 14px; right: 14px; }
+  .mag-processing__step { display: grid; grid-template-columns: minmax(0, 1fr) 90px minmax(0, 1fr); align-items: center; gap: 8px; padding: 12px 8px; }
+  .mag-processing__step-heading { margin: 0; }
+  .mag-processing__value, .mag-processing__value--word { margin: 0; font-size: 19px; text-align: center; }
+  .mag-processing__caption { text-align: right; }
+  .mag-processing__connector { left: 49%; right: auto; top: auto; bottom: -12px; font-size: 0; }
+  .mag-processing__connector::after { content: '↓'; font-size: 12px; }
+  .mag-processing__header, .mag-processing__detail, .mag-processing__methods { padding-left: 14px; padding-right: 14px; }
+  .mag-processing__context { padding-left: 14px; padding-right: 14px; }
+}
+@media (prefers-reduced-motion: reduce) { .mag-processing__detail { animation: none; } }

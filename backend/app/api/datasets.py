@@ -3,7 +3,14 @@ from email.utils import format_datetime
 
 from fastapi import APIRouter, HTTPException, Request, Response
 
-from app.api.models import ChartArtifactPayload, DatasetResponse, ErrorResponse, SummaryResponse
+from app.api.models import (
+    ChartArtifactPayload,
+    DatasetDescriptionResponse,
+    DatasetResponse,
+    ErrorResponse,
+    SummaryResponse,
+)
+from app.services.dataset_description_service import get_dataset_description
 from app.services.dataset_service import get_dataset, list_datasets, read_chart_with_metadata
 
 router = APIRouter(prefix="/api", tags=["datasets"])
@@ -91,6 +98,19 @@ def dataset(slug: str):
 )
 def summary(slug: str, request: Request, response: Response):
     return _cached_chart_response(slug, "summary", request, response, chart_name="Summary")
+
+
+@router.get(
+    "/datasets/{slug}/revisions/{revision_key}/description",
+    response_model=DatasetDescriptionResponse,
+    response_model_exclude_none=True,
+    responses={404: {"model": ErrorResponse}},
+)
+def description(slug: str, revision_key: str):
+    payload = get_dataset_description(slug, revision_key)
+    if payload is None:
+        raise HTTPException(status_code=404, detail="Published dataset revision not found")
+    return payload
 
 
 @router.get(

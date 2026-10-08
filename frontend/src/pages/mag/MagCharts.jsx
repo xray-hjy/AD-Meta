@@ -1,63 +1,64 @@
 import { useMemo } from 'react';
 import CartesianEChart from '../../components/Charts/CartesianEChart';
-import HeatmapEChart from '../../components/Charts/HeatmapEChart';
+import MagZoomableHeatmap from './MagZoomableHeatmap';
 import ChartViewport from '../../components/Charts/ChartViewport';
 import { GROUP_COLORS } from '../../components/Charts/groupPalette';
+import { buildGroupedBarOption } from '../../components/Charts/GroupedBarChart';
+import ZoomableGroupedBarChart from '../../components/Charts/ZoomableGroupedBarChart';
+import BoxScatterChart, { buildBoxScatterOption } from '../../components/Charts/BoxScatterChart';
+import { buildMagHeatmapOption } from './magHeatmapOption';
+import MagResearchChart from './MagResearchChart';
+import { mappingResearchOption } from './magResearchOptions';
 
 export const number = value => value == null ? '—' : Number(value).toLocaleString('en-US', { maximumSignificantDigits: 4 });
 const shortMag = id => id.replace(/__(CRR\d+)_cleanbin_/, ' · ');
 const tooltip = { trigger: 'item', renderMode: 'richText', confine: true };
+// Live rendering is vector-based regardless of the chosen download format.
+const chartInitOptions = { renderer: 'svg' };
+const barStyles = {
+  features: { key: 'mag-abundance', suffix: '%' },
+  taxonomy: { key: 'mag-taxonomy', integerValues: true },
+};
+const distributionStyle = { key: 'mag-boxplot', pointLabel: '样本点', allowLegend: false,
+  pointDescription: '显示或隐藏所选范围内的全部样本点；零丰度样本仍参与统计' };
+
+function comparisonModel(items) {
+  return {
+    title: 'MAG 丰度条形图', featureLabel: 'MAG',
+    items: items.map(row => ({ id: row.magId, label: row.taxonomyName ? `${row.taxonomyName} · ${shortMag(row.magId)}` : shortMag(row.magId),
+      fullName: row.taxonomyName ? `${row.taxonomyName} · ${row.magId}` : row.magId, values: { AD: row.adMeanPercent, NC: row.ncMeanPercent } })),
+    series: ['AD', 'NC'].map(group => ({ key: group, label: `${group} 均值`, color: GROUP_COLORS[group] })),
+    barWidth: 11, rowGap: 10, showValues: true, tooltipAppearance: 'light', pointer: 'line',
+    axisName: '平均相对丰度（%）', formatValue: value => value == null ? '未提供' : `${number(value)}%`,
+    formatAxis: value => String(value), abbreviateLabel: label => label,
+    grid: { left: 305, right: 70 },
+  };
+}
 
 export function comparisonOption(items) {
+  return buildGroupedBarOption(comparisonModel(items));
+}
+
+function distributionModel(data) {
   return {
-    animation: false, tooltip: { ...tooltip, trigger: 'axis' },
-    legend: { top: 0 }, grid: { left: 200, right: 40, top: 36, bottom: 48 },
-    xAxis: { type: 'value', name: '相对丰度（%）', nameLocation: 'middle', nameGap: 28 },
-    yAxis: { type: 'category', inverse: true, data: items.map(r => r.magId), axisLabel: { formatter: shortMag, fontSize: 10 } },
-    series: ['AD', 'NC'].map(group => ({ name: group, type: 'bar', itemStyle: { color: GROUP_COLORS[group] },
-      data: items.map(r => r[`${group.toLowerCase()}MeanPercent`]) })),
+    layout: 'groups', scatterMode: 'all', boxWidth: [35, 90], tooltipAppearance: 'light',
+    activeTransform: { key: 'raw', label: '相对丰度（%）' }, groupCounts: data.provenance.groupCounts,
+    formatValue: value => value == null || value === '-' ? '未提供' : `${number(value)}%`,
+    series: ['AD', 'NC'].map(group => ({ key: group, label: group, color: GROUP_COLORS[group] })),
+    available: [{ featureId: data.feature?.magId || '', shortName: data.feature?.magId || 'MAG',
+      values: Object.fromEntries(['AD', 'NC'].map(group => [group, { raw: {
+        box: data.boxes.find(box => box.group === group)?.values,
+        samplePoints: data.samples.filter(sample => sample.disease === group).map(sample => ({ sample: sample.sampleId, value: sample.abundancePercent })),
+      } }])) }],
   };
 }
 
 export function distributionOption(data) {
-  return {
-    animation: false, tooltip,
-    grid: { left: 65, right: 35, top: 40, bottom: 48 },
-    xAxis: { type: 'category', data: ['AD', 'NC'], axisLabel: { formatter: group => `${group} (n=${data.provenance.groupCounts[group]})` } },
-    yAxis: { type: 'value', name: '相对丰度（%）' },
-    series: [
-      { name: '箱线：1.5×IQR 须', type: 'boxplot', boxWidth: [35, 90],
-        data: ['AD', 'NC'].map(group => ({ value: data.boxes.find(b => b.group === group)?.values || ['-', '-', '-', '-', '-'],
-          itemStyle: { color: `${GROUP_COLORS[group]}40`, borderColor: GROUP_COLORS[group] } })) },
-      ...['AD', 'NC'].map(group => ({ name: `${group} 样本`, type: 'scatter', symbolSize: 6,
-        itemStyle: { color: GROUP_COLORS[group], opacity: 0.7 },
-        data: data.samples.filter(s => s.disease === group).map((s, i) => ({
-          name: s.sampleId, value: [group, s.abundancePercent], symbolOffset: [((i * 7) % 17 - 8) * 2, 0],
-        })) })),
-    ],
-  };
+  return buildBoxScatterOption(distributionModel(data));
 }
 
-export function heatmapOption(data) {
-  return {
-    animation: false,
-    // A single continuous series: a uniform decal obscures the abundance scale.
-    // The sequential blue scale and raw-value tooltip carry the information.
-    aria: { enabled: true, decal: { show: false } },
-    tooltip: { ...tooltip, formatter: p => {
-      const [x, y] = p.value;
-      const sample = data.samples[x];
-      return `${sample.sampleId} · ${sample.disease} · Batch ${sample.batch}\n${data.magIds[y]}\n${number(data.values[x][y])}%`;
-    } },
-    grid: { left: 200, right: 30, top: 62, bottom: 115 },
-    xAxis: { type: 'category', data: data.samples.map(s => `${s.disease} / B${s.batch} / ${s.sampleId}`), axisLabel: { rotate: 60, fontSize: 9 } },
-    yAxis: { type: 'category', data: data.magIds, axisLabel: { formatter: shortMag, fontSize: 10 } },
-    visualMap: { min: 0, max: Math.max(0.001, ...data.values.flat().map(v => Math.log10(1 + v))),
-      orient: 'horizontal', left: 'center', top: 6, calculable: false,
-      text: ['log10(1 + 丰度%)', '0'], inRange: { color: ['#f2f6f9', '#b6dce1', '#4696a9', '#164965'] } },
-    series: [{ name: 'MAG 丰度', type: 'heatmap', progressive: 0,
-      data: data.values.flatMap((row, x) => row.map((value, y) => [x, y, Math.log10(1 + value)])) }],
-  };
+export function heatmapOption(data, preferences, window) {
+  return buildMagHeatmapOption(data, preferences, window);
 }
 
 export function mappingOption(data) {
@@ -122,6 +123,7 @@ export function qualityOption(data) {
         symbolSize: 7,
         itemStyle: { color: '#357e96', opacity: 0.7, borderColor: '#164965', borderWidth: 0.6 },
         data: reference,
+        markArea: { silent: true, itemStyle: { color: '#368a8910' }, data: [[{ xAxis: 90, yAxis: 0 }, { xAxis: 100, yAxis: 5 }]] },
         markLine: {
           silent: true,
           symbol: 'none',
@@ -145,27 +147,49 @@ export function qualityOption(data) {
   };
 }
 
-export default function MagChart({ view, data, format, size }) {
+export default function MagChart({ view, data, format, size, onSelect, heatmapStyle, toolbarTarget, onBrush, selected }) {
+  const model = useMemo(() => view === 'features' ? comparisonModel(data.items)
+    : view === 'distribution' ? distributionModel(data) : null, [view, data]);
   const option = useMemo(() => {
-    if (view === 'distribution') return distributionOption(data);
-    if (view === 'heatmap') return heatmapOption(data);
+    if (view === 'distribution' || view === 'features' || view === 'heatmap') return null;
     if (view === 'taxonomy') return taxonomyOption(data);
     if (view === 'quality') return qualityOption(data);
     if (view === 'mapping') return mappingOption(data);
-    return comparisonOption(data.items.slice(0, 15));
+    return null;
   }, [view, data]);
-  const exportConfig = useMemo(() => ({
-    fileName: `ADMeta-${data.provenance.version}-${view}-${data.provenance.requestFingerprint.slice(0, 12)}${view === 'distribution' ? `-${data.feature.magId}` : view === 'heatmap' ? `-top${data.magIds.length}` : view === 'features' ? `-${data.sortBy}-${data.direction}-p${Math.floor(data.offset / data.limit) + 1}-${data.query || 'all'}` : ''}`,
-    format, minWidth: size === 'large' ? 1800 : 1100, minHeight: size === 'large' ? 1000 : 640,
-    fullDataZoom: true, title: `导出 ${format.toUpperCase()} 图形`,
-  }), [data, format, size, view]);
-  const Chart = view === 'heatmap' ? HeatmapEChart : CartesianEChart;
-  const height = view === 'features' ? 550
-    : view === 'heatmap' ? Math.max(520, data.magIds.length * 24 + 140)
-      : view === 'taxonomy' ? Math.max(500, data.items.length * 28 + 120)
+  const exportConfig = useMemo(() => {
+    const isHeatmap = view === 'heatmap';
+    const width = size === 'large' ? 1800 : 1100;
+    const height = size === 'large' ? 1000 : 640;
+    return {
+      fileName: `ADMeta-${data.provenance.version}-${view}-${(data.projectionFingerprint || data.provenance.requestFingerprint).slice(0, 12)}${view === 'distribution' ? `-${data.feature.magId}` : view === 'heatmap' ? `-${data.settings?.colorMode || 'abundance'}-${data.magIds.length}MAGs${heatmapStyle?.transposed ? '-transposed' : ''}` : view === 'features' ? `-${data.sortBy}-top${data.items.length}-${data.query || 'all'}` : ''}`,
+      format, minWidth: width, minHeight: height,
+      ...(isHeatmap ? {
+        maxHeight: height, maxWidth: width, rasterizeSvg: true,
+        // Bound PNG dimensions/memory while retaining every selected cell.
+        pixelRatio: Math.min(2, 16384 / width, 16384 / height, Math.sqrt(32000000 / (width * height))),
+        prepareOption: (_option, context) => ({ ...heatmapOption(data, heatmapStyle,
+          { fit: true, width: context?.size.width || width, height: context?.size.height || height }),
+          backgroundColor: '#ffffff', tooltip: { show: false } }),
+      } : {}),
+      fullDataZoom: true, title: `导出 ${format.toUpperCase()} 图形`,
+    };
+  }, [data, format, size, view, heatmapStyle]);
+  if (view === 'heatmap') return <div className="mag-chart"><MagZoomableHeatmap data={data} heatmapStyle={heatmapStyle} exportConfig={exportConfig} onSelect={onSelect} toolbarTarget={toolbarTarget} /></div>;
+  if (view === 'features') return <div className="mag-chart"><ZoomableGroupedBarChart model={model} barStyleConfig={barStyles.features} exportConfig={exportConfig} onSelect={onSelect} toolbarTarget={toolbarTarget} /></div>;
+  if (['taxonomy', 'quality', 'mapping'].includes(view)) return <MagResearchChart key={view} kind={view} data={data}
+    buildOption={view === 'taxonomy' ? taxonomyOption : view === 'quality' ? qualityOption : mappingResearchOption}
+    exportConfig={exportConfig} onSelect={onSelect} onBrush={onBrush} selected={selected}
+    height={view === 'taxonomy' ? Math.max(430, data.items.length * 28 + 100) : 480} />;
+  const Chart = view === 'distribution' ? BoxScatterChart : CartesianEChart;
+  const height = view === 'features' ? Math.max(430, data.items.length * 34 + 104)
+    : view === 'taxonomy' ? Math.max(500, data.items.length * 28 + 120)
         : view === 'quality' ? 560 : 430;
-  return <ChartViewport variant="data" minHeight={height + 18} minWidth={680} ariaLabel="MAG 图表，可横向滚动">
-    <Chart option={option} notMerge frameActions showDataTable={false} exportConfig={exportConfig}
+  const minWidth = 680;
+  return <div className="mag-chart"><ChartViewport variant="data" minHeight={height + 18} minWidth={minWidth}
+    ariaLabel="MAG 图表，可横向滚动">
+    <Chart {...(model ? { model, ...(view === 'features' ? { onSelect } : {}) } : { option })} barStyleConfig={barStyles[view]}
+      boxStyleConfig={view === 'distribution' ? distributionStyle : null} opts={chartInitOptions} notMerge frameActions showDataTable={false} exportConfig={exportConfig}
       ariaLabel={`MAG ${view} 图表`} style={{ height }} />
-  </ChartViewport>;
+  </ChartViewport></div>;
 }

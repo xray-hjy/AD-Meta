@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
 from app.api.mag_models import (
+    MagCatalogResponse,
     MagCrosswalkPageResponse,
     MagDistributionResponse,
     MagErrorResponse,
@@ -19,9 +20,11 @@ from app.api.mag_models import (
     MagOverviewResponse,
     MagQualityResponse,
     MagSamplesResponse,
+    MagSuggestionsResponse,
     MagTaxonomyResponse,
 )
 from app.services import mag_data_service as service
+from app.services.mag_suggestions import suggestions as search_suggestions
 
 router = APIRouter(prefix="/api/mag", tags=["mag"], responses={503: {"model": MagErrorResponse}})
 
@@ -58,9 +61,52 @@ MappingStatus = Literal[
 ]
 
 
+def heatmap_settings(
+    mode: Literal["abundance", "variance", "candidate"] = Query(default="abundance", alias="heatmapMode"),
+    query: str = Query(default="", alias="heatmapQuery", max_length=200),
+    ids: str = Query(default="", alias="heatmapIds", max_length=200000),
+    candidate: Literal["statistics", "manual"] = Query(default="statistics", alias="candidateKind"),
+    mean: float = Query(default=0, alias="minMean", ge=0, le=100, allow_inf_nan=False),
+    threshold: float = Query(default=0, alias="sampleThreshold", ge=0, le=100, allow_inf_nan=False),
+    ratio: float = Query(default=0, alias="minSamplePercent", ge=0, le=100, allow_inf_nan=False),
+    completeness: float | None = Query(default=None, alias="minCompleteness", ge=0, le=100, allow_inf_nan=False),
+    contamination: float | None = Query(default=None, alias="maxContamination", ge=0, le=100, allow_inf_nan=False),
+    q: float = Query(default=0.05, alias="maxQ", ge=0, le=1, allow_inf_nan=False),
+    effect: float = Query(default=0, alias="minEffect", ge=0, le=1, allow_inf_nan=False),
+    sample_order: Literal["group", "withinGroup", "cluster"] = Query(default="group", alias="sampleOrder"),
+    row_order: Literal["rank", "cluster"] = Query(default="rank", alias="rowOrder"),
+    color: Literal["abundance", "rowZ"] = Query(default="abundance", alias="colorMode"),
+) -> dict:
+    return {"heatmapMode": mode, "heatmapQuery": query, "heatmapIds": ids, "candidateKind": candidate,
+            "minMean": mean, "sampleThreshold": threshold, "minSamplePercent": ratio,
+            "minCompleteness": completeness, "maxContamination": contamination, "maxQ": q, "minEffect": effect,
+            "sampleOrder": sample_order, "rowOrder": row_order, "colorMode": color}
+
+
+HeatmapSettings = Annotated[dict, Depends(heatmap_settings)]
+
+
+def heatmap_result(data, scope, top_n, settings):
+    try:
+        return service.heatmap(data, scope, top_n, settings)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
 @router.get("/overview", response_model=MagOverviewResponse)
 def overview(data: Data, scope: Scope):
     return service.overview(data, scope)
+
+
+@router.get("/catalog", response_model=MagCatalogResponse)
+def catalog(data: Data):
+    return service.catalog(data)
+
+
+@router.get("/suggestions", response_model=MagSuggestionsResponse)
+def suggestions(data: Data, context: Literal["lineage", "crosswalk"] = "lineage",
+                query: str = Query(default="", max_length=200), limit: int = Query(default=20, ge=1, le=50)):
+    return search_suggestions(data, context=context, query=query, limit=limit)
 
 
 @router.get("/features", response_model=MagFeaturePageResponse)
@@ -69,7 +115,7 @@ def features(
     query: str = Query(default="", max_length=200),
     sort_by: Annotated[SortBy, Query(alias="sortBy")] = "meanPercent",
     direction: Literal["asc", "desc"] = "desc",
-    limit: int = Query(default=25, ge=1, le=100),
+    limit: int = Query(default=25, ge=1, le=300),
     offset: int = Query(default=0, ge=0),
 ):
     return service.feature_page(data, scope, query=query, sort_by=sort_by, direction=direction, limit=limit, offset=offset)
@@ -84,8 +130,9 @@ def distribution(mag_id: str, data: Data, scope: Scope):
 
 
 @router.get("/heatmap", response_model=MagHeatmapResponse)
-def heatmap(data: Data, scope: Scope, top_n: int = Query(default=20, alias="topN", ge=1, le=50)):
-    return service.heatmap(data, scope, top_n)
+def heatmap(data: Data, scope: Scope, settings: HeatmapSettings,
+            top_n: int = Query(default=20, alias="topN", ge=0, le=1000)):
+    return heatmap_result(data, scope, top_n, settings)
 
 
 @router.get("/samples", response_model=MagSamplesResponse)
@@ -123,7 +170,7 @@ def lineage_clusters(
         Query(alias="sortBy"),
     ] = "memberCount",
     direction: Literal["asc", "desc"] = "desc",
-    limit: int = Query(default=25, ge=1, le=100),
+    limit: int = Query(default=25, ge=1, le=300),
     offset: int = Query(default=0, ge=0),
 ):
     return service.lineage_cluster_page(
@@ -146,7 +193,7 @@ def lineage_cluster(
         Query(alias="sortBy"),
     ] = "memberToRepAni",
     direction: Literal["asc", "desc"] = "asc",
-    limit: int = Query(default=25, ge=1, le=100),
+    limit: int = Query(default=25, ge=1, le=300),
     offset: int = Query(default=0, ge=0),
 ):
     try:
@@ -172,7 +219,7 @@ def crosswalk(
     scope: Scope,
     query: str = Query(default="", max_length=200),
     mapping_status: Annotated[MappingStatus, Query(alias="mappingStatus")] = "",
-    limit: int = Query(default=25, ge=1, le=100),
+    limit: int = Query(default=25, ge=1, le=300),
     offset: int = Query(default=0, ge=0),
 ):
     return service.crosswalk_page(
@@ -183,15 +230,17 @@ def crosswalk(
 @router.get("/downloads/{kind}", response_class=StreamingResponse,
             responses={200: {"content": {"text/csv": {}, "text/tab-separated-values": {}, "application/json": {}}}})
 def download(
-    kind: Literal["features", "matrix", "samples", "taxonomy", "quality", "provenance", "lineage", "crosswalk"], data: Data, scope: Scope,
+    kind: Literal["features", "matrix", "samples", "taxonomy", "quality", "provenance", "lineage", "crosswalk", "heatmap"], data: Data, scope: Scope,
+    heatmap_options: HeatmapSettings,
     query: str = Query(default="", max_length=200),
     sort_by: Annotated[SortBy, Query(alias="sortBy")] = "meanPercent",
     direction: Literal["asc", "desc"] = "desc",
     view: Literal["features", "distribution", "heatmap", "taxonomy", "quality", "mapping"] = "features",
+    chart_sort_by: Literal["meanPercent", "adMeanPercent", "ncMeanPercent"] = Query(default="meanPercent", alias="chartSortBy"),
     rank: TaxonomyRank = "phylum",
-    top_n: int = Query(default=20, alias="topN", ge=1, le=50),
+    top_n: int = Query(default=20, alias="topN", ge=0, le=1000),
     mag_id: str = Query(default="", alias="magId", max_length=200),
-    limit: int = Query(default=25, ge=1, le=100),
+    limit: int = Query(default=25, ge=1, le=300),
     offset: int = Query(default=0, ge=0),
 ):
     audit = service.provenance(data, scope)
@@ -206,13 +255,18 @@ def download(
         )
     if kind == "provenance":
         display: dict = {"view": view, "featureQuery": query, "sortBy": sort_by, "direction": direction,
-                         "pageLimit": limit, "pageOffset": offset, "topN": top_n, "selectedMagId": mag_id}
+                         "pageLimit": limit, "pageOffset": offset, "topN": top_n, "selectedMagId": mag_id,
+                         "chartSortBy": chart_sort_by}
         if view == "features":
-            display["displayedMagIds"] = [r["magId"] for r in service.ordered_features(data, scope, query, sort_by, direction)[offset:offset + min(limit, 15)]]
+            display["displayedMagIds"] = [r["magId"] for r in service.ordered_features(data, scope, query, chart_sort_by, "desc")[:top_n or None]]
         elif view == "heatmap":
-            display["displayedMagIds"] = service.heatmap(data, scope, top_n)["magIds"]
-            display["colorTransform"] = "log10(1 + abundance_percent)"
-            display["sampleOrder"] = "disease / HPC_Batch / sampleId"
+            heatmap_data = heatmap_result(data, scope, top_n, heatmap_options)
+            display.update({"displayedMagIds": heatmap_data["magIds"],
+                            "sampleIds": [s["sampleId"] for s in heatmap_data["samples"]],
+                            "heatmapSettings": heatmap_data["settings"], "methods": heatmap_data["methods"],
+                            "selectionAudit": heatmap_data["selectionAudit"], "warnings": heatmap_data["warnings"],
+                            "colorTransform": heatmap_data["methods"]["colorTransform"],
+                            "sampleOrder": heatmap_data["methods"]["sampleOrder"]})
         elif view == "distribution":
             if mag_id not in data.mag_ids:
                 raise HTTPException(404, "MAG ID 不存在。")
@@ -231,7 +285,12 @@ def download(
         display_hash = hashlib.sha256((audit["requestFingerprint"] + json.dumps(display, sort_keys=True)).encode()).hexdigest()
         return JSONResponse({**audit, "display": display, "projectionFingerprint": display_hash},
                             headers={"Content-Disposition": f'attachment; filename="{token}.json"'})
-    if kind == "features":
+    if kind == "heatmap":
+        heatmap_data = heatmap_result(data, scope, top_n, heatmap_options)
+        columns = ["sampleId", "disease", "age", "gender", "batch", *heatmap_data["magIds"]]
+        rows = [{**{k: sample[k] for k in columns[:5]}, **dict(zip(heatmap_data["magIds"], values, strict=True))}
+                for sample, values in zip(heatmap_data["samples"], heatmap_data["values"], strict=True)]
+    elif kind == "features":
         rows = service.ordered_features(data, scope, query, sort_by, direction)
         columns = list(service.comparison_rows(data, scope)[0])
     elif kind == "samples":
@@ -256,6 +315,11 @@ def download(
     # Keep source identity and cohort parameters in every downloaded row.
     context = {"dataFingerprint": data.fingerprint, "requestFingerprint": audit["requestFingerprint"],
                "scopeJson": json.dumps(scope.as_dict(), sort_keys=True), "abundanceUnit": "%"}
-    return StreamingResponse(service.stream_csv([{**row, **context} for row in rows], [*columns, *context]),
+    if kind == "heatmap":
+        context.update({"projectionFingerprint": heatmap_data["projectionFingerprint"],
+                        "heatmapSettingsJson": json.dumps(heatmap_data["settings"], sort_keys=True)})
+    csv_rows = [{**{key: json.dumps(value, ensure_ascii=False, sort_keys=True) if isinstance(value, dict) else value
+                    for key, value in row.items()}, **context} for row in rows]
+    return StreamingResponse(service.stream_csv(csv_rows, [*columns, *context]),
                              media_type="text/csv; charset=utf-8",
                              headers={"Content-Disposition": f'attachment; filename="{token}.csv"'})

@@ -32,6 +32,14 @@
 .mag-stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
 .mag-stat-grid span { display: flex; min-width: 0; flex-direction: column; gap: 3px; padding: 10px 12px; border: 1px solid var(--color-border-soft); border-radius: var(--radius-sm); background: var(--color-bg-subtle); color: var(--color-text-muted); font-size: 11px; line-height: 1.45; }
 .mag-stat-grid strong { color: var(--color-text-main); font-size: 14px; overflow-wrap: anywhere; }
+.mag-distribution-summary { margin: 0 0 12px; padding: 12px; border: 1px solid var(--color-border-soft); border-radius: var(--radius-sm); }
+.mag-distribution-summary__heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.mag-distribution-summary__heading h3 { margin: 0; font-size: 14px; overflow-wrap: anywhere; }
+.mag-distribution-summary__heading p { margin: 5px 0 0; color: var(--color-text-muted); font-size: 12px; }
+.mag-distribution-summary .mag-stat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.mag-result-heading { margin: 16px 0 4px; font-size: 14px; }
+@media (max-width: 900px) { .mag-distribution-summary .mag-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .mag-distribution-summary .mag-stat-grid { grid-template-columns: 1fr; } }
 .mag-lineage-stack { display: grid; gap: 18px; min-width: 0; }
 .mag-lineage-stack .data-table td:first-child small { display: block; margin-top: 4px; color: var(--color-text-muted); }
 .mag-detail-section { display: grid; gap: 12px; padding-top: 18px; border-top: 1px solid var(--color-border); }

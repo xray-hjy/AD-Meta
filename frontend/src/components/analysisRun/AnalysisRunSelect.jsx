@@ -1,6 +1,7 @@
+import StyledSelect from '../ui/StyledSelect';
 export default function AnalysisRunSelect({ runs, value, onChange, disabled }) {
   return (
-    <select
+    <StyledSelect
       className="dataset-select"
       aria-label="选择分析运行"
       value={value}
@@ -12,6 +13,6 @@ export default function AnalysisRunSelect({ runs, value, onChange, disabled }) {
           {run.name}
         </option>
       ))}
-    </select>
+    </StyledSelect>
   );
 }

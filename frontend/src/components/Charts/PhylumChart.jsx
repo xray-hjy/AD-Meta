@@ -1,9 +1,6 @@
 import { useMemo } from 'react';
-import ReactECharts from './CartesianEChart';
-import ChartViewport from './ChartViewport';
-import { escapeTooltipText } from '../../utils/tooltipHtml';
+import ZoomableGroupedBarChart from './ZoomableGroupedBarChart';
 
-const FALLBACK_COLORS = ['#e74c3c', '#2ecc71', '#2563eb', '#f59e0b'];
 const BAR_HEIGHT = 22;
 const ROW_GAP = 6;
 
@@ -71,94 +68,20 @@ function PhylumChart({ data, featureKind = 'taxonomy' }) {
   const { series, items } = normalized;
   const isKo = featureKind === 'ko';
 
-  const option = useMemo(() => {
-    if (!items.length || !series.length) return null;
-    const chartItems = items.map(item => ({
-      label: item.feature || 'Unknown',
-      shortLabel: abbreviateLabel(item.feature),
-      values: item.values || {},
-    }));
+  const model = useMemo(() => ({
+    title: '门级组成', featureLabel: '分类', nameColumn: '分类名称',
+    items: items.map(item => ({ ...item, label: item.feature })),
+    series,
+    barWidth: BAR_HEIGHT,
+    rowGap: ROW_GAP,
+    axisName: '相对丰度占比',
+    axisMax: 1,
+    formatValue: formatPercent,
+    formatAxis: value => String(Math.round(Number(value) * 100)) + '%',
+    abbreviateLabel,
+  }), [items, series]);
 
-    return {
-      backgroundColor: 'transparent',
-      tooltip: {
-        trigger: 'axis',
-        axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(148, 163, 184, 0.08)' } },
-        backgroundColor: 'rgba(15,23,42,0.96)',
-        borderColor: 'transparent',
-        textStyle: { color: '#f8fafc', fontSize: 12, lineHeight: 18 },
-        extraCssText: 'border-radius:10px; padding:12px 14px;',
-        formatter(params) {
-          const item = chartItems[params?.[0]?.dataIndex ?? 0];
-          if (!item) return '';
-          return [`<b>${escapeTooltipText(item.label)}</b>`, ...params.map(entry => `${entry.marker}${escapeTooltipText(entry.seriesName)}: ${formatPercent(entry.value)}`)].join('<br/>');
-        },
-      },
-      legend: {
-        data: series.map(item => item.label),
-        top: 8,
-        right: 24,
-        itemGap: 18,
-        itemWidth: 14,
-        itemHeight: 14,
-        textStyle: { color: '#475569', fontSize: 12 },
-      },
-      grid: { top: 52, left: 116, right: 92, bottom: 42 },
-      xAxis: [{
-        type: 'value',
-        min: 0,
-        max: 1,
-        name: '相对丰度占比',
-        nameLocation: 'middle',
-        nameGap: 30,
-        axisLine: { show: false },
-        axisTick: { show: false },
-        axisLabel: { color: '#475569', fontSize: 11, formatter: value => `${Math.round(Number(value) * 100)}%` },
-        splitLine: { lineStyle: { color: '#e7edf5', type: 'dashed' } },
-      }],
-      yAxis: [{
-        type: 'category',
-        inverse: true,
-        data: chartItems.map(item => item.shortLabel),
-        axisTick: { show: false },
-        axisLine: { show: false },
-        axisLabel: { color: '#475569', fontSize: 12, fontWeight: 500, margin: 12 },
-      }],
-      series: series.map((seriesItem, index) => {
-        const color = seriesItem.color || FALLBACK_COLORS[index % FALLBACK_COLORS.length];
-        return {
-          name: seriesItem.label,
-          type: 'bar',
-          barWidth: BAR_HEIGHT,
-          barGap: '0%',
-          barCategoryGap: `${ROW_GAP}px`,
-          itemStyle: {
-            color,
-            borderRadius: [0, 6, 6, 0],
-          },
-          label: {
-            show: true,
-            position: 'right',
-            color: '#64748b',
-            fontSize: 10,
-            fontWeight: 700,
-            formatter: params => formatPercent(params.value),
-          },
-          emphasis: {
-            focus: 'series',
-            itemStyle: {
-              color,
-              shadowBlur: 10,
-              shadowColor: `${color}66`,
-            },
-          },
-          data: chartItems.map(item => Number(item.values[seriesItem.key]) || 0),
-        };
-      }),
-    };
-  }, [items, series]);
-
-  if (!option) {
+  if (!items.length || !series.length) {
     return <div className="placeholder"><p>{isKo ? '暂无 KO 功能组成数据' : '暂无门级组成数据'}</p></div>;
   }
 
@@ -173,7 +96,6 @@ function PhylumChart({ data, featureKind = 'taxonomy' }) {
     };
   });
   const differenceSummary = buildDifferenceSummary(items, series);
-  const chartHeight = Math.max(360, items.length * (BAR_HEIGHT * series.length + ROW_GAP) + 96);
 
   return (
     <div className="chart-plain">
@@ -198,20 +120,15 @@ function PhylumChart({ data, featureKind = 'taxonomy' }) {
           </span>
         ) : null}
       </div>
-      <ChartViewport variant="data" minHeight={480} preferredHeight={chartHeight}>
-        <ReactECharts
-          option={option}
+        <ZoomableGroupedBarChart
+          model={model}
+          barStyleConfig={{ key: isKo ? 'function-composition' : 'species-phylum', scale: 100, suffix: '%' }}
           exportConfig={{
             fileName: isKo ? 'ko-composition' : 'phylum-composition',
+            title: '导出图像',
             format: 'svg',
           }}
-          frameActions
-          opts={{ renderer: 'svg' }}
-          notMerge
-          lazyUpdate
-          style={{ width: '100%', height: '100%' }}
         />
-      </ChartViewport>
     </div>
   );
 }

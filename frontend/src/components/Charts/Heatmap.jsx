@@ -3,8 +3,10 @@ import * as d3 from 'd3';
 import { useColorVision } from '../../context/ColorVisionContext';
 import useTooltip from '../../hooks/useTooltip';
 import HeatmapLightbox from './HeatmapLightbox';
-import DataTableViewport from '../data-display/DataTableViewport';
-import ChartExportAction from './ChartExportAction';
+import ClientDataTable from '../data-display/ClientDataTable';
+import ResultDisclosure from '../data-display/ResultDisclosure';
+import ChartSupplement from './ChartSupplement';
+import ChartFrameActionGroup from './ChartFrameActionGroup';
 import { escapeTooltipText } from '../../utils/tooltipHtml';
 
 const ABUNDANCE_COLORS = ['#ffffcc', '#ffeda0', '#fed976', '#feb24c', '#fd8d3c', '#fc4e2a', '#e31a1c', '#bd0026', '#800026'];
@@ -424,34 +426,28 @@ function drawHeatmap(canvas, params, renderScale = getRenderScale(), options = {
 /* ====== Canvas 渲染子组件 ====== */
 
 export function HeatmapDataTable({ title, matrix, rowLabels, colLabels }) {
-  const visibleRows = matrix.slice(0, 25);
-  const visibleColumns = colLabels.slice(0, 20);
-  const truncated = matrix.length > visibleRows.length || colLabels.length > visibleColumns.length;
   return (
-    <details className="chart-data-table">
-      <summary>查看{title}数据表</summary>
-      <DataTableViewport
+    <ChartSupplement><ResultDisclosure title={`查看${title}数据表`} summary={`${matrix.length} 行 · ${colLabels.length} 列`} className="chart-data-table result-section--table">
+      <ClientDataTable
         ariaLabel={`${title}数据表，可滚动`}
-        footer={truncated ? '为保证页面性能，仅展示前 25 行、20 列。' : null}
+        rows={matrix}
+        renderRow={(row, rowIndex) => (
+          <tr key={`${rowLabels[rowIndex] || 'row'}-${rowIndex}`}>
+            <th scope="row">{rowLabels[rowIndex] || `行 ${rowIndex + 1}`}</th>
+            {colLabels.map((_, colIndex) => (
+              <td key={colIndex}>{fmt(Number(row[colIndex]), 4)}</td>
+            ))}
+          </tr>
+        )}
       >
           <thead>
             <tr>
               <th scope="col">样本</th>
-              {visibleColumns.map((label, index) => <th scope="col" key={`${label}-${index}`}>{label}</th>)}
+              {colLabels.map((label, index) => <th scope="col" key={`${label}-${index}`}>{label}</th>)}
             </tr>
           </thead>
-          <tbody>
-            {visibleRows.map((row, rowIndex) => (
-              <tr key={`${rowLabels[rowIndex] || 'row'}-${rowIndex}`}>
-                <th scope="row">{rowLabels[rowIndex] || `行 ${rowIndex + 1}`}</th>
-                {visibleColumns.map((_, colIndex) => (
-                  <td key={colIndex}>{fmt(Number(row[colIndex]), 4)}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-      </DataTableViewport>
-    </details>
+      </ClientDataTable>
+    </ResultDisclosure></ChartSupplement>
   );
 }
 
@@ -584,29 +580,26 @@ const HeatmapCanvas = memo(function HeatmapCanvas({
     });
   }, [createSnapshot, getTooltipHtml, hide, layout.totalH, layout.totalW, onOpen, title]);
 
+  const heatmapHint = mode === 'diff'
+    ? '红色=AD高 蓝色=NC高'
+    : showDendrograms
+      ? `颜色越深 log丰度越高 · 分组条：${colorBlindFriendly ? '橙色=AD 蓝色=NC' : '红色=AD 绿色=NC'}`
+      : '颜色越深 log丰度越高';
+
   return (
     <section className={`heatmap-panel ${compact ? 'heatmap-panel--compact' : ''}`}>
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 12,
-        marginBottom: 2,
-      }}>
-        <div style={{ fontSize: compact ? 13 : 15, fontWeight: 600, color: '#0f172a' }}>{title}</div>
-        <ChartExportAction
-          onClick={handleExport}
-          disabled={exporting}
-          label={exporting ? '正在导出热图' : `导出${title}`}
+      <div className="heatmap-panel__toolbar">
+        <div className="heatmap-panel__toolbar-title">
+          <h3>{title}</h3>
+          <span>{heatmapHint}</span>
+        </div>
+        <ChartFrameActionGroup
+          ariaLabel={`${title}操作`}
+          actions={[
+            ...(onOpen ? [{ id: 'expand', icon: 'expand', label: `放大${title}`, onClick: handleOpen }] : []),
+            { id: 'export', icon: 'export', label: exporting ? '正在导出热图' : `导出${title}`, onClick: handleExport, disabled: exporting },
+          ]}
         />
-      </div>
-      <div style={{ fontSize: compact ? 10 : 11, color: '#475569', marginBottom: 6 }}>
-        {mode === 'diff'
-          ? '红色=AD高 蓝色=NC高'
-          : showDendrograms
-            ? `颜色越深 log丰度越高 · 分组条：${colorBlindFriendly ? '橙色=AD 蓝色=NC' : '红色=AD 绿色=NC'}`
-            : '颜色越深 log丰度越高'}
-        {' · 点击热图可放大'}
       </div>
       <div
         onClick={handleOpen}

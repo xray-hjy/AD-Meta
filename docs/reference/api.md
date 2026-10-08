@@ -308,6 +308,19 @@ immutable published revision. Current-chart URLs always resolve through
 `datasets.current_revision_id`. Artifact responses include `ETag`,
 `Last-Modified` and support `If-None-Match` with `304 Not Modified`.
 
+`GET /api/datasets/{slug}/revisions/{revision}/description` returns structured
+facts for a published dataset revision. It reads the sample index, import
+validation report, abundance scale, normalization, file size, revision key and
+source SHA-256 from that revision. The current revision may also report its
+source filename; older revisions do not inherit the current filename. The
+  response contains no manually authored dataset description. `cohortSource` is
+  returned only when the revision's full sample-code set and group counts match
+  an entry in `backend/metadata/verified_cohorts.json`. It carries structured
+  NGDC project/study links and the publication associated with the deposited
+  raw reads; it does not assert that the publication generated the imported
+  abundance matrix. Missing metadata is nullable or empty, and unknown revisions
+  return 404.
+
 ## GET /api/datasets/{slug}/charts/taxonomy
 
 Returns the canonical taxonomy hierarchy used by the sunburst, treemap, and
@@ -451,7 +464,7 @@ MAG 使用独立的版本化外部数据契约，不写入既有 taxonomy/KO rev
 | `/api/mag/overview` | 数据版本、指纹、样本范围、能力就绪度和溯源 |
 | `/api/mag/features` | 872-MAG 检验族上的候选分页与统计 |
 | `/api/mag/features/{mag_id}` | 单 MAG 的组间分布和样本明细 |
-| `/api/mag/heatmap` | 所选样本 × Top N MAG 丰度 |
+| `/api/mag/heatmap` | 所选样本 × 筛选/排序后的 MAG 原始丰度、颜色矩阵与绘图审计（topN=0 为全部匹配） |
 | `/api/mag/samples` | 样本映射比例与丰度阈值统计 |
 | `/api/mag/taxonomy` | 域至种层级的 Top N MAG 分类数量与占比 |
 | `/api/mag/quality` | 872 个代表 MAG 的 CheckM2 完整度、污染率和组装指标 |

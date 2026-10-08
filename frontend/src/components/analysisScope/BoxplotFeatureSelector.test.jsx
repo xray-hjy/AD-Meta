@@ -54,7 +54,7 @@ test('uses ranked Top 30 by default and exposes scientific presets', () => {
     />
   );
 
-  expect(screen.getByLabelText('参与计算的物种数').value).toBe('30');
+  expect(screen.getByLabelText('参与计算的物种数')).toHaveTextContent('Top 30');
   expect(screen.getByText('按当前分析范围内的平均丰度排名；切换范围时重新排名。')).toBeTruthy();
 });
 
