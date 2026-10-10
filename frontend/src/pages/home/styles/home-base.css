@@ -1,0 +1,137 @@
+/* Homepage base styles; scoped to .admeta-home. */
+
+.admeta-home {
+  --ink: #15213a;
+  --muted: #5d6b83;
+  --line: #dbe3ef;
+  --blue: #2469db;
+  --blue-soft: #eaf2ff;
+  --teal: #0d8e93;
+  --mag: #a65277;
+  --paper: #f6f9fe;
+  font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", Arial, sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+  line-height: normal;
+  scroll-behavior: smooth;
+}
+
+.admeta-home * {
+  box-sizing: border-box;
+}
+
+.admeta-home {
+  margin: 0;
+  padding-top: 138px;
+}
+
+.admeta-home button, .admeta-home a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.admeta-home button {
+  font: inherit;
+  cursor: pointer;
+}
+
+.admeta-home a {
+  color: inherit;
+}
+
+.admeta-home :focus-visible {
+  outline: 3px solid #6ca2f8;
+  outline-offset: 3px;
+}
+
+.admeta-home .eyebrow {
+  margin: 0 0 16px;
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.admeta-home h1, .admeta-home h2, .admeta-home h3, .admeta-home p {
+  overflow-wrap: anywhere;
+}
+
+.admeta-home .button-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  gap: 13px;
+  min-height: 42px;
+  padding: 0 18px;
+  border: 1px solid var(--blue);
+  border-radius: 9px;
+  background: var(--blue);
+  color: #fff;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.admeta-home .button-primary:hover {
+  background: #1454bd;
+}
+
+.admeta-home .slide-count {
+  margin-right: 7px;
+  color: #667790;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.admeta-home .site-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 25px clamp(24px, 6vw, 96px);
+  border-top: 1px solid var(--line);
+  color: #77849a;
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+
+.admeta-home {
+    padding-top: 122px;
+  }
+
+.admeta-home .slide-count {
+    margin-right: 0;
+    font-size: 10px;
+  }
+
+.admeta-home .site-footer {
+    flex-direction: column;
+    padding-inline: 19px;
+  }
+
+}
+
+.admeta-home {
+  --story-progress: 0;
+  --copy-progress: 0;
+  --stage-center-x: 0px;
+  --stage-top: 93px;
+  --intro-lift: max(0px, calc(42vh - 200px));
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+.admeta-home {
+    scroll-behavior: auto;
+    --story-progress: 1 !important;
+    --copy-progress: 1 !important;
+  }
+
+.admeta-home *, .admeta-home *::before, .admeta-home *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+}

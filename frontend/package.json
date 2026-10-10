@@ -15,7 +15,8 @@
     "echarts-for-react": "^3.0.6",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "react-router-dom": "^6.30.4"
+    "react-router-dom": "^6.30.4",
+    "swiper": "14.3.0"
   },
   "scripts": {
     "dev": "concurrently -k -n backend,frontend -c blue,green \"npm run dev:backend\" \"npm run dev:frontend\"",

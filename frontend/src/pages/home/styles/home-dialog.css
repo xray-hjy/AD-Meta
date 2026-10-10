@@ -1,0 +1,38 @@
+/* Homepage dialog styles; scoped to .admeta-home. */
+
+.admeta-home .image-dialog {
+  width: min(95vw, 1500px);
+  max-height: 92vh;
+  padding: 12px;
+  border: 1px solid #c9d6e7;
+  border-radius: 12px;
+  box-shadow: 0 30px 90px rgba(13, 29, 55, .28);
+}
+
+.admeta-home .image-dialog::backdrop {
+  background: rgba(15, 31, 56, .76);
+}
+
+.admeta-home .image-dialog img {
+  display: block;
+  width: 100%;
+  max-height: calc(92vh - 78px);
+  object-fit: contain;
+}
+
+.admeta-home .dialog-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.admeta-home .dialog-top button {
+  padding: 6px 12px;
+  border: 1px solid #c7d5e8;
+  border-radius: 6px;
+  background: #fff;
+}

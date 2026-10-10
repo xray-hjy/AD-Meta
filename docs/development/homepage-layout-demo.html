@@ -1,0 +1,1226 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>微脑智库 · 首页布局 Demo</title>
+  <link rel="stylesheet" href="vendor/swiper-14.3.0/swiper-bundle.min.css">
+  <script src="vendor/swiper-14.3.0/swiper-bundle.min.js"></script>
+  <script>
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && !location.hash) {
+      document.documentElement.classList.add('motion-ready');
+      document.documentElement.dataset.intro = 'staged';
+      window.introFallback = setTimeout(() => { document.documentElement.dataset.intro = 'full'; }, 6000);
+    }
+  </script>
+  <style>
+    :root {
+      --ink: #15213a;
+      --muted: #5d6b83;
+      --line: #dbe3ef;
+      --blue: #2469db;
+      --blue-soft: #eaf2ff;
+      --teal: #0d8e93;
+      --mag: #a65277;
+      --paper: #f6f9fe;
+      font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", Arial, sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+      scroll-behavior: smooth;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding-top: 138px; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    button { font: inherit; cursor: pointer; }
+    a { color: inherit; }
+    :focus-visible { outline: 3px solid #6ca2f8; outline-offset: 3px; }
+    .status-strip {
+      padding: 9px 20px;
+      background: #e9f1fc;
+      color: #385479;
+      text-align: center;
+      font-size: 12px;
+      letter-spacing: .025em;
+    }
+    .status-strip strong { color: #1654b3; }
+    .site-header {
+      position: fixed;
+      top: 44px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 40;
+      width: calc(100% - clamp(40px, 8vw, 224px));
+      max-width: 1760px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 28px;
+      height: 70px;
+      padding: 0 clamp(20px, 2.2vw, 42px);
+      background: rgba(255,255,255,.88);
+      border: 1px solid #d5e0ee;
+      border-radius: 14px;
+      box-shadow: 0 12px 34px rgba(26,53,94,.10), 0 2px 6px rgba(26,53,94,.04);
+      backdrop-filter: blur(16px);
+    }
+    .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-size: 17px; font-weight: 800; white-space: nowrap; }
+    .brand img { width: 37px; height: 37px; object-fit: contain; }
+    .header-nav { display: flex; align-items: center; gap: clamp(15px, 2.5vw, 36px); font-size: 13px; font-weight: 700; }
+    .header-nav a { text-decoration: none; color: #4a5870; }
+    .header-nav a:hover { color: var(--blue); }
+    .header-cta { border: 1px solid #b9ccef; border-radius: 9px; padding: 10px 14px; color: var(--blue) !important; }
+    .header-cta:hover { background: var(--blue-soft); }
+    .hero {
+      position: relative;
+      overflow: hidden;
+      min-height: 670px;
+      padding: clamp(70px, 9vw, 120px) 24px 95px;
+      text-align: center;
+      background: radial-gradient(circle at 50% 21%, #ffffff 0, #f8fbff 43%, #eef5ff 100%);
+      border-bottom: 1px solid var(--line);
+    }
+    .hero::before { content: ""; position: absolute; inset: 0; opacity: .4; background-image: radial-gradient(#a9bedb 0.7px, transparent 0.7px); background-size: 24px 24px; mask-image: linear-gradient(to bottom, transparent, black 32%, transparent 100%); pointer-events: none; }
+    .hero > * { position: relative; }
+    .hero-mark { display: block; width: 76px; height: 76px; object-fit: contain; margin: 0 auto 24px; filter: drop-shadow(0 12px 14px rgba(32, 86, 160, .12)); }
+    .eyebrow { margin: 0 0 16px; color: var(--blue); font-size: 11px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
+    h1, h2, h3, p { overflow-wrap: anywhere; }
+    .hero h1 { max-width: 920px; margin: 0 auto; font-size: clamp(39px, 5vw, 68px); line-height: 1.17; letter-spacing: -.045em; }
+    .hero h1 em { color: var(--blue); font-style: normal; }
+    .hero-lead { max-width: 680px; margin: 25px auto 0; color: #42516c; font-size: clamp(16px, 1.5vw, 19px); line-height: 1.8; }
+    .entry-panel { width: min(800px, 100%); margin: 49px auto 0; overflow: hidden; text-align: left; background: white; border: 1px solid #cdd9ea; border-radius: 14px; box-shadow: 0 26px 75px rgba(31, 65, 113, .12); }
+    .entry-tabs { display: flex; border-bottom: 1px solid var(--line); background: #f5f8fc; }
+    .entry-tab { min-width: 0; flex: 1; padding: 15px 10px; border: 0; border-right: 1px solid var(--line); background: transparent; color: #607089; font-size: 13px; font-weight: 800; }
+    .entry-tab:last-child { border-right: 0; }
+    .entry-tab[aria-selected="true"] { position: relative; background: white; color: var(--blue); }
+    .entry-tab[aria-selected="true"]::after { content: ""; position: absolute; inset: auto 0 0; height: 3px; background: var(--blue); }
+    .entry-content { display: flex; align-items: center; justify-content: space-between; gap: 22px; min-height: 106px; padding: 24px 27px; }
+    .entry-content strong { display: block; margin-bottom: 7px; font-size: 16px; }
+    .entry-content p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+    .button-primary { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; gap: 13px; min-height: 42px; padding: 0 18px; border: 1px solid var(--blue); border-radius: 9px; background: var(--blue); color: #fff; text-decoration: none; font-size: 13px; font-weight: 800; }
+    .button-primary:hover { background: #1454bd; }
+    .scroll-cue { margin: 35px 0 0; color: #7a8ba5; font-size: 12px; letter-spacing: .08em; }
+    .story-intro { padding: 100px 24px 45px; text-align: center; }
+    .story-intro h2 { margin: 0 auto; max-width: 800px; font-size: clamp(30px, 3vw, 45px); letter-spacing: -.035em; }
+    .story-intro > p:last-child { margin: 16px auto 0; color: var(--muted); line-height: 1.75; }
+    .story-layout { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(320px, .95fr); gap: clamp(56px, 5.5vw, 140px); width: calc(100% - clamp(64px, 8vw, 224px)); max-width: 2280px; margin: 0 auto; padding: 0 0 130px; }
+    .visual-stage { position: sticky; top: 93px; align-self: start; min-width: 0; height: min(700px, calc(100vh - 122px)); display: flex; flex-direction: column; overflow: visible; background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+    .stage-bar { display: flex; align-items: center; justify-content: space-between; gap: 14px; width: 82%; min-height: 42px; margin: 0 auto; padding: 0 10px; background: transparent; border: 0; }
+    .stage-overline { font-size: 10px; color: #75859c; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    .stage-image-wrap { position: relative; display: flex; align-items: center; justify-content: center; flex: 1; min-height: 0; padding: 24px 0; background: transparent; mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent); }
+    .stage-image { display: block; width: 100%; height: 100%; object-fit: contain; background: #fff; cursor: zoom-in; }
+    .stage-caption { display: flex; align-items: center; justify-content: space-between; gap: 18px; width: 82%; margin: 0 auto; min-height: 93px; padding: 14px 10px; border: 0; }
+    .stage-caption__text { min-width: 0; }
+    .stage-caption__text strong { display: block; font-size: 15px; }
+    .stage-caption__text p { margin: 4px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+    .stage-actions { flex: 0 0 auto; display: flex; align-items: center; gap: 7px; }
+    .slide-count { margin-right: 7px; color: #667790; font-size: 12px; font-weight: 700; white-space: nowrap; }
+    .round-button { width: 35px; height: 35px; border: 1px solid #cbd7e7; border-radius: 50%; background: white; color: #365478; font-size: 20px; line-height: 1; }
+    .round-button:hover { color: var(--blue); border-color: #86a8e6; background: #f4f8ff; }
+    .chapter-list { min-width: 0; }
+    .chapter { display: flex; flex-direction: column; justify-content: center; min-height: max(760px, 96vh); padding: 100px 0; border-bottom: 1px solid var(--line); scroll-margin-top: 138px; }
+    .chapter-content { display: flex; flex-direction: column; width: 100%; }
+    .chapter:last-child { border-bottom: 0; }
+    .chapter-index { display: flex; align-items: center; gap: 11px; color: var(--blue); font-size: 11px; font-weight: 800; letter-spacing: .12em; }
+    .chapter-index::before { content: ""; width: 28px; height: 1px; background: currentColor; }
+    .chapter[data-domain="function"] .chapter-index { color: var(--teal); }
+    .chapter[data-domain="mag"] .chapter-index { color: var(--mag); }
+    .chapter { --chapter-accent: var(--blue); }
+    .chapter[data-domain="function"] { --chapter-accent: var(--teal); }
+    .chapter[data-domain="mag"] { --chapter-accent: var(--mag); }
+    .chapter h3 { margin: 30px 0 28px; font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", sans-serif; font-size: clamp(32px, 2.65vw, 60px); font-weight: 800; line-height: 1.4; letter-spacing: -.035em; }
+    .chapter-title-line { display: block; }
+    .chapter-title-line:last-child { color: var(--chapter-accent); }
+    .chapter-copy { max-width: 33em; margin: 0; color: #52627c; font-size: clamp(17px, 1.12vw, 21px); font-weight: 500; line-height: 1.95; }
+    .chapter ul { display: flex; flex-wrap: wrap; gap: 16px 26px; max-width: 35em; margin: 34px 0 0; padding: 0; list-style: none; }
+    .chapter li { display: inline-flex; align-items: center; gap: 9px; padding: 0; color: #52627c; font-size: clamp(13px, .85vw, 16px); font-weight: 600; }
+    .chapter li::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: #9aafcc; }
+    .chapter-link { display: inline-flex; align-items: center; gap: 22px; align-self: flex-start; margin-top: 43px; padding: 8px 0; color: var(--chapter-accent); text-decoration: none; font-size: clamp(15px, .95vw, 18px); font-weight: 700; }
+    .chapter-link span { display: inline-block; transition: transform 280ms cubic-bezier(.22,1,.36,1); }
+    .chapter-link:hover span { transform: translateX(6px); }
+    .chapter-link:hover { text-decoration: underline; }
+    .chapter-hint { display: inline-flex; align-items: center; gap: 7px; margin-top: 22px; color: #708098; font-size: 11px; }
+    .chapter-hint::before { content: "↔"; color: var(--blue); font-size: 19px; }
+    .mobile-gallery { display: none; }
+    .evidence { padding: 90px clamp(24px, 6vw, 96px); background: #eaf1fa; border-block: 1px solid #d2deed; scroll-margin-top: 138px; }
+    .evidence-inner { display: grid; grid-template-columns: minmax(230px, .72fr) minmax(0, 1.28fr); gap: 70px; max-width: 1300px; margin: 0 auto; align-items: start; }
+    .evidence h2, .final-cta h2 { margin: 0; font-size: clamp(28px, 3vw, 43px); letter-spacing: -.04em; line-height: 1.25; }
+    .evidence p { margin: 16px 0 0; color: var(--muted); line-height: 1.8; }
+    .evidence-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .evidence-step { min-height: 126px; padding: 18px; background: white; border: 1px solid #d8e3f0; border-radius: 10px; }
+    .evidence-step span { color: var(--blue); font-size: 11px; font-weight: 800; }
+    .evidence-step strong { display: block; margin-top: 18px; font-size: 14px; line-height: 1.45; }
+    .evidence-footnote { grid-column: 1 / -1; margin: 7px 0 0 !important; font-size: 12px; }
+    .final-cta { display: flex; align-items: center; justify-content: space-between; gap: 30px; max-width: 1500px; margin: 0 auto; padding: 92px clamp(24px, 6vw, 96px); scroll-margin-top: 138px; }
+    .final-cta p { margin: 13px 0 0; color: var(--muted); line-height: 1.7; }
+    .site-footer { display: flex; justify-content: space-between; gap: 16px; padding: 25px clamp(24px, 6vw, 96px); border-top: 1px solid var(--line); color: #77849a; font-size: 12px; }
+    .demo-note { font-size: 11px; }
+    .image-dialog { width: min(95vw, 1500px); max-height: 92vh; padding: 12px; border: 1px solid #c9d6e7; border-radius: 12px; box-shadow: 0 30px 90px rgba(13, 29, 55, .28); }
+    .image-dialog::backdrop { background: rgba(15, 31, 56, .76); }
+    .image-dialog img { display: block; width: 100%; max-height: calc(92vh - 78px); object-fit: contain; }
+    .dialog-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 10px; font-size: 13px; font-weight: 700; }
+    .dialog-top button { padding: 6px 12px; border: 1px solid #c7d5e8; border-radius: 6px; background: #fff; }
+    @media (max-width: 970px) {
+      .story-layout { grid-template-columns: 1fr; gap: 0; padding-bottom: 35px; }
+      .visual-stage { position: sticky; top: 70px; z-index: 5; height: 51vh; min-height: 330px; max-height: 510px; }
+      .chapter { min-height: 490px; padding: 60px 5px; }
+      .evidence-inner { grid-template-columns: 1fr; gap: 30px; }
+    }
+    @media (max-width: 640px) {
+      body { padding-top: 122px; }
+      .status-strip { font-size: 10px; }
+      .site-header { top: 40px; width: calc(100% - 24px); height: 62px; padding-inline: 17px; border-radius: 11px; }
+      .brand { font-size: 15px; }
+      .brand img { width: 31px; height: 31px; }
+      .header-nav { gap: 12px; font-size: 11px; }
+      .header-nav a:not(.header-cta) { display: none; }
+      .header-cta { padding: 8px 10px; }
+      .hero { min-height: 640px; padding: 74px 16px 70px; }
+      .hero h1 { font-size: clamp(36px, 10vw, 48px); }
+      .hero-lead { font-size: 15px; }
+      .entry-panel { margin-top: 37px; }
+      .entry-content { align-items: flex-start; flex-direction: column; padding: 20px; }
+      .entry-content .button-primary { width: 100%; }
+      .story-intro { padding-top: 70px; }
+      .story-layout { display: block; padding-inline: 17px; }
+      .visual-stage { display: none; }
+      .stage-image-wrap { padding: 8px; }
+      .stage-caption { min-height: 90px; padding: 10px; gap: 5px; }
+      .stage-caption__text strong { font-size: 12px; }
+      .stage-caption__text p { font-size: 10px; }
+      .slide-count { margin-right: 0; font-size: 10px; }
+      .round-button { width: 28px; height: 28px; font-size: 17px; }
+      .chapter { min-height: 0; padding: 65px 3px; }
+      .chapter h3 { font-size: 35px; }
+      .mobile-gallery { display: block; overflow: hidden; margin: 8px 0 20px; background: white; border: 1px solid #cbd8e9; border-radius: 10px; box-shadow: 0 14px 35px rgba(27, 58, 102, .09); }
+      .mobile-gallery__image { display: block; width: 100%; height: 220px; object-fit: contain; background: #edf3fa; }
+      .mobile-gallery__caption { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 53px; padding: 9px; border-top: 1px solid var(--line); }
+      .mobile-gallery__caption strong { font-size: 12px; }
+      .mobile-gallery__actions { display: flex; align-items: center; gap: 6px; }
+      .mobile-gallery__count { color: #71819a; font-size: 10px; white-space: nowrap; }
+      .chapter ul { gap: 7px; }
+      .chapter li { font-size: 13px; }
+      .evidence { padding: 70px 19px; }
+      .evidence-steps { grid-template-columns: repeat(2, 1fr); }
+      .evidence-step { min-height: 110px; }
+      .final-cta { align-items: flex-start; flex-direction: column; padding: 70px 19px; }
+      .site-footer { flex-direction: column; padding-inline: 19px; }
+    }
+    /* The motion sequence follows the reference: assemble, focus, lift, reveal. */
+    :root { --story-progress: 0; --copy-progress: 0; --stage-center-x: 0px; --stage-top: 93px; --intro-lift: max(0px, calc(42vh - 200px)); }
+    .status-strip { position: fixed; inset: 0 0 auto; min-height: 32px; z-index: 41; padding-block: 8px; }
+    .replay-intro { position: absolute; right: 20px; top: 5px; padding: 4px 9px; border: 0; border-radius: 5px; color: #47638c; background: transparent; font-size: 10px; }
+    .replay-intro:hover { background: #d8e7fc; }
+    .hero { min-height: 0; padding: 54px 24px 48px; overflow: visible; }
+    .hero-identity { display: flex; flex-direction: column; align-items: center; gap: 25px; transform: translateY(0); transition: transform 770ms cubic-bezier(.645,.045,.355,1); will-change: transform; }
+    .logo-replay { position: relative; display: block; flex: 0 0 auto; width: 86px; height: 110px; border: 0; margin: 0; padding: 0; background: transparent; overflow: visible; }
+    .hero-mark { width: 100%; height: 100%; margin: 0; }
+    .logo-piece { position: absolute; inset: 0; pointer-events: none; background: url('../../frontend/src/assets/brand/microbrain-logo.svg') center / contain no-repeat; opacity: 0; will-change: transform, opacity; }
+    .logo-piece:nth-of-type(1) { clip-path: inset(0 0 75% 0); }
+    .logo-piece:nth-of-type(2) { clip-path: inset(25% 0 50% 0); }
+    .logo-piece:nth-of-type(3) { clip-path: inset(50% 0 25% 0); }
+    .logo-piece:nth-of-type(4) { clip-path: inset(75% 0 0 0); }
+    .logo-replay.is-assembling .hero-mark { opacity: 0; }
+    .logo-replay.is-assembling .logo-piece { opacity: 1; }
+    .logo-replay::after { content: ''; position: absolute; inset: auto -12px 18px; height: 2px; background: #c2ffff; box-shadow: 0 0 18px #31cecd; opacity: 0; pointer-events: none; }
+    .logo-replay.is-flashing::after { animation: logo-flash 180ms steps(2, end) 2; }
+    .hero h1 { font-size: clamp(38px, 4.2vw, 53px); line-height: 1.2; letter-spacing: -.045em; }
+    .hero-title-line { display: block; }
+    .hero-lead { max-width: 640px; margin-top: 24px; font-size: 16px; line-height: 1.8; }
+    .entry-panel { margin-top: 28px; }
+    .entry-content { min-height: 87px; padding: 19px 25px; }
+    .entry-tab { padding-block: 13px; }
+    .scroll-cue { margin-top: 22px; }
+    .story-intro { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .story-layout { padding-bottom: 160px; scroll-margin-top: 138px; }
+    .stage-rail { position: sticky; top: var(--stage-top); align-self: start; min-width: 0; }
+    .visual-stage { position: relative; top: auto; height: min(860px, calc(100svh - 170px)); transform: translate3d(calc(var(--stage-center-x) * (1 - var(--story-progress))), calc(15px * (1 - var(--story-progress))), 0) scale(calc(1 + .08 * (1 - var(--story-progress)))); transform-origin: center; will-change: transform; box-shadow: none; }
+    .stage-image-wrap { overflow: hidden; }
+    .stage-carousel { flex: 1; width: 100%; height: 100%; min-width: 0; overflow: visible; }
+    .stage-carousel .stage-gallery { display: flex; position: relative; width: 100%; height: 100%; min-width: 0; transition-timing-function: cubic-bezier(.22,1,.36,1); }
+    .stage-slide { display: flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 82%; min-width: 0; height: 100%; padding-inline: 10px; }
+    .stage-slide__sheet { display: block; width: 100%; height: auto; padding: 0; background: white; border: 1px solid #dce5f1; border-radius: 12px; overflow: hidden; box-shadow: 0 18px 46px rgba(27,58,102,.13), 0 3px 10px rgba(27,58,102,.05); cursor: zoom-in; transition: opacity 420ms; }
+    .stage-image { border-radius: 6px; }
+    .stage-carousel.is-parked { position: absolute; inset: 24px 0; height: calc(100% - 48px); visibility: hidden; pointer-events: none; }
+    .stage-carousel.is-parked.is-exiting { visibility: visible; }
+    .round-button:disabled { opacity: .3; cursor: default; }
+    .stage-caption { position: relative; }
+    .gallery-progress { position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background: #e5ecf7; overflow: hidden; }
+    .gallery-progress span { display: block; width: 100%; height: 100%; background: var(--gallery-accent, var(--blue)); transform-origin: left; transform: scaleX(var(--gallery-completion, 0)); }
+    .gallery-scroll-hint { display: block; margin-top: 6px; color: #71839f; font-size: 11px; font-weight: 600; }
+    .stage-caption__text { will-change: transform, opacity; }
+    .stage-chapters { display: flex; gap: 5px; }
+    .stage-chapters button { width: 21px; height: 5px; padding: 0; border: 0; border-radius: 3px; background: #cdd8e7; transition: width 220ms, background 220ms; }
+    .stage-chapters button[aria-pressed="true"] { width: 35px; background: var(--gallery-accent, var(--blue)); }
+    .stage-chapters button::after { content: ''; display: block; height: 23px; margin-top: -9px; }
+    .chapter-list { padding-top: 48px; opacity: var(--copy-progress); }
+    .chapter { min-height: max(760px, 96vh); }
+    .scroll-ready .reveal-item { opacity: var(--reveal, 0); transform: translate3d(0, calc(38px * (1 - var(--reveal, 0))), 0); }
+    .scroll-ready .reveal-item.is-revealing { will-change: transform, opacity; }
+    .chapter-index { font-family: ui-monospace, Consolas, monospace; font-size: 12px; font-weight: 700; letter-spacing: .12em; }
+    .chapter-track { position: relative; }
+    .scroll-gallery .chapter-list { padding-top: 0; }
+    .scroll-gallery .story-layout { overflow: clip; isolation: isolate; }
+    .scroll-gallery .chapter-list { display: grid; }
+    .scroll-gallery :is(.chapter-reader, .chapter-timeline) { grid-area: 1 / 1; }
+    .scroll-gallery .visual-stage { height: min(860px, calc(100svh - 166px)); }
+    .scroll-gallery .chapter-track { height: var(--track-height); }
+    .chapter-reader { display: none; }
+    .scroll-gallery .chapter-reader { display: block; position: sticky; top: var(--stage-top); align-self: start; height: var(--stage-height); margin: 0; overflow: hidden; isolation: isolate; z-index: 1; }
+    .scroll-gallery .chapter { position: absolute; inset: 0; height: 100%; min-height: 0; padding: 0; border-bottom: 0; visibility: hidden; pointer-events: none; }
+    .scroll-gallery .chapter.is-active { visibility: visible; pointer-events: auto; }
+    .scroll-gallery .chapter.is-leaving { visibility: visible; pointer-events: none; }
+    .scroll-gallery .chapter.is-active { z-index: 2; }
+    .chapter.is-changing > .chapter-content { will-change: transform, opacity; }
+    .scroll-gallery .chapter h3 { margin-block: 24px 22px; }
+    .scroll-gallery .chapter ul { margin-top: 26px; }
+    .scroll-gallery .chapter-link { margin-top: 30px; }
+    .chapter-preview { display: none; }
+    .scroll-gallery .chapter-preview { display: block; position: absolute; left: 0; right: 0; overflow: hidden; pointer-events: none; opacity: .36; }
+    .chapter-preview--previous { top: 0; height: var(--preview-top-height, 140px); mask-image: linear-gradient(to bottom, transparent, #000 70%); }
+    .chapter-preview--next { bottom: 0; height: var(--preview-bottom-height, 140px); mask-image: linear-gradient(to bottom, #000 30%, transparent); }
+    .chapter-preview--previous .chapter-preview__content { position: absolute; bottom: 0; width: 100%; }
+    .chapter .chapter-preview .chapter-index { color: var(--chapter-accent); }
+    .chapter-preview .chapter-preview__content { transform: none; }
+    .evidence-step { opacity: var(--reveal, 1); transform: translate3d(0, calc(28px * (1 - var(--reveal, 1))), 0); }
+    :root.motion-ready:is([data-intro="staged"], [data-intro="headline"]) .hero-identity { transform: translateY(var(--intro-lift)); }
+    :root.motion-ready[data-intro="staged"] .hero-title-line { opacity: 0; filter: blur(8px); }
+    :root.motion-ready[data-intro="staged"] .hero-mark { opacity: 0; }
+    :root.motion-ready[data-intro="headline"] .hero-title-line { animation: headline-focus 700ms cubic-bezier(.215,.61,.355,1) both; }
+    :root.motion-ready[data-intro="headline"] .hero-title-line:last-child { animation-delay: 105ms; }
+    :root.motion-ready:not([data-intro="full"]) :is(.hero-lead, .entry-panel, .scroll-cue, .stage-rail, .chapter-list) { opacity: 0; pointer-events: none; }
+    :root.motion-ready[data-intro="full"] :is(.hero-lead, .entry-panel, .scroll-cue) { animation: rest-reveal 1540ms cubic-bezier(.22,1,.36,1) both; }
+    :root.motion-ready[data-intro="full"] .stage-rail { animation: stage-reveal 1540ms cubic-bezier(.22,1,.36,1) both; }
+    :root.motion-ready.is-intro-skipped [class] { animation-duration: 1ms !important; }
+    @keyframes headline-focus { from { opacity: 0; filter: blur(8px); } to { opacity: 1; filter: blur(0); } }
+    @keyframes rest-reveal { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes stage-reveal { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes logo-flash { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+    @media (max-width: 1023px) {
+      .story-layout { display: block; width: 100%; padding-inline: clamp(19px, 5vw, 55px); }
+      .stage-rail { display: none; }
+      .chapter-list { padding-top: 0; opacity: 1; }
+      .chapter { min-height: 0; padding-block: 90px; }
+      .chapter h3 { font-size: clamp(32px, 5vw, 48px); }
+      .chapter-copy { max-width: 38em; font-size: 17px; }
+      .chapter ul { margin-top: 26px; }
+      .mobile-gallery { display: block; overflow: hidden; margin: 8px 0 20px; background: white; border: 1px solid #cbd8e9; border-radius: 10px; }
+      .mobile-gallery__image { display: block; width: 100%; height: clamp(240px, 48vw, 440px); object-fit: contain; background: #edf3fa; }
+      .mobile-gallery__caption { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 53px; padding: 12px; border-top: 1px solid var(--line); }
+      .mobile-gallery__caption strong { font-size: 12px; }
+      .mobile-gallery__actions { display: flex; align-items: center; gap: 7px; }
+      .mobile-gallery__count { color: #71819a; font-size: 11px; white-space: nowrap; }
+      .replay-intro { position: static; margin-left: 10px; }
+      .hero { padding: 42px 20px 40px; }
+      .hero-lead { font-size: 15px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      :root { scroll-behavior: auto; --story-progress: 1 !important; --copy-progress: 1 !important; }
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+      .hero-identity, .visual-stage { transform: none !important; }
+      .scroll-ready .reveal-item, .evidence-step { opacity: 1 !important; transform: none !important; }
+      .logo-piece { display: none; }
+      .hero-mark, .hero-title-line, .hero-lead, .entry-panel, .site-header, .stage-rail { opacity: 1 !important; filter: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="status-strip"><strong>物种丰度 · KO 功能 · MAG 热图</strong>，打开工作区即可查看。<button type="button" class="replay-intro" id="replay-intro">重播开场 ↻</button></div>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="微脑智库首页顶部"><img src="../../frontend/src/assets/brand/microbrain-logo.svg" alt=""><span>微脑智库</span></a>
+    <nav class="header-nav" aria-label="首页导航">
+      <a href="#showcase">可视化展示</a><a href="#evidence">数据基础</a><a href="#customization">自定义能力</a><a class="header-cta" href="#start">进入分析 ↗</a>
+    </nav>
+  </header>
+  <main id="top">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-identity">
+        <button class="logo-replay" id="logo-replay" type="button" aria-label="重播微脑智库 Logo 拼装动画"><img class="hero-mark" src="../../frontend/src/assets/brand/microbrain-logo.svg" alt=""><span class="logo-piece" aria-hidden="true"></span><span class="logo-piece" aria-hidden="true"></span><span class="logo-piece" aria-hidden="true"></span><span class="logo-piece" aria-hidden="true"></span></button>
+        <h1 id="hero-title"><span class="hero-title-line">物种、KO、MAG，</span><em class="hero-title-line">在一个工作区里查看。</em></h1>
+      </div>
+      <p class="hero-lead">微脑智库是面向阿尔茨海默病（AD）脑肠轴研究的肠道宏基因组分析工具。在浏览器里比较丰度、查看分类组成和样本热图，图表的配色、显示数量与导出尺寸都可以自己调整。</p>
+      <div class="entry-panel" aria-label="选择分析领域">
+        <div class="entry-tabs" role="tablist" aria-label="分析领域">
+          <button class="entry-tab" id="tab-species" type="button" role="tab" aria-controls="entry-summary" aria-selected="true" data-entry="species">群落物种</button>
+          <button class="entry-tab" id="tab-function" type="button" role="tab" aria-controls="entry-summary" aria-selected="false" data-entry="function">KO 功能</button>
+          <button class="entry-tab" id="tab-mag" type="button" role="tab" aria-controls="entry-summary" aria-selected="false" data-entry="mag">MAG 解析</button>
+        </div>
+        <div class="entry-content" id="entry-summary" role="tabpanel" aria-labelledby="tab-species">
+          <div><strong id="entry-title">查看菌群组成</strong><p id="entry-description">比较两组丰度，按分类层级查看物种。</p></div>
+          <a class="button-primary" id="entry-link" href="#species">查看物种图集 <span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+      <p class="scroll-cue">向下滚动，看看图表怎么用 ↓</p>
+    </section>
+    <section class="story-intro">
+      <p class="eyebrow">EXPLORE THE ANALYSIS</p>
+      <h2>物种、功能与 MAG，都有哪些图？</h2>
+      <p>下面是工作区里的图表和常用设置。</p>
+    </section>
+    <div class="story-layout" id="showcase">
+      <div class="stage-rail"><div class="visual-stage" aria-label="可视化立体画廊">
+        <div class="stage-bar"><span class="stage-overline" id="stage-domain">COMMUNITY TAXONOMY</span><div class="stage-chapters" aria-label="切换展示章节"><button type="button" data-chapter="species" aria-label="物种展示" aria-pressed="true"></button><button type="button" data-chapter="function" aria-label="KO 功能展示" aria-pressed="false"></button><button type="button" data-chapter="mag" aria-label="MAG 展示" aria-pressed="false"></button><button type="button" data-chapter="custom" aria-label="自定义展示" aria-pressed="false"></button></div></div>
+        <div class="stage-image-wrap" id="stage-viewport"><div class="stage-carousel swiper" id="stage-carousel"><div class="stage-gallery swiper-wrapper" id="stage-gallery" aria-label="本章节图集"></div></div></div>
+        <div class="stage-caption"><div class="stage-caption__text"><strong id="stage-title">物种丰度对比</strong><p id="stage-description">比较 AD 与 NC 组的物种丰度</p><span class="gallery-scroll-hint" id="gallery-scroll-hint">向下滚动，横向浏览本组图集 ↓</span></div><div class="stage-actions"><span class="slide-count" id="slide-count">01 / 04</span><button class="round-button" id="slide-prev" type="button" aria-label="上一张图">‹</button><button class="round-button" id="slide-next" type="button" aria-label="下一张图">›</button></div><div class="gallery-progress" aria-hidden="true"><span></span></div></div>
+      </div></div>
+      <div class="chapter-list">
+        <article class="chapter" id="species" data-domain="species"><div class="chapter-index">01 / COMMUNITY TAXONOMY</div><h3><span class="chapter-title-line">从门到种，</span><span class="chapter-title-line">看菌群组成。</span></h3><p class="chapter-copy">用柱图比较 AD 与 NC 组的物种丰度，也可以切到分类层级图，从门、属一路看到种。只想看几个物种时，改一下显示数量即可。</p><ul aria-label="物种可视化能力"><li>AD / NC 丰度</li><li>分类层级</li><li>Top N 设置</li></ul><a class="chapter-link" href="#start">查看物种图表 <span aria-hidden="true">→</span></a></article>
+        <article class="chapter" id="function" data-domain="function"><div class="chapter-index">02 / COMMUNITY FUNCTION</div><h3><span class="chapter-title-line">比较 KO 丰度，</span><span class="chapter-title-line">查看相对贡献。</span></h3><p class="chapter-copy">按 KO 编号查看丰度，比较 AD 与 NC 两组。切到相对贡献视图，还能查看 KO 在样本内的占比。图表显示多少个 KO，可以从预设里选，也可以自己输入。</p><ul aria-label="KO 可视化能力"><li>KO 丰度</li><li>相对贡献</li><li>显示数量</li></ul><a class="chapter-link" href="#start">查看 KO 图表 <span aria-hidden="true">→</span></a></article>
+        <article class="chapter" id="mag" data-domain="mag"><div class="chapter-index">03 / GENOME-RESOLVED</div><h3><span class="chapter-title-line">比较 MAG，</span><span class="chapter-title-line">柱图和热图都能用。</span></h3><p class="chapter-copy">用柱图比较 MAG 丰度，用热图查看各 MAG 在不同样本中的分布。样本和 MAG 都可以聚类，树枝、排列方向和显示数量可以分别调整。</p><ul aria-label="MAG 可视化能力"><li>样本热图</li><li>样本 / MAG 聚类</li><li>横纵轴交换</li></ul><a class="chapter-link" href="#start">查看 MAG 图表 <span aria-hidden="true">→</span></a></article>
+        <article class="chapter" id="customization" data-domain="custom"><div class="chapter-index">04 / MAKE THE VIEW YOURS</div><h3><span class="chapter-title-line">图怎么画，</span><span class="chapter-title-line">你来定。</span></h3><p class="chapter-copy">换配色，调整柱宽和标签字号，或把热图的横纵轴交换一下。看完后可以导出 SVG 或 PNG，图像尺寸和 PNG 的像素倍率也能设置。</p><ul aria-label="图形自定义能力"><li>配色与字号</li><li>缩放与浏览区间</li><li>SVG / PNG 导出</li></ul><a class="chapter-link" href="#start">打开图表设置 <span aria-hidden="true">→</span></a></article>
+      </div>
+    </div>
+    <section class="evidence" id="evidence"><div class="evidence-inner"><div><p class="eyebrow">DATA FOUNDATION</p><h2>数据从哪里来，<br>经过了哪些分析。</h2><p>数据来自公共肠道宏基因组研究，包含 AD 与健康对照样本。物种、KO 和 MAG 结果由上游分析流程生成，工作区使用这些结果进行查询和比较。</p></div><div class="evidence-steps"><div class="evidence-step"><span>01</span><strong>公共宏基因组<br>测序数据</strong></div><div class="evidence-step"><span>02</span><strong>质控、去宿主<br>组装与注释</strong></div><div class="evidence-step"><span>03</span><strong>物种、KO 与 MAG<br>分析结果</strong></div><div class="evidence-step"><span>04</span><strong>在工作区<br>查询和比较</strong></div><p class="evidence-footnote">AD 表示阿尔茨海默病组，NC 表示健康对照组。</p></div></div></section>
+    <section class="final-cta" id="start"><div><p class="eyebrow">START EXPLORING</p><h2>打开工作区，看看数据。</h2><p>选择物种、KO 或 MAG，查看完整图表、数据列表和处理方法。</p></div><a class="button-primary" href="http://127.0.0.1:3000/analysis/abundance">打开分析工作区 <span aria-hidden="true">→</span></a></section>
+  </main>
+  <footer class="site-footer"><strong>AD-Meta · 微脑智库</strong><span class="demo-note">首页布局 Demo · 使用项目内现有真实界面截图 · 供方案检查</span></footer>
+  <dialog class="image-dialog" id="image-dialog"><div class="dialog-top"><span id="dialog-title">图表预览</span><button type="button" id="dialog-close">关闭 ✕</button></div><img id="dialog-image" alt="放大的真实界面截图"></dialog>
+  <script>
+    const entryContent = {
+      species: { title: '查看菌群组成', description: '比较两组丰度，按分类层级查看物种。', action: '查看物种图集', target: '#species' },
+      function: { title: '比较 KO 丰度', description: '查看 KO 丰度及样本内的相对贡献。', action: '查看 KO 图集', target: '#function' },
+      mag: { title: '查看 MAG 热图', description: '比较 MAG 丰度，查看样本分布与聚类。', action: '查看 MAG 图集', target: '#mag' },
+    };
+    const slides = {
+      species: [
+        { title: '物种丰度对比', image: '../previews/species-species-native-bar-2026-10-07.png', width: 1862, height: 893, description: '比较 AD 与 NC 组的物种丰度' },
+        { title: '门级组成', image: '../previews/species-phylum-native-bar-2026-10-07.png', width: 1862, height: 936, description: '在门级查看两组菌群组成' },
+        { title: '分类层级图', image: '../../frontend/public/assets/home-analysis-preview.png', width: 2238, height: 1124, description: '按分类层级查看菌群组成' },
+        { title: '物种显示数量', image: '../previews/species-species-topn.png', width: 320, height: 549, description: '选择 Top N，或输入要显示的物种数' },
+      ],
+      function: [
+        { title: 'KO 丰度对比', image: '../previews/function-species-native-bar-2026-10-07.png', width: 1862, height: 893, description: '按 KO 编号比较两组丰度' },
+        { title: '高丰度 KO 相对贡献', image: '../previews/function-koContribution-native-bar-2026-10-07.png', width: 1862, height: 936, description: '查看样本内 KO 的相对贡献' },
+        { title: 'KO 显示数量', image: '../previews/function-koContribution-topn.png', width: 320, height: 511, description: '选择预设数量，也可以自己输入' },
+        { title: 'KO 丰度显示设置', image: '../previews/function-species-topn.png', width: 320, height: 549, description: '调整丰度图显示的 KO 数量' },
+      ],
+      mag: [
+        { title: 'MAG 丰度对比', image: '../previews/mag-bar-layout-2026-10-07.png', width: 1862, height: 936, description: '比较 MAG 丰度，拖动查看不同区间' },
+        { title: 'MAG 样本丰度热图', image: '../previews/mag-heatmap-dendrogram-grouped.png', width: 2000, height: 1100, description: '查看样本与 MAG 的丰度矩阵及聚类树' },
+        { title: '热图横纵轴交换', image: '../previews/mag-heatmap-dendrogram-transposed.png', width: 2000, height: 1100, description: '切换样本与 MAG 在横纵轴上的位置' },
+        { title: '完整热图导出', image: '../previews/mag-heatmap-export-fitted.png', width: 1800, height: 1000, description: '把完整热图导出到指定尺寸的画布' },
+      ],
+      custom: [
+        { title: '柱图样式与方向', image: '../previews/mag-bar-layout-2026-10-07.png', width: 1862, height: 936, description: '调整柱图、折线与坐标方向' },
+        { title: '连续导航与数值范围', image: '../previews/mag-bar-layout-range-2026-10-07.png', width: 1862, height: 936, description: '缩放、平移，定位到要看的数据区间' },
+        { title: '聚类树与配色', image: '../previews/mag-heatmap-dendrogram-grouped.png', width: 2000, height: 1100, description: '设置热图配色、排列与聚类树' },
+        { title: '横纵轴交换', image: '../previews/mag-heatmap-dendrogram-transposed.png', width: 2000, height: 1100, description: '切换样本与 MAG 在横纵轴上的位置' },
+        { title: '图像导出设置', image: '../previews/mag-export-panel-2026-10-07.png', width: 1862, height: 936, description: '选择 SVG 或 PNG，设置图像尺寸' },
+      ],
+    };
+    const domainLabels = { species: 'COMMUNITY TAXONOMY', function: 'COMMUNITY FUNCTION', mag: 'GENOME-RESOLVED MAG', custom: 'CUSTOMIZE THE VIEW' };
+    const indexes = { species: 0, function: 0, mag: 0, custom: 0 };
+    let activeDomain = 'species';
+    const $ = id => document.getElementById(id);
+    const root = document.documentElement;
+    const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
+    const reducedMotion = () => motionPreference.matches;
+    const clamp = value => Math.max(0, Math.min(1, value));
+    let galleryDomain = '';
+    let galleryPosition = 0;
+    let galleryTargetPosition = 0;
+    let gallerySheets = [];
+    let gallerySwiper = null;
+    let galleryInputOwned = false;
+    let syncingGalleryScroll = false;
+    let snapTimer = 0;
+    let wheelAccumulator = 0;
+    let lastWheelInput = 0;
+    let wheelDirection = 0;
+    let wheelStartPosition = 0;
+    let wheelKind = '';
+    let pendingChapterDirection = 0;
+    let boundaryFrame = 0;
+    const galleryCache = new Map();
+    let sceneAnimations = [];
+    let sceneMotionToken = 0;
+    const preparedImages = new Map();
+    function prepareImage(source) {
+      if (preparedImages.has(source)) return preparedImages.get(source);
+      const ready = new Promise(resolve => {
+        const preview = new Image();
+        preview.onload = async () => {
+          if (typeof preview.decode === 'function') await preview.decode().catch(() => {});
+          resolve();
+        };
+        preview.onerror = () => resolve();
+        preview.src = source;
+      });
+      preparedImages.set(source, ready);
+      return ready;
+    }
+    function animate(element, frames, options) {
+      if (reducedMotion() || typeof element.animate !== 'function') return Promise.resolve();
+      const animation = element.animate(frames, options);
+      return animation.finished.catch(() => {});
+    }
+    function clearSceneMotion() {
+      sceneMotionToken++;
+      for (const animation of sceneAnimations) animation.cancel();
+      sceneAnimations = [];
+      for (const { scene } of galleryCache.values()) scene.classList.remove('is-exiting', 'is-moving');
+    }
+    function transitionGalleryScene(outgoing, incoming, direction) {
+      const sample = element => {
+        const style = getComputedStyle(element);
+        return { opacity: style.opacity || '1', transform: style.transform === 'none' ? 'translateY(0px)' : style.transform || 'translateY(0px)' };
+      };
+      const oldFrame = outgoing && sample(outgoing);
+      const newFrame = incoming.classList.contains('is-moving') && sample(incoming);
+      clearSceneMotion();
+      if (!outgoing || reducedMotion() || typeof incoming.animate !== 'function') return;
+      const token = sceneMotionToken;
+      outgoing.classList.add('is-exiting', 'is-moving');
+      incoming.classList.add('is-moving');
+      sceneAnimations = [
+        outgoing.animate([oldFrame, { opacity: 0, transform: `translateY(${-direction * 24}px)` }], { duration: 180, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'both' }),
+        incoming.animate([newFrame || { opacity: 0, transform: `translateY(${direction * 28}px)` }, { opacity: 1, transform: 'translateY(0px)' }], { duration: 380, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'both' }),
+      ];
+      Promise.all(sceneAnimations.map(animation => animation.finished.catch(() => {}))).then(() => { if (token === sceneMotionToken) clearSceneMotion(); });
+    }
+    function showSlide({ mode = 'none' } = {}) {
+      const list = slides[activeDomain];
+      if (galleryDomain !== activeDomain) {
+        clearWheelGesture();
+        galleryInputOwned = false;
+        const previousDomain = galleryDomain;
+        const outgoing = galleryCache.get(previousDomain);
+        if (outgoing) {
+          outgoing.swiper.mousewheel.disable();
+          outgoing.scene.removeAttribute('id');
+          outgoing.track.removeAttribute('id');
+          outgoing.scene.classList.add('is-parked');
+          outgoing.scene.setAttribute('aria-hidden', 'true');
+          outgoing.scene.inert = true;
+        }
+        galleryDomain = activeDomain;
+        const cached = galleryCache.get(activeDomain);
+        let scene = cached?.scene;
+        if (!scene) {
+          scene = previousDomain ? document.createElement('div') : $('stage-carousel');
+          if (previousDomain) {
+            scene.className = 'stage-carousel swiper';
+            scene.innerHTML = '<div class="stage-gallery swiper-wrapper" aria-label="本章节图集"></div>';
+            $('stage-viewport').append(scene);
+          }
+        }
+        const track = cached?.track || scene.querySelector('.stage-gallery');
+        scene.id = 'stage-carousel';
+        track.id = 'stage-gallery';
+        scene.classList.remove('is-parked');
+        scene.removeAttribute('aria-hidden');
+        scene.inert = false;
+        galleryTargetPosition = indexes[activeDomain];
+        if (cached) {
+          gallerySheets = cached.sheets;
+          gallerySwiper = cached.swiper;
+          fitGalleryCards();
+        } else {
+        gallerySwiper = null;
+        track.replaceChildren();
+        gallerySheets = list.map((slide, index) => {
+          const pane = document.createElement('div');
+          pane.className = 'stage-slide swiper-slide';
+          const sheet = document.createElement('button');
+          sheet.type = 'button';
+          sheet.className = 'stage-slide__sheet';
+          sheet.setAttribute('aria-label', '放大查看' + slide.title);
+          sheet.addEventListener('click', () => {
+            if (index === Math.round(readGalleryPosition())) { openStageImage(index); return; }
+            clearWheelGesture();
+            galleryInputOwned = true;
+            animateGalleryTo(index);
+            syncScrollToGallery(index);
+          });
+          const image = document.createElement('img');
+          image.className = 'stage-image';
+          image.width = slide.width;
+          image.height = slide.height;
+          image.src = slide.image;
+          image.alt = slide.title + '真实界面截图';
+          image.decoding = 'async';
+          sheet.append(image);
+          pane.append(sheet);
+          track.append(pane);
+          prepareImage(slide.image);
+          return { pane, sheet, image };
+        });
+        fitGalleryCards({ updateSwiper: false });
+        gallerySwiper = new Swiper(scene, {
+          initialSlide: galleryTargetPosition,
+          effect: 'coverflow',
+          slidesPerView: 'auto',
+          centeredSlides: true,
+          coverflowEffect: { rotate: 27, stretch: 0, depth: 130, scale: .9, modifier: 1, slideShadows: false },
+          speed: reducedMotion() ? 0 : 420,
+          loop: false,
+          grabCursor: true,
+          preventInteractionOnTransition: false,
+          resizeObserver: true,
+          freeMode: { enabled: true, momentum: false, sticky: false },
+          // Fine wheel input uses Swiper's continuous movement. The small
+          // adapter below handles discrete ticks and idle snapping via its API.
+          mousewheel: { enabled: false, eventsTarget: 'body', sensitivity: 3, releaseOnEdges: true },
+          on: {
+            setTranslate(swiper) {
+              if (swiper !== gallerySwiper) return;
+              renderGallery(galleryOffsetFromTranslate(swiper));
+            },
+            scroll(swiper, event) {
+              if (swiper !== gallerySwiper) return;
+              event.preventDefault();
+              syncScrollToGallery(galleryOffsetFromTranslate(swiper));
+              scheduleGallerySnap();
+            },
+            sliderFirstMove(swiper) { if (swiper !== gallerySwiper) return; clearWheelGesture(); galleryInputOwned = true; },
+            sliderMove(swiper) { if (swiper === gallerySwiper) syncScrollToGallery(galleryOffsetFromTranslate(swiper)); },
+            touchEnd(swiper) {
+              if (swiper !== gallerySwiper) return;
+              clearTimeout(snapTimer);
+              snapTimer = setTimeout(() => {
+                snapTimer = 0;
+                if (!gallerySwiper) return;
+                const target = Math.round(readGalleryPosition());
+                animateGalleryTo(target);
+                syncScrollToGallery(target);
+              }, 0);
+            },
+            transitionEnd(swiper) {
+              if (swiper !== gallerySwiper) return;
+              if (!snapTimer) galleryInputOwned = false;
+              renderGallery(galleryTargetPosition);
+              if (pendingChapterDirection) {
+                const direction = pendingChapterDirection;
+                pendingChapterDirection = 0;
+                boundaryFrame = requestAnimationFrame(() => { boundaryFrame = 0; advanceChapter(direction); });
+              }
+            },
+          },
+        });
+        galleryCache.set(activeDomain, { scene, track, sheets: gallerySheets, swiper: gallerySwiper });
+        }
+        stage.style.setProperty('--gallery-accent', activeDomain === 'function' ? 'var(--teal)' : activeDomain === 'mag' ? 'var(--mag)' : 'var(--blue)');
+        renderGallery(galleryTargetPosition);
+        const domains = Object.keys(slides);
+        if (mode !== 'none') transitionGalleryScene(outgoing?.scene, scene, Math.sign(domains.indexOf(activeDomain) - domains.indexOf(previousDomain)) || 1);
+        // Decode the adjacent module before its first interaction, without
+        // rebuilding previously visited Swiper scenes at every boundary.
+        const neighbor = domains[domains.indexOf(activeDomain) + 1];
+        if (neighbor) for (const slide of slides[neighbor]) prepareImage(slide.image);
+      }
+      const item = list[indexes[activeDomain]];
+      $('stage-domain').textContent = domainLabels[activeDomain];
+      for (const control of document.querySelectorAll('[data-chapter]')) control.setAttribute('aria-pressed', String(control.dataset.chapter === activeDomain));
+      $('stage-title').textContent = item.title;
+      $('stage-description').textContent = item.description;
+      $('slide-count').textContent = String(indexes[activeDomain] + 1).padStart(2, '0') + ' / ' + String(list.length).padStart(2, '0');
+      $('slide-prev').disabled = indexes[activeDomain] === 0;
+      $('slide-next').disabled = indexes[activeDomain] === list.length - 1;
+      if (mode !== 'none') {
+        const caption = document.querySelector('.stage-caption__text');
+        if (typeof caption.getAnimations === 'function') for (const animation of caption.getAnimations()) animation.cancel();
+        animate(caption, [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: 420, easing: 'cubic-bezier(.22,1,.36,1)' });
+      }
+    }
+    function fitGalleryCards({ updateSwiper = true } = {}) {
+      const scene = $('stage-carousel');
+      if (!scene.clientWidth || !scene.clientHeight) return;
+      const maxWidth = Math.max(1, scene.clientWidth * .82 - 20);
+      const maxHeight = Math.max(1, scene.clientHeight - 48);
+      for (const { pane, sheet, image } of gallerySheets) {
+        const ratio = (image.naturalWidth || image.width) / Math.max(1, image.naturalHeight || image.height);
+        const width = Math.min(maxWidth, maxHeight * ratio);
+        const height = width / ratio;
+        // Fit the complete screenshot inside its own floating card. Portrait
+        // controls and wide charts retain their actual proportions, with no
+        // tall white letterbox imposed by a common browser-window rectangle.
+        pane.style.width = (width + 20).toFixed(2) + 'px';
+        sheet.style.width = width.toFixed(2) + 'px';
+        sheet.style.height = height.toFixed(2) + 'px';
+      }
+      if (updateSwiper && gallerySwiper) {
+        const target = galleryTargetPosition;
+        gallerySwiper.update();
+        gallerySwiper.slideTo(target, 0);
+      }
+    }
+    function renderGallery(position) {
+      const last = slides[activeDomain].length - 1;
+      galleryPosition = Math.max(0, Math.min(last, position));
+      // Swiper exclusively owns the track transform and transition.
+      gallerySheets.forEach(({ pane, sheet }, index) => {
+        const distance = Math.min(1, Math.abs(index - galleryPosition));
+        // The coverflow module owns perspective, rotation and scale on each
+        // pane; the front sheet stays flat and readable at its centered stop.
+        sheet.style.transform = 'none';
+        sheet.style.opacity = String(1 - distance * .22);
+        pane.inert = Math.abs(index - galleryPosition) > 1.05;
+        pane.setAttribute('aria-hidden', String(pane.inert));
+        sheet.setAttribute('aria-label', (index === Math.round(galleryPosition) ? '放大查看' : '切换到') + slides[activeDomain][index].title);
+      });
+      const index = Math.round(galleryPosition);
+      const aligned = Math.abs(galleryPosition - index) < .00001;
+      if (aligned && indexes[activeDomain] !== index) { indexes[activeDomain] = index; showSlide({ mode: 'caption' }); }
+      stage.style.setProperty('--gallery-completion', (last ? indexes[activeDomain] / last : 1).toFixed(5));
+      $('gallery-scroll-hint').textContent = scrollGalleryEnabled() ? (aligned && index === last && galleryTargetPosition === last ? '本组图集已展示完，继续滚动向下探索 ↓' : '轻滚切一张 · 快滚连续浏览 · 支持回看') : '使用箭头浏览本组图集';
+    }
+    function galleryOffsetFromTranslate(swiper, translate = swiper.translate) {
+      // Centered 82%-wide cards start with a positive translation and travel
+      // by the slide grid, not the full viewport width. Use Swiper's actual
+      // anchors so idle snapping and edge release stay correct after resizing.
+      const grid = swiper.slidesGrid;
+      if (!grid || grid.length < 2) return 0;
+      const offset = -translate;
+      if (offset <= grid[0]) return 0;
+      for (let index = 0; index < grid.length - 1; index++) {
+        if (offset <= grid[index + 1]) return index + (offset - grid[index]) / Math.max(1, grid[index + 1] - grid[index]);
+      }
+      return grid.length - 1;
+    }
+    function readGalleryPosition() {
+      return gallerySwiper ? galleryOffsetFromTranslate(gallerySwiper, gallerySwiper.getTranslate()) : galleryPosition;
+    }
+    function animateGalleryTo(position, { immediate = false, duration = 420 } = {}) {
+      const target = Math.max(0, Math.min(slides[activeDomain].length - 1, Math.round(position)));
+      if (!gallerySwiper) return;
+      if (!immediate && !reducedMotion() && target === galleryTargetPosition && gallerySwiper.animating) return;
+      galleryTargetPosition = target;
+      gallerySwiper.slideTo(target, immediate || reducedMotion() ? 0 : duration);
+      renderGallery(target);
+      if (immediate || reducedMotion() || !gallerySwiper.animating) galleryInputOwned = false;
+    }
+    function syncScrollToGallery(position) {
+      if (!scrollGalleryEnabled()) return;
+      const timeline = chapterTimelines.find(item => item.chapter.dataset.domain === activeDomain);
+      if (!timeline) return;
+      syncingGalleryScroll = true;
+      const top = timeline.start + timeline.hold + position * timeline.step;
+      scrollTo({ top, behavior: 'instant' });
+      renderedScroll = scrollY;
+      syncingGalleryScroll = false;
+    }
+    function setDomain(domain) {
+      if (!slides[domain] || domain === activeDomain) return;
+      clearWheelGesture();
+      galleryInputOwned = false;
+      activeDomain = domain;
+      showSlide({ mode: 'chapter' });
+    }
+    function advanceChapter(direction) {
+      const index = chapters.findIndex(chapter => chapter.dataset.domain === activeDomain);
+      const neighbor = chapters[index + direction];
+      const last = slides[activeDomain].length - 1;
+      if (!neighbor || galleryTargetPosition !== (direction > 0 ? last : 0)) return false;
+      const domain = neighbor.dataset.domain;
+      const target = direction > 0 ? 0 : slides[domain].length - 1;
+      indexes[domain] = target;
+      setDomain(domain);
+      animateGalleryTo(target, { immediate: true });
+      syncScrollToGallery(target);
+      updateFromScroll({ immediate: true });
+      return true;
+    }
+    function moveSlide(direction) {
+      clearWheelGesture();
+      galleryInputOwned = true;
+      const target = Math.max(0, Math.min(slides[activeDomain].length - 1, galleryTargetPosition + direction));
+      animateGalleryTo(target);
+      syncScrollToGallery(target);
+    }
+    $('slide-prev').addEventListener('click', () => moveSlide(-1));
+    $('slide-next').addEventListener('click', () => moveSlide(1));
+    for (const button of document.querySelectorAll('.entry-tab')) {
+      button.addEventListener('click', () => {
+        const domain = button.dataset.entry;
+        for (const tab of document.querySelectorAll('.entry-tab')) tab.setAttribute('aria-selected', String(tab === button));
+        const content = entryContent[domain];
+        $('entry-summary').setAttribute('aria-labelledby', button.id);
+        $('entry-title').textContent = content.title;
+        $('entry-description').textContent = content.description;
+        $('entry-link').href = content.target;
+        $('entry-link').innerHTML = content.action + ' <span aria-hidden="true">→</span>';
+        animate($('entry-summary'), [{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: 220, easing: 'ease-out' });
+      });
+    }
+    const chapters = [...document.querySelectorAll('.chapter')];
+    // Keep one reading viewport pinned while empty tracks supply native scroll
+    // distance. Adjacent context is a full-size copy, never another live panel.
+    const reader = document.createElement('div');
+    reader.className = 'chapter-reader';
+    document.querySelector('.chapter-list').prepend(reader);
+    const timelineContainer = document.createElement('div');
+    timelineContainer.className = 'chapter-timeline';
+    reader.after(timelineContainer);
+    for (const chapter of chapters) {
+      const content = document.createElement('div');
+      content.className = 'chapter-content';
+      content.append(...chapter.childNodes);
+      chapter.append(content);
+    }
+    const chapterTracks = chapters.map(chapter => {
+      const track = document.createElement('div');
+      track.className = 'chapter-track';
+      chapter.before(track);
+      track.append(chapter);
+      timelineContainer.append(track);
+      return track;
+    });
+    chapters.forEach((chapter, index) => {
+      for (const [side, neighbor] of [['previous', chapters[index - 1]], ['next', chapters[index + 1]]]) {
+        if (!neighbor) continue;
+        const preview = document.createElement('div');
+        preview.className = 'chapter-preview chapter-preview--' + side;
+        preview.dataset.neighbor = neighbor.dataset.domain;
+        preview.setAttribute('aria-hidden', 'true');
+        preview.inert = true;
+        const content = neighbor.querySelector('.chapter-content').cloneNode(true);
+        content.classList.add('chapter-preview__content');
+        preview.style.setProperty('--chapter-accent', ({ function: 'var(--teal)', mag: 'var(--mag)' })[neighbor.dataset.domain] || 'var(--blue)');
+        preview.append(content);
+        chapter.append(preview);
+      }
+    });
+    const rail = document.querySelector('.stage-rail');
+    const stage = document.querySelector('.visual-stage');
+    const story = $('showcase');
+    const evidenceItems = [...document.querySelectorAll('.evidence-step')];
+    const revealRecords = [];
+    let chapterPositions = [];
+    let chapterTimelines = [];
+    const scrollGalleryEnabled = () => innerWidth > 1023 && innerHeight >= 650 && !reducedMotion();
+    let displayedChapter = null;
+    let readerAnimations = [];
+    let readerMotionToken = 0;
+    function clearReaderMotion() {
+      readerMotionToken++;
+      for (const animation of readerAnimations) animation.cancel();
+      readerAnimations = [];
+      for (const chapter of chapters) chapter.classList.remove('is-leaving', 'is-changing');
+    }
+    function presentChapter() {
+      const incoming = chapters.find(chapter => chapter.dataset.domain === activeDomain);
+      if (incoming === displayedChapter) return;
+      const outgoing = displayedChapter;
+      const oldContent = outgoing?.querySelector('.chapter-content');
+      const newContent = incoming.querySelector('.chapter-content');
+      // Sample unfinished movement before cancelling it, so rapid reversals
+      // resume at the rendered position instead of finishing a queued effect.
+      const sample = element => {
+        const style = getComputedStyle(element);
+        return { opacity: style.opacity || '1', transform: style.transform === 'none' ? 'translateY(0px)' : style.transform || 'translateY(0px)' };
+      };
+      const oldFrame = oldContent && sample(oldContent);
+      const incomingWasMoving = incoming.classList.contains('is-changing');
+      const newFrame = incomingWasMoving && sample(newContent);
+      const oldPreviewFrames = new Map([...outgoing?.querySelectorAll('.chapter-preview') || []].map(preview => [preview, sample(preview)]));
+      const newPreviewFrames = new Map(incomingWasMoving ? [...incoming.querySelectorAll('.chapter-preview')].map(preview => [preview, sample(preview)]) : []);
+      clearReaderMotion();
+      displayedChapter = incoming;
+      if (!outgoing || !scrollGalleryEnabled() || typeof incoming.animate !== 'function') return;
+      const direction = Math.sign(chapters.indexOf(incoming) - chapters.indexOf(outgoing)) || 1;
+      const token = readerMotionToken;
+      const easing = 'cubic-bezier(.22,1,.36,1)';
+      outgoing.classList.add('is-leaving', 'is-changing');
+      incoming.classList.add('is-changing');
+      const run = (element, frames, duration) => {
+        const animation = element.animate(frames, { duration, easing, fill: 'both' });
+        readerAnimations.push(animation);
+        return animation.finished.catch(() => {});
+      };
+      const jobs = [
+        run(oldContent, [oldFrame, { opacity: 0, transform: `translateY(${-direction * 32}px)` }], 180),
+        run(newContent, [newFrame || { opacity: 0, transform: `translateY(${direction * 40}px)` }, { opacity: 1, transform: 'translateY(0px)' }], 420),
+      ];
+      for (const preview of outgoing.querySelectorAll('.chapter-preview')) {
+        jobs.push(run(preview, [oldPreviewFrames.get(preview), { opacity: 0, transform: `translateY(${-direction * 18}px)` }], 180));
+      }
+      for (const preview of incoming.querySelectorAll('.chapter-preview')) {
+        jobs.push(run(preview, [newPreviewFrames.get(preview) || { opacity: 0, transform: `translateY(${direction * 24}px)` }, { opacity: .36, transform: 'translateY(0px)' }], 380));
+      }
+      Promise.all(jobs).then(() => { if (token === readerMotionToken) clearReaderMotion(); });
+    }
+    let storyBounds = { top: 0, bottom: 0 };
+    let scrollFrame = 0;
+    let renderedScroll = scrollY;
+    let introToken = 0;
+    let logoToken = 0;
+    let resettingScroll = false;
+    function cancelLogo() {
+      logoToken++;
+      for (const piece of document.querySelectorAll('.logo-piece')) if (typeof piece.getAnimations === 'function') for (const animation of piece.getAnimations()) animation.cancel();
+      $('logo-replay').classList.remove('is-assembling', 'is-flashing');
+    }
+    function pause(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+    async function assembleLogo() {
+      cancelLogo();
+      if (reducedMotion()) return;
+      const token = logoToken;
+      const button = $('logo-replay');
+      button.classList.add('is-assembling');
+      const pieces = [...button.querySelectorAll('.logo-piece')].reverse();
+      await Promise.all(pieces.map((piece, index) => animate(piece, [
+        { opacity: 0, transform: `translate(${index % 2 ? -14 : 14}px, -145px) rotate(${index % 2 ? -7 : 7}deg)`, offset: 0 },
+        { opacity: 1, transform: `translate(${index % 2 ? -14 : 14}px, -145px) rotate(${index % 2 ? -7 : 7}deg)`, offset: .08 },
+        { opacity: 1, transform: 'translate(0, 3px) rotate(0deg)', offset: .8 },
+        { opacity: 1, transform: 'translate(0, 0) rotate(0deg)', offset: 1 },
+      ], { duration: 310, delay: index * 155, easing: 'cubic-bezier(.4,0,.8,1)', fill: 'both' })));
+      if (token !== logoToken) return;
+      button.classList.add('is-flashing');
+      await pause(360);
+      if (token !== logoToken) return;
+      button.classList.remove('is-assembling', 'is-flashing');
+      for (const piece of pieces) if (typeof piece.getAnimations === 'function') for (const animation of piece.getAnimations()) animation.cancel();
+      await animate(button.querySelector('.hero-mark'), [{ opacity: .5 }, { opacity: 1 }], { duration: 180, easing: 'ease-out' });
+    }
+    function finishIntro({ skipped = false } = {}) {
+      introToken++;
+      clearTimeout(window.introFallback);
+      cancelLogo();
+      root.classList.toggle('is-intro-skipped', skipped);
+      root.dataset.intro = 'full';
+      document.querySelector('.site-header').removeAttribute('inert');
+    }
+    async function runIntro({ force = false } = {}) {
+      if (reducedMotion() || (!force && location.hash) || scrollY > 3) { finishIntro({ skipped: true }); return; }
+      const token = ++introToken;
+      root.classList.add('motion-ready');
+      root.classList.remove('is-intro-skipped');
+      root.dataset.intro = 'staged';
+      await pause(175);
+      if (token !== introToken) return;
+      root.dataset.intro = 'headline';
+      await assembleLogo();
+      if (token !== introToken) return;
+      root.dataset.intro = 'collapsing';
+      await pause(826 + 350);
+      if (token !== introToken) return;
+      finishIntro();
+      updateGeometry();
+      updateFromScroll();
+    }
+    function updateGeometry() {
+      // Keep native scroll ranges for the scrollbar and keyboard; wheel input
+      // inside a pinned chapter selects slides directly instead of waiting
+      // for hundreds of pixels to accumulate.
+      const pinned = scrollGalleryEnabled();
+      clearReaderMotion();
+      clearSceneMotion();
+      root.classList.toggle('scroll-gallery', pinned);
+      chapters.forEach((chapter, index) => {
+        const parent = pinned ? reader : chapterTracks[index];
+        if (chapter.parentElement !== parent) parent.append(chapter);
+      });
+      function documentTop(element, stop = null) {
+        let top = 0;
+        for (let node = element; node && node !== stop; node = node.offsetParent) top += node.offsetTop;
+        return top;
+      }
+      const railBounds = rail.getBoundingClientRect();
+      const header = document.querySelector('.site-header');
+      const headerHeight = header.offsetHeight;
+      const headerBottom = header.getBoundingClientRect().top + headerHeight;
+      const centerShift = innerWidth <= 1023 ? 0 : innerWidth / 2 - railBounds.left - rail.clientWidth / 2;
+      const stageHeight = stage.offsetHeight;
+      const stageTop = Math.max(headerBottom + 24, (innerHeight + headerBottom - stageHeight) / 2);
+      root.style.setProperty('--stage-height', stageHeight + 'px');
+      root.style.setProperty('--stage-top', stageTop.toFixed(2) + 'px');
+      const hold = 24;
+      const step = Math.max(440, innerHeight * .68);
+      const chapterGap = 96;
+      const ranges = chapters.map(chapter => hold + (slides[chapter.dataset.domain].length - 1) * step + chapterGap);
+      // A shared sticky viewport only needs its height once, at the final
+      // track. Repeating that height between chapters created a dead screen.
+      chapterTracks.forEach((track, index) => track.style.setProperty('--track-height', (ranges[index] + (index === chapters.length - 1 ? stageHeight : 0)).toFixed(2) + 'px'));
+      chapterTimelines = chapterTracks.map((track, index) => {
+        const top = documentTop(track);
+        return { chapter: chapters[index], top, start: top - stageTop, range: ranges[index], hold, step, stageHeight };
+      });
+      const storyTop = documentTop(story);
+      storyBounds = { top: storyTop, bottom: storyTop + story.offsetHeight };
+      chapterPositions = chapters.map((chapter, index) => {
+        const heading = chapter.querySelector('h3');
+        const top = pinned ? chapterTimelines[index].top + documentTop(heading, chapter) : documentTop(heading);
+        return { chapter, center: top + heading.offsetHeight / 2 };
+      });
+      for (const record of revealRecords) {
+        record.timeline = pinned && record.chapter ? chapterTimelines[chapters.indexOf(record.chapter)] : null;
+        record.top = record.timeline ? record.timeline.top + documentTop(record.element, record.chapter) : documentTop(record.element);
+      }
+      const previewSpace = chapters.map(chapter => {
+        if (!pinned) return { chapter, above: 0, below: 0 };
+        const content = chapter.querySelector('.chapter-content');
+        // Let adjacent chapters sit near the viewport edges, leaving the
+        // central paragraph room to breathe. Short windows omit previews
+        // rather than squeezing them against the active text.
+        const gap = Math.min(140, Math.max(88, innerHeight * .11));
+        return {
+          chapter,
+          above: Math.max(0, content.offsetTop - gap),
+          below: Math.max(0, stageHeight - content.offsetTop - content.offsetHeight - gap),
+        };
+      });
+      for (const space of previewSpace) {
+        space.chapter.style.setProperty('--preview-top-height', space.above.toFixed(1) + 'px');
+        space.chapter.style.setProperty('--preview-bottom-height', space.below.toFixed(1) + 'px');
+      }
+      root.style.setProperty('--stage-center-x', centerShift.toFixed(2) + 'px');
+      clearWheelGesture();
+      galleryInputOwned = false;
+      fitGalleryCards();
+    }
+    function galleryPositionAt(timeline, position) {
+      const last = slides[timeline.chapter.dataset.domain].length - 1;
+      const segment = Math.max(0, (position - timeline.start - timeline.hold) / timeline.step);
+      const base = Math.floor(segment);
+      const transition = clamp((segment - base - .35) / .5);
+      return Math.min(last, base + transition * transition * (3 - 2 * transition));
+    }
+    function paintScroll(position) {
+      const progress = reducedMotion() ? 1 : clamp(position / (innerWidth <= 1023 ? 260 : 360));
+      const eased = progress * progress * (3 - 2 * progress);
+      root.style.setProperty('--story-progress', eased.toFixed(4));
+      root.style.setProperty('--copy-progress', innerWidth <= 1023 || reducedMotion() ? '1' : clamp((progress - .38) / .55).toFixed(4));
+      if (scrollGalleryEnabled()) {
+        let timeline = chapterTimelines[0];
+        for (const item of chapterTimelines) if (position >= item.start) timeline = item;
+        const galleryOffset = galleryPositionAt(timeline, position);
+        const domain = timeline.chapter.dataset.domain;
+        if (activeDomain !== domain) {
+          indexes[domain] = Math.round(galleryOffset);
+          setDomain(domain);
+        }
+        if (!galleryInputOwned && Math.round(galleryOffset) !== galleryTargetPosition) animateGalleryTo(galleryOffset);
+      } else {
+        const activationLine = position + innerHeight * .60;
+        let current = chapters[0];
+        for (const record of chapterPositions) if (record.center <= activationLine) current = record.chapter;
+        if (storyBounds.top - position < innerHeight * .9 && storyBounds.bottom - position > innerHeight * .18) setDomain(current.dataset.domain);
+      }
+      for (const chapter of chapters) {
+        const active = chapter.dataset.domain === activeDomain;
+        chapter.classList.toggle('is-active', active);
+        chapter.inert = scrollGalleryEnabled() && !active;
+        if (scrollGalleryEnabled() && !active) chapter.setAttribute('aria-hidden', 'true');
+        else chapter.removeAttribute('aria-hidden');
+      }
+      for (const record of revealRecords) {
+        const stickyTravel = record.timeline ? Math.max(0, Math.min(record.timeline.range, position - record.timeline.start)) : 0;
+        const distance = innerHeight * .94 - (record.top - position + stickyTravel) - record.delay;
+        const entrance = record.timeline ? clamp((position - record.timeline.start + record.timeline.hold - record.delay * 3) / record.timeline.hold) : 0;
+        // Pinned chapter changes are animated as complete text blocks. Their
+        // descendants must not also fade according to an offscreen track.
+        const linear = reducedMotion() || record.timeline ? 1 : Math.max(entrance, clamp(distance / Math.max(150, innerHeight * .25)));
+        const reveal = linear * linear * (3 - 2 * linear);
+        if (reveal === record.last || (reveal > 0 && reveal < 1 && Math.abs(reveal - record.last) < .001)) continue;
+        record.last = reveal;
+        record.element.style.setProperty('--reveal', reveal.toFixed(4));
+        record.element.classList.toggle('is-revealing', reveal > 0 && reveal < 1);
+      }
+      presentChapter();
+    }
+    function scrollTick() {
+      // Native scrolling already supplies motion. Coalesce paint to one frame
+      // without another smoothing loop delaying chapter selection.
+      scrollFrame = 0;
+      renderedScroll = scrollY;
+      paintScroll(renderedScroll);
+    }
+    function updateFromScroll({ immediate = false } = {}) {
+      if (!resettingScroll && root.dataset.intro !== 'full' && scrollY > 3) finishIntro({ skipped: true });
+      if (immediate || reducedMotion()) {
+        if (scrollFrame) cancelAnimationFrame(scrollFrame);
+        scrollFrame = 0;
+        renderedScroll = scrollY;
+        paintScroll(renderedScroll);
+        return;
+      }
+      if (scrollFrame) return;
+      scrollFrame = requestAnimationFrame(scrollTick);
+    }
+    addEventListener('scroll', () => { if (!syncingGalleryScroll) updateFromScroll(); }, { passive: true });
+    addEventListener('resize', () => { updateGeometry(); updateFromScroll({ immediate: true }); });
+    motionPreference.addEventListener('change', () => { if (reducedMotion()) { finishIntro({ skipped: true }); animateGalleryTo(galleryTargetPosition, { immediate: true }); } updateGeometry(); updateFromScroll({ immediate: true }); });
+    function clearWheelGesture() {
+      pendingChapterDirection = 0;
+      if (boundaryFrame) cancelAnimationFrame(boundaryFrame);
+      boundaryFrame = 0;
+      clearTimeout(snapTimer);
+      snapTimer = 0;
+      wheelAccumulator = 0;
+      wheelDirection = 0;
+      lastWheelInput = 0;
+      wheelKind = '';
+    }
+    function scheduleGallerySnap() {
+      clearTimeout(snapTimer);
+      snapTimer = setTimeout(() => {
+        snapTimer = 0;
+        const position = readGalleryPosition();
+        // Follow the gesture direction at rest: a short deliberate gesture
+        // still reaches a whole image, while long input can cross many images.
+        const target = Math.abs(wheelAccumulator) >= 8
+          ? (wheelDirection > 0 ? Math.ceil(position - .001) : Math.floor(position + .001))
+          : Math.round(position);
+        animateGalleryTo(target, { duration: 360 });
+        syncScrollToGallery(galleryTargetPosition);
+      }, 140);
+    }
+    addEventListener('wheel', event => {
+      if (!gallerySwiper) return;
+      if (scrollGalleryEnabled() && Math.abs(renderedScroll - scrollY) > .5) updateFromScroll({ immediate: true });
+      const timeline = chapterTimelines.find(item => item.chapter.dataset.domain === activeDomain);
+      const inChapter = timeline && scrollY >= timeline.start - 24 && scrollY <= timeline.start + timeline.range + 24;
+      const ignored = !scrollGalleryEnabled() || !inChapter || event.ctrlKey || event.metaKey || event.defaultPrevented || !event.cancelable
+        || event.deltaY === 0 || Math.abs(event.deltaX) > Math.abs(event.deltaY)
+        || $('image-dialog').open || event.target.closest?.('input, textarea, select, [contenteditable="true"]');
+      if (ignored) { gallerySwiper.mousewheel.disable(); return; }
+      const delta = event.deltaY * (event.deltaMode === 1 ? 40 : event.deltaMode === 2 ? innerHeight : 1);
+      const direction = Math.sign(delta);
+      if (pendingChapterDirection && pendingChapterDirection !== direction || boundaryFrame) {
+        pendingChapterDirection = 0;
+        if (boundaryFrame) cancelAnimationFrame(boundaryFrame);
+        boundaryFrame = 0;
+      }
+      const position = readGalleryPosition();
+      const last = slides[activeDomain].length - 1;
+      const atEdge = direction > 0 ? position >= last - .002 : position <= .002;
+      const targetAtEdge = galleryTargetPosition === (direction > 0 ? last : 0);
+      if (atEdge || gallerySwiper.animating && targetAtEdge) {
+        gallerySwiper.mousewheel.disable();
+        if (gallerySwiper.animating) {
+          // Keep a single boundary intent, so input during the final picture's
+          // motion is not swallowed or played as a backlog of chapter jumps.
+          event.preventDefault();
+          pendingChapterDirection = direction;
+          return;
+        }
+        clearWheelGesture();
+        galleryInputOwned = false;
+        if (advanceChapter(direction)) { event.preventDefault(); return; }
+        // Before the first module and after the final one, release the page.
+        return;
+      }
+      const time = performance.now();
+      const reversed = wheelDirection !== 0 && direction !== wheelDirection;
+      const newGesture = time - lastWheelInput > 240 || reversed || !wheelKind;
+      if (newGesture) {
+        wheelAccumulator = 0;
+        wheelStartPosition = reversed || !gallerySwiper.animating ? Math.round(position) : galleryTargetPosition;
+        wheelKind = event.deltaMode !== 0 || Math.abs(delta) >= 40 ? 'notch' : 'continuous';
+      }
+      wheelDirection = direction;
+      lastWheelInput = time;
+      wheelAccumulator += delta;
+      galleryInputOwned = true;
+      if (wheelKind === 'notch') {
+        event.preventDefault();
+        gallerySwiper.mousewheel.disable();
+        const distance = Math.max(1, Math.ceil(Math.abs(wheelAccumulator) / 120));
+        const target = wheelStartPosition + direction * distance;
+        // Retarget a single Swiper transition immediately. Large input never
+        // waits for intermediate slides to finish one after another.
+        animateGalleryTo(target, { duration: Math.max(280, 440 - distance * 30) });
+        syncScrollToGallery(galleryTargetPosition);
+        clearTimeout(snapTimer);
+        snapTimer = setTimeout(() => { snapTimer = 0; if (!gallerySwiper.animating) galleryInputOwned = false; }, 240);
+      } else {
+        // Swiper consumes the original event when it bubbles through the body.
+        gallerySwiper.mousewheel.enable();
+      }
+    }, { passive: false, capture: true });
+    $('logo-replay').addEventListener('click', () => {
+      if (root.dataset.intro !== 'full') finishIntro({ skipped: true });
+      assembleLogo();
+    });
+    $('replay-intro').addEventListener('click', async () => {
+      finishIntro({ skipped: true });
+      resettingScroll = true;
+      scrollTo({ top: 0, behavior: 'instant' });
+      await pause(160);
+      resettingScroll = false;
+      updateFromScroll();
+      runIntro({ force: true });
+    });
+    for (const control of document.querySelectorAll('[data-chapter]')) control.addEventListener('click', () => {
+      clearWheelGesture();
+      const chapter = chapters.find(item => item.dataset.domain === control.dataset.chapter);
+      if (scrollGalleryEnabled()) {
+        const timeline = chapterTimelines.find(item => item.chapter === chapter);
+        scrollTo({ top: timeline.start + timeline.hold, behavior: 'smooth' });
+      } else chapter.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'start' });
+    });
+    document.addEventListener('click', event => { if (event.target.closest?.('a[href]')) clearWheelGesture(); });
+    const dialog = $('image-dialog');
+    function openStageImage(index) {
+      const item = slides[activeDomain][index];
+      $('dialog-image').src = item.image;
+      $('dialog-image').alt = item.title + '真实界面截图';
+      $('dialog-title').textContent = item.title;
+      dialog.showModal();
+    }
+    $('dialog-close').addEventListener('click', () => dialog.close());
+    dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
+    for (const chapter of chapters) {
+      const domain = chapter.dataset.domain;
+      const gallery = document.createElement('div');
+      gallery.className = 'mobile-gallery';
+      gallery.setAttribute('aria-label', domainLabels[domain] + '图集');
+      const preview = document.createElement('img');
+      preview.className = 'mobile-gallery__image';
+      preview.alt = '';
+      const caption = document.createElement('div');
+      caption.className = 'mobile-gallery__caption';
+      const title = document.createElement('strong');
+      const actions = document.createElement('div');
+      actions.className = 'mobile-gallery__actions';
+      const count = document.createElement('span');
+      count.className = 'mobile-gallery__count';
+      const previous = document.createElement('button');
+      previous.className = 'round-button';
+      previous.type = 'button';
+      previous.setAttribute('aria-label', '上一张' + domainLabels[domain] + '图');
+      previous.textContent = '‹';
+      const next = document.createElement('button');
+      next.className = 'round-button';
+      next.type = 'button';
+      next.setAttribute('aria-label', '下一张' + domainLabels[domain] + '图');
+      next.textContent = '›';
+      function refresh() {
+        const item = slides[domain][indexes[domain]];
+        preview.src = item.image;
+        preview.alt = item.title + '真实界面截图';
+        title.textContent = item.title;
+        count.textContent = (indexes[domain] + 1) + ' / ' + slides[domain].length;
+      }
+      function shift(direction) {
+        indexes[domain] = (indexes[domain] + direction + slides[domain].length) % slides[domain].length;
+        refresh();
+        animate(preview, [{ opacity: 0, transform: `translateX(${direction * 40}px)` }, { opacity: 1, transform: 'translateX(0)' }], { duration: 640, easing: 'cubic-bezier(.22,1,.36,1)' });
+        if (activeDomain === domain) { animateGalleryTo(indexes[domain], { immediate: true }); showSlide({ mode: 'caption' }); }
+      }
+      previous.addEventListener('click', () => shift(-1));
+      next.addEventListener('click', () => shift(1));
+      preview.addEventListener('click', () => { $('dialog-image').src = preview.src; $('dialog-image').alt = preview.alt; $('dialog-title').textContent = title.textContent; dialog.showModal(); });
+      actions.append(count, previous, next);
+      caption.append(title, actions);
+      gallery.append(preview, caption);
+      chapter.querySelector('h3').after(gallery);
+      refresh();
+    }
+    for (const chapter of chapters) {
+      const parts = chapter.querySelector('.chapter-content').querySelectorAll('.chapter-index, .chapter-title-line, .mobile-gallery, .chapter-copy, ul, .chapter-link');
+      [...parts].forEach((element, index) => {
+        element.classList.add('reveal-item');
+        revealRecords.push({ element, chapter, delay: Math.min(index * 10, 50), top: 0, last: -1 });
+      });
+    }
+    evidenceItems.forEach((element, index) => revealRecords.push({ element, delay: index * 32, top: 0, last: -1 }));
+    showSlide();
+    updateGeometry();
+    updateFromScroll({ immediate: true });
+    root.classList.add('scroll-ready');
+    runIntro();
+    if (document.fonts) document.fonts.ready.then(() => { updateGeometry(); updateFromScroll({ immediate: true }); });
+  </script>
+</body>
+</html>

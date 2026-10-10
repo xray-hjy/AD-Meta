@@ -4,6 +4,12 @@ import App from './App';
 import { fetchJson } from './api/client';
 import { queryClient } from './api/queryClient';
 
+// jsdom cannot parse Swiper 14's native CSS nesting; retain its real JS.
+// Vendor styles and motion geometry are checked in the browser.
+vi.mock('swiper/css', () => ({}));
+vi.mock('swiper/css/effect-coverflow', () => ({}));
+vi.mock('swiper/css/free-mode', () => ({}));
+
 vi.mock('./api/client', () => ({
   fetchJson: vi.fn(),
 }));
@@ -353,7 +359,8 @@ test('switches MAG inside the analysis workspace and synchronizes its navigation
 
   fireEvent.click(magButton);
 
-  expect(await screen.findByLabelText('MAG 模块数据就绪度')).toBeTruthy();
+  // The MAG route loads a large lazy module on its first navigation.
+  expect(await screen.findByLabelText('MAG 模块数据就绪度', {}, { timeout: 5000 })).toBeTruthy();
   expect(document.querySelector('.app-subtitle')?.textContent).toBe('MAG 解析');
   expect(screen.getByRole('navigation', { name: '图表导航' })).toBeTruthy();
   expect(window.location.pathname).toBe('/analysis/abundance');

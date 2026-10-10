@@ -23,10 +23,10 @@ async function expectNoBlockingAccessibilityViolations(page) {
 
 test('home page opens the analysis workspace and passes the accessibility gate', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'AD-Meta', level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /物种、KO、MAG，\s*在一个工作区里查看。/, level: 1 })).toBeVisible();
   await expectNoBlockingAccessibilityViolations(page);
 
-  await page.getByRole('link', { name: /进入群落分析/ }).click();
+  await page.getByRole('link', { name: /进入分析/ }).click();
   await expect(page).toHaveURL(/\/analysis\/abundance/);
   await expect(page.getByRole('heading', { name: /Top N (物种|KO)丰度对比/ })).toBeVisible();
   await expectNoBlockingAccessibilityViolations(page);

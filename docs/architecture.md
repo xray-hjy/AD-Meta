@@ -48,6 +48,8 @@ frontend/src/
 
 `ChartFrame` 负责页面级标题、说明、加载、错误和空状态。图表组件只负责图表内部控件与渲染，禁止再次包裹同类卡片或重复标题。
 
+首页独立位于 `frontend/src/pages/home/`：`HomePage.jsx` 只组合页面，文案和图集元数据集中在 `homeContent.js`，组件、首页局部样式及动画控制器分别维护。Swiper 只管理独立图集容器；首页不请求分析数据或参与科学计算，离开页面时清理全部交互实例。具体修改入口、生命周期和回归检查见 [首页维护说明](../frontend/src/pages/home/README.md)。
+
 ## 数据流
 
 1. 导入命令读取宽表并识别 taxonomy 或 KO 数据集。
