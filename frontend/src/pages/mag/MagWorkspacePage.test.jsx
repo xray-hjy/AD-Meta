@@ -111,7 +111,8 @@ test('all MAG selection loads the complete ranked collection independently of th
   await waitFor(() => expect(screen.getByTestId('chart-features').dataset.magIds.split(',')).toHaveLength(872));
   expect(api.getMagFeatures).toHaveBeenCalledWith(expect.objectContaining({ limit: 300, offset: 600, sortBy: 'meanPercent' }), expect.anything());
   expect(screen.getByLabelText('图表显示 MAG 数')).toHaveTextContent('全部 MAG');
-});
+  // Rendering the complete 872-row collection under CI coverage can exceed 5 seconds.
+}, 15_000);
 
 test('uses button-based module switching and keeps the MAG analysis navigation in sync', async () => {
   const onDatasetChange = vi.fn();
