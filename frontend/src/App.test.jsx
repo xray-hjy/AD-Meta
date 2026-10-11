@@ -136,7 +136,7 @@ test('shows the four supported chart tabs for KO datasets', async () => {
   render(<App />);
 
   expect(
-    await screen.findByText('KO 检出率热图', {}, { timeout: 3000 })
+    await screen.findByText('KO 检出率热图', {}, { timeout: 10_000 })
   ).toBeTruthy();
 
   expect(screen.getAllByText('丰度对比').length).toBeGreaterThan(0);
@@ -148,7 +148,8 @@ test('shows the four supported chart tabs for KO datasets', async () => {
   expect(screen.queryByText('分类层级图')).toBeNull();
   expect(screen.queryByText('KO PCA')).toBeNull();
   expect(screen.queryByText('KO PCoA')).toBeNull();
-});
+  // The first workspace render includes cold lazy imports and coverage instrumentation.
+}, 15_000);
 
 test('loads the selected revision facts without showing another dataset name', async () => {
   datasets = [
