@@ -159,12 +159,14 @@ describe('ProjectionAuditPanel', () => {
     render(<ProjectionAuditPanel {...baseProps} />);
     fireEvent.click(screen.getByText('查看筛选与合并明细'));
 
-    expect(useScopedAnalysisSamples).toHaveBeenLastCalledWith(
-      'run-1',
-      'ko-abundance',
-      expect.objectContaining({ scope: baseProps.projectionRequest.scope, limit: 200 }),
-      false,
-    );
+    await waitFor(() => {
+      expect(useScopedAnalysisSamples).toHaveBeenLastCalledWith(
+        'run-1',
+        'ko-abundance',
+        expect.objectContaining({ scope: baseProps.projectionRequest.scope, limit: 200 }),
+        false,
+      );
+    });
     fireEvent.click(await screen.findByText('查看参与样本（185）'));
     await waitFor(() => {
       expect(useScopedAnalysisSamples).toHaveBeenLastCalledWith(

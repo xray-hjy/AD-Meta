@@ -91,7 +91,7 @@
   gap: 16px;
   padding: 25px clamp(24px, 6vw, 96px);
   border-top: 1px solid var(--line);
-  color: #77849a;
+  color: #5b6b83;
   font-size: 12px;
 }
 

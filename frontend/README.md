@@ -1,6 +1,8 @@
 # 前端开发导航
 
-React 19 + Vite 6。运行要求 Node.js 22 或更新版本；依赖以 `package-lock.json` 为准。
+React 19 + Vite 6。运行要求 Node.js 22.12 或更新版本；依赖以 `package-lock.json` 为准。
+
+浏览器回归使用 `npm run test:e2e`；先安装后端 `backend/.venv` 的开发依赖及 `npx playwright install chromium`。测试的 Python 路径、端口和独立临时数据在 `e2e/environment.js` 中维护，支持 Windows 与 Linux。
 
 ## 目录职责
 

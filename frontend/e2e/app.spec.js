@@ -28,13 +28,13 @@ test('home page opens the analysis workspace and passes the accessibility gate',
 
   await page.getByRole('link', { name: /进入分析/ }).click();
   await expect(page).toHaveURL(/\/analysis\/abundance/);
-  await expect(page.getByRole('heading', { name: /Top N (物种|KO)丰度对比/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Top N (物种|KO)丰度对比/, level: 2 })).toBeVisible();
   await expectNoBlockingAccessibilityViolations(page);
 });
 
 test('deep links restore all taxonomy modes and dataset switching', async ({ page }) => {
   await page.goto(`/analysis/abundance?dataset=${SPECIES_DATASET}&chart=sunburst`);
-  await expect(page.getByRole('heading', { name: '分类层级旭日图' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '分类层级旭日图', level: 2 })).toBeVisible();
 
   const modes = [
     ['矩形树图', 'treemap', '分类层级矩形树图'],
@@ -45,19 +45,19 @@ test('deep links restore all taxonomy modes and dataset switching', async ({ pag
   for (const [label, chart, title] of modes) {
     await page.getByRole('button', { name: new RegExp(`^${label}`) }).click();
     await expect(page).toHaveURL(new RegExp(`chart=${chart}`));
-    await expect(page.getByRole('heading', { name: title })).toBeVisible();
+    await expect(page.getByRole('heading', { name: title, level: 2 })).toBeVisible();
     await expect(page.locator('.taxonomy-chart-surface')).toBeVisible();
   }
 
   await page.getByRole('button', { name: '群落功能 切换数据域' }).click();
   await expect(page).toHaveURL(new RegExp(`dataset=${KO_DATASET}.*chart=species`));
-  await expect(page.getByRole('heading', { name: /Top N KO丰度对比/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Top N KO丰度对比/, level: 2 })).toBeVisible();
   await expectNoBlockingAccessibilityViolations(page);
 });
 
 test('heatmap reports the current result and supports interaction when candidates exist', async ({ page }) => {
   await page.goto(`/analysis/abundance?dataset=${SPECIES_DATASET}&chart=heatmap`);
-  await expect(page.getByRole('heading', { name: '差异丰度热图' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '差异丰度热图', level: 2 })).toBeVisible();
   await expectNoBlockingAccessibilityViolations(page);
 
   const firstCanvas = page.getByRole('img', { name: 'AD 组丰度热图' });
@@ -92,7 +92,7 @@ test('heatmap reports the current result and supports interaction when candidate
 
 test('chart data and projection audit details stack without overlap', async ({ page }) => {
   await page.goto(`/analysis/abundance?dataset=${SPECIES_DATASET}&chart=pcoa`);
-  await expect(page.getByRole('heading', { name: 'β多样性 PCoA' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'β多样性 PCoA', level: 2 })).toBeVisible();
 
   const resources = page.getByRole('region', { name: '排序分析解释资源' });
   const resourceTable = resources.locator('details').first();

@@ -1,6 +1,6 @@
 /* Shared visual language for the three analysis workspaces. */
 :root {
-  --workspace-accent: #2f80ed;
+  --workspace-accent: #1d63c5;
   --workspace-accent-soft: rgba(47, 128, 237, 0.11);
   --workspace-ink: #17233b;
   --workspace-surface: #ffffff;
@@ -12,7 +12,7 @@
 }
 
 .app--function {
-  --workspace-accent: #118a88;
+  --workspace-accent: #086b68;
   --workspace-accent-soft: rgba(17, 138, 136, 0.12);
   --workspace-header-background: color-mix(in srgb, var(--workspace-accent) 7%, #f8fafc);
   --topbar-start: #29495f;
@@ -21,7 +21,7 @@
 }
 
 .app--mag {
-  --workspace-accent: #b65770;
+  --workspace-accent: #a44060;
   --workspace-accent-soft: rgba(182, 87, 112, 0.13);
   --workspace-header-background: #f3eff2;
   --topbar-start: #675064;
