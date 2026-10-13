@@ -24,7 +24,7 @@ GMrepo 是独立外部参考模块，提供样本、队列、菌属和质量记�
 
 默认目录为 `ADMetaData/reference/gmrepo/processed/2026-10-09-v1`。可用 `AD_META_GMREPO_DATA_ROOT` 指定其他经过校验的处理目录；相对路径以仓库根解析，绝对路径也支持。
 
-以下文件须与 `processing_manifest.json` 中的哈希相符：
+仓库现随源码提供 [固定版本运行 ZIP 和交付清单](../../data-packages/README.md)，无需另外索取当前页面的数据。基础读取文件须与 `processing_manifest.json` 中的哈希相符：
 
 ```text
 data_contract.json
@@ -38,7 +38,51 @@ tables/genus_abundance_long.tsv
 
 首次读取检查 SHA-256、元数据键、目标分类层级/域、丰度键、总比例守恒及可用样本数，然后按处理清单 fingerprint 缓存只读结果。发布新版本时使用新的完整目录和清单；不要在原版本随意改文件。缺少或校验失败的数据返回 503，页面不替换成示例数据。
 
-本地继续用 `npm run dev` 启动。处理包、原快照和运行缓存属于本地科研数据，不在 Git 中；部署或新检出环境需要另外提供处理包。
+当前交付包共 14 个文件，除上述 7 文件和原 `processing_manifest.json`，还包括：
+
+```text
+tables/source_marker_evidence.tsv
+raw/ena/PRJEB51982_samples_0000.xml
+raw/papers/PMC5648830.xml
+evidence/PRJEB59009_author_metadata.tsv
+extract_author_metadata.R
+raw/papers/PMC10776369.xml
+```
+
+它们分别支持来源 LDA 对照与当前两个合格队列的身份审查。原数据字节和 fingerprint 保持不变；原清单仍包含完整科研处理目录的 119 项，运行包不包含重处理所需的原快照和全部派生产物。
+
+### Windows 下载者的恢复步骤
+
+先将项目更新到包含 `data-packages/` 与安装器的当前 `main`（Git 下载可执行 `git pull --ff-only`；Download ZIP 用户重新下载并解压当前源码）。在 `G:\project\admeta` 的 PowerShell 中运行：
+
+```powershell
+.\Start-ADMeta.ps1 gmrepo
+npm run verify:gmrepo
+# 在两个终端分别运行：
+.\Start-ADMeta.ps1 backend
+.\Start-ADMeta.ps1 frontend
+```
+
+默认安装结果是 `G:\project\admeta\ADMetaData\reference\gmrepo\processed\2026-10-09-v1`。直接运行后端命令也会自动安装默认包；单独执行 `gmrepo` 可以在启动服务前确认交付完整。安装过程中不需要额外下载数据或连接 MySQL；后端主分析功能的 MySQL 配置仍按 [运行手册](../guides/runbook.md) 完成。
+
+macOS / Linux 对应命令为 `npm run setup:gmrepo`、`npm run verify:gmrepo`、`npm run dev:backend` 与 `npm run dev`。后端和前端分别监听 8000 / 3000；仅启动 `backend` 不会启动前端。
+
+已有 Python 时，也可直接使用标准库安装器：
+
+```powershell
+python backend/app/cli/install_gmrepo.py --destination "ADMetaData/reference/gmrepo/processed/2026-10-09-v1"
+python backend/app/cli/install_gmrepo.py --destination "ADMetaData/reference/gmrepo/processed/2026-10-09-v1" --check
+```
+
+需要手动解压时，把 `data-packages/gmrepo-2026-10-09-v1.zip` 的内容直接解压到该版本目录，确保 `processing_manifest.json` 直接在版本目录内，不要多嵌套一层文件夹，再运行 `npm run verify:gmrepo`。校验器同时检查 ZIP、所有 14 文件及原处理清单的 SHA-256。
+
+### 已有目录与自定义部署
+
+安装器先在同一父目录建立临时目录，解压并逐文件验证后才交付最终目录；失败会清理暂存文件。已有目录验证通过时不写入数据；不完整、损坏或属于其他版本时拒绝覆盖，保留原文件。先备份该目录，再选择一个尚不存在的目录安装，或从可信归档恢复已验证版本。
+
+后端自动安装只作用于默认数据目录。配置 `AD_META_GMREPO_DATA_ROOT` 为自定义路径时，启动过程保留该配置；部署者应提供该路径的数据，或显式运行 `npm run setup:gmrepo -- --destination <自定义目录>` 安装当前固定版本。相对路径以仓库根目录解析。
+
+安装后的数据目录、原科研快照和运行缓存仍被 Git 忽略；仓库中只有经核验的运行 ZIP、交付清单和来源说明。这个运行包足以使用现有 GMrepo 功能，不能代替完整原快照来重跑科研处理管道。
 
 ## 科学口径
 
@@ -80,4 +124,4 @@ cd backend
 
 `backend/tests/test_gmrepo*.py` 用独立的小型数据包验证哈希、分区、缺失分母、共用 BioSample、零/空值、旧名搜索和版本约束；另验证年龄混杂导致方向反转、HC3 的矩阵计算、重复/缺失编号关闭推断、原性别类别、完整协变量子集、奇异模型、完整目录 FDR 不随检索变化，以及主数据分类匹配的域/revision 边界。前端测试验证固定 AD/NC 分母、暂缓状态不展示推断数值、分页重置、质量信息和两种图表尺度。OpenAPI 和前端类型随接口更新。
 
-真实处理包的读回与页面验证另核对本机数据，不把本地科研数据作为 CI 前置条件。
+`backend/tests/test_install_gmrepo.py` 从仓库交付 ZIP 安装到空目录，读回实际目录、身份审查和两个合格队列的完整 322 属统计；另测试重复安装、数据损坏、缺少证据、ZIP 损坏 / 路径越界 / 符号链接及自定义目录保护。Windows CI 用标准库 Python 实际安装、读回并重复安装同一包。完整原科研快照不作为 CI 前置条件；本机原包的密封文件另做 SHA-256 保持性核对。

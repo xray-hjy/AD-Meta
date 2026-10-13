@@ -6,10 +6,12 @@
   },
   "scripts": {
     "dev": "npm --prefix frontend run dev",
-    "dev:backend": "npm run prepare:runtime && cd backend && node ../scripts/backend-python.mjs -m uvicorn app.main:app --host 127.0.0.1 --port 8000",
+    "dev:backend": "npm run setup:gmrepo -- --auto && npm run prepare:runtime && cd backend && node ../scripts/backend-python.mjs -m uvicorn app.main:app --host 127.0.0.1 --port 8000",
     "dev:frontend": "npm --prefix frontend start",
     "migrate:sqlite-to-mysql": "cd backend && node ../scripts/backend-python.mjs -m app.cli.migrate_sqlite_to_mysql",
     "bootstrap:storage": "cd backend && node ../scripts/backend-python.mjs -m app.cli.bootstrap_storage",
+    "setup:gmrepo": "cd backend && node ../scripts/backend-python.mjs -m app.cli.install_gmrepo",
+    "verify:gmrepo": "npm run setup:gmrepo -- --check",
     "validate:mag": "cd backend && node ../scripts/backend-python.mjs -m app.cli.validate_mag",
     "import:mag:database": "cd backend && node ../scripts/backend-python.mjs -m app.cli.import_mag_database",
     "prepare:mag:v2": "cd backend && node ../scripts/backend-python.mjs -m app.cli.prepare_mag_v2",

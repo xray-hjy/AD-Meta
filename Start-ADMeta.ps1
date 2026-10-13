@@ -1,4 +1,4 @@
-param([ValidateSet('backend', 'frontend', 'worker', 'worker-test', 'prepare', 'verify')][string]$Service = 'frontend')
+param([ValidateSet('backend', 'frontend', 'worker', 'worker-test', 'prepare', 'verify', 'gmrepo')][string]$Service = 'frontend')
 
 $ErrorActionPreference = 'Stop'
 Set-Location -LiteralPath $PSScriptRoot
@@ -28,6 +28,7 @@ switch ($Service) {
     'backend' { npm run dev:backend }
     'frontend' { npm run dev:frontend }
     'prepare' { npm run prepare:runtime }
+    'gmrepo' { npm run setup:gmrepo }
     'verify' { npm run verify }
     'worker' { Invoke-WorkerScript 'server.R' }
     'worker-test' { Invoke-WorkerScript 'tests/model_smoke.R' }

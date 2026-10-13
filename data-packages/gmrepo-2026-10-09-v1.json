@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "version": "2026-10-09-v1",
+  "scope": "runtime_files_and_identity_evidence",
+  "archive": "gmrepo-2026-10-09-v1.zip",
+  "archive_bytes": 634714,
+  "archive_sha256": "23172b1bba7ba9c71bb77f9610bfeb27bcac99f18919f82ed48d256825e3b87d",
+  "fingerprint": "68f003174b519a9aa8ec401a8e42223bf9e4b67aa26fe4b370b4b5b2e33f2971",
+  "unpacked_bytes": 6618368,
+  "files": [
+    {
+      "path": "cohort_rules.json",
+      "bytes": 4082,
+      "sha256": "bf35669cbf7b1371655f4a4955ac5460a46c57b266686902c3fbedb74816aac6"
+    },
+    {
+      "path": "data_contract.json",
+      "bytes": 2836,
+      "sha256": "6548a13c162ce3fec809476caf9fe7cbb9d45c57a48efbd23f184bb6adaa8ad3"
+    },
+    {
+      "path": "evidence/PRJEB59009_author_metadata.tsv",
+      "bytes": 10585,
+      "sha256": "89b732ec69757ccd9c543ef753a9c98adf9323852e5d9cc3b870274590bccd47"
+    },
+    {
+      "path": "extract_author_metadata.R",
+      "bytes": 935,
+      "sha256": "7865e52ba1162fe658b48a67af87ebbb04eeae1bf1e9cd06fa34bad1af23efc0"
+    },
+    {
+      "path": "processing_manifest.json",
+      "bytes": 24818,
+      "sha256": "68f003174b519a9aa8ec401a8e42223bf9e4b67aa26fe4b370b4b5b2e33f2971"
+    },
+    {
+      "path": "quality_checks.json",
+      "bytes": 2171,
+      "sha256": "b2050d2187bea54b157d8310bba0b10b7e2bae1ec55435e18fb3e963cd01b99b"
+    },
+    {
+      "path": "raw/ena/PRJEB51982_samples_0000.xml",
+      "bytes": 289422,
+      "sha256": "77c1a523622b57f3184775d5e30454d5eb53fd40bba76266433a7ee9353dd57b"
+    },
+    {
+      "path": "raw/papers/PMC10776369.xml",
+      "bytes": 205529,
+      "sha256": "ab452bba89d6cfb2ad41ce033400550714125ce852bbba7dd43d25d0192655aa"
+    },
+    {
+      "path": "raw/papers/PMC5648830.xml",
+      "bytes": 115933,
+      "sha256": "3b1ca86d57f51e39bf42855f42ac1687fce0a670d6e110f59d4c12fc55bdbaa8"
+    },
+    {
+      "path": "tables/genus_abundance_long.tsv",
+      "bytes": 3236955,
+      "sha256": "292c08ef950de3f58a328b3e5aff3aedd843a2d7c6d533b2265eb7bd3c581881"
+    },
+    {
+      "path": "tables/sample_metadata_clean.json",
+      "bytes": 2490441,
+      "sha256": "8847e4565f62c157a44f3e66540eac52059a0c3d2dd479e03060fc24aace80f7"
+    },
+    {
+      "path": "tables/source_marker_evidence.tsv",
+      "bytes": 12335,
+      "sha256": "67831b68a58bb2f8c3113b8751a58b74d9ea388db1e29ab7a7690baab3bc74fa"
+    },
+    {
+      "path": "tables/taxonomy_mapping.json",
+      "bytes": 220901,
+      "sha256": "d6fa635898584a0da60fed72b058c2054dae474df133fc8998134ab0ef518c00"
+    },
+    {
+      "path": "validation_readback.json",
+      "bytes": 1425,
+      "sha256": "ccdd374de5be63df66e324273ea28232c9a16bc683bfa884a33f275aad706ef2"
+    }
+  ]
+}

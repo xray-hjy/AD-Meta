@@ -106,8 +106,17 @@ MySQL 本地连接参数模板见 [`.env.example`](.env.example)，完整步骤�
 `ADMetaData/reference/gmrepo/processed/2026-10-09-v1`，也可在 `.env` 中设置
 `AD_META_GMREPO_DATA_ROOT` 指向已验证的处理包；相对路径以仓库根目录解析。
 
-参考包、原快照和分析导出结果均不随 Git 发布，新克隆或部署时需要另外提供数据包。
-缺少或损坏的数据包返回明确的不可用状态。菌属统计按队列和身份审查条件开放，
+仓库现提供约 620 KiB 的 [固定版本运行数据包](data-packages/README.md)，包含页面、身份审查、统计及来源 LDA 所需的 14 个文件。
+`npm run dev:backend` 或 Windows 的 `.\Start-ADMeta.ps1 backend` 会先安装并校验默认目录；
+已有通过校验的数据直接复用，自定义数据根目录由部署者管理。也可单独运行：
+
+```bash
+npm run setup:gmrepo
+npm run verify:gmrepo
+```
+
+原科研快照、完整重处理归档和分析导出结果仍单独保存。
+缺少或损坏的数据包返回明确的不可用状态，安装器拒绝覆盖已有异常目录。菌属统计按队列和身份审查条件开放，
 不将测序 Run 自动视为独立参与者，不把参考队列结果称为主数据的数值复现。
 目录契约、哈希校验、部署配置和导出方法见 [GMrepo 接入说明](docs/reference/gmrepo.md)。
 

@@ -34,6 +34,9 @@ project-local Node runtime under `frontend/.tmp/runtime/` when installed:
 
 ```powershell
 .\Start-ADMeta.ps1 prepare
+# Optional separate GMrepo installation / readback before starting services:
+.\Start-ADMeta.ps1 gmrepo
+npm run verify:gmrepo
 # Run the following in separate terminals:
 .\Start-ADMeta.ps1 backend
 .\Start-ADMeta.ps1 frontend
@@ -42,8 +45,11 @@ project-local Node runtime under `frontend/.tmp/runtime/` when installed:
 .\Start-ADMeta.ps1 verify
 ```
 
-The backend startup command prepares an empty database from the tracked raw
-files, or synchronizes analysis registrations for an existing published dataset.
+The backend startup command first installs/verifies the shipped GMrepo runtime
+bundle at its default location, then prepares an empty database from the tracked
+raw files or synchronizes analysis registrations for an existing published dataset.
+Existing GMrepo files are never overwritten. Custom `AD_META_GMREPO_DATA_ROOT`
+locations remain operator-managed; see [GMrepo data installation](../reference/gmrepo.md).
 
 Restore the statistics worker's locked R 4.5.2 / Bioconductor 3.21 environment
 once. The first command installs `renv` only when it is not already available:

@@ -5,6 +5,24 @@ on:
   pull_request:
 
 jobs:
+  gmrepo-windows-install:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install and read back the shipped GMrepo bundle
+        shell: pwsh
+        run: |
+          $destination = Join-Path $env:RUNNER_TEMP 'AD Meta\reference\2026-10-09-v1'
+          python backend/app/cli/install_gmrepo.py --destination "$destination"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python backend/app/cli/install_gmrepo.py --destination "$destination" --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python backend/app/cli/install_gmrepo.py --destination "$destination"
+          exit $LASTEXITCODE
+
   python-dependency-audit:
     runs-on: ubuntu-latest
     steps:
