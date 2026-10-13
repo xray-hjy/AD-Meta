@@ -55,6 +55,18 @@ export function getMagQuality(params, options) {
 }
 
 /** @param {MagParams} params @param {FetchJsonOptions} [options]
+ * @returns {Promise<import('./generated').components['schemas']['MagCatalogResponse']>} */
+export function getMagCatalog(params, options) {
+  return fetchJson(`/api/mag/catalog?${magParams(params)}`, options);
+}
+
+/** @param {MagParams} params @param {FetchJsonOptions} [options]
+ * @returns {Promise<import('./generated').components['schemas']['MagSuggestionsResponse']>} */
+export function getMagSuggestions(params, options) {
+  return fetchJson(`/api/mag/suggestions?${magParams(params)}`, options);
+}
+
+/** @param {MagParams} params @param {FetchJsonOptions} [options]
  * @returns {Promise<import('./generated').components['schemas']['MagLineageClusterPageResponse']>} */
 export function getMagLineageClusters(params, options) {
   return fetchJson(`/api/mag/lineage/clusters?${magParams(params)}`, options);
@@ -78,7 +90,7 @@ export function getMagCrosswalk(params, options) {
   return fetchJson(`/api/mag/crosswalk?${magParams(params)}`, options);
 }
 
-/** @param {'features' | 'matrix' | 'samples' | 'taxonomy' | 'quality' | 'provenance' | 'lineage' | 'crosswalk'} kind @param {MagParams} params */
+/** @param {'features' | 'matrix' | 'samples' | 'taxonomy' | 'quality' | 'provenance' | 'lineage' | 'crosswalk' | 'heatmap'} kind @param {MagParams} params */
 export function magDownloadUrl(kind, params) {
   return `${import.meta.env.VITE_API_BASE_URL || ''}/api/mag/downloads/${kind}?${magParams(params)}`;
 }

@@ -8,7 +8,7 @@ vi.mock('../../api/completeResults', async importOriginal => ({ ...await importO
 
 test('lazy loads full results, paginates, resets search and exports all matching rows', async () => {
   getCompleteResults.mockImplementation(async (_run, _artifact, params) => ({
-    total: params.query ? 1 : 100, columns: ['sampleCode', 'featureId', 'abundance'], datasetRevision: 'rev-a', abundanceScale: 'percent', normalization: 'none',
+    total: params.query ? 1 : 900, columns: ['sampleCode', 'featureId', 'abundance'], datasetRevision: 'rev-a', abundanceScale: 'percent', normalization: 'none',
     items: [{ sampleCode: `sample-${params.offset}`, featureId: 'MAG1', abundance: 0 }],
   }));
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -19,7 +19,8 @@ test('lazy loads full results, paginates, resets search and exports all matching
   fireEvent(details, new Event('toggle'));
   await screen.findByText('sample-0');
   fireEvent.click(screen.getByRole('button', { name: '下一页' }));
-  await screen.findByText('sample-50');
+  await screen.findByText('sample-300');
+  expect(getCompleteResults).toHaveBeenLastCalledWith('r1', 'a1', expect.objectContaining({ limit: 300, offset: 300 }), expect.anything());
   fireEvent.change(screen.getByLabelText('完整结果搜索'), { target: { value: 'CRR' } });
   fireEvent.click(screen.getByRole('button', { name: '查询完整结果' }));
   await waitFor(() => expect(getCompleteResults).toHaveBeenLastCalledWith('r1', 'a1', expect.objectContaining({ offset: 0, query: 'CRR' }), expect.anything()));

@@ -2,6 +2,7 @@ import { fetchJson } from './client';
 
 /** @typedef {import('./generated').components['schemas']['DatasetResponse']} Dataset */
 /** @typedef {import('./generated').components['schemas']['SummaryResponse']} DatasetSummary */
+/** @typedef {import('./generated').components['schemas']['DatasetDescriptionResponse']} DatasetDescription */
 /** @typedef {import('./generated').components['schemas']['ChartArtifactResponse']} ChartArtifact */
 /** @typedef {import('./client').FetchJsonOptions} FetchJsonOptions */
 
@@ -13,6 +14,11 @@ export function listDatasets(options) {
 /** @param {string} slug @param {FetchJsonOptions} [options] @returns {Promise<DatasetSummary>} */
 export function getDatasetSummary(slug, options) {
   return fetchJson(`/api/datasets/${slug}/summary`, options);
+}
+
+/** @param {string} slug @param {string} revision @param {FetchJsonOptions} [options] @returns {Promise<DatasetDescription>} */
+export function getDatasetDescription(slug, revision, options) {
+  return fetchJson(`/api/datasets/${slug}/revisions/${revision}/description`, options);
 }
 
 /**

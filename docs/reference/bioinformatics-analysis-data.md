@@ -27,7 +27,7 @@ AD-Meta 只接收生物信息分析流程整理后的结构化分析结果，不
 
 ### 当前 185 个样本的范围
 
-本地 KO 矩阵和当前 MAG 定量产物均包含 185 个 CRR 样本，其中 AD 122 个、NC 63 个，数量与官方项目中的 AD 和 NC 两组完全一致。因此当前系统使用的是 **CRA014435 项目的 AD/NC 子队列**，不是一个官方命名为“CRR185”的独立数据集。
+2026-10-01 下载官方元数据后，按 `CRR → CRX → SAMC` 逐条关联确认：本地清单与官方全部 AD/NC Run 集合完全一致，185 个样本的别名、SAMC、分组、年龄和性别均无冲突；物种、KO 和 MAG 的样本集合也已对照。因此当前系统使用的是 **CRA014435 项目的 AD/NC 子队列**。详见[下载与核对记录](../guides/ngdc-metadata-verification.md)。
 
 推荐表述：
 
@@ -35,7 +35,7 @@ AD-Meta 只接收生物信息分析流程整理后的结构化分析结果，不
 - 数据来源说明：`CRA014435（PRJCA022804）AD/NC 子队列，n=185`
 - 内部技术标识可以使用 `cra014435_ad_nc_185`，但不得把它写成官方数据集名称。
 
-这是依据官方项目统计和本地分组标签进行的交叉核对。后续接入完整临床元数据后，应继续校验每个样本的诊断分组，而不能只依赖样本数量相等。
+分组取自官方 Sample title，并保留字段出处；官方 Host disease 和 Host subject id 仍为空。当前子集选择意图、受试者匿名 ID 和临床标签定义需要团队进一步确认。
 
 ### 编号层级与样本身份
 
@@ -57,7 +57,9 @@ CRR 是测序运行编号，不等同于受试者身份。后端导入和 Manife
 
 ### 关联论文与下载入口
 
-项目页面当前关联的论文包括：
+来源论文为 [Metagenomic analysis characterizes stage-specific gut microbiota in Alzheimer’s disease](https://www.nature.com/articles/s41380-025-02973-7)，*Molecular Psychiatry*，2025，DOI `10.1038/s41380-025-02973-7`；Data availability 明确将原始 reads 指向 PRJCA022804。
+
+项目页面当前另列的关联论文包括：
 
 1. [Impacts of host genetics on gut microbiome composition in Alzheimer's disease](https://doi.org/10.1186/s40168-026-02342-8)，*Microbiome*，2026；[PubMed 41782023](https://pubmed.ncbi.nlm.nih.gov/41782023/)。
 2. [Multi-omics profiling reveals gut microbiome signatures associated with cognitive decline in Alzheimer's disease](https://doi.org/10.1016/j.isci.2026.116622)，*iScience*，2026。
@@ -97,6 +99,8 @@ Clean Reads -> Kraken2 分类 -> Bracken 丰度校正 -> Sample x Species
 当前发布范围限定为 CRA014435 的 185 个 CRR AD/NC 样本（AD 122、NC 63）。
 原始交付表中的 ERR 与 SRR 行保留用于来源审计，但不会进入当前物种数据集、缓存或分析运行。
 
+2026-10-01 新服务器交付已提供 Kraken2/Bracken 脚本、配置与逐样本报告；但其物种特征和数值尚不能直接对应当前 Excel。上述流程为方法说明，当前 Excel 的具体生成批次及转换规则仍需确认，详见[服务器转交核对](../guides/server-transfer-audit.md)。交叉表中的 Reads 观察状态也需与明确结果版本关联。
+
 它支持群落物种组成概览、AD/NC 物种分布与差异分析、分类层级关系可视化，以及基于物种矩阵的样本结构与距离分析。
 
 ### Sample x KO
@@ -129,9 +133,9 @@ Clean Reads -> Assembly -> 基因预测与功能注释 -> Reads 定量 -> Sample
 backend/storage/raw/crr-mag-quantification/
 ```
 
-当前运行版本 `mag_v2` 已将 Sample × MAG 丰度、GTDB-Tk 分类和 CheckM2 质量通过同一组 872 个代表 MAG ID 关联，并在 `/analysis/mag` 提供丰度、分类、质量和技术质控视图。运行时只读版本化 `development_input`，不直接读取生信源目录。
+本机当前运行版本 `mag_v3` 已将 Sample × MAG 丰度、GTDB-Tk 分类、CheckM2 质量和去冗余关系通过同一组 872 个代表 MAG ID 关联，含 8,548 个成员关系；已导入本次独立配置的 MySQL。运行版本由 MAG manifest 和本机环境配置决定，原始交付包另外保留。
 
-MAG × KO、ARG、CAZyme、BGC 等功能注释尚未交付为可关联的数据产品；当前 185 个样本又都来自 CRA014435 的 AD/NC 子队列，因此 MAG 功能注释和独立跨队列复现仍必须标记为“规划中”，不得展示模拟结果。GTDB-Tk 与 GTDB reference release 版本也仍需补充到来源清单。
+MAG 功能注释（MAG × KO、ARG、CAZyme、BGC 等）整体尚未做完，按用户 2026-10-01 确认标为待完成，具体子步骤以实际记录为准；完成后交付结果及运行证据。现有群落 Sample × KO 已交付，其生成链路和单位仍待说明。独立 IQ-TREE 结果未交付，完成状态待确认。最新服务器转交已补齐 CoverM 0.8.0、strobealign 0.17.0、SAMtools 1.24 的成功链路，CheckM2 1.1.0、GTDB-Tk 2.7.2/R232 成功记录，与现有 MAG 数据关联验证通过。另收到含当前 869 个细菌 MAG 的 GTDB backbone 分类定位树，但不能作为独立 IQ-TREE 产物。dRep 3.7.1 仍为用户报告版本，精确执行日志待补，详见[最新服务器核对](../guides/server-transfer-audit.md)。跨队列复现需真实独立队列，不得展示模拟结果。
 
 ## 前端分析域约定
 
@@ -140,6 +144,6 @@ MAG × KO、ARG、CAZyme、BGC 等功能注释尚未交付为可关联的数据�
 1. 群落物种：组成概览、分布与差异、分类层级、样本结构。
 2. 群落功能：功能概览、检出与差异、样本结构、通路解释。
 3. 物种-功能联合：规划中的样本层面关联分析；相关关系不得表述为功能归属。
-4. MAG 解析：已接入丰度、GTDB 分类、CheckM2 质量和技术质控；功能注释与独立跨队列复现规划中。
+4. MAG 解析：已接入丰度、GTDB 分类、CheckM2 质量和技术质控；MAG 功能注释待完成，独立跨队列复现规划中。
 
 分析域是长期信息架构。新增分析数据类型时，应扩展导入契约、数据库模型、后端预计算和图表注册配置，不应在页面组件中临时拼接数据或增加孤立入口。

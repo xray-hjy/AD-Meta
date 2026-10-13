@@ -6,6 +6,27 @@ AD-Meta 是一个面向阿尔茨海默病（Alzheimer's Disease, AD）脑肠轴�
 
 本仓库不包含原始测序数据处理和 MAG 分析脚本。项目背景、数据来源及与生物信息分析流程的边界见 [项目说明](docs/project-overview.md)。
 
+## 20261010更新
+
+- **正式首页**：首屏入口、物种 / KO / MAG / 自定义图集、数据来源与工作区入口。
+- **滚动与动画**：立体画廊、完整图片吸附与连续切图、正文和三个大区块的过渡；真实 SVG 部件随机播放五种 Logo 动画。
+- **代码整理**：首页内容、组件、hooks、动画和样式分别维护，提供[前端开发导航](frontend/README.md)及[首页维护说明](frontend/src/pages/home/README.md)。
+
+完整记录见 [20261010更新日志](docs/development/20261010-update.md)。
+
+## 20261008更新
+
+- **MAG 工作区**：统一卡片、折叠标题栏、工具栏和结果列表布局；新增数据说明、连续处理流程、单 MAG 证据与研究扩展模板。
+- **条形图与折线图**：接入 ECharts 原生柱线切换、柱体生长动画和双轴范围拖动；优化缩放、平移摇杆、全局预览、分组标记与仅在柱体触发的悬浮。物种丰度、门级组成、KO 丰度、KO 贡献和差异 KO 图按各自数据语义复用组件。
+- **科研绘图样式**：增加连续、分类和双组科研配色，以及圆角、字号、网格、数值、纹理和箱线图设置；物种蓝、功能青、MAG 玫红主题同步到菜单与浮层。
+- **查询与数量设置**：新增 MAG ID / 分类名称自动补全和键盘选择；统一圆角下拉框；MAG、物种与 KO / 功能 Top N 支持预设、自定义整数、滑条和明确应用，保留各视图接口上限与计算语义。
+- **MAG 热图**：增加丰度概览、变化模式、候选筛选、样本与 MAG 聚类、横纵轴交换和完整矩阵导航；显示真实层次聚类树，并说明 average linkage、欧氏距离、输入变换及 AD/NC 组内聚类规则。
+- **图像与数据导出**：增加圆角导出按钮、格式 / 尺寸 / 分辨率 / 默认设置面板；修复完整热图导出时标签与树枝过小的问题，完整矩阵按所选画布适配，PNG 高清输出、SVG 保留矢量细节。
+- **表格与数据说明**：统一物种、KO、MAG 的数据折叠区域和查询布局；支持拖动表格高度、靠近窗口边缘自动滚动及可调每页数量；补充版本、样本范围、公开来源和丰度口径说明。
+- **接口与运行支持**：新增 MAG 建议查询和热图筛选 / 合并记录契约，同步 OpenAPI 与前端类型；整理 185 个 CRR 样本的物种 CSV 输入、来源核对及本地启动脚本。
+
+对比仓库 main 提交 `f0d583a`，完整清单见 [20261008更新日志](docs/development/20261008-update.md)。
+
 ## 目录结构
 
 ```text
@@ -46,7 +67,7 @@ MySQL 数据库。新克隆、没有旧 SQLite 文件时，改用 `npm run boots
 ```bash
 # 终端 1（首次运行前先按 worker 文档恢复 R 依赖）
 cd stats-worker
-Rscript -e 'renv::run("server.R", project = ".")'
+Rscript server.R
 
 # 终端 2（项目根目录）
 npm run dev:backend
@@ -89,7 +110,7 @@ Windows 下同样使用三个终端启动统计 worker、后端与前端，具�
 
 - `npm run verify`：快速、离线的日常检查，包含 Ruff、mypy、前端类型检查、单元测试和生产构建。
 - `npm run verify:full`：增加覆盖率、只读 OpenAPI 漂移检查、依赖漏洞审计和隔离 E2E；需要网络并预先安装 Playwright Chromium。
-- `cd stats-worker && Rscript -e 'renv::run("tests/model_smoke.R", project = ".")'`：在已恢复的 R 环境中验证 ANCOM-BC2 与 MaAsLin2 模型链路。
+- `cd stats-worker && Rscript tests/model_smoke.R`：在已恢复的 R 环境中验证 ANCOM-BC2 与 MaAsLin2 模型链路。
 
 生产构建默认不生成 sourcemap，避免将完整前端源码随静态资源发布。如需上传到私有错误监控平台，可临时执行
 `npm --prefix frontend run build -- --sourcemap hidden`，上传 `.map` 后再从部署目录删除。

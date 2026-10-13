@@ -837,6 +837,176 @@
         "title": "CompleteResultPageResponse",
         "type": "object"
       },
+      "DatasetDescriptionResponse": {
+        "properties": {
+          "abundanceScale": {
+            "default": "unknown",
+            "title": "Abundancescale",
+            "type": "string"
+          },
+          "cohortSource": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VerifiedCohortSourceResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "datasetName": {
+            "title": "Datasetname",
+            "type": "string"
+          },
+          "datasetRevision": {
+            "title": "Datasetrevision",
+            "type": "string"
+          },
+          "datasetSlug": {
+            "title": "Datasetslug",
+            "type": "string"
+          },
+          "duplicateFeaturePolicy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duplicatefeaturepolicy"
+          },
+          "excludedSampleCount": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Excludedsamplecount"
+          },
+          "featureCount": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Featurecount"
+          },
+          "featureKind": {
+            "title": "Featurekind",
+            "type": "string"
+          },
+          "featureLabel": {
+            "title": "Featurelabel",
+            "type": "string"
+          },
+          "groupCounts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Groupcounts",
+            "type": "object"
+          },
+          "groupMapping": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Groupmapping",
+            "type": "object"
+          },
+          "imputedCellCount": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Imputedcellcount"
+          },
+          "missingValuePolicy": {
+            "default": "error",
+            "title": "Missingvaluepolicy",
+            "type": "string"
+          },
+          "normalization": {
+            "default": "unknown",
+            "title": "Normalization",
+            "type": "string"
+          },
+          "publishedAt": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publishedat"
+          },
+          "sampleCount": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Samplecount"
+          },
+          "sampleIdPrefixes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Sampleidprefixes",
+            "type": "array"
+          },
+          "sourceFileName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourcefilename"
+          },
+          "sourceFileSize": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourcefilesize"
+          },
+          "sourceSha256": {
+            "title": "Sourcesha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "datasetSlug",
+          "datasetName",
+          "datasetRevision",
+          "sourceSha256",
+          "featureKind",
+          "featureLabel"
+        ],
+        "title": "DatasetDescriptionResponse",
+        "type": "object"
+      },
       "DatasetResponse": {
         "properties": {
           "analysisStatus": {
@@ -1063,6 +1233,168 @@
           "values"
         ],
         "title": "MagBox",
+        "type": "object"
+      },
+      "MagCatalogItem": {
+        "properties": {
+          "magId": {
+            "title": "Magid",
+            "type": "string"
+          },
+          "quality": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MagQualityItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "taxonomy": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MagCatalogTaxonomy"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "magId",
+          "taxonomy",
+          "quality"
+        ],
+        "title": "MagCatalogItem",
+        "type": "object"
+      },
+      "MagCatalogResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MagCatalogItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/MagProvenance"
+          },
+          "scopeKind": {
+            "const": "catalog",
+            "default": "catalog",
+            "title": "Scopekind",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "provenance",
+          "items",
+          "total"
+        ],
+        "title": "MagCatalogResponse",
+        "type": "object"
+      },
+      "MagCatalogTaxonomy": {
+        "properties": {
+          "class": {
+            "title": "Class",
+            "type": "string"
+          },
+          "classificationMethod": {
+            "title": "Classificationmethod",
+            "type": "string"
+          },
+          "closestAf": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closestaf"
+          },
+          "closestAni": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closestani"
+          },
+          "closestReference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closestreference"
+          },
+          "domain": {
+            "title": "Domain",
+            "type": "string"
+          },
+          "family": {
+            "title": "Family",
+            "type": "string"
+          },
+          "genus": {
+            "title": "Genus",
+            "type": "string"
+          },
+          "msaPercent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Msapercent"
+          },
+          "order": {
+            "title": "Order",
+            "type": "string"
+          },
+          "phylum": {
+            "title": "Phylum",
+            "type": "string"
+          },
+          "species": {
+            "title": "Species",
+            "type": "string"
+          }
+        },
+        "required": [
+          "domain",
+          "phylum",
+          "class",
+          "order",
+          "family",
+          "genus",
+          "species",
+          "classificationMethod",
+          "closestReference",
+          "closestAni",
+          "closestAf",
+          "msaPercent"
+        ],
+        "title": "MagCatalogTaxonomy",
         "type": "object"
       },
       "MagCrosswalkItem": {
@@ -1340,6 +1672,46 @@
         "title": "MagCrosswalkPageResponse",
         "type": "object"
       },
+      "MagDendrogramTree": {
+        "properties": {
+          "leafIds": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Leafids",
+            "type": "array"
+          },
+          "merges": {
+            "items": {
+              "maxItems": 4,
+              "minItems": 4,
+              "prefixItems": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            "title": "Merges",
+            "type": "array"
+          }
+        },
+        "required": [
+          "leafIds",
+          "merges"
+        ],
+        "title": "MagDendrogramTree",
+        "type": "object"
+      },
       "MagDistributionResponse": {
         "properties": {
           "boxes": {
@@ -1490,6 +1862,28 @@
             ],
             "title": "Admedianpercent"
           },
+          "completenessPercent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completenesspercent"
+          },
+          "contaminationPercent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contaminationpercent"
+          },
           "lengthBp": {
             "title": "Lengthbp",
             "type": "integer"
@@ -1585,6 +1979,35 @@
               }
             ],
             "title": "Rankbiserial"
+          },
+          "taxonomy": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Taxonomy",
+            "type": "object"
+          },
+          "taxonomyName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taxonomyname"
+          },
+          "taxonomyRank": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taxonomyrank"
           }
         },
         "required": [
@@ -1655,14 +2078,85 @@
         "title": "MagFeaturePageResponse",
         "type": "object"
       },
+      "MagHeatmapDendrograms": {
+        "properties": {
+          "linkage": {
+            "default": "average",
+            "title": "Linkage",
+            "type": "string"
+          },
+          "mags": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MagDendrogramTree"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "metric": {
+            "default": "euclidean",
+            "title": "Metric",
+            "type": "string"
+          },
+          "samples": {
+            "items": {
+              "$ref": "#/components/schemas/MagSampleDendrogramTree"
+            },
+            "title": "Samples",
+            "type": "array"
+          }
+        },
+        "title": "MagHeatmapDendrograms",
+        "type": "object"
+      },
       "MagHeatmapResponse": {
         "properties": {
+          "constantMagIds": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Constantmagids",
+            "type": "array"
+          },
+          "dendrograms": {
+            "$ref": "#/components/schemas/MagHeatmapDendrograms"
+          },
+          "displayValues": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "title": "Displayvalues",
+            "type": "array"
+          },
+          "features": {
+            "items": {
+              "$ref": "#/components/schemas/MagFeature"
+            },
+            "title": "Features",
+            "type": "array"
+          },
           "magIds": {
             "items": {
               "type": "string"
             },
             "title": "Magids",
             "type": "array"
+          },
+          "methods": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Methods",
+            "type": "object"
+          },
+          "projectionFingerprint": {
+            "title": "Projectionfingerprint",
+            "type": "string"
           },
           "provenance": {
             "$ref": "#/components/schemas/MagProvenance"
@@ -1678,6 +2172,16 @@
             "title": "Selection",
             "type": "string"
           },
+          "selectionAudit": {
+            "additionalProperties": true,
+            "title": "Selectionaudit",
+            "type": "object"
+          },
+          "settings": {
+            "additionalProperties": true,
+            "title": "Settings",
+            "type": "object"
+          },
           "values": {
             "items": {
               "items": {
@@ -1687,6 +2191,13 @@
             },
             "title": "Values",
             "type": "array"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
           }
         },
         "required": [
@@ -1694,7 +2205,15 @@
           "magIds",
           "samples",
           "values",
-          "selection"
+          "selection",
+          "displayValues",
+          "features",
+          "settings",
+          "methods",
+          "selectionAudit",
+          "warnings",
+          "constantMagIds",
+          "projectionFingerprint"
         ],
         "title": "MagHeatmapResponse",
         "type": "object"
@@ -2667,6 +3186,51 @@
         "title": "MagSample",
         "type": "object"
       },
+      "MagSampleDendrogramTree": {
+        "properties": {
+          "group": {
+            "title": "Group",
+            "type": "string"
+          },
+          "leafIds": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Leafids",
+            "type": "array"
+          },
+          "merges": {
+            "items": {
+              "maxItems": 4,
+              "minItems": 4,
+              "prefixItems": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            "title": "Merges",
+            "type": "array"
+          }
+        },
+        "required": [
+          "leafIds",
+          "merges",
+          "group"
+        ],
+        "title": "MagSampleDendrogramTree",
+        "type": "object"
+      },
       "MagSamplesResponse": {
         "properties": {
           "items": {
@@ -2760,6 +3324,86 @@
           "bytes"
         ],
         "title": "MagSource",
+        "type": "object"
+      },
+      "MagSuggestionItem": {
+        "properties": {
+          "approximate": {
+            "default": false,
+            "title": "Approximate",
+            "type": "boolean"
+          },
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Count"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "value",
+          "label",
+          "detail",
+          "kind"
+        ],
+        "title": "MagSuggestionItem",
+        "type": "object"
+      },
+      "MagSuggestionsResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MagSuggestionItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "query": {
+            "title": "Query",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "revision",
+          "query",
+          "total",
+          "items"
+        ],
+        "title": "MagSuggestionsResponse",
         "type": "object"
       },
       "MagTaxonomyResponse": {
@@ -3445,6 +4089,44 @@
         "title": "ProvenanceResponse",
         "type": "object"
       },
+      "RelatedPublicationResponse": {
+        "properties": {
+          "doi": {
+            "title": "Doi",
+            "type": "string"
+          },
+          "journal": {
+            "title": "Journal",
+            "type": "string"
+          },
+          "relationship": {
+            "title": "Relationship",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "year": {
+            "title": "Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "title",
+          "journal",
+          "year",
+          "doi",
+          "url",
+          "relationship"
+        ],
+        "title": "RelatedPublicationResponse",
+        "type": "object"
+      },
       "ScopedFeatureRequest": {
         "description": "Search and rank the complete feature catalog within one sample scope.",
         "properties": {
@@ -3624,6 +4306,59 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "VerifiedCohortSourceResponse": {
+        "properties": {
+          "cohortId": {
+            "title": "Cohortid",
+            "type": "string"
+          },
+          "projectAccession": {
+            "title": "Projectaccession",
+            "type": "string"
+          },
+          "projectUrl": {
+            "title": "Projecturl",
+            "type": "string"
+          },
+          "publication": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RelatedPublicationResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "repository": {
+            "title": "Repository",
+            "type": "string"
+          },
+          "studyAccession": {
+            "title": "Studyaccession",
+            "type": "string"
+          },
+          "studyUrl": {
+            "title": "Studyurl",
+            "type": "string"
+          },
+          "verifiedOn": {
+            "title": "Verifiedon",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cohortId",
+          "repository",
+          "studyAccession",
+          "studyUrl",
+          "projectAccession",
+          "projectUrl",
+          "verifiedOn"
+        ],
+        "title": "VerifiedCohortSourceResponse",
         "type": "object"
       }
     }
@@ -5019,6 +5754,67 @@
         ]
       }
     },
+    "/api/datasets/{slug}/revisions/{revision_key}/description": {
+      "get": {
+        "operationId": "description_api_datasets__slug__revisions__revision_key__description_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "revision_key",
+            "required": true,
+            "schema": {
+              "title": "Revision Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetDescriptionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Description",
+        "tags": [
+          "datasets"
+        ]
+      }
+    },
     "/api/datasets/{slug}/summary": {
       "get": {
         "operationId": "summary_api_datasets__slug__summary_get",
@@ -5129,6 +5925,60 @@
         "summary": "Ready"
       }
     },
+    "/api/mag/catalog": {
+      "get": {
+        "operationId": "catalog_api_mag_catalog_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagCatalogResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Catalog",
+        "tags": [
+          "mag"
+        ]
+      }
+    },
     "/api/mag/crosswalk": {
       "get": {
         "operationId": "crosswalk_api_mag_crosswalk_get",
@@ -5166,7 +6016,7 @@
             "required": false,
             "schema": {
               "default": 25,
-              "maximum": 100,
+              "maximum": 300,
               "minimum": 1,
               "title": "Limit",
               "type": "integer"
@@ -5346,7 +6196,8 @@
                 "quality",
                 "provenance",
                 "lineage",
-                "crosswalk"
+                "crosswalk",
+                "heatmap"
               ],
               "title": "Kind",
               "type": "string"
@@ -5416,6 +6267,21 @@
           },
           {
             "in": "query",
+            "name": "chartSortBy",
+            "required": false,
+            "schema": {
+              "default": "meanPercent",
+              "enum": [
+                "meanPercent",
+                "adMeanPercent",
+                "ncMeanPercent"
+              ],
+              "title": "Chartsortby",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "rank",
             "required": false,
             "schema": {
@@ -5439,8 +6305,8 @@
             "required": false,
             "schema": {
               "default": 20,
-              "maximum": 50,
-              "minimum": 1,
+              "maximum": 1000,
+              "minimum": 0,
               "title": "Topn",
               "type": "integer"
             }
@@ -5462,7 +6328,7 @@
             "required": false,
             "schema": {
               "default": 25,
-              "maximum": 100,
+              "maximum": 300,
               "minimum": 1,
               "title": "Limit",
               "type": "integer"
@@ -5585,6 +6451,196 @@
               "title": "Abundancethresholdpercent",
               "type": "number"
             }
+          },
+          {
+            "in": "query",
+            "name": "heatmapMode",
+            "required": false,
+            "schema": {
+              "default": "abundance",
+              "enum": [
+                "abundance",
+                "variance",
+                "candidate"
+              ],
+              "title": "Heatmapmode",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "heatmapQuery",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 200,
+              "title": "Heatmapquery",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "heatmapIds",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 200000,
+              "title": "Heatmapids",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "candidateKind",
+            "required": false,
+            "schema": {
+              "default": "statistics",
+              "enum": [
+                "statistics",
+                "manual"
+              ],
+              "title": "Candidatekind",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "minMean",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100,
+              "minimum": 0,
+              "title": "Minmean",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sampleThreshold",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100,
+              "minimum": 0,
+              "title": "Samplethreshold",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "minSamplePercent",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100,
+              "minimum": 0,
+              "title": "Minsamplepercent",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "minCompleteness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 100,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Mincompleteness"
+            }
+          },
+          {
+            "in": "query",
+            "name": "maxContamination",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 100,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Maxcontamination"
+            }
+          },
+          {
+            "in": "query",
+            "name": "maxQ",
+            "required": false,
+            "schema": {
+              "default": 0.05,
+              "maximum": 1,
+              "minimum": 0,
+              "title": "Maxq",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "minEffect",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 1,
+              "minimum": 0,
+              "title": "Mineffect",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sampleOrder",
+            "required": false,
+            "schema": {
+              "default": "group",
+              "enum": [
+                "group",
+                "withinGroup",
+                "cluster"
+              ],
+              "title": "Sampleorder",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "rowOrder",
+            "required": false,
+            "schema": {
+              "default": "rank",
+              "enum": [
+                "rank",
+                "cluster"
+              ],
+              "title": "Roworder",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "colorMode",
+            "required": false,
+            "schema": {
+              "default": "abundance",
+              "enum": [
+                "abundance",
+                "rowZ"
+              ],
+              "title": "Colormode",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -5677,7 +6733,7 @@
             "required": false,
             "schema": {
               "default": 25,
-              "maximum": 100,
+              "maximum": 300,
               "minimum": 1,
               "title": "Limit",
               "type": "integer"
@@ -6009,8 +7065,8 @@
             "required": false,
             "schema": {
               "default": 20,
-              "maximum": 50,
-              "minimum": 1,
+              "maximum": 1000,
+              "minimum": 0,
               "title": "Topn",
               "type": "integer"
             }
@@ -6120,6 +7176,196 @@
               "minimum": 0,
               "title": "Abundancethresholdpercent",
               "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "heatmapMode",
+            "required": false,
+            "schema": {
+              "default": "abundance",
+              "enum": [
+                "abundance",
+                "variance",
+                "candidate"
+              ],
+              "title": "Heatmapmode",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "heatmapQuery",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 200,
+              "title": "Heatmapquery",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "heatmapIds",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 200000,
+              "title": "Heatmapids",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "candidateKind",
+            "required": false,
+            "schema": {
+              "default": "statistics",
+              "enum": [
+                "statistics",
+                "manual"
+              ],
+              "title": "Candidatekind",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "minMean",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100,
+              "minimum": 0,
+              "title": "Minmean",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sampleThreshold",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100,
+              "minimum": 0,
+              "title": "Samplethreshold",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "minSamplePercent",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100,
+              "minimum": 0,
+              "title": "Minsamplepercent",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "minCompleteness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 100,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Mincompleteness"
+            }
+          },
+          {
+            "in": "query",
+            "name": "maxContamination",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 100,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Maxcontamination"
+            }
+          },
+          {
+            "in": "query",
+            "name": "maxQ",
+            "required": false,
+            "schema": {
+              "default": 0.05,
+              "maximum": 1,
+              "minimum": 0,
+              "title": "Maxq",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "minEffect",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 1,
+              "minimum": 0,
+              "title": "Mineffect",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sampleOrder",
+            "required": false,
+            "schema": {
+              "default": "group",
+              "enum": [
+                "group",
+                "withinGroup",
+                "cluster"
+              ],
+              "title": "Sampleorder",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "rowOrder",
+            "required": false,
+            "schema": {
+              "default": "rank",
+              "enum": [
+                "rank",
+                "cluster"
+              ],
+              "title": "Roworder",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "colorMode",
+            "required": false,
+            "schema": {
+              "default": "abundance",
+              "enum": [
+                "abundance",
+                "rowZ"
+              ],
+              "title": "Colormode",
+              "type": "string"
             }
           }
         ],
@@ -6243,7 +7489,7 @@
             "required": false,
             "schema": {
               "default": 25,
-              "maximum": 100,
+              "maximum": 300,
               "minimum": 1,
               "title": "Limit",
               "type": "integer"
@@ -6506,7 +7752,7 @@
             "required": false,
             "schema": {
               "default": 25,
-              "maximum": 100,
+              "maximum": 300,
               "minimum": 1,
               "title": "Limit",
               "type": "integer"
@@ -7273,6 +8519,97 @@
           }
         },
         "summary": "Samples",
+        "tags": [
+          "mag"
+        ]
+      }
+    },
+    "/api/mag/suggestions": {
+      "get": {
+        "operationId": "suggestions_api_mag_suggestions_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "context",
+            "required": false,
+            "schema": {
+              "default": "lineage",
+              "enum": [
+                "lineage",
+                "crosswalk"
+              ],
+              "title": "Context",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 200,
+              "title": "Query",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagSuggestionsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Suggestions",
         "tags": [
           "mag"
         ]

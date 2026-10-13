@@ -9,6 +9,10 @@
 
 ## 使用指南
 
+- [当前数据产品、开发职责与来源追溯](guides/data-products-and-provenance.md)：按部分样本跑通流程、后续服务器批量运行的背景，梳理数据用途、当前交付状态、前端职责和溯源缺口。
+- [NGDC 元数据下载与当前样本核对](guides/ngdc-metadata-verification.md)：官方 476 个样本与当前 185 个样本的对应、文件下载清单、新旧元数据变化和待补资料。
+- [生信脚本归档与版本证据核对](guides/bioinformatics-script-provenance.md)：历史脚本、用户提供的软件版本、已交付产物之间的对应，以及待补的成功运行记录。
+- [服务器转交文件整理与剩余缺项](guides/server-transfer-audit.md)：本次从服务器取得的新脚本、成功日志、MAG 来源对应、物种矩阵差异与更新后的缺项清单。
 - [本地运行与数据导入](guides/runbook.md)：环境安装、服务启动、数据导入、缓存重建和部署。
 - [MAG 丰度、分类与质量接入](guides/mag-data.md)：外部数据配置、MySQL 导入、版本校验、MAG 工作区、统计边界和下载 API。
 
@@ -23,6 +27,15 @@
 
 ## 开发记录
 
+- [20261010更新](development/20261010-update.md)：首页接入、立体图集与滚动衔接、五种分层 Logo 动画及前端维护目录整理。
+
+- [2026-10-08 开发交接文档](development/2026-10-08-development-handoff.md)：新聊天接续入口，含当前状态、代码地图、数据口径、运行验证与开发经验。
+
+- [20261008更新](development/20261008-update.md)：与仓库 main 最新版本对比的功能更新与优化清单。
+
+- [2026-10-04 MAG 条形图连续导航与全部选择](development/2026-10-04-mag-bar-navigation.md)：全部 MAG、共用缩放/摇杆/预览、方向切换及完整集合导出。
+- [群落数据集信息展示规则](development/community-data-description-design-draft.md)：物种与群落 KO 共用的结构化字段、版本绑定和内容边界。
+- [2026-10-01 前端页面与实际数据核查](development/2026-10-01-frontend-data-audit.md)：各入口的数据用途与限制、实际页面核查、状态和样本范围问题，以及下一轮调整顺序。
 - [综合更新日志](development/updates.md)
 - [2026-08-20 第二阶段开发收尾日志](development/2026-08-20-stage-two-closeout.md)：汇总分析范围、科学展示规则、投影审计、箱线图性能和缓存生命周期，并记录纳入下一阶段实施的事项。
 - [2026-08-13 箱线图选择与性能更新](development/2026-08-13-boxplot-selection-and-performance.md)

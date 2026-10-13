@@ -1,7 +1,13 @@
 import { describe, expect, test } from 'vitest';
-import { withChartExport, withExportGrid, withoutTransientInteraction } from './chartExport';
+import { withChartExport, withExportGrid, withoutTransientInteraction, exportSize } from './chartExport';
 
 describe('chart export option contract', () => {
+  test('explicit export bounds keep responsive screen dimensions out of the downloaded figure', () => {
+    const chart = { getWidth: () => 9844, getHeight: () => 3015 };
+    expect(exportSize(chart, {}, { minWidth: 4020, maxWidth: 4020, minHeight: 1284, maxHeight: 1284 }))
+      .toEqual({ width: 4020, height: 1284 });
+    expect(exportSize(chart, {}, {})).toEqual({ width: 9844, height: 3015 });
+  });
   test('removes transient interaction without mutating the screen option', () => {
     const source = {
       animation: true,

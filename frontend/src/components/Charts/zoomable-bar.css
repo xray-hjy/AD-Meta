@@ -1,0 +1,44 @@
+.zoomable-bar-svg--animate { animation: chart-bar-axis-enter 220ms ease-out; }
+@keyframes chart-bar-axis-enter { from { opacity: .35; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .zoomable-bar-svg--animate { animation: none; } }
+.zoomable-bar-legend__item { cursor: pointer; outline: none; }
+.zoomable-bar-legend__hit { fill: transparent; stroke: transparent; }
+.zoomable-bar-legend__item:hover .zoomable-bar-legend__hit { fill: var(--workspace-accent-soft); }
+.zoomable-bar-legend__item:focus-visible .zoomable-bar-legend__hit { stroke: var(--workspace-accent); }
+.chart-category-range { margin: 2px 14px 14px; color: var(--text-secondary, #64748b); font-size: 11px; }
+.chart-category-range__caption { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 16px; margin-bottom: 9px; }
+.chart-category-range__caption strong { color: var(--workspace-accent); font-variant-numeric: tabular-nums; font-weight: 600; }
+.chart-category-range__track { height: 30px; position: relative; border: 1px solid color-mix(in srgb, var(--workspace-accent) 20%, transparent); border-radius: 5px; background: color-mix(in srgb, var(--workspace-accent) 4%, transparent); }
+.chart-category-range__track > svg { position: absolute; width: 100%; height: 100%; fill: color-mix(in srgb, var(--workspace-accent) 17%, transparent); pointer-events: none; }
+.chart-category-range__slider { position: relative; display: flex; align-items: center; width: 100%; height: 100%; touch-action: none; user-select: none; }
+.chart-category-range__rail { position: relative; flex: 1; height: 100%; }
+.chart-category-range__window { position: absolute; height: 100%; border: 1px solid var(--workspace-accent); background: color-mix(in srgb, var(--workspace-accent) 13%, transparent); cursor: grab; box-sizing: border-box; }
+.chart-category-range__window::after { content: '⋮⋮'; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: var(--workspace-accent); font-size: 13px; }
+.chart-category-range__window:active { cursor: grabbing; }
+.chart-category-range__thumb { display: block; width: 10px; height: 34px; border-radius: 4px; border: 1px solid var(--workspace-accent); background: var(--color-bg-panel, #fff); box-shadow: 0 1px 4px #0002; cursor: ew-resize; }
+.chart-category-range__thumb::after { content: ''; display: block; height: 12px; width: 2px; margin: 10px auto; background: var(--workspace-accent); border-radius: 2px; }
+.chart-category-range__thumb:focus-visible, .chart-category-range__window:focus-visible { outline: 2px solid var(--workspace-accent); outline-offset: 3px; }
+.mag-native-surface, .mag-native-chart { position: absolute; inset: 0; }
+.chart-frame-actions .chart-frame-actions__button--type {
+  display: inline-flex; gap: 5px; width: auto; padding: 0 8px; min-height: 30px;
+  border-radius: 8px; border-color: color-mix(in srgb, var(--workspace-accent) 22%, transparent);
+  background: var(--color-bg-panel); color: var(--workspace-accent); font: inherit; font-size: 11px;
+}
+.chart-frame-actions .chart-frame-actions__button--type:hover { background: var(--workspace-accent-soft); border-color: var(--workspace-accent); }
+.chart-type-icon { position: relative; display: inline-block; width: 17px; height: 17px; }
+.chart-type-icon svg { position: absolute; inset: 0; transition: opacity 220ms ease, transform 220ms ease; }
+.chart-type-icon__bar { opacity: 1; transform: scale(1) rotate(0); }
+.chart-type-icon__line { opacity: 0; transform: scale(.7) rotate(-15deg); }
+[data-alternate-active=true] .chart-type-icon__bar { opacity: 0; transform: scale(.7) rotate(15deg); }
+[data-alternate-active=true] .chart-type-icon__line { opacity: 1; transform: scale(1) rotate(0); }
+@media (prefers-reduced-motion: reduce) { .chart-type-icon svg { transition: none; } }
+.mag-native-chart--line { animation: mag-chart-enter-line 240ms ease-out; }
+.mag-native-chart--bar { animation: mag-chart-enter-bar 240ms ease-out; }
+@keyframes mag-chart-enter-line { from { opacity: .65; } to { opacity: 1; } }
+@keyframes mag-chart-enter-bar { from { opacity: .65; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .mag-native-chart--line, .mag-native-chart--bar { animation: none; } }
+.mag-native-markers { position: absolute; inset: 0; pointer-events: none; }
+.mag-native-range-label { position: absolute; bottom: 55px; font-size: 11px; color: var(--workspace-accent); pointer-events: none; font-variant-numeric: tabular-nums; }
+.mag-native-empty { position: absolute; left: 40%; top: 45%; font-size: 13px; color: var(--color-text-muted); pointer-events: none; }
+.mag-native-accessibility { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.mag-native-accessibility:focus-within { width: auto; height: auto; max-width: calc(100% - 30px); left: 15px; top: 0; clip-path: none; padding: 6px; background: var(--color-bg-panel); z-index: 4; display: flex; flex-wrap: wrap; gap: 6px; }

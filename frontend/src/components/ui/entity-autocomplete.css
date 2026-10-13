@@ -1,0 +1,29 @@
+.entity-autocomplete { min-width: 0; width: clamp(220px, 26vw, 390px); font-size: 12px; }
+.entity-input-group { display: flex; align-items: center; min-height: 34px; gap: 3px; padding: 0 6px 0 9px; border: 1px solid #dbe3ee; border-radius: 10px; background: var(--workspace-surface, white); box-shadow: 0 1px 3px #17233b06; transition: border-color .16s, box-shadow .16s; }
+.entity-input-group:focus-within { border-color: var(--workspace-accent, #b65770); box-shadow: 0 0 0 3px color-mix(in srgb, var(--workspace-accent, #b65770) 12%, transparent); }
+.entity-input-icon { color: var(--workspace-accent, #b65770); font-size: 21px; }
+.entity-input-group input { flex: 1; width: 0 !important; min-width: 0 !important; border: 0 !important; background: transparent !important; box-shadow: none !important; outline: none !important; padding: 7px 5px !important; text-overflow: ellipsis; font-size: 12px; color: #26334a; }
+.entity-input-group button { border: 0; background: transparent; color: #7b879a; cursor: pointer; border-radius: 7px; width: 24px; height: 26px; padding: 0; flex-shrink: 0; }
+.entity-input-group button:hover { background: var(--workspace-accent-soft, #b6577015); color: var(--workspace-accent, #b65770); }
+.entity-input-group[data-disabled] { opacity: .5; }
+.entity-positioner { z-index: 1600; width: min(510px, calc(100vw - 24px)); min-width: min(var(--anchor-width), calc(100vw - 24px)); max-width: calc(100vw - 24px); --entity-accent: #b65770; }
+.entity-popup { border-radius: 15px; border: 1px solid color-mix(in srgb, var(--entity-accent) 20%, #e5eaf1); color: #25324a; background: rgb(255 255 255 / .96); backdrop-filter: blur(18px); box-shadow: 0 14px 45px #17233b22, 0 2px 6px #17233b08; overflow: hidden; outline: none; font: 12px/1.5 system-ui, sans-serif; transition: opacity .12s, transform .12s; transform-origin: var(--transform-origin); }
+.entity-popup[data-starting-style], .entity-popup[data-ending-style] { opacity: 0; transform: translateY(-4px); }
+.entity-popup__heading { display: flex; justify-content: space-between; gap: 12px; padding: 10px 14px; color: #718096; font-size: 11px; border-bottom: 1px solid #edf0f6; }
+.entity-popup__list { max-height: min(330px, max(100px, calc(var(--available-height) - 90px))); overflow-y: auto; overscroll-behavior: contain; padding: 5px; scrollbar-width: thin; }
+.entity-option { display: flex; flex-direction: column; gap: 3px; padding: 9px; border-radius: 9px; cursor: pointer; outline: none; }
+.entity-option[data-highlighted] { background: color-mix(in srgb, var(--entity-accent) 11%, white); }
+.entity-option[data-selected] { box-shadow: inset 3px 0 var(--entity-accent); }
+.entity-option__heading { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.entity-option__heading strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; font-weight: 600; }
+.entity-option__heading small { flex-shrink: 0; color: var(--entity-accent); background: color-mix(in srgb, var(--entity-accent) 8%, white); padding: 1px 6px; border-radius: 5px; font-size: 10px; }
+.entity-option__detail { color: #79869b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 10px; }
+.entity-popup__footer { padding: 8px 14px; font-size: 10px; color: #8894a5; border-top: 1px solid #edf0f6; }
+.entity-popup__message { padding: 16px; color: #748197; }
+.entity-popup__message button { margin-left: 8px; border: 0; background: transparent; color: var(--entity-accent); cursor: pointer; }
+.entity-chip-list { display: flex; flex-wrap: wrap; gap: 5px; max-height: 130px; overflow: auto; margin-top: 8px; }
+.entity-chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 7px; max-width: 260px; border: 1px solid #b6577033; border-radius: 8px; color: #82465b; background: #b657700c; }
+.entity-chip span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.entity-chip button { border: 0; background: transparent; color: inherit; cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .entity-popup, .entity-input-group { transition: none; } }
+@media (max-width: 600px) { .entity-autocomplete { width: 100%; } }

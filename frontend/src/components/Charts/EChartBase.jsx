@@ -1,12 +1,20 @@
 import { forwardRef, useCallback, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import ReactEChartsCore from 'echarts-for-react/lib/core';
 import * as echarts from 'echarts/core';
 import { AriaComponent } from 'echarts/components';
 import { CanvasRenderer, SVGRenderer } from 'echarts/renderers';
 import { useColorVision } from '../../context/ColorVisionContext';
-import DataTableViewport from '../data-display/DataTableViewport';
+import ClientDataTable from '../data-display/ClientDataTable';
+import ResultDisclosure from '../data-display/ResultDisclosure';
+import ChartSupplement from './ChartSupplement';
 import { exportEChart, withChartExport } from './chartExport';
-import { useChartFrameActions } from './ChartFrameActionsContext';
+import { useChartFrameActions, useChartFrameToolbarTarget } from './ChartFrameActionsContext';
+import BarStyleToolbar from './BarStyleToolbar';
+import BoxStyleToolbar from './BoxStyleToolbar';
+import useChartStylePreferences from './useChartStylePreferences';
+import { applyBarStyle } from './barStyle';
+import { applyBoxStyle } from './boxStyle';
 
 echarts.use([AriaComponent, CanvasRenderer, SVGRenderer]);
 
@@ -24,7 +32,7 @@ function cssLength(value, fallback) {
   return typeof value === 'number' ? `${value}px` : value;
 }
 
-export function chartRowsFromOption(option, limit = 200) {
+export function chartRowsFromOption(option, limit = Infinity) {
   const rows = [];
   const seriesList = Array.isArray(option?.series) ? option.series : option?.series ? [option.series] : [];
   const xCategories = option?.xAxis?.data || option?.xAxis?.[0]?.data || [];
@@ -78,6 +86,8 @@ const EChartBase = forwardRef(function EChartBase(
     showDataTable = true,
     exportConfig = null,
     frameActions = false,
+    barStyleConfig = null,
+    boxStyleConfig = null,
     style,
     ...props
   },
@@ -87,14 +97,40 @@ const EChartBase = forwardRef(function EChartBase(
   const { colorBlindFriendly } = useColorVision();
   const [tableOpen, setTableOpen] = useState(false);
   const [seriesMode, setSeriesMode] = useState(null);
+  const styleConfig = barStyleConfig || boxStyleConfig;
+  const preferences = useChartStylePreferences(styleConfig?.key);
+  const toolbarTarget = useChartFrameToolbarTarget();
+  const interactionRef = useRef(null);
+  const styledOption = useMemo(() => {
+    const styled = barStyleConfig ? applyBarStyle(option, preferences.values, barStyleConfig)
+      : boxStyleConfig ? applyBoxStyle(option, preferences.values, boxStyleConfig) : option;
+    const interaction = interactionRef.current?.source === option ? interactionRef.current : null;
+    return {
+      ...styled,
+      ...(seriesMode ? { series: styled.series.map(series => ({ ...series, type: seriesMode })) } : {}),
+      ...(interaction?.dataZoom ? { dataZoom: interaction.dataZoom } : {}),
+      ...(interaction?.legend && styled.legend ? { legend: (Array.isArray(styled.legend) ? styled.legend : [styled.legend])
+        .map((legend, index) => ({ ...legend, selected: interaction.legend[index]?.selected })) } : {}),
+    };
+  }, [option, preferences.values, barStyleConfig, boxStyleConfig, seriesMode]);
+  const rememberInteraction = () => {
+    const current = chartRef.current?.getEchartsInstance?.()?.getOption?.();
+    interactionRef.current = current ? {
+      source: option,
+      dataZoom: current.dataZoom?.map((zoom, index) => ({ ...(Array.isArray(option.dataZoom) ? option.dataZoom[index] : option.dataZoom),
+        start: zoom.start, end: zoom.end, ...(zoom.startValue == null ? {} : { startValue: zoom.startValue }),
+        ...(zoom.endValue == null ? {} : { endValue: zoom.endValue }) })),
+      legend: current.legend?.map((legend, index) => ({ ...(Array.isArray(option.legend) ? option.legend[index] : option.legend), selected: legend.selected })),
+    } : null;
+  };
   const accessibleOption = useMemo(() => ({
-    ...option,
+    ...styledOption,
     aria: {
       enabled: true,
       decal: { show: colorBlindFriendly },
-      ...(option?.aria || {}),
+      ...(styledOption?.aria || {}),
     },
-  }), [colorBlindFriendly, option]);
+  }), [colorBlindFriendly, styledOption]);
   const renderedOption = useMemo(() => {
     if (!frameActions) return withChartExport(accessibleOption, chartRef, exportConfig);
     if (!accessibleOption?.toolbox) return accessibleOption;
@@ -123,7 +159,6 @@ const EChartBase = forwardRef(function EChartBase(
         { key: 'value', label: '数值' },
       ],
       rows: fallbackTableRows,
-      footer: fallbackTableRows.length >= 200 ? '为保证页面性能，仅展示前 200 行。' : null,
     };
   }, [dataTableModel, fallbackTableRows]);
   const hasDataTable = showDataTable && tableModel.columns.length > 0 && tableModel.rows.length > 0;
@@ -134,15 +169,14 @@ const EChartBase = forwardRef(function EChartBase(
   const supportsBarView = Array.isArray(magicTypeList) && magicTypeList.includes('bar');
   const supportsRestore = Boolean(toolboxFeatures.restore && toolboxFeatures.restore.show !== false);
   const setSeriesType = useCallback(type => {
-    const instance = chartRef.current?.getEchartsInstance?.();
     const series = Array.isArray(option?.series) ? option.series : [];
-    if (!instance || !series.length) return;
-    instance.setOption({ series: series.map(item => ({ ...item, type })) });
+    if (!series.length) return;
     setSeriesMode(type);
   }, [option?.series]);
   const restoreChart = useCallback(() => {
     const instance = chartRef.current?.getEchartsInstance?.();
     instance?.dispatchAction?.({ type: 'restore' });
+    interactionRef.current = null;
     setSeriesMode(null);
   }, []);
   const externalActions = useMemo(() => {
@@ -201,8 +235,11 @@ const EChartBase = forwardRef(function EChartBase(
   ]);
   useChartFrameActions(externalActions, frameActions);
   const containerStyle = useMemo(
-    () => hasDataTable ? { ...style, height: '100%' } : { height: 300, ...style },
-    [hasDataTable, style]
+    () => hasDataTable ? { ...style, height: '100%' } : {
+      height: 300, ...style,
+      ...(styleConfig && style?.height === '100%' ? { height: 'var(--echart-context-height, 300px)' } : {}),
+    },
+    [hasDataTable, style, styleConfig]
   );
   const layoutStyle = useMemo(() => {
     const requestedHeight = style?.height;
@@ -232,21 +269,46 @@ const EChartBase = forwardRef(function EChartBase(
     </div>
   );
 
-  if (!hasDataTable) return chart;
+  const StyleToolbar = barStyleConfig ? BarStyleToolbar : BoxStyleToolbar;
+  const styleToolbar = styleConfig && seriesMode !== 'line' ? (
+    <StyleToolbar option={option} preferences={preferences.values} config={styleConfig}
+      onChange={(key, value) => { rememberInteraction(); preferences.update(key, value); }}
+      onReset={() => { rememberInteraction(); preferences.reset(); }} />
+  ) : null;
+  const decorateChart = content => styleConfig ? (
+    <div className="styled-chart">
+      {frameActions && toolbarTarget ? createPortal(styleToolbar, toolbarTarget) : styleToolbar}
+      {content}
+    </div>
+  ) : content;
 
-  return (
+  if (!hasDataTable) return decorateChart(chart);
+
+  return decorateChart(
     <div className="echart-layout" style={layoutStyle}>
       {chart}
-      <details
-        className="chart-data-table"
+      <ChartSupplement><ResultDisclosure
+        title="查看当前图表数据"
+        summary={`${tableModel.rows.length.toLocaleString()} 条图表记录`}
+        className="chart-data-table result-section--table"
         open={tableOpen}
         onToggle={event => setTableOpen(event.currentTarget.open)}
       >
-        <summary>查看当前图表数据</summary>
         {tableOpen ? (
-          <DataTableViewport
+          <ClientDataTable
             ariaLabel={tableModel.ariaLabel || '当前图表数据，可滚动'}
             footer={tableModel.footer || null}
+            rows={tableModel.rows}
+            renderRow={(row, index) => (
+              <tr key={tableModel.rowKey?.(row, index) ?? index}>
+                {tableModel.columns.map(column => {
+                  const value = column.format
+                    ? column.format(row[column.key], row)
+                    : printableValue(row[column.key]);
+                  return <td key={column.key}>{value}</td>;
+                })}
+              </tr>
+            )}
           >
             <thead>
               <tr>
@@ -255,21 +317,9 @@ const EChartBase = forwardRef(function EChartBase(
                 ))}
               </tr>
             </thead>
-            <tbody>
-              {tableModel.rows.map((row, index) => (
-                <tr key={tableModel.rowKey?.(row, index) || index}>
-                  {tableModel.columns.map(column => {
-                    const value = column.format
-                      ? column.format(row[column.key], row)
-                      : printableValue(row[column.key]);
-                    return <td key={column.key}>{value}</td>;
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </DataTableViewport>
+          </ClientDataTable>
         ) : null}
-      </details>
+      </ResultDisclosure></ChartSupplement>
     </div>
   );
 });

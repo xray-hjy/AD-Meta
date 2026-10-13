@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "cohorts": [
+    {
+      "cohortId": "cra014435-ad-nc-runs",
+      "sampleIdScheme": "NGDC_GSA_RUN",
+      "sampleSetSha256": "869f065b51cc89b360ae3be96e4f37f588e5e031b04cf21b36c1fee6fa05c3b0",
+      "sampleCount": 185,
+      "groupCounts": {"AD": 122, "NC": 63},
+      "verifiedOn": "2026-10-01",
+      "repository": "NGDC GSA",
+      "studyAccession": "CRA014435",
+      "studyUrl": "https://ngdc.cncb.ac.cn/gsa/browse/CRA014435",
+      "projectAccession": "PRJCA022804",
+      "projectUrl": "https://ngdc.cncb.ac.cn/bioproject/browse/PRJCA022804",
+      "publication": {
+        "title": "Metagenomic analysis characterizes stage-specific gut microbiota in Alzheimer's disease",
+        "journal": "Molecular Psychiatry",
+        "year": 2025,
+        "doi": "10.1038/s41380-025-02973-7",
+        "url": "https://www.nature.com/articles/s41380-025-02973-7",
+        "relationship": "raw_reads_deposited_in_project"
+      }
+    }
+  ]
+}

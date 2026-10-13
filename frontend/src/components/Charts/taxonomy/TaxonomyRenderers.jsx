@@ -131,12 +131,12 @@ export function SunburstRenderer({
           option={option}
           onChartReady={onReady}
           onEvents={{ click: onClick, sunburstRootToNode: onRootToNode }}
+          frameActions
           exportConfig={{
             fileName: `taxonomy-sunburst-${view}`,
             format: 'svg',
             minWidth: size + 360,
             minHeight: size,
-            toolbox: { right: 8, top: 8 },
             prepareOption: exportedOption => buildSunburstExportOption(
               exportedOption,
               legendItems,
@@ -168,6 +168,7 @@ export function RadialTreeRenderer({ option, size }) {
       className="taxonomy-chart-surface"
       option={option}
       opts={{ renderer: 'svg' }}
+      frameActions
       exportConfig={{
         fileName: 'taxonomy-radial-tree',
         format: 'svg',
@@ -188,6 +189,7 @@ export function SankeyRenderer({ option, opts, height, constraints, onReady }) {
         opts={opts}
         autoResize={false}
         onChartReady={onReady}
+        frameActions
         exportConfig={{
           fileName: 'taxonomy-sankey',
           format: 'png',
@@ -195,7 +197,6 @@ export function SankeyRenderer({ option, opts, height, constraints, onReady }) {
           minWidth: constraints.minWidth,
           minHeight: height,
           maxWidth: constraints.maxWidth,
-          toolbox: { right: 10, top: 8 },
         }}
         style={{
           width: `clamp(${constraints.minWidth}px, 100%, ${constraints.maxWidth}px)`,
@@ -217,6 +218,7 @@ export function TreemapRenderer({ option, size, onReady, onFinished }) {
         option={option}
         onChartReady={onReady}
         onEvents={{ finished: onFinished }}
+        frameActions
         exportConfig={{
           fileName: 'taxonomy-treemap',
           format: 'svg',

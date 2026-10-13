@@ -1,7 +1,7 @@
 """Additive MAG API contract; does not change existing dataset projections."""
 from typing import Any, Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class MagScopeResponse(BaseModel):
@@ -72,6 +72,11 @@ class MagOverviewResponse(BaseModel):
 class MagFeature(BaseModel):
     magId: str
     lengthBp: int
+    taxonomyName: str | None = None
+    taxonomyRank: str | None = None
+    taxonomy: dict[str, str] = Field(default_factory=dict)
+    completenessPercent: float | None = None
+    contaminationPercent: float | None = None
     meanPercent: float | None
     adMeanPercent: float | None
     ncMeanPercent: float | None
@@ -127,12 +132,39 @@ class MagDistributionResponse(BaseModel):
     boxes: list[MagBox]
 
 
+class MagDendrogramTree(BaseModel):
+    # SciPy leaves retain stable IDs from the clustering input; branch indexes
+    # reference leaves first, then the merges in their original order.
+    leafIds: list[str]
+    merges: list[tuple[int, int, float, int]]
+
+
+class MagSampleDendrogramTree(MagDendrogramTree):
+    group: str
+
+
+class MagHeatmapDendrograms(BaseModel):
+    metric: str = "euclidean"
+    linkage: str = "average"
+    mags: MagDendrogramTree | None = None
+    samples: list[MagSampleDendrogramTree] = Field(default_factory=list)
+
+
 class MagHeatmapResponse(BaseModel):
     provenance: MagProvenance
     magIds: list[str]
     samples: list[MagSample]
     values: list[list[float]]
     selection: str
+    displayValues: list[list[float]]
+    features: list[MagFeature]
+    settings: dict[str, Any]
+    methods: dict[str, str]
+    selectionAudit: dict[str, Any]
+    warnings: list[str]
+    constantMagIds: list[str]
+    projectionFingerprint: str
+    dendrograms: MagHeatmapDendrograms = Field(default_factory=MagHeatmapDendrograms)
 
 
 class MagSamplesResponse(BaseModel):
@@ -197,6 +229,34 @@ class MagQualityResponse(BaseModel):
     referenceBand: MagQualityReferenceBand
     method: str
     version: str | None
+
+
+class MagCatalogTaxonomy(BaseModel):
+    domain: str
+    phylum: str
+    class_: str = Field(alias="class")
+    order: str
+    family: str
+    genus: str
+    species: str
+    classificationMethod: str
+    closestReference: str | None
+    closestAni: float | None
+    closestAf: float | None
+    msaPercent: float | None
+
+
+class MagCatalogItem(BaseModel):
+    magId: str
+    taxonomy: MagCatalogTaxonomy | None
+    quality: MagQualityItem | None
+
+
+class MagCatalogResponse(BaseModel):
+    provenance: MagProvenance
+    items: list[MagCatalogItem]
+    total: int
+    scopeKind: Literal["catalog"] = "catalog"
 
 
 class MagLineageClusterSummary(BaseModel):
@@ -333,3 +393,20 @@ class MagLineageResponse(BaseModel):
 class MagErrorResponse(BaseModel):
     detail: str
     report: dict[str, str] | None = None
+
+
+class MagSuggestionItem(BaseModel):
+    key: str
+    value: str
+    label: str
+    detail: str
+    kind: str
+    count: int | None = None
+    approximate: bool = False
+
+
+class MagSuggestionsResponse(BaseModel):
+    revision: str
+    query: str
+    total: int
+    items: list[MagSuggestionItem]

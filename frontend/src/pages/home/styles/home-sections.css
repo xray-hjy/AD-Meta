@@ -1,0 +1,51 @@
+/* Reversible transitions between the three main homepage sections. Keep
+   transforms off the story/evidence anchors so measurements stay stable. */
+.admeta-home.section-motion .hero-surface {
+  opacity: calc(1 - var(--hero-departure, 0));
+  transform: translate3d(0, calc(-1 * var(--section-hero-distance) * var(--hero-departure, 0)), 0)
+    scale(calc(1 - .035 * var(--hero-departure, 0)));
+  transform-origin: center bottom;
+  transition: transform var(--section-duration) cubic-bezier(.22,1,.36,1),
+    opacity var(--section-duration) cubic-bezier(.22,1,.36,1);
+}
+
+.admeta-home.section-motion.scroll-gallery .visual-stage {
+  opacity: calc((.28 + .72 * var(--story-progress)) * (1 - .85 * var(--showcase-departure, 0)));
+  transform: translate3d(calc(var(--stage-center-x) * (1 - var(--story-progress))),
+    calc(64px * (1 - var(--story-progress)) - var(--section-exit-distance) * var(--showcase-departure, 0)), 0)
+    scale(calc(1 - .10 * (1 - var(--story-progress)) - .08 * var(--showcase-departure, 0)));
+  transition: transform var(--section-duration) cubic-bezier(.22,1,.36,1),
+    opacity var(--section-duration) cubic-bezier(.22,1,.36,1);
+}
+
+.admeta-home.section-motion.scroll-gallery .chapter-reader {
+  opacity: calc(1 - .85 * var(--showcase-departure, 0));
+  transform: translate3d(0, calc(-1 * var(--section-exit-distance) * var(--showcase-departure, 0)), 0);
+  transition: transform var(--section-duration) cubic-bezier(.22,1,.36,1),
+    opacity var(--section-duration) cubic-bezier(.22,1,.36,1);
+}
+
+.admeta-home.section-motion .chapter-list {
+  transition: opacity var(--section-duration) cubic-bezier(.22,1,.36,1);
+}
+
+.admeta-home.section-motion .evidence-inner {
+  opacity: var(--foundation-arrival, 1);
+  transform: translate3d(0, calc(var(--section-foundation-distance) * (1 - var(--foundation-arrival, 1))), 0);
+  transition: transform var(--section-duration) cubic-bezier(.22,1,.36,1),
+    opacity var(--section-duration) cubic-bezier(.22,1,.36,1);
+}
+
+.admeta-home .hero { border-bottom: 0; }
+.admeta-home .evidence {
+  border-top: 0;
+  background: linear-gradient(to bottom, #f5f8ff, #eaf1fa 110px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admeta-home.section-motion :is(.hero-surface, .visual-stage, .chapter-reader, .evidence-inner) {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

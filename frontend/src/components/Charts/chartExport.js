@@ -104,7 +104,7 @@ function exportSize(chart, option, config) {
     : currentWidth;
   return {
     width: Math.min(Number(config.maxWidth) || 12000, Math.max(currentWidth, calculatedWidth, Number(config.minWidth) || 0)),
-    height: Math.max(currentHeight, Number(config.minHeight) || 0),
+    height: Math.min(Number(config.maxHeight) || Infinity, Math.max(currentHeight, Number(config.minHeight) || 0)),
   };
 }
 
@@ -141,6 +141,27 @@ function waitForChart(chart) {
   });
 }
 
+function rasterizeSvg(url, size, pixelRatio) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onerror = () => reject(new Error('Unable to rasterize the SVG export'));
+    image.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.floor(size.width * pixelRatio));
+        canvas.height = Math.max(1, Math.floor(size.height * pixelRatio));
+        const context = canvas.getContext('2d');
+        if (!context) throw new Error('PNG canvas is unavailable');
+        context.fillStyle = '#ffffff';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/png'));
+      } catch (error) { reject(error); }
+    };
+    image.src = url;
+  });
+}
+
 export async function exportEChart(chartRefOrInstance, config = {}) {
   const sourceChart = resolveChart(chartRefOrInstance);
   if (!sourceChart || typeof document === 'undefined') return false;
@@ -169,15 +190,19 @@ export async function exportEChart(chartRefOrInstance, config = {}) {
 
   let exportChart;
   try {
-    exportChart = echarts.init(host, null, { renderer: format === 'svg' ? 'svg' : 'canvas' });
+    const vectorRaster = format === 'png' && config.rasterizeSvg;
+    exportChart = echarts.init(host, null, { renderer: format === 'svg' || vectorRaster ? 'svg' : 'canvas' });
     exportChart.setOption(option, { notMerge: true, lazyUpdate: false });
     await waitForChart(exportChart);
-    const url = exportChart.getDataURL({
-      type: format,
+    let url = exportChart.getDataURL({
+      type: vectorRaster ? 'svg' : format,
       pixelRatio: format === 'png' ? (Number(config.pixelRatio) || 2) : 1,
       backgroundColor: '#ffffff',
       excludeComponents: ['toolbox', 'dataZoom', 'brush'],
     });
+    // Large heatmaps can leave incremental canvas paint callbacks after disposal.
+    // Rasterizing a complete SVG avoids that lifecycle and retains the vector colors/order.
+    if (vectorRaster) url = await rasterizeSvg(url, size, Number(config.pixelRatio) || 2);
     triggerDownload(url, `${safeFileName(config.fileName)}-${dateStamp()}.${format}`);
     return true;
   } catch (error) {
@@ -216,4 +241,4 @@ export function withChartExport(option, chartRef, config) {
   };
 }
 
-export { withoutTransientInteraction, withExportGrid };
+export { withoutTransientInteraction, withExportGrid, exportSize };

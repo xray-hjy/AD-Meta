@@ -1,4 +1,5 @@
 import { PCA_FEATURE_SELECTION_METHOD } from '../../app/ordinationPolicy';
+import { DatasetSemanticsNotice } from '../dataset/DatasetDescription';
 
 const SCOPE_LABELS = {
   cohort: '全部样本',
@@ -11,6 +12,9 @@ function projectionSummary(data) {
   const projection = data.projection;
   const payload = data.payload || {};
   const featureLabel = data.featureLabel || '物种';
+  if (projection.kind === 'mag_distribution') {
+    return [`当前选中 ${projection.returnedFeatureCount} 个 MAG`, '每个散点代表一个样本的丰度'];
+  }
   if (projection.kind === 'ko_contribution') {
     const series = Array.isArray(data.payload?.series) ? data.payload.series : [];
     const coverage = projection.coverageBySeries || {};
@@ -151,7 +155,7 @@ function formatNumber(value) {
   return Number.isFinite(number) ? number.toFixed(4) : '-';
 }
 
-export default function ProjectionDisclosure({ data, fetching = false }) {
+export default function ProjectionDisclosure({ data, fetching = false, dataSemantics = null }) {
   const projection = data?.projection;
   if (!projection) return null;
   const scopeLabel = data.scope?.mode === 'group'
@@ -162,12 +166,15 @@ export default function ProjectionDisclosure({ data, fetching = false }) {
 
   return (
     <div className="projection-disclosure" aria-live="polite">
-      <span className="projection-disclosure__scope">{scopeLabel}</span>
-      <span>基于 {projection.sampleCount} 个样本</span>
+      <span className="projection-disclosure__scope">{projection.kind === 'mag_distribution' ? `样本范围：${data.scope?.mode === 'subset' ? '当前筛选样本' : scopeLabel}` : scopeLabel}</span>
+      <span>{projection.kind === 'mag_distribution'
+        ? `样本数：${projection.sampleCount}（AD ${projection.groupCounts?.AD ?? 0} · NC ${projection.groupCounts?.NC ?? 0}）`
+        : `基于 ${projection.sampleCount} 个样本`}</span>
       {projectionSummary(data).map(message => <span key={message}>{message}</span>)}
-      {data.dataSemantics?.normalization === 'unknown' ? (
-        <span className="projection-disclosure__warning">上游标准化方式待确认</span>
-      ) : null}
+      <DatasetSemanticsNotice
+        abundanceScale={(data.dataSemantics || dataSemantics)?.abundanceScale}
+        normalization={(data.dataSemantics || dataSemantics)?.normalization}
+      />
       {fetching ? <span className="projection-disclosure__updating">正在更新</span> : null}
     </div>
   );

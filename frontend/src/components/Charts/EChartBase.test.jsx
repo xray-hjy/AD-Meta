@@ -29,9 +29,10 @@ describe('chartRowsFromOption', () => {
     expect(rows).toContainEqual({ series: '流向', item: '门 → 属', value: '2' });
   });
 
-  test('caps large alternatives to keep chart rendering bounded', () => {
-    const rows = chartRowsFromOption({ series: [{ data: Array.from({ length: 400 }, (_, i) => i) }] });
-    expect(rows).toHaveLength(200);
+  test('retains all chart records for pagination and supports an explicit caller limit', () => {
+    const option = { series: [{ data: Array.from({ length: 400 }, (_, i) => i) }] };
+    expect(chartRowsFromOption(option)).toHaveLength(400);
+    expect(chartRowsFromOption(option, 200)).toHaveLength(200);
   });
 
   test('can hide the data table for charts that do not need it', () => {

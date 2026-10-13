@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import useScopedAnalysisSamples from '../../hooks/useScopedAnalysisSamples';
 import DataTableViewport from '../data-display/DataTableViewport';
+import PaginationControls from '../data-display/PaginationControls';
+import ResultDisclosure from '../data-display/ResultDisclosure';
 
 export default function ScopedSampleList({
   runKey,
@@ -11,7 +13,7 @@ export default function ScopedSampleList({
 }) {
   const [open, setOpen] = useState(false);
   const [offset, setOffset] = useState(0);
-  const limit = 50;
+  const limit = 200;
   const scopeKey = JSON.stringify(scope || {});
 
   useEffect(() => {
@@ -32,11 +34,12 @@ export default function ScopedSampleList({
   const pageEnd = Math.min(offset + limit, total);
 
   return (
-    <details
+    <ResultDisclosure
+      title={`查看参与样本${sampleCount ? `（${sampleCount}）` : ''}`}
       className={`projection-samples${prominent ? ' is-prominent' : ''}`}
+      open={open}
       onToggle={event => setOpen(event.currentTarget.open)}
     >
-      <summary>查看参与样本{sampleCount ? `（${sampleCount}）` : ''}</summary>
       {open ? (
         <div className="projection-samples__content">
           <div className="projection-samples__meta">
@@ -53,7 +56,14 @@ export default function ScopedSampleList({
             <div className="projection-audit__message">正在读取参与样本...</div>
           ) : null}
           {!state.error && !state.loading ? (
-            <DataTableViewport ariaLabel="参与样本数据，可滚动">
+            <DataTableViewport ariaLabel="参与样本数据，可滚动" resizable pageKey={offset}
+              pagination={<PaginationControls
+                page={Math.floor(offset / limit) + 1}
+                pageCount={Math.max(1, Math.ceil(total / limit))}
+                onPageChange={page => setOffset((page - 1) * limit)}
+                disabled={state.fetching}
+                ariaLabel="参与样本分页"
+              />}>
                 <thead>
                   <tr>
                     <th>样本编号</th>
@@ -77,16 +87,8 @@ export default function ScopedSampleList({
                 </tbody>
             </DataTableViewport>
           ) : null}
-          <div className="projection-audit__pagination">
-            <button type="button" disabled={offset <= 0} onClick={() => setOffset(Math.max(0, offset - limit))}>
-              上一页
-            </button>
-            <button type="button" disabled={offset + limit >= total} onClick={() => setOffset(offset + limit)}>
-              下一页
-            </button>
-          </div>
         </div>
       ) : null}
-    </details>
+    </ResultDisclosure>
   );
 }

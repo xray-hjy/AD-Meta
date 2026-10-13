@@ -55,7 +55,8 @@ def test_mysql_import_revision_binding_and_projection(tmp_path: Path) -> None:
                 "mysql-live-run", "ko", AbundanceProjectionRequest(topN=2)
             )
         assert projection["datasetSlug"] == "mysql-live-dataset"
-        assert projection["payload"]["items"]
+        assert {item["feature"] for item in projection["items"]} == {"K00001", "K00002"}
+        assert projection["projection"]["returnedFeatureCount"] == 2
         assert projection["datasetRevision"]
         assert list((tmp_path / "cache" / "projections").rglob("*.json"))
         exported = b"".join(

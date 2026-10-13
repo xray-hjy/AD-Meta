@@ -1,8 +1,14 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import App from './App';
 import { fetchJson } from './api/client';
 import { queryClient } from './api/queryClient';
+
+// jsdom cannot parse Swiper 14's native CSS nesting; retain its real JS.
+// Vendor styles and motion geometry are checked in the browser.
+vi.mock('swiper/css', () => ({}));
+vi.mock('swiper/css/effect-coverflow', () => ({}));
+vi.mock('swiper/css/free-mode', () => ({}));
 
 vi.mock('./api/client', () => ({
   fetchJson: vi.fn(),
@@ -130,7 +136,7 @@ test('shows the four supported chart tabs for KO datasets', async () => {
   render(<App />);
 
   expect(
-    await screen.findByText('KO 检出率热图', {}, { timeout: 3000 })
+    await screen.findByText('KO 检出率热图', {}, { timeout: 10_000 })
   ).toBeTruthy();
 
   expect(screen.getAllByText('丰度对比').length).toBeGreaterThan(0);
@@ -142,6 +148,75 @@ test('shows the four supported chart tabs for KO datasets', async () => {
   expect(screen.queryByText('分类层级图')).toBeNull();
   expect(screen.queryByText('KO PCA')).toBeNull();
   expect(screen.queryByText('KO PCoA')).toBeNull();
+  // The first workspace render includes cold lazy imports and coverage instrumentation.
+}, 15_000);
+
+test('loads the selected revision facts without showing another dataset name', async () => {
+  datasets = [
+    { slug: 'ad-nc-ko-abundance', name: 'KO', featureKind: 'ko', currentRevision: 'ko-rev' },
+    { slug: 'ad-nc-species', name: 'Species', featureKind: 'taxonomy', currentRevision: 'species-rev' },
+  ];
+  summaries['ad-nc-species'] = {
+    datasetSlug: 'ad-nc-species', datasetName: 'Species', featureKind: 'taxonomy',
+    featureLabel: '物种', totalSamples: 4, adSamples: 2, ncSamples: 2, totalFeatures: 6,
+  };
+  analysisRuns[0].artifacts[0].datasetRevision = 'ko-rev';
+  analysisRuns[0].artifacts.push({
+    key: 'species-abundance', type: 'species_abundance', datasetSlug: 'ad-nc-species',
+    datasetRevision: 'species-rev', sampleCount: 4,
+  });
+  const initialFetch = fetchJson.getMockImplementation();
+  let resolveSpecies;
+  const description = (slug, revision, datasetName) => ({
+    datasetSlug: slug, datasetName, datasetRevision: revision, sourceSha256: 'a'.repeat(64),
+    featureKind: slug === 'ad-nc-species' ? 'taxonomy' : 'ko',
+    featureLabel: slug === 'ad-nc-species' ? '物种' : 'KO',
+    sampleCount: 4, featureCount: 6, groupCounts: { AD: 2, NC: 2 },
+    abundanceScale: 'unknown', normalization: 'unknown', sampleIdPrefixes: [],
+    groupMapping: {}, missingValuePolicy: 'error',
+    cohortSource: {
+      cohortId: slug, repository: 'NGDC GSA',
+      studyAccession: slug === 'ad-nc-species' ? 'CRA-SPECIES' : 'CRA-KO',
+      studyUrl: 'https://ngdc.cncb.ac.cn/gsa/browse/CRA014435',
+      projectAccession: 'PRJCA022804',
+      projectUrl: 'https://ngdc.cncb.ac.cn/bioproject/browse/PRJCA022804',
+      verifiedOn: '2026-10-01',
+      publication: {
+        title: 'Metagenomic analysis characterizes stage-specific gut microbiota in Alzheimer\'s disease',
+        journal: 'Molecular Psychiatry', year: 2025,
+        doi: '10.1038/s41380-025-02973-7',
+        url: 'https://www.nature.com/articles/s41380-025-02973-7',
+        relationship: 'raw_reads_deposited_in_project',
+      },
+    },
+  });
+  fetchJson.mockImplementation((url, options) => {
+    if (url === '/api/datasets/ad-nc-ko-abundance/revisions/ko-rev/description') {
+      return Promise.resolve(description('ad-nc-ko-abundance', 'ko-rev', 'KO data revision'));
+    }
+    if (url === '/api/datasets/ad-nc-species/revisions/species-rev/description') {
+      return new Promise(resolve => { resolveSpecies = resolve; });
+    }
+    return initialFetch(url, options);
+  });
+
+  render(<App />);
+  fireEvent.click(await screen.findByRole('button', { name: '数据说明' }));
+  expect(document.querySelector('.sidebar')).not.toContainElement(screen.getByRole('button', { name: '数据说明' }));
+  expect(document.querySelector('.main-content > .dataset-description-card')).toBeInTheDocument();
+  expect(await screen.findByText('KO data revision')).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'CRA-KO' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: /群落物种/ }));
+  await waitFor(() => expect(resolveSpecies).toBeTypeOf('function'));
+  expect(screen.queryByText('KO data revision')).toBeNull();
+  expect(screen.queryByRole('link', { name: 'CRA-KO' })).toBeNull();
+  await act(async () => {
+    resolveSpecies(description('ad-nc-species', 'species-rev', 'Species data revision'));
+  });
+  expect(await screen.findByText('Species data revision')).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'CRA-SPECIES' })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: /Metagenomic analysis characterizes/ })).toBeInTheDocument();
+  expect(screen.getAllByText('丰度尺度：未提供 · 标准化方法：未提供').length).toBeGreaterThan(0);
 });
 
 test('stores the selected scientific scope in the URL and requests a group projection', async () => {
@@ -172,7 +247,7 @@ test('describes the selected analysis run and current artifact sample coverage',
   render(<App />);
 
   await waitFor(() => {
-    expect(screen.getByRole('option', { name: 'AD/NC 群落分析基线' })).toBeTruthy();
+    expect(screen.getByRole('combobox', { name: '选择分析运行' })).toHaveTextContent('AD/NC 群落分析基线');
     expect(screen.getByText('运行 4 样本 · 当前结果覆盖 4')).toBeTruthy();
   });
 
@@ -285,7 +360,8 @@ test('switches MAG inside the analysis workspace and synchronizes its navigation
 
   fireEvent.click(magButton);
 
-  expect(await screen.findByLabelText('MAG 模块数据就绪度')).toBeTruthy();
+  // The MAG route loads a large lazy module on its first navigation.
+  expect(await screen.findByLabelText('MAG 模块数据就绪度', {}, { timeout: 5000 })).toBeTruthy();
   expect(document.querySelector('.app-subtitle')?.textContent).toBe('MAG 解析');
   expect(screen.getByRole('navigation', { name: '图表导航' })).toBeTruthy();
   expect(window.location.pathname).toBe('/analysis/abundance');

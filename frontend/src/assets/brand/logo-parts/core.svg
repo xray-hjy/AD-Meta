@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" data-name="图层_1" version="1.1" viewBox="585 440 505 685">
+  <g>
+    <g>
+      <line x1="826.1" y1="901.21" x2="716.1" y2="785.65" fill="none" stroke="#cee9ea" stroke-miterlimit="10" stroke-width="5px" />
+      <line x1="826.1" y1="809.55" x2="717.02" y2="786.13" fill="none" stroke="#cee9ea" stroke-miterlimit="10" stroke-width="5px" />
+      <line x1="935.82" y1="794.6" x2="829.6" y2="725.33" fill="none" stroke="#cee9ea" stroke-miterlimit="10" stroke-width="5px" />
+      <line x1="935.82" y1="794.6" x2="826.1" y2="809.55" fill="none" stroke="#cee9ea" stroke-miterlimit="10" stroke-width="5px" />
+      <line x1="826.1" y1="713.94" x2="728.38" y2="877.04" fill="none" stroke="#cee9ea" stroke-miterlimit="10" stroke-width="5px" />
+      <line x1="825.38" y1="808.12" x2="728.38" y2="877.05" fill="none" stroke="#cee9ea" stroke-miterlimit="10" stroke-width="5px" />
+      <line x1="728.38" y1="877.05" x2="826.1" y2="901.21" fill="none" stroke="#cee9ea" stroke-miterlimit="10" stroke-width="5px" />
+      <line x1="935.82" y1="793.23" x2="826.1" y2="901.21" fill="none" stroke="#cee9ea" stroke-miterlimit="10" stroke-width="5px" />
+      <line x1="715.23" y1="786.13" x2="825.38" y2="713.94" fill="none" stroke="#cee9ea" stroke-miterlimit="10" stroke-width="5px" />
+      <line x1="825.38" y1="723.1" x2="825.38" y2="900.83" fill="none" stroke="#cee9ea" stroke-miterlimit="10" stroke-width="5px" />
+      <path d="M825.38,832.28c-13.32,0-24.16-10.84-24.16-24.16s10.84-24.16,24.16-24.16,24.16,10.84,24.16,24.16-10.84,24.16-24.16,24.16Z" fill="#cee9ea" />
+      <circle cx="825.38" cy="808.12" r="19.78" fill="#00519a" />
+      <path d="M825.38,738.1c-13.32,0-24.16-10.84-24.16-24.16s10.84-24.16,24.16-24.16,24.16,10.84,24.16,24.16-10.84,24.16-24.16,24.16Z" fill="#cee9ea" />
+      <circle cx="825.38" cy="713.94" r="19.78" fill="#009996" />
+      <path d="M825.38,925c-13.32,0-24.16-10.84-24.16-24.16s10.84-24.16,24.16-24.16,24.16,10.84,24.16,24.16-10.84,24.16-24.16,24.16Z" fill="#cee9ea" />
+      <circle cx="825.38" cy="900.83" r="19.78" fill="#009996" />
+      <path d="M715.78,808.48c-13.32,0-24.16-10.84-24.16-24.16s10.84-24.16,24.16-24.16,24.16,10.84,24.16,24.16-10.84,24.16-24.16,24.16Z" fill="#cee9ea" />
+      <circle cx="715.78" cy="784.32" r="19.78" fill="#009996" />
+      <path d="M935.82,817.39c-13.32,0-24.16-10.84-24.16-24.16s10.84-24.16,24.16-24.16,24.16,10.84,24.16,24.16-10.84,24.16-24.16,24.16Z" fill="#cee9ea" />
+      <circle cx="935.85" cy="793.27" r="19.78" fill="#00519a" />
+      <path d="M728.93,901.52c-13.32,0-24.16-10.84-24.16-24.16s10.84-24.16,24.16-24.16,24.16,10.84,24.16,24.16-10.84,24.16-24.16,24.16Z" fill="#cee9ea" />
+      <circle cx="728.93" cy="877.36" r="19.78" fill="#00519a" />
+    </g>
+  </g>
+</svg>

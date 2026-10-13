@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useEffect, useMemo } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getChart } from '../api/datasets';
 import { queryClient } from '../api/queryClient';
@@ -14,6 +14,7 @@ import { normalizeAnalysisParameters, validateAnalysisScope } from './analysisPo
 import AppShell from '../components/layout/AppShell';
 import ChartFrame from '../components/Charts/ChartFrame';
 import AnalysisScopeToolbar from '../components/analysisScope/AnalysisScopeToolbar';
+import AnalysisTopNControl from '../components/analysisScope/AnalysisTopNControl';
 import BoxplotFeatureSelector from '../components/analysisScope/BoxplotFeatureSelector';
 import ProjectionDisclosure from '../components/analysisScope/ProjectionDisclosure';
 import ProjectionLoadingState from '../components/analysisScope/ProjectionLoadingState';
@@ -23,11 +24,14 @@ import ErrorState from '../components/ui/ErrorState';
 import LoadingState from '../components/ui/LoadingState';
 import MainWorkspace from '../components/layout/MainWorkspace';
 import Sidebar from '../components/layout/Sidebar';
+import DatasetDescription, { DatasetSemanticsNotice } from '../components/dataset/DatasetDescription';
+import DatasetDescriptionCard from '../components/dataset/DatasetDescriptionCard';
 import TopBar from '../components/layout/TopBar';
 import CompleteResultsPanel from '../components/data-display/CompleteResultsPanel';
 import useActiveChart from '../hooks/useActiveChart';
 import useChartData from '../hooks/useChartData';
 import useDatasetSummary from '../hooks/useDatasetSummary';
+import useDatasetDescription from '../hooks/useDatasetDescription';
 import useAnalysisRuns from '../hooks/useAnalysisRuns';
 import useAnalysisSamples from '../hooks/useAnalysisSamples';
 import useAnalysisProjection, {
@@ -87,6 +91,7 @@ function renderChartComponent(chartType, chartData, summary) {
 }
 
 function App({ datasetsState, onDomainChange }) {
+  const [descriptionOpen, setDescriptionOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const runsState = useAnalysisRuns();
   const requestedRun = searchParams.get('run') || '';
@@ -117,6 +122,12 @@ function App({ datasetsState, onDomainChange }) {
   const activeArtifact = activeRun?.artifacts?.find(
     artifact => artifact.datasetSlug === activeDataset
   ) || null;
+  const selectedDataset = scopedDatasets.find(dataset => dataset.slug === activeDataset) || null;
+  const descriptionRevision = activeArtifact?.datasetRevision || selectedDataset?.currentRevision || '';
+  const descriptionState = useDatasetDescription(activeDataset, descriptionRevision, descriptionOpen);
+  const datasetSemantics = activeArtifact || (
+    selectedDataset?.currentRevision === descriptionRevision ? selectedDataset?.provenance : null
+  );
   const projectionStateContext = activeArtifact?.datasetRevision || activeArtifact?.key || '';
 
   const updateSelection = useCallback((updates, options = {}) => {
@@ -396,6 +407,7 @@ function App({ datasetsState, onDomainChange }) {
   );
   const projectionControls = projectionKind && activeRun && activeArtifact ? (
     <AnalysisScopeToolbar
+      showTopN={false}
       scope={projectionSelection.scope}
       topN={projectionSelection.topN}
       parameters={projectionSelection.parameters}
@@ -426,8 +438,30 @@ function App({ datasetsState, onDomainChange }) {
     />
   ) : null;
   const projectionDisclosure = projectionEnabled && projectionState.data ? (
-    <ProjectionDisclosure data={projectionState.data} fetching={projectionState.fetching} />
+    <ProjectionDisclosure
+      data={projectionState.data}
+      fetching={projectionState.fetching}
+      dataSemantics={datasetSemantics}
+    />
   ) : null;
+  const chartDisclosure = projectionDisclosure || (
+    <DatasetSemanticsNotice
+      abundanceScale={datasetSemantics?.abundanceScale}
+      normalization={datasetSemantics?.normalization}
+    />
+  );
+  const descriptionPanel = (
+    <DatasetDescriptionCard open={descriptionOpen} onOpenChange={setDescriptionOpen}>
+    <DatasetDescription
+      id="community-dataset-description"
+      data={descriptionState.data}
+      loading={descriptionState.loading}
+      error={descriptionState.error}
+      revision={descriptionRevision}
+      onRetry={descriptionState.reload}
+    />
+    </DatasetDescriptionCard>
+  );
   const projectionAudit = projectionEnabled && projectionState.data ? (
     <ProjectionAuditPanel
       runKey={activeRun?.key}
@@ -446,6 +480,17 @@ function App({ datasetsState, onDomainChange }) {
   } else {
     mainContent = (
         <ChartFrame
+        sectioned
+        chartControls={projectionControls ? <AnalysisTopNControl
+          control={(activeChartMeta?.analysisPolicy?.controls || activeChartMeta?.controls || []).find(control => control.key === 'topN')}
+          value={projectionSelection.topN}
+          featureLabel={activeChartMeta?.projection === 'composition' ? '分类' : summaryState.data?.featureLabel || '物种'}
+          availableCount={projectionState.data?.projection?.sourceCategoryCount
+            ?? projectionState.data?.projection?.eligibleFeatureCount
+            ?? projectionState.data?.projection?.sourceFeatureCount ?? null}
+          loading={projectionState.fetching || projectionState.refreshing}
+          onChange={next => changeProjection(projectionSelection.scope, next, projectionSelection.parameters)}
+        /> : null}
         title={activeChartMeta?.title || activeChartMeta?.label || '图表'}
         subtitle={activeChartMeta?.frameSubtitle || activeChartMeta?.subtitle}
           loading={loading}
@@ -456,7 +501,8 @@ function App({ datasetsState, onDomainChange }) {
         empty={!scopeUnavailable && !scopeInvalid && !loading && !error && !chartBody}
         layout={activeChartMeta?.layout || 'fit'}
         controls={projectionControls}
-        disclosure={projectionDisclosure}
+        description={descriptionPanel}
+        disclosure={chartDisclosure}
         audit={<>{projectionAudit}{activeRun && activeArtifact ? <CompleteResultsPanel key={`${activeRun.key}:${activeArtifact.key}`} runKey={activeRun.key} artifactKey={activeArtifact.key} /> : null}</>}
         loadingState={projectionKind ? <ProjectionLoadingState /> : null}
       >
@@ -467,6 +513,7 @@ function App({ datasetsState, onDomainChange }) {
 
   return (
     <AppShell
+      tone={summaryState.data?.featureKind === 'ko' ? 'function' : 'species'}
       topbar={
         <TopBar
           featureKind={summaryState.data?.featureKind}

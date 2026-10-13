@@ -58,6 +58,50 @@ class SummaryResponse(BaseModel):
     provenance: ProvenanceResponse = Field(default_factory=ProvenanceResponse)
 
 
+class RelatedPublicationResponse(BaseModel):
+    title: str
+    journal: str
+    year: int
+    doi: str
+    url: str
+    relationship: str
+
+
+class VerifiedCohortSourceResponse(BaseModel):
+    cohortId: str
+    repository: str
+    studyAccession: str
+    studyUrl: str
+    projectAccession: str
+    projectUrl: str
+    verifiedOn: str
+    publication: RelatedPublicationResponse | None = None
+
+
+class DatasetDescriptionResponse(BaseModel):
+    datasetSlug: str
+    datasetName: str
+    datasetRevision: str
+    sourceSha256: str
+    sourceFileName: str | None = None
+    sourceFileSize: int | None = None
+    publishedAt: Any | None = None
+    featureKind: str
+    featureLabel: str
+    sampleCount: int | None = None
+    featureCount: int | None = None
+    groupCounts: dict[str, int] = Field(default_factory=dict)
+    abundanceScale: str = "unknown"
+    normalization: str = "unknown"
+    sampleIdPrefixes: list[str] = Field(default_factory=list)
+    excludedSampleCount: int | None = None
+    groupMapping: dict[str, str] = Field(default_factory=dict)
+    missingValuePolicy: str = "error"
+    imputedCellCount: int | None = None
+    duplicateFeaturePolicy: str | None = None
+    cohortSource: VerifiedCohortSourceResponse | None = None
+
+
 class DifferentialStatistic(BaseModel):
     model_config = ConfigDict(extra="allow")
 

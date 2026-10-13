@@ -29,6 +29,11 @@ backend/storage/*
 
 # misc
 .DS_Store
+/.tmp/
+/LOCAL_SETUP.md
+backend/.tmp/
+backend/.*-server.*.log
+docs/previews/mag-heatmap-export-fitted*.svg
 ._*
 frontend/.tmp/
 .env.local

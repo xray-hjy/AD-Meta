@@ -1,8 +1,6 @@
 import { useState } from 'react';
-import DataTableViewport from '../data-display/DataTableViewport';
-import PaginationControls from '../data-display/PaginationControls';
-
-const PAGE_SIZE = 100;
+import ClientDataTable from '../data-display/ClientDataTable';
+import ResultDisclosure from '../data-display/ResultDisclosure';
 
 function percent(value) {
   return `${((Number(value) || 0) * 100).toFixed(2)}%`;
@@ -10,39 +8,23 @@ function percent(value) {
 
 function Table({ ariaLabel, columns, rows }) {
   const [open, setOpen] = useState(false);
-  const [page, setPage] = useState(1);
   if (!rows?.length) return null;
-  const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
-  const currentPage = Math.min(page, pageCount);
-  const pageRows = rows.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE,
-  );
   return (
-    <details className="ordination-resources__detail">
-      <summary onClick={() => setOpen(value => !value)}>
-        {ariaLabel}（{rows.length} 项）
-      </summary>
-      {open ? <>
-        <DataTableViewport
+    <ResultDisclosure className="ordination-resources__detail result-section--table" title={`${ariaLabel}（${rows.length} 项）`} open={open} onToggle={event => setOpen(event.currentTarget.open)}>
+      {open ? (
+        <ClientDataTable
           ariaLabel={`${ariaLabel}，可滚动`}
-          footer={`第 ${currentPage}/${pageCount} 页 · 每页最多 ${PAGE_SIZE} 项`}
-        >
-          <thead><tr>{columns.map(column => <th key={column.key} scope="col">{column.label}</th>)}</tr></thead>
-          <tbody>{pageRows.map((row, index) => (
+          rows={rows}
+          renderRow={(row, index) => (
             <tr key={`${row.feature || row.sample || row.axis || index}`}>
               {columns.map(column => <td key={column.key}>{column.format ? column.format(row[column.key]) : row[column.key]}</td>)}
             </tr>
-          ))}</tbody>
-        </DataTableViewport>
-        <PaginationControls
-          page={currentPage}
-          pageCount={pageCount}
-          onPageChange={setPage}
-          ariaLabel={`${ariaLabel}分页`}
-        />
-      </> : null}
-    </details>
+          )}
+        >
+          <thead><tr>{columns.map(column => <th key={column.key} scope="col">{column.label}</th>)}</tr></thead>
+        </ClientDataTable>
+      ) : null}
+    </ResultDisclosure>
   );
 }
 

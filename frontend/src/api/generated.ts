@@ -310,6 +310,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/datasets/{slug}/revisions/{revision_key}/description": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Description */
+        get: operations["description_api_datasets__slug__revisions__revision_key__description_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/datasets/{slug}/summary": {
         parameters: {
             query?: never;
@@ -370,6 +387,23 @@ export interface paths {
         };
         /** Ready */
         get: operations["ready_api_health_ready_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mag/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Catalog */
+        get: operations["catalog_api_mag_catalog_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -557,6 +591,23 @@ export interface paths {
         };
         /** Samples */
         get: operations["samples_api_mag_samples_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mag/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Suggestions */
+        get: operations["suggestions_api_mag_suggestions_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -955,6 +1006,63 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /** DatasetDescriptionResponse */
+        DatasetDescriptionResponse: {
+            /**
+             * Abundancescale
+             * @default unknown
+             */
+            abundanceScale: string;
+            cohortSource?: components["schemas"]["VerifiedCohortSourceResponse"] | null;
+            /** Datasetname */
+            datasetName: string;
+            /** Datasetrevision */
+            datasetRevision: string;
+            /** Datasetslug */
+            datasetSlug: string;
+            /** Duplicatefeaturepolicy */
+            duplicateFeaturePolicy?: string | null;
+            /** Excludedsamplecount */
+            excludedSampleCount?: number | null;
+            /** Featurecount */
+            featureCount?: number | null;
+            /** Featurekind */
+            featureKind: string;
+            /** Featurelabel */
+            featureLabel: string;
+            /** Groupcounts */
+            groupCounts?: {
+                [key: string]: number;
+            };
+            /** Groupmapping */
+            groupMapping?: {
+                [key: string]: string;
+            };
+            /** Imputedcellcount */
+            imputedCellCount?: number | null;
+            /**
+             * Missingvaluepolicy
+             * @default error
+             */
+            missingValuePolicy: string;
+            /**
+             * Normalization
+             * @default unknown
+             */
+            normalization: string;
+            /** Publishedat */
+            publishedAt?: unknown | null;
+            /** Samplecount */
+            sampleCount?: number | null;
+            /** Sampleidprefixes */
+            sampleIdPrefixes?: string[];
+            /** Sourcefilename */
+            sourceFileName?: string | null;
+            /** Sourcefilesize */
+            sourceFileSize?: number | null;
+            /** Sourcesha256 */
+            sourceSha256: string;
+        };
         /** DatasetResponse */
         DatasetResponse: {
             /**
@@ -1063,6 +1171,54 @@ export interface components {
             /** Values */
             values: number[];
         };
+        /** MagCatalogItem */
+        MagCatalogItem: {
+            /** Magid */
+            magId: string;
+            quality: components["schemas"]["MagQualityItem"] | null;
+            taxonomy: components["schemas"]["MagCatalogTaxonomy"] | null;
+        };
+        /** MagCatalogResponse */
+        MagCatalogResponse: {
+            /** Items */
+            items: components["schemas"]["MagCatalogItem"][];
+            provenance: components["schemas"]["MagProvenance"];
+            /**
+             * Scopekind
+             * @default catalog
+             * @constant
+             */
+            scopeKind: "catalog";
+            /** Total */
+            total: number;
+        };
+        /** MagCatalogTaxonomy */
+        MagCatalogTaxonomy: {
+            /** Class */
+            class: string;
+            /** Classificationmethod */
+            classificationMethod: string;
+            /** Closestaf */
+            closestAf: number | null;
+            /** Closestani */
+            closestAni: number | null;
+            /** Closestreference */
+            closestReference: string | null;
+            /** Domain */
+            domain: string;
+            /** Family */
+            family: string;
+            /** Genus */
+            genus: string;
+            /** Msapercent */
+            msaPercent: number | null;
+            /** Order */
+            order: string;
+            /** Phylum */
+            phylum: string;
+            /** Species */
+            species: string;
+        };
         /** MagCrosswalkItem */
         MagCrosswalkItem: {
             /** Gtdbclassification */
@@ -1124,6 +1280,18 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** MagDendrogramTree */
+        MagDendrogramTree: {
+            /** Leafids */
+            leafIds: string[];
+            /** Merges */
+            merges: [
+                number,
+                number,
+                number,
+                number
+            ][];
+        };
         /** MagDistributionResponse */
         MagDistributionResponse: {
             /** Boxes */
@@ -1175,6 +1343,10 @@ export interface components {
             adMeanPercent: number | null;
             /** Admedianpercent */
             adMedianPercent: number | null;
+            /** Completenesspercent */
+            completenessPercent?: number | null;
+            /** Contaminationpercent */
+            contaminationPercent?: number | null;
             /** Lengthbp */
             lengthBp: number;
             /** Magid */
@@ -1195,6 +1367,14 @@ export interface components {
             qValue: number | null;
             /** Rankbiserial */
             rankBiserial: number | null;
+            /** Taxonomy */
+            taxonomy?: {
+                [key: string]: string;
+            };
+            /** Taxonomyname */
+            taxonomyName?: string | null;
+            /** Taxonomyrank */
+            taxonomyRank?: string | null;
         };
         /** MagFeaturePageResponse */
         MagFeaturePageResponse: {
@@ -1214,17 +1394,56 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** MagHeatmapDendrograms */
+        MagHeatmapDendrograms: {
+            /**
+             * Linkage
+             * @default average
+             */
+            linkage: string;
+            mags?: components["schemas"]["MagDendrogramTree"] | null;
+            /**
+             * Metric
+             * @default euclidean
+             */
+            metric: string;
+            /** Samples */
+            samples?: components["schemas"]["MagSampleDendrogramTree"][];
+        };
         /** MagHeatmapResponse */
         MagHeatmapResponse: {
+            /** Constantmagids */
+            constantMagIds: string[];
+            dendrograms?: components["schemas"]["MagHeatmapDendrograms"];
+            /** Displayvalues */
+            displayValues: number[][];
+            /** Features */
+            features: components["schemas"]["MagFeature"][];
             /** Magids */
             magIds: string[];
+            /** Methods */
+            methods: {
+                [key: string]: string;
+            };
+            /** Projectionfingerprint */
+            projectionFingerprint: string;
             provenance: components["schemas"]["MagProvenance"];
             /** Samples */
             samples: components["schemas"]["MagSample"][];
             /** Selection */
             selection: string;
+            /** Selectionaudit */
+            selectionAudit: {
+                [key: string]: unknown;
+            };
+            /** Settings */
+            settings: {
+                [key: string]: unknown;
+            };
             /** Values */
             values: number[][];
+            /** Warnings */
+            warnings: string[];
         };
         /** MagLineageClusterDetailResponse */
         MagLineageClusterDetailResponse: {
@@ -1589,6 +1808,20 @@ export interface components {
             /** Unmappedpercent */
             unmappedPercent: number;
         };
+        /** MagSampleDendrogramTree */
+        MagSampleDendrogramTree: {
+            /** Group */
+            group: string;
+            /** Leafids */
+            leafIds: string[];
+            /** Merges */
+            merges: [
+                number,
+                number,
+                number,
+                number
+            ][];
+        };
         /** MagSamplesResponse */
         MagSamplesResponse: {
             /** Items */
@@ -1618,6 +1851,37 @@ export interface components {
             file: string;
             /** Sha256 */
             sha256: string;
+        };
+        /** MagSuggestionItem */
+        MagSuggestionItem: {
+            /**
+             * Approximate
+             * @default false
+             */
+            approximate: boolean;
+            /** Count */
+            count?: number | null;
+            /** Detail */
+            detail: string;
+            /** Key */
+            key: string;
+            /** Kind */
+            kind: string;
+            /** Label */
+            label: string;
+            /** Value */
+            value: string;
+        };
+        /** MagSuggestionsResponse */
+        MagSuggestionsResponse: {
+            /** Items */
+            items: components["schemas"]["MagSuggestionItem"][];
+            /** Query */
+            query: string;
+            /** Revision */
+            revision: string;
+            /** Total */
+            total: number;
         };
         /** MagTaxonomyResponse */
         MagTaxonomyResponse: {
@@ -1964,6 +2228,21 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /** RelatedPublicationResponse */
+        RelatedPublicationResponse: {
+            /** Doi */
+            doi: string;
+            /** Journal */
+            journal: string;
+            /** Relationship */
+            relationship: string;
+            /** Title */
+            title: string;
+            /** Url */
+            url: string;
+            /** Year */
+            year: number;
+        };
         /**
          * ScopedFeatureRequest
          * @description Search and rank the complete feature catalog within one sample scope.
@@ -2067,6 +2346,24 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** VerifiedCohortSourceResponse */
+        VerifiedCohortSourceResponse: {
+            /** Cohortid */
+            cohortId: string;
+            /** Projectaccession */
+            projectAccession: string;
+            /** Projecturl */
+            projectUrl: string;
+            publication?: components["schemas"]["RelatedPublicationResponse"] | null;
+            /** Repository */
+            repository: string;
+            /** Studyaccession */
+            studyAccession: string;
+            /** Studyurl */
+            studyUrl: string;
+            /** Verifiedon */
+            verifiedOn: string;
         };
     };
     responses: never;
@@ -2758,6 +3055,47 @@ export interface operations {
             };
         };
     };
+    description_api_datasets__slug__revisions__revision_key__description_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+                revision_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatasetDescriptionResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     summary_api_datasets__slug__summary_get: {
         parameters: {
             query?: never;
@@ -2867,6 +3205,46 @@ export interface operations {
             };
         };
     };
+    catalog_api_mag_catalog_get: {
+        parameters: {
+            query?: {
+                revision?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagCatalogResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
     crosswalk_api_mag_crosswalk_get: {
         parameters: {
             query?: {
@@ -2924,6 +3302,7 @@ export interface operations {
                 sortBy?: "magId" | "meanPercent" | "adMeanPercent" | "ncMeanPercent" | "meanDifferencePercentPoints" | "qValue" | "rankBiserial";
                 direction?: "asc" | "desc";
                 view?: "features" | "distribution" | "heatmap" | "taxonomy" | "quality" | "mapping";
+                chartSortBy?: "meanPercent" | "adMeanPercent" | "ncMeanPercent";
                 rank?: "domain" | "phylum" | "class" | "order" | "family" | "genus" | "species";
                 topN?: number;
                 magId?: string;
@@ -2936,10 +3315,24 @@ export interface operations {
                 ageMin?: number | null;
                 ageMax?: number | null;
                 abundanceThresholdPercent?: number;
+                heatmapMode?: "abundance" | "variance" | "candidate";
+                heatmapQuery?: string;
+                heatmapIds?: string;
+                candidateKind?: "statistics" | "manual";
+                minMean?: number;
+                sampleThreshold?: number;
+                minSamplePercent?: number;
+                minCompleteness?: number | null;
+                maxContamination?: number | null;
+                maxQ?: number;
+                minEffect?: number;
+                sampleOrder?: "group" | "withinGroup" | "cluster";
+                rowOrder?: "rank" | "cluster";
+                colorMode?: "abundance" | "rowZ";
             };
             header?: never;
             path: {
-                kind: "features" | "matrix" | "samples" | "taxonomy" | "quality" | "provenance" | "lineage" | "crosswalk";
+                kind: "features" | "matrix" | "samples" | "taxonomy" | "quality" | "provenance" | "lineage" | "crosswalk" | "heatmap";
             };
             cookie?: never;
         };
@@ -3086,6 +3479,20 @@ export interface operations {
                 ageMin?: number | null;
                 ageMax?: number | null;
                 abundanceThresholdPercent?: number;
+                heatmapMode?: "abundance" | "variance" | "candidate";
+                heatmapQuery?: string;
+                heatmapIds?: string;
+                candidateKind?: "statistics" | "manual";
+                minMean?: number;
+                sampleThreshold?: number;
+                minSamplePercent?: number;
+                minCompleteness?: number | null;
+                maxContamination?: number | null;
+                maxQ?: number;
+                minEffect?: number;
+                sampleOrder?: "group" | "withinGroup" | "cluster";
+                rowOrder?: "rank" | "cluster";
+                colorMode?: "abundance" | "rowZ";
             };
             header?: never;
             path?: never;
@@ -3395,6 +3802,49 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MagSamplesResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    suggestions_api_mag_suggestions_get: {
+        parameters: {
+            query?: {
+                context?: "lineage" | "crosswalk";
+                query?: string;
+                limit?: number;
+                revision?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagSuggestionsResponse"];
                 };
             };
             /** @description Validation Error */

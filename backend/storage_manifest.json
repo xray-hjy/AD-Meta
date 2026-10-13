@@ -41,7 +41,7 @@
       "slug": "ad-nc-species",
       "name": "AD vs NC Species Abundance",
       "description": "Species abundance comparison between AD and NC groups.",
-      "file": "storage/raw/ad-nc-species/raw.xlsx",
+      "file": "storage/raw/ad-nc-species/raw.csv",
       "abundanceScale": "unknown",
       "normalization": "unknown",
       "missingValuePolicy": "zero",
@@ -53,7 +53,7 @@
       "groupMapping": {},
       "source": {
         "kind": "tracked_raw",
-        "inferenceNote": "CRR-only scope is enforced at import; abundance scale requires upstream confirmation. The duplicated uncultured_Mediterranean_phage source columns are coalesced only after their selected CRR values are verified equal."
+        "inferenceNote": "Source table contains only the 185 AD/NC CRR samples in the current dataset; abundance scale requires upstream confirmation. The duplicated uncultured_Mediterranean_phage source columns are coalesced only after their selected CRR values are verified equal."
       }
     },
     {

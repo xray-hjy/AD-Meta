@@ -2,16 +2,14 @@ import { render, screen } from '@testing-library/react';
 import { vi } from 'vitest';
 
 let lastOption;
-let lastStyle;
 
-vi.mock('./CartesianEChart', () => ({
-  __esModule: true,
-  default: ({ option, style }) => {
-    lastOption = option;
-    lastStyle = style;
+vi.mock('./ZoomableGroupedBarChart', async () => {
+  const { buildGroupedBarOption } = await import('./GroupedBarChart');
+  return { default: ({ model }) => {
+    lastOption = buildGroupedBarOption(model);
     return <div data-testid="echarts-chart" />;
   },
-}));
+}; });
 
 import PhylumChart from './PhylumChart';
 
@@ -23,7 +21,6 @@ const compositionData = [
 
 beforeEach(() => {
   lastOption = undefined;
-  lastStyle = undefined;
 });
 
 test('renders taxonomy composition summary cards', () => {
@@ -85,5 +82,7 @@ test('uses compact horizontal bars with abundance-style hover shadow', () => {
   expect(lastOption.series[0].emphasis.itemStyle.borderWidth).toBeUndefined();
   expect(lastOption.toolbox).toBeUndefined();
   expect(lastOption.dataZoom).toBeUndefined();
-  expect(lastStyle.height).toBe('100%');
+  expect(lastOption.xAxis[0].max).toBe(1);
+  expect(lastOption.xAxis[0].axisLabel.formatter(0.45)).toBe('45%');
+  expect(lastOption.series[0].label.formatter({ value: 0.45 })).toBe('45.0%');
 });

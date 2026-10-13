@@ -56,15 +56,17 @@ npm run import:mag:database -- --version mag_v3
 未满足数据契约的入口显示为“规划中”且不可操作，不读取 `source_data`，也不展示模拟图。
 
 1. 通过 disease、性别、HPC_Batch、年龄区间筛选，点击“应用筛选”；不会在输入过程中反复重算。
-2. 候选列表按均值、q 值、均值差、秩效应量或 MAG ID 排序；每页 25 条，图示当前页前 15 条。
-3. 点击 MAG ID 查看同范围 AD/NC 箱线图和全部样本散点。也可按 ID 搜索或用分页选择器浏览。
-4. 热图按范围内平均丰度选择 Top 10/20/30/50；保留所有所选样本，按 disease / HPC_Batch / CRR ID 排序。不做聚类。
+2. 候选列表按均值、q 值、均值差、秩效应量或 MAG ID 排序；每页读取最多 300 条，默认展示 20 行，可拖动调整高度并展开至设定行数。图表独立选择 Top 10/20/30/50，不随列表翻页或排序变化。
+3. 公共搜索支持完整或部分 MAG ID、GTDB 各分类层级的名称，不区分大小写；搜索完整结果后再分页，并同时应用于丰度图、列表和候选 CSV。点击 MAG ID 查看同范围 AD/NC 箱线图和全部样本散点，保留当前所选 MAG。
+   单 MAG 页面分为两个独立折叠模块：上方“MAG 分布与证据”包含箱线图、散点及六项证据摘要，下方“样本丰度明细”包含当前 MAG 的样本列表。选择 MAG、候选浏览、图像导出和来源入口归属上方标题栏；候选换页、排序或搜索不会自动替换已选 MAG。样本表沿用轻量列头、默认 20 行及拖动调节高度。
+4. 热图提供丰度概览、变化模式、候选对比（统计条件或手动清单）；先按 ID/分类、质量、均值、超过阈值样本比例筛选，再排序与截取。显示数量为 20/50/100/全部匹配项；图形每段 50 行，列表每页 300 行，二者独立。默认 disease / HPC_Batch / CRR ID 排序，可选择各组内部或全部样本聚类、MAG 行聚类（average linkage / Euclidean，基于当前颜色变换矩阵）。点击单元格或 MAG ID 定位单 MAG 分布，分布页可将该 MAG 加入手动热图候选。
 5. MAG 分类按所选层级统计全部代表 MAG；Top 20 之外合并为“其他分类”。该视图不使用样本筛选，完整 872 行分类可下载。
 6. MAG 质量图每个点代表一个 MAG；参考线为完整度 90%和污染率 5%，不等同于完整 MIMAG 高质量判定。完整 872 行质量可下载。
 7. 技术质控中的映射与丰度阈值视图展示映射比例、未映射比例和超过指定丰度阈值的 MAG 数，不把阈值称为生物学检出，也不把映射比例当作 CheckM2 完整度。
 8. 下载全部匹配候选（不是当前页）、当前样本×全部 MAG 的稠密矩阵（保留零值）、样本映射与阈值统计、分类、质量或分析溯源 JSON；v3 可下载未经改写的原始 lineage/crosswalk TSV。
 
 图像导出复用 ChartFrame / EChartBase / chartExport：SVG 矢量或 PNG 2×，标准最小 1100×640、大图最小 1800×1000；尺寸不会缩小原图。
+丰度图的选取控件位于图表标题栏，格式与尺寸在“导出图像”弹层中设置；列表排序、方向、列设置及完整数据下载位于列表标题栏。列表提供丰度、差异、质量、全部列预设及逐列勾选，按数据指纹记住显示偏好；MAG ID 固定在左侧，隐藏列不改变查询、统计或完整数据下载。
 文件名带版本、视图、范围指纹和相应分页/排序/Top N/MAG 信息。原有导出净化逻辑继续排除 dataZoom、tooltip、toolbox 等交互控件。
 表格的丰度展示最多 4 位有效数字，整数长度完整显示；CSV 保留后端数值精度。
 
@@ -78,7 +80,7 @@ npm run import:mag:database -- --version mag_v3
 - 显示两组均值、中位数（API/CSV）、超过阈值的样本比例、AD−NC 均值差（百分点）、秩二列相关效应量、p 值和 q 值。秩效应量正值表示 AD 倾向更高，均值差与秩效应方向不保证一致。
 - 任一组少于 2 个样本时，p/q 和秩效应量返回 null；单组仍可浏览，不伪造组间检验。
 - 年龄/性别/批次筛选**不是协变量调整**，未控制混杂、组成性、重复探索、多次子集筛选的影响。q 值是当前筛选范围内的探索性结果。
-- 热图颜色使用 `log10(1 + abundance_percent)`，tooltip/下载保留原始百分比；箱线图须遵循 1.5×IQR，全体样本另以散点呈现。
+- 热图默认颜色使用 `log10(1 + abundance_percent)`；工具栏提供带渐变预览的配色列表：PuBuGn（默认）、Blues、Viridis、Cividis、Magma、YlOrBr。其中 PuBuGn、Blues、YlOrBr 去除最浅的 15% 色段，避免白色端点。行标准化按每个 MAG 在全部所选样本中的 log 变换值计算 Z-score（总体标准差 ddof=0），提供以零为中心的 RdBu_r（默认）、BrBG、PuOr、PRGn 发散色阶；不能跨 MAG 比较丰度大小，恒定行以所选色阶的中性色表示。连续与发散模式分别记住配色，图像导出和配置 JSON 同步当前选择。tooltip/矩阵下载保留原始百分比，色标使用整个展示集合的范围、不随图形分段变化。箱线图须遵循 1.5×IQR，全体样本另以散点呈现。
 - GTDB 分类覆盖 872/872 个 MAG；843 个有种级名称，29 个未解析至种。v2 未记录 GTDB-Tk/GTDB release，页面显示版本待补；v3 manifest 记录 GTDB-Tk 2.7.2 与 GTDB R232。
 - v3 中 `disease` 是 AD/NC 疾病分组，`Group` 只是 CHN/CHN2 来源组。dRep 跨样本聚类不等于独立外部队列验证。
 - 物种 crosswalk 是分类标识符对应，不是 read 到具体 MAG 的直接比对证据。未解析状态不得通过名称相似度升级为确定映射。
@@ -94,7 +96,7 @@ npm run import:mag:database -- --version mag_v3
 | `/overview` | 校验结果、范围/分组计数、批次构成、筛选选项及溯源 |
 | `/features` | 完整候选分页、搜索和排序 |
 | `/features/{mag_id}` | 单 MAG 统计、箱线五数和样本数据 |
-| `/heatmap` | 按均值排名的所选样本×Top N 原始百分比 |
+| `/heatmap` | 可筛选/排序/聚类的热图原始矩阵、显示矩阵、MAG 注释、选行审计及投影指纹 |
 | `/samples` | 所选样本的映射比例、未映射比例和超过阈值的 MAG 数 |
 | `/taxonomy` | 按域至种层级汇总全部代表 MAG 的 Top N 分类及未解析数量 |
 | `/quality` | 全部代表 MAG 的 CheckM2 质量点和汇总范围 |
@@ -112,7 +114,9 @@ npm run import:mag:database -- --version mag_v3
 | `/downloads/provenance` | JSON：方法、输入文件哈希、样本 ID、筛选和展示选择 |
 
 共同参数：`disease`（空/AD/NC）、`gender`（空/F/M）、`batch`（空/1–5）、`ageMin`、`ageMax`、`abundanceThresholdPercent`（0–100）、`revision`（可选预期数据指纹）。
-列表支持 `query`、`sortBy`、`direction`（asc/desc）、`limit`（1–100）和 `offset`；热图 `topN`（1–50）；分类支持 `rank`（domain 至 species）和 `topN`（5–50）。分类与质量数据本身不受样本筛选影响。
+列表支持 `query`（MAG ID 或 GTDB 分类名称）、`sortBy`、`direction`（asc/desc）、`limit`（1–300）和 `offset`；热图 `topN`（0–1000，0 表示全部匹配项），以及 `heatmapMode`、`heatmapQuery`、`heatmapIds`、`candidateKind`、`minMean`、`sampleThreshold`、`minSamplePercent`、`minCompleteness`、`maxContamination`、`maxQ`、`minEffect`、`sampleOrder`、`rowOrder`、`colorMode`。热图独立 `sampleThreshold` 不继承全局技术阈值；仅筛选展示，不改变原始丰度和 BH 检验族。分类支持 `rank`（domain 至 species）和 `topN`（5–50）。分类与质量数据本身不受样本筛选影响。
+
+`/downloads/heatmap` 下载展示集合的原始百分比矩阵，MAG 和样本顺序与热图完全一致；`/downloads/provenance?view=heatmap` 记录热图条件、实际 MAG/样本顺序、变换及聚类方法。页面“下载配置与溯源”额外记录样式、图形分段和导出设置。图像导出包含整个展示集合（包括当前分段之外的 MAG）、图例与注释条，排除 HTML 图形样式工具栏。已应用设置在本次会话内保留；“保存配置”按数据指纹持久保存，不保存尚未应用的输入。
 溯源下载还记录 `view`、`magId`、`topN`、`limit`、`offset` 和实际展示的 MAG ID，提供独立 `projectionFingerprint`。
 OpenAPI 为字段、枚举和响应类型的精确依据。
 

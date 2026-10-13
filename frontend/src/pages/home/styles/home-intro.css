@@ -1,0 +1,153 @@
+/* Page-scoped intro styles. */
+
+.admeta-home .hero-identity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 25px;
+  transform: translateY(0);
+  transition: transform 770ms cubic-bezier(.645,.045,.355,1);
+  will-change: transform;
+}
+
+.admeta-home .logo-replay {
+  position: relative;
+  display: block;
+  flex: 0 0 auto;
+  width: 86px;
+  height: 110px;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  overflow: visible;
+}
+
+.admeta-home .logo-machine {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  perspective: 360px;
+  transform-style: preserve-3d;
+}
+
+.admeta-home .logo-part {
+  display: block;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transform-origin: 50% 50%;
+}
+
+.admeta-home .logo-part :is(img,svg) {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.admeta-home .logo-replay.is-assembling .logo-part {
+  will-change: transform, opacity;
+}
+
+.admeta-home .hero-title-line {
+  display: block;
+}
+
+.admeta-home.motion-ready:is([data-intro="staged"], [data-intro="headline"]) .hero-identity {
+  transform: translateY(var(--intro-lift));
+}
+
+.admeta-home.motion-ready[data-intro="staged"] .hero-title-line {
+  opacity: 0;
+  filter: blur(8px);
+}
+
+.admeta-home.motion-ready[data-intro="staged"] .logo-replay {
+  opacity: 0;
+}
+
+.admeta-home.motion-ready[data-intro="headline"] .hero-title-line {
+  animation: admeta-home-headline-focus 700ms cubic-bezier(.215,.61,.355,1) both;
+}
+
+.admeta-home.motion-ready[data-intro="headline"] .hero-title-line:last-child {
+  animation-delay: 105ms;
+}
+
+.admeta-home.motion-ready:not([data-intro="full"]) :is(.hero-lead, .entry-panel, .scroll-cue, .stage-rail, .chapter-list) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.admeta-home.motion-ready[data-intro="full"] :is(.hero-lead, .entry-panel, .scroll-cue) {
+  animation: admeta-home-rest-reveal 1540ms cubic-bezier(.22,1,.36,1) both;
+}
+
+.admeta-home.motion-ready[data-intro="full"] .stage-rail {
+  animation: admeta-home-stage-reveal 1540ms cubic-bezier(.22,1,.36,1) both;
+}
+
+.admeta-home.motion-ready[data-intro-skipped="true"] [class] {
+  animation-duration: 1ms !important;
+}
+
+@keyframes admeta-home-headline-focus {
+
+  from {
+    opacity: 0;
+    filter: blur(8px);
+  }
+
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes admeta-home-rest-reveal {
+
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes admeta-home-stage-reveal {
+
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .admeta-home .hero-identity, .admeta-home .visual-stage {
+    transform: none !important;
+  }
+
+  .admeta-home .evidence-step {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .admeta-home .logo-part, .admeta-home .logo-machine {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .admeta-home .logo-replay, .admeta-home .hero-title-line, .admeta-home .hero-lead, .admeta-home .entry-panel, .admeta-home .site-header, .admeta-home .stage-rail {
+    opacity: 1 !important;
+    filter: none !important;
+  }
+}

@@ -1,20 +1,21 @@
 import { render, screen } from '@testing-library/react';
 import { vi } from 'vitest';
 
-vi.mock('./CartesianEChart', () => ({
-  __esModule: true,
-  default: ({ option }) => {
-    const tooltip = option?.tooltip?.formatter?.({ data: option.series?.[0]?.data?.[0] }) || '';
+vi.mock('./ZoomableGroupedBarChart', async () => {
+  const { buildGroupedBarOption } = await import('./GroupedBarChart');
+  return { default: ({ model, barStyleConfig }) => {
+    const option = buildGroupedBarOption(model);
+    const tooltip = option.tooltip.formatter({ dataIndex: 0, seriesIndex: 0 });
     return (
       <div>
         <div data-testid="ko-lda-tooltip">{tooltip}</div>
         <div data-testid="ko-lda-chart">
-          {JSON.stringify(option)}
+          {JSON.stringify({ ...option, barStyleConfig })}
         </div>
       </div>
     );
   },
-}));
+}; });
 
 import KoLdaBarChart from './KoLdaBarChart';
 
@@ -84,16 +85,20 @@ test('builds a diverging horizontal effect-size chart with AD positive and NC ne
 
   const option = JSON.parse(screen.getByTestId('ko-lda-chart').textContent);
 
-  expect(option.xAxis.type).toBe('value');
-  expect(option.xAxis.name).toBe('NC 富集 ← rank-biserial effect → AD 富集');
-  expect(option.yAxis.type).toBe('category');
+  expect(option.xAxis[0].type).toBe('value');
+  expect(option.xAxis[0].name).toBe('NC 富集 ← rank-biserial effect → AD 富集');
+  expect(option.xAxis[0].min).toBe(-option.xAxis[0].max);
+  expect(option.yAxis[0].type).toBe('category');
   expect(option.series[0].type).toBe('bar');
   expect(option.series[0].data[0].value).toBe(0.85);
   expect(option.series[0].data[0].effectSize).toBe(0.85);
   expect(option.series[0].data[0].itemStyle.color).toBe('#e74c3c');
-  expect(option.series[0].data[1].value).toBe(-0.7);
-  expect(option.series[0].data[1].effectSize).toBe(-0.7);
-  expect(option.series[0].data[1].itemStyle.color).toBe('#2ecc71');
+  expect(option.series[0].data[1]).toBeNull();
+  expect(option.series[1].data[1].value).toBe(-0.7);
+  expect(option.series[1].data[1].effectSize).toBe(-0.7);
+  expect(option.series[1].data[1].itemStyle.color).toBe('#2ecc71');
+  expect(option.series[1].barGap).toBe('-100%');
+  expect(option.barStyleConfig.allowLine).toBe(false);
   expect(screen.getByTestId('ko-lda-tooltip').textContent).toContain('rank-biserial 效应量: 0.8500');
   expect(screen.getByTestId('ko-lda-tooltip').textContent).toContain('q 值: 0.0100');
 });

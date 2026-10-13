@@ -382,7 +382,7 @@ def _load_snapshot(root: Path, signatures: tuple, contract: MagContract, version
                 "magId": mag_id,
                 **{rank: row[rank] for rank in TAXONOMY_RANKS},
                 "classificationMethod": row["classification_method"],
-                "closestReference": row["closest_reference"] or None,
+                "closestReference": None if row["closest_reference"].strip().lower() in {"", "n/a", "na", "none"} else row["closest_reference"],
                 "closestAni": closest_ani,
                 "closestAf": closest_af,
                 "msaPercent": msa_percent,
@@ -655,6 +655,16 @@ def overview(data: MagDataset, scope: MagScope) -> dict[str, Any]:
     }
 
 
+def catalog(data: MagDataset) -> dict[str, Any]:
+    """Catalog evidence is independent of sample filters and abundance statistics."""
+    taxonomy = {row["magId"]: row for row in data.taxonomy}
+    quality = {row["magId"]: row for row in data.quality}
+    return {"provenance": provenance(data, MagScope()), "scopeKind": "catalog",
+            "total": len(data.mag_ids), "items": [
+                {"magId": mag_id, "taxonomy": taxonomy.get(mag_id), "quality": quality.get(mag_id)}
+                for mag_id in data.mag_ids]}
+
+
 def taxonomy_summary(data: MagDataset, scope: MagScope, rank: str = "phylum", top_n: int = 20) -> dict[str, Any]:
     if not data.taxonomy:
         raise MagDataError(TAXONOMY, "当前版本包含已核验的 MAG 分类输入", "未提供", data.version)
@@ -782,7 +792,10 @@ def lineage_cluster_page(
     if sort_by not in LINEAGE_CLUSTER_SORT_FIELDS or direction not in {"asc", "desc"}:
         raise ValueError("不支持的 lineage 聚类排序字段或方向。")
     needle = query.strip().casefold()
-    rows = [row for row in lineage_cluster_summaries(data) if (
+    summaries = lineage_cluster_summaries(data)
+    exact_id = needle in {value.casefold() for row in summaries for value in (row["clusterId"], row["representativeMag"])}
+    rows = [row for row in summaries if (
+        needle in (row["clusterId"].casefold(), row["representativeMag"].casefold()) if exact_id else
         not needle or needle in row["clusterId"].casefold()
         or needle in row["representativeMag"].casefold()
         or needle in (row["gtdbSpecies"] or "").casefold()
@@ -894,7 +907,9 @@ def crosswalk_page(
 ) -> dict[str, Any]:
     _require_v3(data, "crosswalk")
     needle = query.strip().casefold()
+    exact_id = needle in {row["magId"].casefold() for row in data.crosswalk}
     rows = [row for row in data.crosswalk if (
+        row["magId"].casefold() == needle if exact_id else
         not needle or needle in row["magId"].casefold()
         or needle in (row["gtdbSpecies"] or "").casefold()
         or needle in (row["ncbiOrganismName"] or "").casefold()
@@ -941,8 +956,18 @@ def comparison_rows(data: MagDataset, scope: MagScope) -> tuple[dict[str, Any], 
         q_values = benjamini_hochberg(p_values)
         effects = 2 * result.statistic / (len(ad) * len(nc)) - 1
     rows = []
+    taxonomy_by_id = {row['magId']: row for row in data.taxonomy}
+    quality_by_id = {row['magId']: row for row in data.quality}
     for j, mag_id in enumerate(data.mag_ids):
+        taxonomy = taxonomy_by_id.get(mag_id, {})
+        quality = quality_by_id.get(mag_id, {})
+        taxonomy_rank = next((rank for rank in reversed(TAXONOMY_RANKS) if taxonomy.get(rank)), None)
         row: dict[str, Any] = {"magId": mag_id, "lengthBp": data.lengths[j],
+                               "taxonomyName": taxonomy.get(taxonomy_rank) if taxonomy_rank else None,
+                               "taxonomyRank": taxonomy_rank,
+                               "taxonomy": {rank: taxonomy.get(rank) for rank in TAXONOMY_RANKS if taxonomy.get(rank)},
+                               "completenessPercent": quality.get('completenessPercent'),
+                               "contaminationPercent": quality.get('contaminationPercent'),
                                "meanPercent": float(values[:, j].mean()) if len(values) else None}
         for group, block in groups.items():
             prefix = group.lower()
@@ -963,7 +988,12 @@ SORT_FIELDS = {"magId", "meanPercent", "adMeanPercent", "ncMeanPercent", "meanDi
 def ordered_features(data: MagDataset, scope: MagScope, query: str = "", sort_by: str = "meanPercent", direction: str = "desc") -> list:
     if sort_by not in SORT_FIELDS or direction not in {"asc", "desc"}:
         raise ValueError("不支持的排序字段或方向。")
-    rows = [row for row in comparison_rows(data, scope) if query.strip().casefold() in row["magId"].casefold()]
+    needle = query.strip().casefold()
+    exact_id = needle in {mag_id.casefold() for mag_id in data.mag_ids}
+    rows = [row for row in comparison_rows(data, scope)
+            if (row["magId"].casefold() == needle if exact_id else
+                not needle or any(needle in value.casefold()
+                                  for value in [row["magId"], *row["taxonomy"].values()]))]
     # Stable ties; missing statistics always last, in both directions.
     present = sorted((r for r in rows if r[sort_by] is not None), key=lambda r: r["magId"])
     present.sort(key=lambda r: r[sort_by], reverse=direction == "desc")
@@ -1000,15 +1030,11 @@ def feature_distribution(data: MagDataset, scope: MagScope, mag_id: str) -> dict
             "samples": samples, "boxes": boxes}
 
 
-def heatmap(data: MagDataset, scope: MagScope, top_n: int = 20) -> dict[str, Any]:
-    ranked = ordered_features(data, scope)[:top_n]
-    columns = [data.mag_ids.index(r["magId"]) for r in ranked]
-    # Explicit stratification, not clustering or significance-driven selection.
-    indices = sorted(scope_indices(data, scope), key=lambda i: (data.samples[i]["disease"], data.samples[i]["batch"], data.sample_ids[i]))
-    return {"provenance": provenance(data, scope), "magIds": [r["magId"] for r in ranked],
-            "samples": [data.samples[i] for i in indices],
-            "values": data.matrix[np.ix_(indices, columns)].tolist(),
-            "selection": "所选样本平均丰度降序 Top N；全部样本按 disease / HPC_Batch / CRR ID 排序；不聚类。"}
+def heatmap(data: MagDataset, scope: MagScope, top_n: int = 20, settings=None) -> dict[str, Any]:
+    from app.services.mag_heatmap_service import build_heatmap
+
+    return {"provenance": provenance(data, scope),
+            **build_heatmap(data, scope_indices(data, scope), comparison_rows(data, scope), top_n, settings)}
 
 
 def stream_csv(rows, columns):

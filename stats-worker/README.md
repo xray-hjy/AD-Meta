@@ -18,12 +18,19 @@ this directory:
 
 ```bash
 Rscript -e 'if (!requireNamespace("renv", quietly = TRUE)) install.packages("renv", repos = "https://cloud.r-project.org")'
+Rscript -e 'writeLines("source(\"renv/activate.R\")", ".Rprofile")'
 Rscript -e 'renv::restore(project = ".", lockfile = "renv.lock", prompt = FALSE)'
 ```
 
 Start the worker and run its model smoke test with:
 
 ```bash
-Rscript -e 'renv::run("server.R", project = ".")'
-Rscript -e 'renv::run("tests/model_smoke.R", project = ".")'
+Rscript server.R
+Rscript tests/model_smoke.R
 ```
+
+The ignored `.Rprofile` activates the project library before each script runs.
+Direct Rscript execution keeps the service in the terminal and returns the
+model test's exit status. On Windows, Rtools45 is needed when locked packages
+must be compiled from source. This configured checkout can use the root
+`Start-ADMeta.ps1 worker` and `Start-ADMeta.ps1 worker-test` commands.

@@ -7,13 +7,13 @@ import {
   e2eBackendPort,
   e2eBaseUrl,
   e2eFrontendPort,
+  e2ePython,
 } from './e2e/environment.js';
 
 const frontendRoot = path.basename(process.cwd()) === 'frontend'
   ? process.cwd()
   : path.resolve(process.cwd(), 'frontend');
 const backendRoot = path.resolve(frontendRoot, '../backend');
-const python = process.env.CI ? 'python' : '.venv/bin/python';
 
 export default defineConfig({
   testDir: './e2e',
@@ -39,7 +39,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: `${python} -m uvicorn app.main:app --host 127.0.0.1 --port ${e2eBackendPort}`,
+      command: `"${e2ePython}" -m uvicorn app.main:app --host 127.0.0.1 --port ${e2eBackendPort}`,
       cwd: backendRoot,
       env: { ...process.env, ...e2eBackendEnvironment },
       url: `http://127.0.0.1:${e2eBackendPort}/api/health/live`,
