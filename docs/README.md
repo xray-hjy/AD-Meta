@@ -19,6 +19,7 @@
 ## 技术参考
 
 - [API 契约](reference/api.md)：公开只读接口与图表 payload。
+- [GMrepo 参考数据接入](reference/gmrepo.md)：版本化处理包、队列质量、菌属箱线图/散点、身份审查、探索性检验和证据对照接口。
 - [数据库契约](reference/database.md)：科学数据表、应用支撑表和导入约束。
 - [AnalysisRun、Artifact 与 Manifest 数据契约](reference/analysis-run-artifact-manifest.md)：生信组、标志物组与 AD-Meta 之间的分析结果交付规范草案。
 - [AD 宏基因组生物信息分析流程摘要](reference/bioinformatics-analysis-workflow.md)：从 Raw FASTQ 到物种、KO 和 MAG 分析结果的上游流程。
@@ -26,6 +27,10 @@
 - [图表分析策略与投影契约](reference/chart-analysis-policies.md)：分析范围、计算参数、展示上限及各类图表的专属科学策略。
 
 ## 开发记录
+
+- [20261013更新](development/20261013-update.md)：主分支与依赖分支整合、GMrepo 外部参考模块、本地改动发布与验证记录。
+
+- [20261011 CI 修复](development/20261011-ci-fixes.md)：依赖审计、MySQL 集成断言、覆盖率等待与浏览器回归修复。
 
 - [20261010更新](development/20261010-update.md)：首页接入、立体图集与滚动衔接、五种分层 Logo 动画及前端维护目录整理。
 

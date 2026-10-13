@@ -1,0 +1,24 @@
+{
+  "version": "2026-10-12-v1",
+  "reviewedOn": "2026-10-12",
+  "referenceFingerprint": "68f003174b519a9aa8ec401a8e42223bf9e4b67aa26fe4b370b4b5b2e33f2971",
+  "cohorts": {
+    "PRJEB51982": {
+      "allRunSetSha256": "acbc870736fd83686d3ec33b3844d6e5a3f1f985dc93fba877fa1d61f5594ee0",
+      "identityReviewed": true,
+      "sexMode": "decoded",
+      "note": "ENA host subject id 与样本别名精确对应；50 个研究内参与者编号各出现一次。原研究为 25 AD 与 25 年龄/性别匹配对照；没有公开的配对关系，使用独立两组设计。",
+      "evidence": ["raw/ena/PRJEB51982_samples_0000.xml", "raw/papers/PMC5648830.xml"],
+      "sourceUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5648830/"
+    },
+    "PRJEB59009": {
+      "allRunSetSha256": "3300cd3a2a74f42c5744c73b7900bb83df914e2a424eb63fea31346591ea43ed",
+      "identityReviewed": true,
+      "sexMode": "author_code",
+      "allowedSexCodes": ["1", "2"],
+      "note": "按粪便样本别名精确连接作者表 patient_id.x。作者表 151 条粪便记录有 151 个不同编号，参考包中的 145 个编号也没有重复。Geschlecht 为原性别字段；原码 1/2 作为类别协变量，不猜测男女映射。原研究包含 AD/MCI/风险/对照；检验仅纳入已核对 AD/NC。",
+      "evidence": ["evidence/PRJEB59009_author_metadata.tsv", "extract_author_metadata.R", "raw/papers/PMC10776369.xml"],
+      "sourceUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10776369/"
+    }
+  }
+}

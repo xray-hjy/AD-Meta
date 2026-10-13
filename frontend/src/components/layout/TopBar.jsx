@@ -77,6 +77,7 @@ export default function TopBar({
           <span className="colorblind-toggle__label">色盲友好</span>
         </label>
         <Link className="topbar-home-link" to="/">首页</Link>
+        <Link className="topbar-home-link" to="/reference/gmrepo">GMrepo 参考</Link>
       </div>
     </header>
   );

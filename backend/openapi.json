@@ -1196,6 +1196,387 @@
         "title": "FeatureSelection",
         "type": "object"
       },
+      "GmrepoAuditResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ReferenceAudit"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "methods": {
+            "$ref": "#/components/schemas/ReferenceMethods"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/ReferenceProvenance"
+          }
+        },
+        "required": [
+          "provenance",
+          "methods",
+          "items"
+        ],
+        "title": "GmrepoAuditResponse",
+        "type": "object"
+      },
+      "GmrepoCatalogResponse": {
+        "properties": {
+          "cohorts": {
+            "items": {
+              "$ref": "#/components/schemas/ReferenceCohort"
+            },
+            "title": "Cohorts",
+            "type": "array"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/ReferenceOption"
+            },
+            "title": "Groups",
+            "type": "array"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/ReferenceProvenance"
+          },
+          "scopes": {
+            "items": {
+              "$ref": "#/components/schemas/ReferenceOption"
+            },
+            "title": "Scopes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "provenance",
+          "cohorts",
+          "groups",
+          "scopes"
+        ],
+        "title": "GmrepoCatalogResponse",
+        "type": "object"
+      },
+      "GmrepoDistributionResponse": {
+        "properties": {
+          "audit": {
+            "$ref": "#/components/schemas/ReferenceAudit"
+          },
+          "boxes": {
+            "items": {
+              "$ref": "#/components/schemas/ReferenceBox"
+            },
+            "title": "Boxes",
+            "type": "array"
+          },
+          "cohort": {
+            "title": "Cohort",
+            "type": "string"
+          },
+          "genus": {
+            "$ref": "#/components/schemas/ReferenceGenus"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/ReferencePoint"
+            },
+            "title": "Points",
+            "type": "array"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/ReferenceProvenance"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provenance",
+          "cohort",
+          "genus",
+          "audit",
+          "unit",
+          "boxes",
+          "points",
+          "note"
+        ],
+        "title": "GmrepoDistributionResponse",
+        "type": "object"
+      },
+      "GmrepoErrorResponse": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "detail",
+          "code"
+        ],
+        "title": "GmrepoErrorResponse",
+        "type": "object"
+      },
+      "GmrepoEvidenceResponse": {
+        "properties": {
+          "audit": {
+            "$ref": "#/components/schemas/ReferenceAudit"
+          },
+          "ciMethod": {
+            "title": "Cimethod",
+            "type": "string"
+          },
+          "cohort": {
+            "title": "Cohort",
+            "type": "string"
+          },
+          "genus": {
+            "$ref": "#/components/schemas/ReferenceGenus"
+          },
+          "primary": {
+            "$ref": "#/components/schemas/ReferencePrimaryEvidence"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/ReferenceProvenance"
+          },
+          "rankBiserialCi": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rankbiserialci"
+          },
+          "sourceMarkers": {
+            "items": {
+              "$ref": "#/components/schemas/ReferenceMarker"
+            },
+            "title": "Sourcemarkers",
+            "type": "array"
+          },
+          "sourceNote": {
+            "title": "Sourcenote",
+            "type": "string"
+          },
+          "statistic": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReferenceStatistic"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "provenance",
+          "cohort",
+          "genus",
+          "audit",
+          "statistic",
+          "rankBiserialCi",
+          "ciMethod",
+          "sourceMarkers",
+          "sourceNote",
+          "primary"
+        ],
+        "title": "GmrepoEvidenceResponse",
+        "type": "object"
+      },
+      "GmrepoGeneraResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ReferenceGenus"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/ReferenceProvenance"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "provenance",
+          "total",
+          "items"
+        ],
+        "title": "GmrepoGeneraResponse",
+        "type": "object"
+      },
+      "GmrepoOverviewResponse": {
+        "properties": {
+          "cohorts": {
+            "items": {
+              "$ref": "#/components/schemas/ReferenceCohort"
+            },
+            "title": "Cohorts",
+            "type": "array"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/ReferenceCounts"
+          },
+          "decisions": {
+            "items": {
+              "$ref": "#/components/schemas/ReferenceDecision"
+            },
+            "title": "Decisions",
+            "type": "array"
+          },
+          "missingness": {
+            "items": {
+              "$ref": "#/components/schemas/ReferenceMissingness"
+            },
+            "title": "Missingness",
+            "type": "array"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/ReferenceProvenance"
+          },
+          "resolution": {
+            "items": {
+              "$ref": "#/components/schemas/ReferenceResolution"
+            },
+            "title": "Resolution",
+            "type": "array"
+          },
+          "selection": {
+            "$ref": "#/components/schemas/ReferenceSelection"
+          }
+        },
+        "required": [
+          "provenance",
+          "selection",
+          "counts",
+          "cohorts",
+          "decisions",
+          "missingness",
+          "resolution"
+        ],
+        "title": "GmrepoOverviewResponse",
+        "type": "object"
+      },
+      "GmrepoSamplesResponse": {
+        "properties": {
+          "genus": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReferenceGenus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ReferenceSample"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/ReferenceProvenance"
+          },
+          "selection": {
+            "$ref": "#/components/schemas/ReferenceSelection"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "provenance",
+          "selection",
+          "genus",
+          "total",
+          "limit",
+          "offset",
+          "items"
+        ],
+        "title": "GmrepoSamplesResponse",
+        "type": "object"
+      },
+      "GmrepoStatisticsResponse": {
+        "properties": {
+          "audit": {
+            "$ref": "#/components/schemas/ReferenceAudit"
+          },
+          "familySize": {
+            "title": "Familysize",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ReferenceStatistic"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "methods": {
+            "$ref": "#/components/schemas/ReferenceMethods"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/ReferenceProvenance"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/ReferenceStatisticsSummary"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "provenance",
+          "audit",
+          "methods",
+          "familySize",
+          "total",
+          "limit",
+          "offset",
+          "items",
+          "summary"
+        ],
+        "title": "GmrepoStatisticsResponse",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -4087,6 +4468,1517 @@
           }
         },
         "title": "ProvenanceResponse",
+        "type": "object"
+      },
+      "ReferenceAdjustedStatistic": {
+        "properties": {
+          "ciHigh": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cihigh"
+          },
+          "ciLow": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cilow"
+          },
+          "effect": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effect"
+          },
+          "pValue": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pvalue"
+          },
+          "qValue": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qvalue"
+          },
+          "residualDf": {
+            "title": "Residualdf",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "effect",
+          "ciLow",
+          "ciHigh",
+          "pValue",
+          "qValue",
+          "residualDf"
+        ],
+        "title": "ReferenceAdjustedStatistic",
+        "type": "object"
+      },
+      "ReferenceAudit": {
+        "properties": {
+          "adjustedCount": {
+            "title": "Adjustedcount",
+            "type": "integer"
+          },
+          "adjustedReasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Adjustedreasons",
+            "type": "array"
+          },
+          "adjustedStatus": {
+            "title": "Adjustedstatus",
+            "type": "string"
+          },
+          "covariates": {
+            "items": {
+              "$ref": "#/components/schemas/ReferenceCovariates"
+            },
+            "title": "Covariates",
+            "type": "array"
+          },
+          "design": {
+            "$ref": "#/components/schemas/ReferenceDesign"
+          },
+          "evidenceFiles": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Evidencefiles",
+            "type": "array"
+          },
+          "excludedMissingCovariates": {
+            "title": "Excludedmissingcovariates",
+            "type": "integer"
+          },
+          "excludedNoGenusRuns": {
+            "title": "Excludednogenusruns",
+            "type": "integer"
+          },
+          "groupConfirmedRuns": {
+            "title": "Groupconfirmedruns",
+            "type": "integer"
+          },
+          "groupCounts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Groupcounts",
+            "type": "object"
+          },
+          "identityStatus": {
+            "title": "Identitystatus",
+            "type": "string"
+          },
+          "knownParticipantRuns": {
+            "title": "Knownparticipantruns",
+            "type": "integer"
+          },
+          "metadataRuns": {
+            "title": "Metadataruns",
+            "type": "integer"
+          },
+          "plotReadyRuns": {
+            "title": "Plotreadyruns",
+            "type": "integer"
+          },
+          "projectId": {
+            "title": "Projectid",
+            "type": "string"
+          },
+          "repeatedParticipantIds": {
+            "title": "Repeatedparticipantids",
+            "type": "integer"
+          },
+          "reviewFingerprint": {
+            "title": "Reviewfingerprint",
+            "type": "string"
+          },
+          "reviewNote": {
+            "title": "Reviewnote",
+            "type": "string"
+          },
+          "reviewVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewversion"
+          },
+          "sexMode": {
+            "title": "Sexmode",
+            "type": "string"
+          },
+          "sourceUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourceurl"
+          },
+          "unadjustedReasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unadjustedreasons",
+            "type": "array"
+          },
+          "unadjustedStatus": {
+            "title": "Unadjustedstatus",
+            "type": "string"
+          },
+          "uniqueKnownParticipants": {
+            "title": "Uniqueknownparticipants",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "projectId",
+          "metadataRuns",
+          "plotReadyRuns",
+          "groupConfirmedRuns",
+          "excludedNoGenusRuns",
+          "groupCounts",
+          "knownParticipantRuns",
+          "uniqueKnownParticipants",
+          "repeatedParticipantIds",
+          "identityStatus",
+          "reviewVersion",
+          "reviewFingerprint",
+          "reviewNote",
+          "evidenceFiles",
+          "sourceUrl",
+          "sexMode",
+          "covariates",
+          "design",
+          "unadjustedStatus",
+          "unadjustedReasons",
+          "adjustedStatus",
+          "adjustedReasons",
+          "adjustedCount",
+          "excludedMissingCovariates"
+        ],
+        "title": "ReferenceAudit",
+        "type": "object"
+      },
+      "ReferenceBox": {
+        "properties": {
+          "box": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Box"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "detectedCount": {
+            "title": "Detectedcount",
+            "type": "integer"
+          },
+          "group": {
+            "title": "Group",
+            "type": "string"
+          },
+          "logBox": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logbox"
+          }
+        },
+        "required": [
+          "group",
+          "count",
+          "detectedCount",
+          "box",
+          "logBox"
+        ],
+        "title": "ReferenceBox",
+        "type": "object"
+      },
+      "ReferenceCohort": {
+        "properties": {
+          "adRuns": {
+            "title": "Adruns",
+            "type": "integer"
+          },
+          "completeProfiles": {
+            "title": "Completeprofiles",
+            "type": "integer"
+          },
+          "groupConfirmedRuns": {
+            "title": "Groupconfirmedruns",
+            "type": "integer"
+          },
+          "metadataRuns": {
+            "title": "Metadataruns",
+            "type": "integer"
+          },
+          "ncRuns": {
+            "title": "Ncruns",
+            "type": "integer"
+          },
+          "noProfileRuns": {
+            "title": "Noprofileruns",
+            "type": "integer"
+          },
+          "noResolvedGenusRuns": {
+            "title": "Noresolvedgenusruns",
+            "type": "integer"
+          },
+          "originalStudyUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Originalstudyurl"
+          },
+          "pendingRuns": {
+            "title": "Pendingruns",
+            "type": "integer"
+          },
+          "plotReadyRuns": {
+            "title": "Plotreadyruns",
+            "type": "integer"
+          },
+          "projectId": {
+            "title": "Projectid",
+            "type": "string"
+          },
+          "stageReferenceRuns": {
+            "title": "Stagereferenceruns",
+            "type": "integer"
+          },
+          "unresolvedMedianPercent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unresolvedmedianpercent"
+          }
+        },
+        "required": [
+          "projectId",
+          "metadataRuns",
+          "completeProfiles",
+          "groupConfirmedRuns",
+          "plotReadyRuns",
+          "adRuns",
+          "ncRuns",
+          "stageReferenceRuns",
+          "pendingRuns",
+          "noProfileRuns",
+          "noResolvedGenusRuns",
+          "unresolvedMedianPercent",
+          "originalStudyUrl"
+        ],
+        "title": "ReferenceCohort",
+        "type": "object"
+      },
+      "ReferenceCounts": {
+        "properties": {
+          "adRuns": {
+            "title": "Adruns",
+            "type": "integer"
+          },
+          "completeProfiles": {
+            "title": "Completeprofiles",
+            "type": "integer"
+          },
+          "groupConfirmedRuns": {
+            "title": "Groupconfirmedruns",
+            "type": "integer"
+          },
+          "ncRuns": {
+            "title": "Ncruns",
+            "type": "integer"
+          },
+          "noProfileRuns": {
+            "title": "Noprofileruns",
+            "type": "integer"
+          },
+          "noResolvedGenusRuns": {
+            "title": "Noresolvedgenusruns",
+            "type": "integer"
+          },
+          "pendingRuns": {
+            "title": "Pendingruns",
+            "type": "integer"
+          },
+          "plotReadyRuns": {
+            "title": "Plotreadyruns",
+            "type": "integer"
+          },
+          "selectedRuns": {
+            "title": "Selectedruns",
+            "type": "integer"
+          },
+          "stageReferenceRuns": {
+            "title": "Stagereferenceruns",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "selectedRuns",
+          "completeProfiles",
+          "groupConfirmedRuns",
+          "plotReadyRuns",
+          "adRuns",
+          "ncRuns",
+          "stageReferenceRuns",
+          "pendingRuns",
+          "noProfileRuns",
+          "noResolvedGenusRuns"
+        ],
+        "title": "ReferenceCounts",
+        "type": "object"
+      },
+      "ReferenceCovariates": {
+        "properties": {
+          "adjustedCount": {
+            "title": "Adjustedcount",
+            "type": "integer"
+          },
+          "ageIntervalCount": {
+            "title": "Ageintervalcount",
+            "type": "integer"
+          },
+          "ageKnown": {
+            "title": "Ageknown",
+            "type": "integer"
+          },
+          "ageMedian": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agemedian"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "group": {
+            "title": "Group",
+            "type": "string"
+          },
+          "sexCategories": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Sexcategories",
+            "type": "object"
+          },
+          "sexKnown": {
+            "title": "Sexknown",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "group",
+          "count",
+          "ageKnown",
+          "ageMedian",
+          "ageIntervalCount",
+          "sexKnown",
+          "sexCategories",
+          "adjustedCount"
+        ],
+        "title": "ReferenceCovariates",
+        "type": "object"
+      },
+      "ReferenceDecision": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "count"
+        ],
+        "title": "ReferenceDecision",
+        "type": "object"
+      },
+      "ReferenceDesign": {
+        "properties": {
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Columns",
+            "type": "array"
+          },
+          "conditionNumber": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conditionnumber"
+          },
+          "maxLeverage": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maxleverage"
+          },
+          "rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank"
+          },
+          "residualDf": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Residualdf"
+          }
+        },
+        "required": [
+          "columns",
+          "rank",
+          "conditionNumber",
+          "maxLeverage",
+          "residualDf"
+        ],
+        "title": "ReferenceDesign",
+        "type": "object"
+      },
+      "ReferenceGenus": {
+        "properties": {
+          "domain": {
+            "title": "Domain",
+            "type": "string"
+          },
+          "featureId": {
+            "title": "Featureid",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "sourceNames": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Sourcenames",
+            "type": "array"
+          },
+          "sourceTaxonIds": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Sourcetaxonids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "featureId",
+          "name",
+          "domain",
+          "sourceTaxonIds",
+          "sourceNames"
+        ],
+        "title": "ReferenceGenus",
+        "type": "object"
+      },
+      "ReferenceMarker": {
+        "properties": {
+          "comparisonStatus": {
+            "title": "Comparisonstatus",
+            "type": "string"
+          },
+          "direction": {
+            "title": "Direction",
+            "type": "string"
+          },
+          "lda": {
+            "title": "Lda",
+            "type": "number"
+          },
+          "pValue": {
+            "title": "Pvalue",
+            "type": "null"
+          },
+          "pureAdNc": {
+            "title": "Pureadnc",
+            "type": "boolean"
+          },
+          "qValue": {
+            "title": "Qvalue",
+            "type": "null"
+          },
+          "sourceFile": {
+            "title": "Sourcefile",
+            "type": "string"
+          },
+          "sourceName": {
+            "title": "Sourcename",
+            "type": "string"
+          },
+          "sourceTaxonId": {
+            "title": "Sourcetaxonid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sourceTaxonId",
+          "sourceName",
+          "lda",
+          "direction",
+          "comparisonStatus",
+          "sourceFile",
+          "pureAdNc",
+          "pValue",
+          "qValue"
+        ],
+        "title": "ReferenceMarker",
+        "type": "object"
+      },
+      "ReferenceMethods": {
+        "properties": {
+          "adjusted": {
+            "title": "Adjusted",
+            "type": "string"
+          },
+          "fdr": {
+            "title": "Fdr",
+            "type": "string"
+          },
+          "limits": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limits",
+            "type": "array"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/ReferenceSource"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "unadjusted": {
+            "title": "Unadjusted",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "unadjusted",
+          "adjusted",
+          "fdr",
+          "limits",
+          "sources"
+        ],
+        "title": "ReferenceMethods",
+        "type": "object"
+      },
+      "ReferenceMissingness": {
+        "properties": {
+          "denominator": {
+            "title": "Denominator",
+            "type": "integer"
+          },
+          "field": {
+            "title": "Field",
+            "type": "string"
+          },
+          "intervalCount": {
+            "title": "Intervalcount",
+            "type": "integer"
+          },
+          "knownCount": {
+            "title": "Knowncount",
+            "type": "integer"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "unavailableCount": {
+            "title": "Unavailablecount",
+            "type": "integer"
+          },
+          "unavailablePercent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unavailablepercent"
+          },
+          "unmappedCodeCount": {
+            "title": "Unmappedcodecount",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "field",
+          "label",
+          "denominator",
+          "knownCount",
+          "unavailableCount",
+          "unavailablePercent",
+          "intervalCount",
+          "unmappedCodeCount"
+        ],
+        "title": "ReferenceMissingness",
+        "type": "object"
+      },
+      "ReferenceOption": {
+        "properties": {
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "value",
+          "label"
+        ],
+        "title": "ReferenceOption",
+        "type": "object"
+      },
+      "ReferencePoint": {
+        "properties": {
+          "ageRaw": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ageraw"
+          },
+          "ageYears": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ageyears"
+          },
+          "group": {
+            "title": "Group",
+            "type": "string"
+          },
+          "identityStatus": {
+            "title": "Identitystatus",
+            "type": "string"
+          },
+          "jitter": {
+            "title": "Jitter",
+            "type": "number"
+          },
+          "participantId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Participantid"
+          },
+          "qcStatus": {
+            "title": "Qcstatus",
+            "type": "string"
+          },
+          "readCount": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Readcount"
+          },
+          "runId": {
+            "title": "Runid",
+            "type": "string"
+          },
+          "sex": {
+            "title": "Sex",
+            "type": "string"
+          },
+          "sourceSexCode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourcesexcode"
+          },
+          "specimenId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Specimenid"
+          },
+          "unresolvedPercent": {
+            "title": "Unresolvedpercent",
+            "type": "number"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "runId",
+          "participantId",
+          "specimenId",
+          "group",
+          "value",
+          "jitter",
+          "unresolvedPercent",
+          "ageYears",
+          "ageRaw",
+          "sex",
+          "sourceSexCode",
+          "readCount",
+          "qcStatus",
+          "identityStatus"
+        ],
+        "title": "ReferencePoint",
+        "type": "object"
+      },
+      "ReferencePrimaryEvidence": {
+        "properties": {
+          "abundanceScale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Abundancescale"
+          },
+          "cohortId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cohortid"
+          },
+          "comparisonNote": {
+            "title": "Comparisonnote",
+            "type": "string"
+          },
+          "datasetRevision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Datasetrevision"
+          },
+          "datasetSlug": {
+            "title": "Datasetslug",
+            "type": "string"
+          },
+          "groupCounts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Groupcounts",
+            "type": "object"
+          },
+          "matchMethod": {
+            "title": "Matchmethod",
+            "type": "string"
+          },
+          "matchedFeatureCount": {
+            "title": "Matchedfeaturecount",
+            "type": "integer"
+          },
+          "normalization": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Normalization"
+          },
+          "platform": {
+            "title": "Platform",
+            "type": "string"
+          },
+          "quantitativeStatus": {
+            "title": "Quantitativestatus",
+            "type": "string"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "sampleCount": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Samplecount"
+          },
+          "sourceSha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourcesha256"
+          },
+          "speciesPreview": {
+            "items": {
+              "$ref": "#/components/schemas/ReferencePrimarySpecies"
+            },
+            "title": "Speciespreview",
+            "type": "array"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "datasetSlug",
+          "datasetRevision",
+          "sourceSha256",
+          "abundanceScale",
+          "normalization",
+          "sampleCount",
+          "groupCounts",
+          "cohortId",
+          "platform",
+          "matchMethod",
+          "matchedFeatureCount",
+          "speciesPreview",
+          "quantitativeStatus",
+          "reasons",
+          "comparisonNote"
+        ],
+        "title": "ReferencePrimaryEvidence",
+        "type": "object"
+      },
+      "ReferencePrimarySpecies": {
+        "properties": {
+          "featureId": {
+            "title": "Featureid",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "sourceGenus": {
+            "title": "Sourcegenus",
+            "type": "string"
+          }
+        },
+        "required": [
+          "featureId",
+          "name",
+          "sourceGenus"
+        ],
+        "title": "ReferencePrimarySpecies",
+        "type": "object"
+      },
+      "ReferenceProvenance": {
+        "properties": {
+          "fingerprint": {
+            "title": "Fingerprint",
+            "type": "string"
+          },
+          "genusTotal": {
+            "title": "Genustotal",
+            "type": "integer"
+          },
+          "inputSnapshot": {
+            "title": "Inputsnapshot",
+            "type": "string"
+          },
+          "metadataTotal": {
+            "title": "Metadatatotal",
+            "type": "integer"
+          },
+          "observationUnit": {
+            "title": "Observationunit",
+            "type": "string"
+          },
+          "processedAt": {
+            "title": "Processedat",
+            "type": "string"
+          },
+          "profileTotal": {
+            "title": "Profiletotal",
+            "type": "integer"
+          },
+          "purpose": {
+            "title": "Purpose",
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/ReferenceSource"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "inputSnapshot",
+          "fingerprint",
+          "processedAt",
+          "metadataTotal",
+          "profileTotal",
+          "genusTotal",
+          "sources",
+          "observationUnit",
+          "purpose"
+        ],
+        "title": "ReferenceProvenance",
+        "type": "object"
+      },
+      "ReferenceResolution": {
+        "properties": {
+          "medianUnresolvedPercent": {
+            "title": "Medianunresolvedpercent",
+            "type": "number"
+          },
+          "noResolvedGenusCount": {
+            "title": "Noresolvedgenuscount",
+            "type": "integer"
+          },
+          "profileCount": {
+            "title": "Profilecount",
+            "type": "integer"
+          },
+          "projectId": {
+            "title": "Projectid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "projectId",
+          "profileCount",
+          "medianUnresolvedPercent",
+          "noResolvedGenusCount"
+        ],
+        "title": "ReferenceResolution",
+        "type": "object"
+      },
+      "ReferenceSample": {
+        "properties": {
+          "ageRaw": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ageraw"
+          },
+          "ageYears": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ageyears"
+          },
+          "biosampleAccession": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Biosampleaccession"
+          },
+          "bmi": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bmi"
+          },
+          "decisionKey": {
+            "title": "Decisionkey",
+            "type": "string"
+          },
+          "decisionLabel": {
+            "title": "Decisionlabel",
+            "type": "string"
+          },
+          "evidenceFiles": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Evidencefiles",
+            "type": "array"
+          },
+          "genusAbundancePercent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Genusabundancepercent"
+          },
+          "groupReviewStatus": {
+            "title": "Groupreviewstatus",
+            "type": "string"
+          },
+          "identityNote": {
+            "title": "Identitynote",
+            "type": "string"
+          },
+          "identityStatus": {
+            "title": "Identitystatus",
+            "type": "string"
+          },
+          "originalStudyUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Originalstudyurl"
+          },
+          "profileStatus": {
+            "title": "Profilestatus",
+            "type": "string"
+          },
+          "projectId": {
+            "title": "Projectid",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "researchGroup": {
+            "title": "Researchgroup",
+            "type": "string"
+          },
+          "resolvedGenusPercent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolvedgenuspercent"
+          },
+          "runId": {
+            "title": "Runid",
+            "type": "string"
+          },
+          "sex": {
+            "title": "Sex",
+            "type": "string"
+          },
+          "sourceGroup": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourcegroup"
+          },
+          "sourceSexCode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourcesexcode"
+          },
+          "specimenId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Specimenid"
+          },
+          "unresolvedPercent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unresolvedpercent"
+          }
+        },
+        "required": [
+          "projectId",
+          "runId",
+          "specimenId",
+          "biosampleAccession",
+          "researchGroup",
+          "sourceGroup",
+          "decisionKey",
+          "decisionLabel",
+          "reason",
+          "groupReviewStatus",
+          "profileStatus",
+          "ageYears",
+          "ageRaw",
+          "sex",
+          "sourceSexCode",
+          "bmi",
+          "unresolvedPercent",
+          "resolvedGenusPercent",
+          "identityStatus",
+          "identityNote",
+          "originalStudyUrl",
+          "evidenceFiles",
+          "genusAbundancePercent"
+        ],
+        "title": "ReferenceSample",
+        "type": "object"
+      },
+      "ReferenceSelection": {
+        "properties": {
+          "cohort": {
+            "title": "Cohort",
+            "type": "string"
+          },
+          "group": {
+            "title": "Group",
+            "type": "string"
+          },
+          "scope": {
+            "enum": [
+              "all",
+              "complete",
+              "plot_ready",
+              "group_confirmed",
+              "stage_reference",
+              "pending",
+              "no_profile"
+            ],
+            "title": "Scope",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cohort",
+          "group",
+          "scope"
+        ],
+        "title": "ReferenceSelection",
+        "type": "object"
+      },
+      "ReferenceSource": {
+        "properties": {
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "url"
+        ],
+        "title": "ReferenceSource",
+        "type": "object"
+      },
+      "ReferenceStatistic": {
+        "properties": {
+          "adCount": {
+            "title": "Adcount",
+            "type": "integer"
+          },
+          "adDetectedPercent": {
+            "title": "Addetectedpercent",
+            "type": "number"
+          },
+          "adMedianPercent": {
+            "title": "Admedianpercent",
+            "type": "number"
+          },
+          "adjusted": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReferenceAdjustedStatistic"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "direction": {
+            "title": "Direction",
+            "type": "string"
+          },
+          "genus": {
+            "$ref": "#/components/schemas/ReferenceGenus"
+          },
+          "ncCount": {
+            "title": "Nccount",
+            "type": "integer"
+          },
+          "ncDetectedPercent": {
+            "title": "Ncdetectedpercent",
+            "type": "number"
+          },
+          "ncMedianPercent": {
+            "title": "Ncmedianpercent",
+            "type": "number"
+          },
+          "pValue": {
+            "title": "Pvalue",
+            "type": "number"
+          },
+          "qValue": {
+            "title": "Qvalue",
+            "type": "number"
+          },
+          "rankBiserial": {
+            "title": "Rankbiserial",
+            "type": "number"
+          },
+          "signalStatus": {
+            "title": "Signalstatus",
+            "type": "string"
+          }
+        },
+        "required": [
+          "genus",
+          "adCount",
+          "ncCount",
+          "adMedianPercent",
+          "ncMedianPercent",
+          "adDetectedPercent",
+          "ncDetectedPercent",
+          "rankBiserial",
+          "direction",
+          "pValue",
+          "qValue",
+          "adjusted",
+          "signalStatus"
+        ],
+        "title": "ReferenceStatistic",
+        "type": "object"
+      },
+      "ReferenceStatisticsSummary": {
+        "properties": {
+          "adjustedFdrCount": {
+            "title": "Adjustedfdrcount",
+            "type": "integer"
+          },
+          "concordantFdrCount": {
+            "title": "Concordantfdrcount",
+            "type": "integer"
+          },
+          "unadjustedFdrCount": {
+            "title": "Unadjustedfdrcount",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "unadjustedFdrCount",
+          "adjustedFdrCount",
+          "concordantFdrCount"
+        ],
+        "title": "ReferenceStatisticsSummary",
         "type": "object"
       },
       "RelatedPublicationResponse": {
@@ -8793,6 +10685,678 @@
         "summary": "Taxonomy",
         "tags": [
           "mag"
+        ]
+      }
+    },
+    "/api/references/gmrepo/audit": {
+      "get": {
+        "operationId": "audit_api_references_gmrepo_audit_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoAuditResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Audit",
+        "tags": [
+          "gmrepo"
+        ]
+      }
+    },
+    "/api/references/gmrepo/catalog": {
+      "get": {
+        "operationId": "catalog_api_references_gmrepo_catalog_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoCatalogResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Catalog",
+        "tags": [
+          "gmrepo"
+        ]
+      }
+    },
+    "/api/references/gmrepo/distribution": {
+      "get": {
+        "operationId": "distribution_api_references_gmrepo_distribution_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "cohort",
+            "required": true,
+            "schema": {
+              "maxLength": 32,
+              "minLength": 1,
+              "pattern": "^PRJ[A-Z0-9]+$",
+              "title": "Cohort",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "genus",
+            "required": true,
+            "schema": {
+              "maxLength": 32,
+              "pattern": "^NCBI:\\d+$",
+              "title": "Genus",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoDistributionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Distribution",
+        "tags": [
+          "gmrepo"
+        ]
+      }
+    },
+    "/api/references/gmrepo/evidence": {
+      "get": {
+        "operationId": "evidence_api_references_gmrepo_evidence_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "cohort",
+            "required": true,
+            "schema": {
+              "maxLength": 32,
+              "minLength": 1,
+              "pattern": "^PRJ[A-Z0-9]+$",
+              "title": "Cohort",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "genus",
+            "required": true,
+            "schema": {
+              "maxLength": 32,
+              "pattern": "^NCBI:\\d+$",
+              "title": "Genus",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoEvidenceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Evidence",
+        "tags": [
+          "gmrepo"
+        ]
+      }
+    },
+    "/api/references/gmrepo/genera": {
+      "get": {
+        "operationId": "genera_api_references_gmrepo_genera_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "query",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 100,
+              "title": "Query",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoGeneraResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Genera",
+        "tags": [
+          "gmrepo"
+        ]
+      }
+    },
+    "/api/references/gmrepo/overview": {
+      "get": {
+        "operationId": "overview_api_references_gmrepo_overview_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cohort",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 32,
+              "pattern": "^(PRJ[A-Z0-9]+)?$",
+              "title": "Cohort",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "group",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "AD",
+                "NC",
+                "MCI",
+                "at_risk",
+                "cognitively_normal_amyloid_status_unresolved",
+                "unresolved",
+                "other"
+              ],
+              "title": "Group",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "enum": [
+                "all",
+                "complete",
+                "plot_ready",
+                "group_confirmed",
+                "stage_reference",
+                "pending",
+                "no_profile"
+              ],
+              "title": "Scope",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoOverviewResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Overview",
+        "tags": [
+          "gmrepo"
+        ]
+      }
+    },
+    "/api/references/gmrepo/samples": {
+      "get": {
+        "operationId": "samples_api_references_gmrepo_samples_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "genus",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 32,
+              "pattern": "^(NCBI:\\d+)?$",
+              "title": "Genus",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cohort",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 32,
+              "pattern": "^(PRJ[A-Z0-9]+)?$",
+              "title": "Cohort",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "group",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "AD",
+                "NC",
+                "MCI",
+                "at_risk",
+                "cognitively_normal_amyloid_status_unresolved",
+                "unresolved",
+                "other"
+              ],
+              "title": "Group",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "enum": [
+                "all",
+                "complete",
+                "plot_ready",
+                "group_confirmed",
+                "stage_reference",
+                "pending",
+                "no_profile"
+              ],
+              "title": "Scope",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoSamplesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Samples",
+        "tags": [
+          "gmrepo"
+        ]
+      }
+    },
+    "/api/references/gmrepo/statistics": {
+      "get": {
+        "operationId": "statistics_api_references_gmrepo_statistics_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "cohort",
+            "required": true,
+            "schema": {
+              "maxLength": 32,
+              "minLength": 1,
+              "pattern": "^PRJ[A-Z0-9]+$",
+              "title": "Cohort",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 100,
+              "title": "Query",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoStatisticsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Statistics",
+        "tags": [
+          "gmrepo"
         ]
       }
     }

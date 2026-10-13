@@ -29,6 +29,7 @@ function home() {
 
 test('renders the accepted copy and routes each real analysis entry to its dataset', () => {
   home();
+  expect(screen.getByRole('link', { name: 'GMrepo 参考' })).toHaveAttribute('href', '/reference/gmrepo');
   expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(HOME_COPY.title.join(''));
   for (const chapter of HOME_CHAPTERS) {
     expect(screen.getByRole('link', { name: chapter.action })).toHaveAttribute('href', chapter.route);

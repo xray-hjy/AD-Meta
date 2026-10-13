@@ -31,6 +31,24 @@ Use standard HTTP status codes:
 - `400`: unsupported chart type.
 - `500`: cache exists in the database but cannot be read.
 
+## GMrepo external reference API
+
+The independent reference module uses the `/api/references/gmrepo` prefix with
+read-only `catalog`, `overview`, `genera`, `samples`, `audit`, `distribution`,
+`statistics`, and `evidence` endpoints. Responses bind to a validated package
+fingerprint rather than a primary dataset revision. A mismatched `revision`
+returns `409`; an absent or invalid package returns `503` with `detail` and
+`code`; invalid selections return `422`.
+
+The module preserves source relative percentages, Run-level metadata, and
+cohort boundaries. Statistical results are exploratory and gated by subject
+identity and covariate review. Search and pagination keep the complete genus
+test family fixed. The primary-data comparison reports taxonomy coverage;
+quantitative replication remains deferred when data scales or participant
+mapping are unknown. Endpoint parameters, field meanings, methods, package
+requirements, and deployment are documented in
+[GMrepo reference integration](gmrepo.md).
+
 ## GET /api/datasets
 
 Returns all published datasets.

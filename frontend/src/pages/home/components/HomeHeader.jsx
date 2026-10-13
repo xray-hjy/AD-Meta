@@ -12,6 +12,7 @@ export default function HomeHeader({ onReplay, onChapter }) {
         <a href="#home-showcase" onClick={event => { event.preventDefault(); onChapter('species'); }}>可视化展示</a>
         <a href="#home-evidence">数据基础</a>
         <a href="#home-customization" onClick={event => { event.preventDefault(); onChapter('custom'); }}>自定义能力</a>
+        <Link className="header-reference" to="/reference/gmrepo">GMrepo 参考</Link>
         <Link className="header-cta" to="/analysis/abundance">进入分析 ↗</Link>
       </nav>
     </header>

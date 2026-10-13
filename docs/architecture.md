@@ -30,6 +30,8 @@ backend/app/
 
 分类层级图使用一份 canonical taxonomy hierarchy。旭日图、矩形树图和放射树图读取统一树；桑基图使用由统一树派生的 `taxonomy_sankey` projection。projection 是面向某种可视化的数据表达，不是第二套科学数据源。
 
+GMrepo 是并列的外部参考领域：`api/gmrepo.py` 提供只读接口，参考服务加载经过 SHA-256 验证的数据包，分析服务依据身份审查计算单队列探索性结果，主数据证据服务只查询当前已发布物种 revision 的分类覆盖。参考包与主物种 / KO / MAG 表保持独立，不通过该模块改写主数据。默认包路径、版本约束和科学语义见 [GMrepo 参考数据接入](reference/gmrepo.md)。
+
 ## 前端职责
 
 ```text

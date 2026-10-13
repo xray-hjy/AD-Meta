@@ -1,10 +1,19 @@
 # AD-Meta
 
-AD-Meta 是一个面向阿尔茨海默病（Alzheimer's Disease, AD）脑肠轴研究的肠道宏基因组研发辅助工具。系统以宏基因组生物信息分析结果为数据基础，当前支持群落物种组成、KO 功能，以及 MAG（Metagenome-Assembled Genomes，宏基因组组装基因组）丰度、GTDB 分类和 CheckM2 质量的分析与可视化。MAG 功能注释及独立跨队列复现仍待数据接入。
+AD-Meta 是一个面向阿尔茨海默病（Alzheimer's Disease, AD）脑肠轴研究的肠道宏基因组研发辅助工具。系统以宏基因组生物信息分析结果为数据基础，当前支持群落物种组成、KO 功能，以及 MAG（Metagenome-Assembled Genomes，宏基因组组装基因组）丰度、GTDB 分类和 CheckM2 质量的分析与可视化；另提供 GMrepo 扩增子参考队列的菌属分布、身份核查、探索性检验与证据对照。MAG 功能注释与主数据的独立跨队列数值复现仍待完成。
 
 项目采用 React/Vite 前端、FastAPI 后端与内网 R/Bioconductor 统计 worker。后端以不可变 revision 原子发布预计算结果，前端通过只读 API 完成交互式分析展示。
 
 本仓库不包含原始测序数据处理和 MAG 分析脚本。项目背景、数据来源及与生物信息分析流程的边界见 [项目说明](docs/project-overview.md)。
+
+## 20261013更新
+
+- **主分支整合**：合入 MAG / 物种 / KO 开发更新、新版首页和 CI 修复，并完成 [Dependabot PR #13](https://github.com/xray-hjy/AD-Meta/pull/13) 的 13 项 Python 依赖升级。
+- **GMrepo 外部参考**：新增队列与质量概览、参考样本核查、AD/NC 菌属箱线图与散点、身份审查、年龄 / 性别调整和证据对照；结果仅作为探索性研究线索。
+- **数据与接口**：参考包按版本和 SHA-256 只读加载，独立于主物种 / KO / MAG 数据；同步 OpenAPI、前端类型和参考模块导出命令。
+- **首页与部署**：新版首页及分析顶栏保留 GMrepo 入口，兼容窄屏导航，补充外部数据包配置和 MAG 独立建表 SQL。
+
+完整记录见 [20261013更新日志](docs/development/20261013-update.md)，接口和科学口径见 [GMrepo 参考数据接入](docs/reference/gmrepo.md)。
 
 ## 20261010更新
 
@@ -47,6 +56,7 @@ admeta/
 - [本地运行与数据导入](docs/guides/runbook.md)
 - [API 契约](docs/reference/api.md)
 - [数据库契约](docs/reference/database.md)
+- [GMrepo 参考数据接入](docs/reference/gmrepo.md)
 - [开发记录](docs/development/updates.md)
 
 ## 本地启动
@@ -90,6 +100,17 @@ npm run dev:frontend
 MySQL 本地连接参数模板见 [`.env.example`](.env.example)，完整步骤见
 [本地运行与数据导入](docs/guides/runbook.md)。
 
+## GMrepo 参考数据接入
+
+访问 `/reference/gmrepo` 查看独立外部参考队列。默认读取
+`ADMetaData/reference/gmrepo/processed/2026-10-09-v1`，也可在 `.env` 中设置
+`AD_META_GMREPO_DATA_ROOT` 指向已验证的处理包；相对路径以仓库根目录解析。
+
+参考包、原快照和分析导出结果均不随 Git 发布，新克隆或部署时需要另外提供数据包。
+缺少或损坏的数据包返回明确的不可用状态。菌属统计按队列和身份审查条件开放，
+不将测序 Run 自动视为独立参与者，不把参考队列结果称为主数据的数值复现。
+目录契约、哈希校验、部署配置和导出方法见 [GMrepo 接入说明](docs/reference/gmrepo.md)。
+
 ## MAG 数据接入
 
 将外部交付的 `ADMetaData` 文件夹放在项目根目录即可使用默认配置，也可在
@@ -106,7 +127,7 @@ Windows 下同样使用三个终端启动统计 worker、后端与前端，具�
 
 验证分为三档：
 
-本地 Node.js 要求为 22 或更高版本（与 CI 一致）。
+本地 Node.js 要求为 22.12.0 或更高版本（与前端依赖及 CI 一致）。
 
 - `npm run verify`：快速、离线的日常检查，包含 Ruff、mypy、前端类型检查、单元测试和生产构建。
 - `npm run verify:full`：增加覆盖率、只读 OpenAPI 漂移检查、依赖漏洞审计和隔离 E2E；需要网络并预先安装 Playwright Chromium。

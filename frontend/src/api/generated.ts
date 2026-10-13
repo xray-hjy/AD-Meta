@@ -633,6 +633,142 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/references/gmrepo/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Audit */
+        get: operations["audit_api_references_gmrepo_audit_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/references/gmrepo/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Catalog */
+        get: operations["catalog_api_references_gmrepo_catalog_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/references/gmrepo/distribution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Distribution */
+        get: operations["distribution_api_references_gmrepo_distribution_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/references/gmrepo/evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Evidence */
+        get: operations["evidence_api_references_gmrepo_evidence_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/references/gmrepo/genera": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Genera */
+        get: operations["genera_api_references_gmrepo_genera_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/references/gmrepo/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Overview */
+        get: operations["overview_api_references_gmrepo_overview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/references/gmrepo/samples": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Samples */
+        get: operations["samples_api_references_gmrepo_samples_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/references/gmrepo/statistics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Statistics */
+        get: operations["statistics_api_references_gmrepo_statistics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1156,6 +1292,117 @@ export interface components {
              * @constant
              */
             ranking: "mean_abundance";
+        };
+        /** GmrepoAuditResponse */
+        GmrepoAuditResponse: {
+            /** Items */
+            items: components["schemas"]["ReferenceAudit"][];
+            methods: components["schemas"]["ReferenceMethods"];
+            provenance: components["schemas"]["ReferenceProvenance"];
+        };
+        /** GmrepoCatalogResponse */
+        GmrepoCatalogResponse: {
+            /** Cohorts */
+            cohorts: components["schemas"]["ReferenceCohort"][];
+            /** Groups */
+            groups: components["schemas"]["ReferenceOption"][];
+            provenance: components["schemas"]["ReferenceProvenance"];
+            /** Scopes */
+            scopes: components["schemas"]["ReferenceOption"][];
+        };
+        /** GmrepoDistributionResponse */
+        GmrepoDistributionResponse: {
+            audit: components["schemas"]["ReferenceAudit"];
+            /** Boxes */
+            boxes: components["schemas"]["ReferenceBox"][];
+            /** Cohort */
+            cohort: string;
+            genus: components["schemas"]["ReferenceGenus"];
+            /** Note */
+            note: string;
+            /** Points */
+            points: components["schemas"]["ReferencePoint"][];
+            provenance: components["schemas"]["ReferenceProvenance"];
+            /** Unit */
+            unit: string;
+        };
+        /** GmrepoErrorResponse */
+        GmrepoErrorResponse: {
+            /** Code */
+            code: string;
+            /** Detail */
+            detail: string;
+        };
+        /** GmrepoEvidenceResponse */
+        GmrepoEvidenceResponse: {
+            audit: components["schemas"]["ReferenceAudit"];
+            /** Cimethod */
+            ciMethod: string;
+            /** Cohort */
+            cohort: string;
+            genus: components["schemas"]["ReferenceGenus"];
+            primary: components["schemas"]["ReferencePrimaryEvidence"];
+            provenance: components["schemas"]["ReferenceProvenance"];
+            /** Rankbiserialci */
+            rankBiserialCi: number[] | null;
+            /** Sourcemarkers */
+            sourceMarkers: components["schemas"]["ReferenceMarker"][];
+            /** Sourcenote */
+            sourceNote: string;
+            statistic: components["schemas"]["ReferenceStatistic"] | null;
+        };
+        /** GmrepoGeneraResponse */
+        GmrepoGeneraResponse: {
+            /** Items */
+            items: components["schemas"]["ReferenceGenus"][];
+            provenance: components["schemas"]["ReferenceProvenance"];
+            /** Total */
+            total: number;
+        };
+        /** GmrepoOverviewResponse */
+        GmrepoOverviewResponse: {
+            /** Cohorts */
+            cohorts: components["schemas"]["ReferenceCohort"][];
+            counts: components["schemas"]["ReferenceCounts"];
+            /** Decisions */
+            decisions: components["schemas"]["ReferenceDecision"][];
+            /** Missingness */
+            missingness: components["schemas"]["ReferenceMissingness"][];
+            provenance: components["schemas"]["ReferenceProvenance"];
+            /** Resolution */
+            resolution: components["schemas"]["ReferenceResolution"][];
+            selection: components["schemas"]["ReferenceSelection"];
+        };
+        /** GmrepoSamplesResponse */
+        GmrepoSamplesResponse: {
+            genus: components["schemas"]["ReferenceGenus"] | null;
+            /** Items */
+            items: components["schemas"]["ReferenceSample"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            provenance: components["schemas"]["ReferenceProvenance"];
+            selection: components["schemas"]["ReferenceSelection"];
+            /** Total */
+            total: number;
+        };
+        /** GmrepoStatisticsResponse */
+        GmrepoStatisticsResponse: {
+            audit: components["schemas"]["ReferenceAudit"];
+            /** Familysize */
+            familySize: number;
+            /** Items */
+            items: components["schemas"]["ReferenceStatistic"][];
+            /** Limit */
+            limit: number;
+            methods: components["schemas"]["ReferenceMethods"];
+            /** Offset */
+            offset: number;
+            provenance: components["schemas"]["ReferenceProvenance"];
+            summary: components["schemas"]["ReferenceStatisticsSummary"];
+            /** Total */
+            total: number;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -2227,6 +2474,473 @@ export interface components {
             sourceSha256?: string | null;
         } & {
             [key: string]: unknown;
+        };
+        /** ReferenceAdjustedStatistic */
+        ReferenceAdjustedStatistic: {
+            /** Cihigh */
+            ciHigh: number | null;
+            /** Cilow */
+            ciLow: number | null;
+            /** Effect */
+            effect: number | null;
+            /** Pvalue */
+            pValue: number | null;
+            /** Qvalue */
+            qValue: number | null;
+            /** Residualdf */
+            residualDf: number;
+            /** Status */
+            status: string;
+        };
+        /** ReferenceAudit */
+        ReferenceAudit: {
+            /** Adjustedcount */
+            adjustedCount: number;
+            /** Adjustedreasons */
+            adjustedReasons: string[];
+            /** Adjustedstatus */
+            adjustedStatus: string;
+            /** Covariates */
+            covariates: components["schemas"]["ReferenceCovariates"][];
+            design: components["schemas"]["ReferenceDesign"];
+            /** Evidencefiles */
+            evidenceFiles: string[];
+            /** Excludedmissingcovariates */
+            excludedMissingCovariates: number;
+            /** Excludednogenusruns */
+            excludedNoGenusRuns: number;
+            /** Groupconfirmedruns */
+            groupConfirmedRuns: number;
+            /** Groupcounts */
+            groupCounts: {
+                [key: string]: number;
+            };
+            /** Identitystatus */
+            identityStatus: string;
+            /** Knownparticipantruns */
+            knownParticipantRuns: number;
+            /** Metadataruns */
+            metadataRuns: number;
+            /** Plotreadyruns */
+            plotReadyRuns: number;
+            /** Projectid */
+            projectId: string;
+            /** Repeatedparticipantids */
+            repeatedParticipantIds: number;
+            /** Reviewfingerprint */
+            reviewFingerprint: string;
+            /** Reviewnote */
+            reviewNote: string;
+            /** Reviewversion */
+            reviewVersion: string | null;
+            /** Sexmode */
+            sexMode: string;
+            /** Sourceurl */
+            sourceUrl: string | null;
+            /** Unadjustedreasons */
+            unadjustedReasons: string[];
+            /** Unadjustedstatus */
+            unadjustedStatus: string;
+            /** Uniqueknownparticipants */
+            uniqueKnownParticipants: number;
+        };
+        /** ReferenceBox */
+        ReferenceBox: {
+            /** Box */
+            box: number[] | null;
+            /** Count */
+            count: number;
+            /** Detectedcount */
+            detectedCount: number;
+            /** Group */
+            group: string;
+            /** Logbox */
+            logBox: number[] | null;
+        };
+        /** ReferenceCohort */
+        ReferenceCohort: {
+            /** Adruns */
+            adRuns: number;
+            /** Completeprofiles */
+            completeProfiles: number;
+            /** Groupconfirmedruns */
+            groupConfirmedRuns: number;
+            /** Metadataruns */
+            metadataRuns: number;
+            /** Ncruns */
+            ncRuns: number;
+            /** Noprofileruns */
+            noProfileRuns: number;
+            /** Noresolvedgenusruns */
+            noResolvedGenusRuns: number;
+            /** Originalstudyurl */
+            originalStudyUrl: string | null;
+            /** Pendingruns */
+            pendingRuns: number;
+            /** Plotreadyruns */
+            plotReadyRuns: number;
+            /** Projectid */
+            projectId: string;
+            /** Stagereferenceruns */
+            stageReferenceRuns: number;
+            /** Unresolvedmedianpercent */
+            unresolvedMedianPercent: number | null;
+        };
+        /** ReferenceCounts */
+        ReferenceCounts: {
+            /** Adruns */
+            adRuns: number;
+            /** Completeprofiles */
+            completeProfiles: number;
+            /** Groupconfirmedruns */
+            groupConfirmedRuns: number;
+            /** Ncruns */
+            ncRuns: number;
+            /** Noprofileruns */
+            noProfileRuns: number;
+            /** Noresolvedgenusruns */
+            noResolvedGenusRuns: number;
+            /** Pendingruns */
+            pendingRuns: number;
+            /** Plotreadyruns */
+            plotReadyRuns: number;
+            /** Selectedruns */
+            selectedRuns: number;
+            /** Stagereferenceruns */
+            stageReferenceRuns: number;
+        };
+        /** ReferenceCovariates */
+        ReferenceCovariates: {
+            /** Adjustedcount */
+            adjustedCount: number;
+            /** Ageintervalcount */
+            ageIntervalCount: number;
+            /** Ageknown */
+            ageKnown: number;
+            /** Agemedian */
+            ageMedian: number | null;
+            /** Count */
+            count: number;
+            /** Group */
+            group: string;
+            /** Sexcategories */
+            sexCategories: {
+                [key: string]: number;
+            };
+            /** Sexknown */
+            sexKnown: number;
+        };
+        /** ReferenceDecision */
+        ReferenceDecision: {
+            /** Count */
+            count: number;
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+        };
+        /** ReferenceDesign */
+        ReferenceDesign: {
+            /** Columns */
+            columns: string[];
+            /** Conditionnumber */
+            conditionNumber: number | null;
+            /** Maxleverage */
+            maxLeverage: number | null;
+            /** Rank */
+            rank: number | null;
+            /** Residualdf */
+            residualDf: number | null;
+        };
+        /** ReferenceGenus */
+        ReferenceGenus: {
+            /** Domain */
+            domain: string;
+            /** Featureid */
+            featureId: string;
+            /** Name */
+            name: string;
+            /** Sourcenames */
+            sourceNames: string[];
+            /** Sourcetaxonids */
+            sourceTaxonIds: string[];
+        };
+        /** ReferenceMarker */
+        ReferenceMarker: {
+            /** Comparisonstatus */
+            comparisonStatus: string;
+            /** Direction */
+            direction: string;
+            /** Lda */
+            lda: number;
+            /** Pvalue */
+            pValue: null;
+            /** Pureadnc */
+            pureAdNc: boolean;
+            /** Qvalue */
+            qValue: null;
+            /** Sourcefile */
+            sourceFile: string;
+            /** Sourcename */
+            sourceName: string;
+            /** Sourcetaxonid */
+            sourceTaxonId: string;
+        };
+        /** ReferenceMethods */
+        ReferenceMethods: {
+            /** Adjusted */
+            adjusted: string;
+            /** Fdr */
+            fdr: string;
+            /** Limits */
+            limits: string[];
+            /** Sources */
+            sources: components["schemas"]["ReferenceSource"][];
+            /** Unadjusted */
+            unadjusted: string;
+            /** Version */
+            version: string;
+        };
+        /** ReferenceMissingness */
+        ReferenceMissingness: {
+            /** Denominator */
+            denominator: number;
+            /** Field */
+            field: string;
+            /** Intervalcount */
+            intervalCount: number;
+            /** Knowncount */
+            knownCount: number;
+            /** Label */
+            label: string;
+            /** Unavailablecount */
+            unavailableCount: number;
+            /** Unavailablepercent */
+            unavailablePercent: number | null;
+            /** Unmappedcodecount */
+            unmappedCodeCount: number;
+        };
+        /** ReferenceOption */
+        ReferenceOption: {
+            /** Label */
+            label: string;
+            /** Value */
+            value: string;
+        };
+        /** ReferencePoint */
+        ReferencePoint: {
+            /** Ageraw */
+            ageRaw: string | null;
+            /** Ageyears */
+            ageYears: number | null;
+            /** Group */
+            group: string;
+            /** Identitystatus */
+            identityStatus: string;
+            /** Jitter */
+            jitter: number;
+            /** Participantid */
+            participantId: string | null;
+            /** Qcstatus */
+            qcStatus: string;
+            /** Readcount */
+            readCount: number | null;
+            /** Runid */
+            runId: string;
+            /** Sex */
+            sex: string;
+            /** Sourcesexcode */
+            sourceSexCode: string | null;
+            /** Specimenid */
+            specimenId: string | null;
+            /** Unresolvedpercent */
+            unresolvedPercent: number;
+            /** Value */
+            value: number;
+        };
+        /** ReferencePrimaryEvidence */
+        ReferencePrimaryEvidence: {
+            /** Abundancescale */
+            abundanceScale: string | null;
+            /** Cohortid */
+            cohortId: string | null;
+            /** Comparisonnote */
+            comparisonNote: string;
+            /** Datasetrevision */
+            datasetRevision: string | null;
+            /** Datasetslug */
+            datasetSlug: string;
+            /** Groupcounts */
+            groupCounts: {
+                [key: string]: number;
+            };
+            /** Matchmethod */
+            matchMethod: string;
+            /** Matchedfeaturecount */
+            matchedFeatureCount: number;
+            /** Normalization */
+            normalization: string | null;
+            /** Platform */
+            platform: string;
+            /** Quantitativestatus */
+            quantitativeStatus: string;
+            /** Reasons */
+            reasons: string[];
+            /** Samplecount */
+            sampleCount: number | null;
+            /** Sourcesha256 */
+            sourceSha256: string | null;
+            /** Speciespreview */
+            speciesPreview: components["schemas"]["ReferencePrimarySpecies"][];
+            /** Status */
+            status: string;
+        };
+        /** ReferencePrimarySpecies */
+        ReferencePrimarySpecies: {
+            /** Featureid */
+            featureId: string;
+            /** Name */
+            name: string;
+            /** Sourcegenus */
+            sourceGenus: string;
+        };
+        /** ReferenceProvenance */
+        ReferenceProvenance: {
+            /** Fingerprint */
+            fingerprint: string;
+            /** Genustotal */
+            genusTotal: number;
+            /** Inputsnapshot */
+            inputSnapshot: string;
+            /** Metadatatotal */
+            metadataTotal: number;
+            /** Observationunit */
+            observationUnit: string;
+            /** Processedat */
+            processedAt: string;
+            /** Profiletotal */
+            profileTotal: number;
+            /** Purpose */
+            purpose: string;
+            /** Sources */
+            sources: components["schemas"]["ReferenceSource"][];
+            /** Version */
+            version: string;
+        };
+        /** ReferenceResolution */
+        ReferenceResolution: {
+            /** Medianunresolvedpercent */
+            medianUnresolvedPercent: number;
+            /** Noresolvedgenuscount */
+            noResolvedGenusCount: number;
+            /** Profilecount */
+            profileCount: number;
+            /** Projectid */
+            projectId: string;
+        };
+        /** ReferenceSample */
+        ReferenceSample: {
+            /** Ageraw */
+            ageRaw: string | null;
+            /** Ageyears */
+            ageYears: number | null;
+            /** Biosampleaccession */
+            biosampleAccession: string | null;
+            /** Bmi */
+            bmi: number | null;
+            /** Decisionkey */
+            decisionKey: string;
+            /** Decisionlabel */
+            decisionLabel: string;
+            /** Evidencefiles */
+            evidenceFiles: string[];
+            /** Genusabundancepercent */
+            genusAbundancePercent: number | null;
+            /** Groupreviewstatus */
+            groupReviewStatus: string;
+            /** Identitynote */
+            identityNote: string;
+            /** Identitystatus */
+            identityStatus: string;
+            /** Originalstudyurl */
+            originalStudyUrl: string | null;
+            /** Profilestatus */
+            profileStatus: string;
+            /** Projectid */
+            projectId: string;
+            /** Reason */
+            reason: string;
+            /** Researchgroup */
+            researchGroup: string;
+            /** Resolvedgenuspercent */
+            resolvedGenusPercent: number | null;
+            /** Runid */
+            runId: string;
+            /** Sex */
+            sex: string;
+            /** Sourcegroup */
+            sourceGroup: string | null;
+            /** Sourcesexcode */
+            sourceSexCode: string | null;
+            /** Specimenid */
+            specimenId: string | null;
+            /** Unresolvedpercent */
+            unresolvedPercent: number | null;
+        };
+        /** ReferenceSelection */
+        ReferenceSelection: {
+            /** Cohort */
+            cohort: string;
+            /** Group */
+            group: string;
+            /**
+             * Scope
+             * @enum {string}
+             */
+            scope: "all" | "complete" | "plot_ready" | "group_confirmed" | "stage_reference" | "pending" | "no_profile";
+        };
+        /** ReferenceSource */
+        ReferenceSource: {
+            /** Label */
+            label: string;
+            /** Url */
+            url: string;
+        };
+        /** ReferenceStatistic */
+        ReferenceStatistic: {
+            /** Adcount */
+            adCount: number;
+            /** Addetectedpercent */
+            adDetectedPercent: number;
+            /** Admedianpercent */
+            adMedianPercent: number;
+            adjusted: components["schemas"]["ReferenceAdjustedStatistic"] | null;
+            /** Direction */
+            direction: string;
+            genus: components["schemas"]["ReferenceGenus"];
+            /** Nccount */
+            ncCount: number;
+            /** Ncdetectedpercent */
+            ncDetectedPercent: number;
+            /** Ncmedianpercent */
+            ncMedianPercent: number;
+            /** Pvalue */
+            pValue: number;
+            /** Qvalue */
+            qValue: number;
+            /** Rankbiserial */
+            rankBiserial: number;
+            /** Signalstatus */
+            signalStatus: string;
+        };
+        /** ReferenceStatisticsSummary */
+        ReferenceStatisticsSummary: {
+            /** Adjustedfdrcount */
+            adjustedFdrCount: number;
+            /** Concordantfdrcount */
+            concordantFdrCount: number;
+            /** Unadjustedfdrcount */
+            unadjustedFdrCount: number;
         };
         /** RelatedPublicationResponse */
         RelatedPublicationResponse: {
@@ -3911,6 +4625,344 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    audit_api_references_gmrepo_audit_get: {
+        parameters: {
+            query?: {
+                revision?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoAuditResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoErrorResponse"];
+                };
+            };
+        };
+    };
+    catalog_api_references_gmrepo_catalog_get: {
+        parameters: {
+            query?: {
+                revision?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoCatalogResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoErrorResponse"];
+                };
+            };
+        };
+    };
+    distribution_api_references_gmrepo_distribution_get: {
+        parameters: {
+            query: {
+                cohort: string;
+                genus: string;
+                revision?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoDistributionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoErrorResponse"];
+                };
+            };
+        };
+    };
+    evidence_api_references_gmrepo_evidence_get: {
+        parameters: {
+            query: {
+                cohort: string;
+                genus: string;
+                revision?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoEvidenceResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoErrorResponse"];
+                };
+            };
+        };
+    };
+    genera_api_references_gmrepo_genera_get: {
+        parameters: {
+            query?: {
+                query?: string;
+                revision?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoGeneraResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoErrorResponse"];
+                };
+            };
+        };
+    };
+    overview_api_references_gmrepo_overview_get: {
+        parameters: {
+            query?: {
+                revision?: string;
+                cohort?: string;
+                group?: "" | "AD" | "NC" | "MCI" | "at_risk" | "cognitively_normal_amyloid_status_unresolved" | "unresolved" | "other";
+                scope?: "all" | "complete" | "plot_ready" | "group_confirmed" | "stage_reference" | "pending" | "no_profile";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoOverviewResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoErrorResponse"];
+                };
+            };
+        };
+    };
+    samples_api_references_gmrepo_samples_get: {
+        parameters: {
+            query?: {
+                genus?: string;
+                limit?: number;
+                offset?: number;
+                revision?: string;
+                cohort?: string;
+                group?: "" | "AD" | "NC" | "MCI" | "at_risk" | "cognitively_normal_amyloid_status_unresolved" | "unresolved" | "other";
+                scope?: "all" | "complete" | "plot_ready" | "group_confirmed" | "stage_reference" | "pending" | "no_profile";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoSamplesResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoErrorResponse"];
+                };
+            };
+        };
+    };
+    statistics_api_references_gmrepo_statistics_get: {
+        parameters: {
+            query: {
+                cohort: string;
+                query?: string;
+                limit?: number;
+                offset?: number;
+                revision?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoStatisticsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoErrorResponse"];
                 };
             };
         };

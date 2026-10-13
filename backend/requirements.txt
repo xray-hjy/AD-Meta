@@ -4,6 +4,7 @@ uvicorn[standard]==0.54.0
 pandas==3.0.6
 numpy==2.5.3
 scipy==1.18.1
+statsmodels==0.14.5
 scikit-learn==1.9.1
 openpyxl==3.1.5
 PyMySQL==1.2.3

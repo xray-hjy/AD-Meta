@@ -67,6 +67,7 @@
 .admeta-home .header-nav a {
   text-decoration: none;
   color: #4a5870;
+  white-space: nowrap;
 }
 
 .admeta-home .header-nav a:hover {
@@ -94,7 +95,8 @@
     top: 40px;
     width: calc(100% - 24px);
     height: 62px;
-    padding-inline: 17px;
+    gap: 12px;
+    padding-inline: 13px;
     border-radius: 11px;
   }
 
@@ -102,17 +104,18 @@
     font-size: 15px;
   }
 
-.admeta-home .brand img {
+.admeta-home .brand img,
+.admeta-home .brand-mark {
     width: 31px;
     height: 31px;
   }
 
 .admeta-home .header-nav {
-    gap: 12px;
+    gap: 8px;
     font-size: 11px;
   }
 
-.admeta-home .header-nav a:not(.header-cta) {
+.admeta-home .header-nav a:not(.header-cta):not(.header-reference) {
     display: none;
   }
 

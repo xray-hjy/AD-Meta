@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     mag_data_root: Path = Path("ADMetaData")
     mag_data_version: str = "mag_v2"
     mag_storage_backend: str = "package"
+    gmrepo_data_root: Path = Path("ADMetaData/reference/gmrepo/processed/2026-10-09-v1")
     db_path: Path | None = None
     db_engine: str = "mysql"
     mysql_host: str = "127.0.0.1"

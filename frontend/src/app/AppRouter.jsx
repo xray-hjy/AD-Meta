@@ -3,12 +3,14 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import HomePage from '../pages/home/HomePage';
 
 const AnalysisWorkspacePage = lazy(() => import('../pages/analysis/AnalysisWorkspacePage'));
+const GmrepoPage = lazy(() => import('../pages/gmrepo/GmrepoPage'));
 
 export default function AppRouter() {
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
         <Route index element={<HomePage />} />
+        <Route path="reference/gmrepo" element={<Suspense fallback={<div className="route-loading">正在打开 GMrepo 参考数据...</div>}><GmrepoPage /></Suspense>} />
         <Route path="analysis/mag" element={<Navigate to="/analysis/abundance?domain=mag" replace />} />
         <Route
           path="analysis/abundance"
