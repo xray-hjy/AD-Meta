@@ -1,5 +1,6 @@
 import { Children, isValidElement, useId, useRef, useState } from 'react';
 import { Select } from '@base-ui/react/select';
+import SelectOptionsList from './SelectOptionsList';
 import './selection-controls.css';
 
 function optionsFrom(children) {
@@ -7,7 +8,7 @@ function optionsFrom(children) {
     if (!isValidElement(child)) return [];
     if (child.type !== 'option') return optionsFrom(child.props.children);
     const label = child.props.children;
-    return [{ value: String(child.props.value ?? Children.toArray(label).join('')), label, disabled: child.props.disabled }];
+    return [{ value: String(child.props.value ?? Children.toArray(label).join('')), label, disabled: child.props.disabled, hidden: child.props.hidden }];
   });
 }
 
@@ -37,13 +38,13 @@ export default function StyledSelect({ children, value, defaultValue, onChange, 
     </Select.Trigger>
     <Select.Portal><Select.Positioner className="selection-positioner" align="start" sideOffset={7} alignItemWithTrigger={false}
       collisionPadding={16} positionMethod="fixed" style={theme}>
-      <Select.Popup className="styled-select-popup" onPointerDown={event => event.stopPropagation()}
+      <Select.Popup className="styled-select-popup selection-popup-transition" onPointerDown={event => event.stopPropagation()}
         onKeyDown={event => { if (event.key === 'Escape') event.stopPropagation(); }}>
-        <Select.List className="styled-select-list">
-          {items.map(item => <Select.Item key={item.value} value={item.value} data-select-value={item.value} disabled={item.disabled} className="styled-select-option">
+        <SelectOptionsList>
+          {items.filter(item => !item.hidden).map(item => <Select.Item key={item.value} value={item.value} data-select-value={item.value} disabled={item.disabled} className="styled-select-option">
             <Select.ItemText>{item.label}</Select.ItemText><Select.ItemIndicator>✓</Select.ItemIndicator>
           </Select.Item>)}
-        </Select.List>
+        </SelectOptionsList>
       </Select.Popup>
     </Select.Positioner></Select.Portal>
   </Select.Root>;

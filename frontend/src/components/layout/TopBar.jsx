@@ -3,6 +3,7 @@ import { useColorVision } from '../../context/ColorVisionContext';
 import { Link } from 'react-router-dom';
 import AnalysisRunSelect from '../analysisRun/AnalysisRunSelect';
 import BrandMark from '../brand/BrandMark';
+import SidebarToggle from './SidebarToggle';
 
 export default function TopBar({
   featureKind,
@@ -35,6 +36,7 @@ export default function TopBar({
   return (
     <header className="app-topbar">
       <div className="workspace-branding">
+        <SidebarToggle />
         <Link className="workspace-brand-link brand-link" to="/" aria-label="AD-Meta 首页">
           <BrandMark />
           <span className="app-title brand-link__label">AD-Meta</span>
@@ -77,7 +79,7 @@ export default function TopBar({
           <span className="colorblind-toggle__label">色盲友好</span>
         </label>
         <Link className="topbar-home-link" to="/">首页</Link>
-        <Link className="topbar-home-link" to="/reference/gmrepo">GMrepo 参考</Link>
+        <Link className="topbar-home-link" to="/reference/gmrepo">外部证据评估</Link>
       </div>
     </header>
   );

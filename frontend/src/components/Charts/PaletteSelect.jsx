@@ -1,4 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import SlidingHighlight from '../ui/SlidingHighlight';
+import useSlidingHighlight from '../ui/useSlidingHighlight';
+import usePopupPresence from '../ui/usePopupPresence';
 
 export default function PaletteSelect({ field, value, onChange }) {
   const [open, setOpen] = useState(false);
@@ -7,6 +10,10 @@ export default function PaletteSelect({ field, value, onChange }) {
   const list = useRef(null);
   const id = useId();
   const current = field.options.find(option => option.value === value) || field.options[0];
+  const [active, setActive] = useState(current.value);
+  const highlight = useRef(null);
+  const mounted = usePopupPresence(open);
+  useSlidingHighlight({ containerRef: list, highlightRef: highlight, enabled: mounted, selector: '[data-highlighted]' });
   const gradient = colors => ({ background: `linear-gradient(90deg, ${field.discrete
     ? colors.flatMap((color, index) => [`${color} ${index / colors.length * 100}%`, `${color} ${(index + 1) / colors.length * 100}%`]).join(', ')
     : colors.join(', ')})` });
@@ -30,9 +37,9 @@ export default function PaletteSelect({ field, value, onChange }) {
       <span className="chart-palette-select__swatch" style={gradient(current.colors)} aria-hidden="true" />
       <span>{current.shortLabel || current.label}</span><span aria-hidden="true">⌄</span>
     </button>
-    {open && <div className="chart-palette-select__panel">
+    {mounted && <div className="chart-palette-select__panel selection-popup-motion" data-ending-style={!open ? '' : undefined} inert={!open} aria-hidden={!open || undefined}>
       <div className="chart-palette-select__hint">{field.description}</div>
-      <div id={id} ref={list} role="listbox" aria-label={`${field.label}系列`} onKeyDown={event => {
+      <div id={id} ref={list} className="sliding-option-list" role="listbox" aria-label={`${field.label}系列`} onKeyDown={event => {
         const options = Array.from(list.current.querySelectorAll('[role=option]'));
         const index = options.indexOf(document.activeElement);
         if (event.key === 'Escape') { event.preventDefault(); setOpen(false); trigger.current?.focus(); }
@@ -41,7 +48,10 @@ export default function PaletteSelect({ field, value, onChange }) {
             : (index + (event.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length);
         } else if (event.key === 'Tab') setOpen(false);
       }}>
+        <SlidingHighlight ref={highlight} />
         {field.options.map(option => <button type="button" role="option" tabIndex={-1} key={option.value}
+          data-highlighted={active === option.value ? '' : undefined} onFocus={() => setActive(option.value)}
+          onPointerMove={event => { if (event.pointerType !== 'touch') setActive(option.value); }}
           aria-selected={option.value === current.value} onClick={() => select(option)}>
           <span className="chart-palette-select__option-name">{option.label}<span aria-hidden="true">{option.value === current.value ? '✓' : ''}</span></span>
           <span className="chart-palette-select__ramp" style={gradient(option.colors)} aria-hidden="true" />

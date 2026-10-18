@@ -1,19 +1,30 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
+import { fileURLToPath } from 'node:url';
+import { createApiProxy, resolveApiProxyTarget } from './scripts/api-proxy.mjs';
 
-const apiProxyTarget = process.env.VITE_API_PROXY_TARGET || 'http://127.0.0.1:8000';
-const apiProxy = { '/api': apiProxyTarget };
+const root = fileURLToPath(new URL('.', import.meta.url));
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const apiProxy = createApiProxy(resolveApiProxyTarget(process.env, loadEnv(mode, root, 'VITE_')));
+  return {
   plugins: [react()],
+  optimizeDeps: {
+    entries: ['index.html'],
+  },
   server: {
     host: '127.0.0.1',
     port: 3000,
+    strictPort: true,
     proxy: apiProxy,
+    watch: {
+      ignored: ['**/.tmp/**', '**/coverage/**', '**/output/**'],
+    },
   },
   preview: {
     host: '127.0.0.1',
     port: 4173,
+    strictPort: true,
     proxy: apiProxy,
   },
   build: {
@@ -45,4 +56,5 @@ export default defineConfig({
       },
     },
   },
+  };
 });

@@ -100,7 +100,10 @@ def test_unsafe_zip_paths_cannot_escape_staging(tmp_path, bad_path):
         return member
     path = _altered_bundle(tmp_path, rename)
     destination = tmp_path / "new" / "data"
-    with pytest.raises(installer.PackageError, match="Unsafe package path"):
+    # Windows ZipInfo may normalize backslashes while reading the ZIP. The
+    # normalized path must still be rejected by the exact delivered-file list.
+    message = "Unsafe package path|ZIP file list does not match" if "\\" in bad_path else "Unsafe package path"
+    with pytest.raises(installer.PackageError, match=message):
         installer.install_package(destination, path)
     assert list(destination.parent.iterdir()) == []
     assert not (tmp_path / "escape").exists()

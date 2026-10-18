@@ -95,7 +95,7 @@ PROJECTION_FILE_CACHE_MAX_ENTRY_BYTES = SETTINGS.projection_file_cache_max_entry
 PROJECTION_FILE_CACHE_MAX_TOTAL_BYTES = SETTINGS.projection_file_cache_max_total_bytes
 PROJECTION_FILE_CACHE_MAX_FILES = SETTINGS.projection_file_cache_max_files
 
-COMPUTE_VERSION = "2026-08-13-ordination-v3"
+COMPUTE_VERSION = "2026-10-16-metaphlan-relative-v1"
 
 PUBLIC_CHART_TYPES = {
     "species",

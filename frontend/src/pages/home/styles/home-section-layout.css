@@ -1,0 +1,20 @@
+/* Stable flow shells. Extra/long content grows instead of being clipped. */
+.admeta-home .home-section { position: relative; min-width: 0; }
+.admeta-home .home-section[data-section-size="viewport"] { min-height: calc(100svh - var(--home-header-height)); }
+.admeta-home .home-section[data-home-section="hero"] > .hero {
+  min-height: calc(100svh - var(--home-header-height));
+}
+.admeta-home .home-section[data-home-section="foundation"] {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.admeta-home .home-section[data-home-section="foundation"] .evidence {
+  display: grid;
+  align-content: center;
+  flex: 1;
+}
+.admeta-home .home-section[data-home-section="foundation"] .final-cta { width: 100%; }
+.admeta-home.section-motion [data-section-surface] {
+  transition: transform var(--section-duration) cubic-bezier(.22,1,.36,1), opacity var(--section-duration) cubic-bezier(.22,1,.36,1);
+}

@@ -87,12 +87,13 @@ function EvidenceComparison({ data }) {
       <article><h3>项目当前数据 · 分类覆盖</h3>{primary.status === 'available' ? <>
         <p>{primary.cohortId || '来源待核查'} · {primary.sampleCount} 条样本（AD {primary.groupCounts.AD || 0} / NC {primary.groupCounts.NC || 0}）</p>
         <p>主物种矩阵精确属名对应 <strong>{primary.matchedFeatureCount}</strong> 个物种特征。丰度单位：{primary.abundanceScale === 'unknown' ? '待核对' : primary.abundanceScale}；标准化：{primary.normalization === 'unknown' ? '待核对' : primary.normalization}。</p>
+        {primary.cohortEvidence?.status === 'source_bound' ? <details className="gmrepo-evidence"><summary>主队列来源与样本纳入</summary><p>{primary.cohortEvidence.selection}</p><p>{primary.cohortEvidence.participantNote}</p><p>{primary.cohortEvidence.crossCohortNote}</p></details> : null}
         <details className="gmrepo-evidence"><summary>物种对应与数据版本</summary><p>{primary.matchMethod}</p>
           <p>当前版本 {primary.datasetRevision}</p><p className="gmrepo-fingerprint">源数据 SHA-256：{primary.sourceSha256}</p>
           <ul>{primary.speciesPreview.map(species => <li key={species.featureId}>{species.name}（源属名 {species.sourceGenus}）</li>)}</ul>
           {primary.matchedFeatureCount > primary.speciesPreview.length ? <p>仅列前 {primary.speciesPreview.length} 个；数量为完整匹配集合。</p> : null}</details>
       </> : <p>项目主数据当前不可读取，参考队列功能仍可使用。</p>}
-        <div className="gmrepo-inference-pending"><strong>数值复现对照待核查</strong><ul>{primary.reasons.map(reason => <li key={reason}>{reason}</li>)}</ul></div>
+        <div className="gmrepo-inference-pending"><strong>{primary.genusComparison?.statistic ? '同属探索性比较已计算 · 独立复现未认证' : '数值复现对照待核查'}</strong><ul>{primary.reasons.map(reason => <li key={reason}>{reason}</li>)}</ul></div>
         <p className="gmrepo-note">{primary.comparisonNote}</p>
       </article>
     </div>
@@ -132,7 +133,7 @@ function exportEvidence(distribution, evidence, methods) {
   URL.revokeObjectURL(url);
 }
 
-export default function GenusWorkspace({ revision, genera, params, update }) {
+export default function GenusWorkspace({ revision, genera, params, update, hideAudit = false, sourceRevision = '', datasetSlug = 'ad-nc-species' }) {
   const [transform, setTransform] = useState('raw');
   const audit = useQuery({ queryKey: ['gmrepo', 'audit', revision], retry: false,
     queryFn: ({ signal }) => getGmrepoAudit({ revision }, { signal }) });
@@ -146,37 +147,40 @@ export default function GenusWorkspace({ revision, genera, params, update }) {
     queryFn: ({ signal }) => getGmrepoDistribution({ revision, cohort, genus }, { signal }) });
   const statistics = useQuery({ queryKey: ['gmrepo', 'statistics', revision, cohort, query, page], enabled: !!cohort, retry: false,
     queryFn: ({ signal }) => getGmrepoStatistics({ revision, cohort, query, limit: 25, offset: (page - 1) * 25 }, { signal }) });
-  const evidence = useQuery({ queryKey: ['gmrepo', 'evidence', revision, cohort, genus], enabled, retry: false,
-    queryFn: ({ signal }) => getGmrepoEvidence({ revision, cohort, genus }, { signal }) });
+  const evidence = useQuery({ queryKey: ['gmrepo', 'evidence', revision, cohort, genus, sourceRevision, datasetSlug], enabled, retry: false,
+    queryFn: ({ signal }) => getGmrepoEvidence({ revision, cohort, genus, ...(sourceRevision ? { sourceRevision, datasetSlug } : {}) }, { signal }) });
   const change = (key, value) => update(key, value);
   if (audit.isPending) return <LoadingState />;
   if (audit.error) return <ErrorState message={audit.error.message} onRetry={audit.refetch} />;
   if (!audit.data.items.length) return <p className="gmrepo-empty">当前版本没有可画图的 AD/NC 队列。</p>;
   return <div className="gmrepo-genus-workspace">
-    <section className="gmrepo-panel" aria-labelledby="gmrepo-audit-title">
+    {!hideAudit ? <section className="gmrepo-panel" aria-labelledby="gmrepo-audit-title">
       <div className="gmrepo-panel-heading"><h2 id="gmrepo-audit-title">推断前核查 · 受试者、重复采样与协变量</h2><p>分布图可覆盖 {audit.data.items.length} 个可用队列；检验只在身份审查和模型前提通过后开放。点击队列查看对应分布。</p></div>
       <AuditTable items={audit.data.items} choose={value => change('analysisCohort', value)} active={cohort} />
-    </section>
+    </section> : null}
     <section className="gmrepo-panel" aria-labelledby="gmrepo-distribution-title">
-      <div className="gmrepo-panel-heading"><h2 id="gmrepo-distribution-title">菌属分布 · 同一队列 AD / NC</h2><p>固定使用所选队列的属级图表可用 AD/NC 子集；每个点保留零值、来源 QC 和分类待解析比例。</p></div>
-      <div className="gmrepo-analysis-filters">
+      <div className="gmrepo-panel-heading evaluation-section-heading"><h2 id="gmrepo-distribution-title">菌属分布 · 同一队列 AD / NC</h2>{hideAudit ? <span>{cohort} · {genera.find(item => item.featureId === genus)?.name}</span> : null}</div>
+      <div className={`gmrepo-analysis-filters${hideAudit ? ' evaluation-distribution-controls' : ''}`}>
         <label htmlFor="gmrepo-analysis-cohort">分布与检验队列<StyledSelect id="gmrepo-analysis-cohort" value={cohort} onChange={e => change('analysisCohort', e.target.value)}>{audit.data.items.map(item => <option key={item.projectId} value={item.projectId}>{item.projectId}</option>)}</StyledSelect></label>
-        <label htmlFor="gmrepo-analysis-genus">研究菌属<StyledSelect id="gmrepo-analysis-genus" value={genus} onChange={e => change('analysisGenus', e.target.value)}>{genera.map(item => <option key={item.featureId} value={item.featureId}>{item.name} · {item.featureId}</option>)}</StyledSelect></label>
+        {!hideAudit ? <label htmlFor="gmrepo-analysis-genus">研究菌属<StyledSelect id="gmrepo-analysis-genus" value={genus} onChange={e => change('analysisGenus', e.target.value)}>{genera.map(item => <option key={item.featureId} value={item.featureId}>{item.name} · {item.featureId}</option>)}</StyledSelect></label> : null}
         <label htmlFor="gmrepo-analysis-transform">图表尺度<StyledSelect id="gmrepo-analysis-transform" value={transform} onChange={e => setTransform(e.target.value)}><option value="raw">原始相对丰度（%）</option><option value="log">log10(丰度 % + 1)</option></StyledSelect></label>
       </div>
       {distribution.error ? <ErrorState message={distribution.error.message} onRetry={distribution.refetch} /> : distribution.isPending ? <LoadingState /> : distribution.data ? <>
-        <div className="gmrepo-distribution-heading"><h3>{distribution.data.genus.name} <small>{distribution.data.genus.featureId} · {cohort}</small></h3>
+        <div className="gmrepo-distribution-heading"><h3>{hideAudit ? cohort : distribution.data.genus.name} <small>{hideAudit ? `${distribution.data.genus.name} · ${distribution.data.genus.featureId}` : `${distribution.data.genus.featureId} · ${cohort}`}</small></h3>
           <button type="button" className="analysis-button" disabled={!evidence.data} onClick={() => exportEvidence(distribution.data, evidence.data, audit.data.methods)}>下载所选菌属证据 JSON</button></div>
         <Suspense fallback={<LoadingState />}><GenusDistributionChart data={distribution.data} transform={transform} /></Suspense>
         <p className="gmrepo-note">{distribution.data.note} 变换只改变展示，检验始终使用原相对丰度的秩。</p>
         <div className="gmrepo-distribution-summary">{distribution.data.boxes.map(box => <span key={box.group}>{box.group}：{box.count} Run · 中位数 {num(box.box?.[2])}% · 检出 {box.detectedCount}/{box.count}</span>)}</div>
         <PointTable data={distribution.data} />
-        <AuditDetails audit={distribution.data.audit} />
+        {hideAudit && distribution.data.audit.unadjustedReasons.length ? <p className="gmrepo-inference-pending">检验暂缓：{distribution.data.audit.unadjustedReasons.join(' ')}</p> : null}
+        {hideAudit ? <details className="evaluation-audit-disclosure"><summary>参与者、协变量与检验资格</summary><AuditDetails audit={distribution.data.audit} /></details> : <AuditDetails audit={distribution.data.audit} />}
         {evidence.error ? <ErrorState title="证据读取失败" message={evidence.error.message} onRetry={evidence.refetch} /> : evidence.isPending ? <LoadingState /> : evidence.data ? <SelectedStatistic data={evidence.data} /> : null}
       </> : null}
     </section>
-    {statistics.error ? <ErrorState message={statistics.error.message} onRetry={statistics.refetch} /> : statistics.isPending ? <LoadingState /> : statistics.data ?
-      <StatisticsTable data={statistics.data} query={query} onQuery={value => change('analysisQuery', value)} page={page} onPage={value => change('analysisPage', value)} onGenus={value => change('analysisGenus', value)} /> : null}
-    {evidence.data ? <EvidenceComparison data={evidence.data} /> : null}
+    <details className="gmrepo-evidence" open={!hideAudit}><summary>完整菌属统计目录与方法（检索不改变检验族）</summary>
+      {statistics.error ? <ErrorState message={statistics.error.message} onRetry={statistics.refetch} /> : statistics.isPending ? <LoadingState /> : statistics.data ?
+        <StatisticsTable data={statistics.data} query={query} onQuery={value => change('analysisQuery', value)} page={page} onPage={value => change('analysisPage', value)} onGenus={value => change('analysisGenus', value)} /> : null}
+    </details>
+    {evidence.data ? hideAudit ? <details className="evaluation-source-disclosure"><summary>来源 marker 与主数据分类对照</summary><EvidenceComparison data={evidence.data} /></details> : <EvidenceComparison data={evidence.data} /> : null}
   </div>;
 }

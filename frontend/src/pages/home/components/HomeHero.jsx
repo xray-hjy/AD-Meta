@@ -1,12 +1,15 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import HomeLogo from './HomeLogo';
+import HomeHeroBackdrop from './HomeHeroBackdrop';
 import { HOME_CHAPTERS, HOME_COPY } from '../homeContent';
 
-export default function HomeHero({ onReplayLogo, onChapter }) {
+export default function HomeHero({ onReplayLogo, onChapter, reducedMotion }) {
+  const heroRef = useRef(null);
   const entries = HOME_CHAPTERS.filter(chapter => chapter.entry);
   const [selected, setSelected] = useState(entries[0].key);
   const chapter = entries.find(item => item.key === selected);
-  return <section className="hero" aria-labelledby="home-title">
+  return <section className="hero" aria-labelledby="home-title" ref={heroRef}>
+    <HomeHeroBackdrop heroRef={heroRef} reducedMotion={reducedMotion} />
     <div className="hero-surface">
     <div className="hero-identity">
       <HomeLogo onReplay={onReplayLogo} />

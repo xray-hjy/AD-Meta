@@ -1,0 +1,35 @@
+.diting-workspace { width: 100%; min-width: 0; color: var(--workspace-ink, #17233b); }
+.diting-toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: 14px; padding: 4px 0 18px; border-bottom: 1px solid var(--workspace-panel-border, #dce5ef); }
+.diting-toolbar label, .diting-distribution-controls label { display: grid; gap: 7px; font-size: 12px; color: #64748b; }
+.diting-search { flex: 1 1 220px; }
+.diting-search input { width: 100%; min-height: 36px; padding: 7px 10px; border: 1px solid var(--workspace-panel-border, #dce5ef); border-radius: 7px; background: #fff; font: inherit; font-size: 13px; color: var(--workspace-ink); }
+.diting-search input:focus { outline: 2px solid var(--workspace-accent-soft); border-color: var(--workspace-accent); }
+.diting-picker { flex: 2 1 340px; min-width: 0; }
+.diting-picker .styled-select-trigger { max-width: 100%; }
+.diting-view-switch { display: inline-flex; margin: 12px 0 6px; }
+.diting-workspace .sliding-choice-group button { padding: 7px 14px; border: 0; border-radius: 6px; background: transparent; color: #64748b; font: inherit; font-size: 12px; cursor: pointer; }
+.diting-workspace .sliding-choice-group button[aria-pressed="true"] { color: var(--workspace-accent); font-weight: 600; }
+.diting-caption { font-size: 12px; line-height: 1.7; color: #64748b; margin: 12px 0; }
+.diting-selected-name { font-size: 16px; font-weight: 600; margin: 20px 0 14px; overflow-wrap: anywhere; }
+.diting-distribution-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 24px; margin-bottom: 16px; }
+.diting-chart-scroll { overflow-x: auto; width: 100%; }
+.diting-view-switch { max-width: 100%; flex-wrap: wrap; }
+.diting-chart-actions, .diting-selection-actions, .diting-pagination { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 12px; color: var(--color-text-muted); margin: 10px 0; }
+.diting-chart-actions button[aria-pressed=true] { color: var(--workspace-accent); background: var(--workspace-accent-soft); }
+.diting-selection { margin: 10px 0 16px; padding: 10px 12px; border-block: 1px solid var(--workspace-panel-border); font-size: 12px; }
+.diting-selection summary { cursor: pointer; color: var(--workspace-accent); }
+.diting-selection-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); max-height: 220px; overflow: auto; padding: 6px 0; gap: 8px 20px; }
+.diting-selection-list label { display: flex; align-items: start; gap: 8px; line-height: 1.5; overflow-wrap: anywhere; }
+.diting-selection-list input { accent-color: var(--workspace-accent); }
+.diting-data-note { border-left: 2px solid var(--workspace-accent); padding-left: 10px; }
+.research-chart-surface { width: 100%; min-width: 0; overflow-x: clip; }
+.diting-facet-surface { width: 100%; min-width: 0; overflow-x: auto; }
+.diting-workspace > .chart-style-toolbar { margin-block: 10px; }
+.diting-downloads { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; padding: 16px 0; border-top: 1px solid var(--workspace-panel-border); }
+.diting-downloads a, .diting-downloads button, .diting-row-link { border: 0; background: transparent; color: var(--workspace-accent); font: inherit; font-size: 12px; cursor: pointer; text-decoration: none; padding: 0; }
+.diting-downloads a:hover, .diting-downloads button:hover, .diting-row-link:hover { text-decoration: underline; }
+.diting-row-link { text-align: left; max-width: 360px; }
+.diting-method { font-size: 12px; line-height: 1.8; color: #64748b; padding: 16px 0; }
+.diting-method summary { cursor: pointer; color: var(--workspace-ink); }
+.diting-method code { overflow-wrap: anywhere; font-size: 11px; }
+@media (max-width: 720px) { .diting-toolbar { gap: 10px; } .diting-picker { flex-basis: 100%; } }

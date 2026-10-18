@@ -2,9 +2,9 @@
   "manifestVersion": "1.0",
   "analysisRuns": [
     {
-      "key": "ad-nc-community-crr-only-2026-09",
-      "name": "当前 AD/NC CRR 分析结果",
-      "description": "物种组成与 KO 功能分析结果均限定为 CRA014435 的 AD/NC CRR 子队列。",
+      "key": "ad-nc-community-diting-2026-10-16",
+      "name": "AD/NC 群落分析",
+      "description": "185 个 CRA014435 AD/NC 样本；MetaPhlAn 4 物种、DiTing KO 与 95 项通路指标。",
       "status": "published",
       "pipeline": {
         "name": "external-ad-metagenome-workflow",
@@ -18,7 +18,7 @@
       "referenceDatabases": [],
       "provenance": {
         "scope": "cra014435-ad-nc-crr-only",
-        "note": "Current published run excludes ERR and SRR accessions; upstream workflow details and database versions require confirmation from the bioinformatics team."
+        "note": "Same 185 AD/NC samples. Species: MetaPhlAn 4. Function: paired DiTing KO and pathway outputs, upstream standardized values retained. Exact installed tool/database releases remain unspecified."
       },
       "artifacts": [
         {
@@ -41,11 +41,13 @@
       "slug": "ad-nc-species",
       "name": "AD vs NC Species Abundance",
       "description": "Species abundance comparison between AD and NC groups.",
-      "file": "storage/raw/ad-nc-species/raw.csv",
-      "abundanceScale": "unknown",
-      "normalization": "unknown",
-      "missingValuePolicy": "zero",
-      "duplicateFeaturePolicy": "coalesce_equal_selected",
+      "file": "storage/raw/ad-nc-species/PRJCA022804/taxonomy.tsv",
+      "inputFormat": "metaphlan4_taxonomy",
+      "sampleMetadataFile": "storage/raw/ad-nc-species/PRJCA022804/samples.tsv",
+      "abundanceScale": "relative_abundance",
+      "normalization": "MetaPhlAn 4 种级相对丰度；上游百分数除以 100 存为比例，不二次归一化",
+      "missingValuePolicy": "error",
+      "duplicateFeaturePolicy": "reject",
       "sampleIdPrefixes": [
         "CRR"
       ],
@@ -53,25 +55,31 @@
       "groupMapping": {},
       "source": {
         "kind": "tracked_raw",
-        "inferenceNote": "Source table contains only the 185 AD/NC CRR samples in the current dataset; abundance scale requires upstream confirmation. The duplicated uncultured_Mediterranean_phage source columns are coalesced only after their selected CRR values are verified equal."
+        "method": "MetaPhlAn 4 (file marker); exact release, database and command pending",
+        "projectAccession": "PRJCA022804",
+        "studyAccession": "CRA014435",
+        "inferenceNote": "185 unchanged AD/NC samples (122/63); keep terminal s__ rows only, exclude parent and t__ rows, preserve SGB/GGB identifiers. Exact tool/database versions and upstream execution records remain unconfirmed. Labels are joined by CRR from the existing verified dataset, never by column order."
       }
     },
     {
       "slug": "ad-nc-ko-abundance",
       "name": "AD vs NC KO Abundance",
       "description": "KO abundance comparison between AD and NC groups.",
-      "file": "storage/raw/ad-nc-ko-abundance/raw.csv",
-      "abundanceScale": "unknown",
-      "normalization": "unknown",
+      "file": "storage/raw/ad-nc-ko-abundance/PRJCA022804/ko_abundance_among_samples.tab",
+      "inputFormat": "diting_ko",
+      "sampleMetadataFile": "storage/raw/ad-nc-species/PRJCA022804/samples.tsv",
+      "pathwayFile": "storage/raw/ad-nc-ko-abundance/PRJCA022804/pathways_relative_abundance.tab",
+      "abundanceScale": "normalized_abundance",
+      "normalization": "DiTing 上游标准化丰度，保留原值；参考实现按基因覆盖度百万尺度汇总，非百分比",
       "missingValuePolicy": "error",
       "covariates": [],
-      "groupMapping": {
-        "1": "AD",
-        "0": "NC"
-      },
+      "groupMapping": {},
       "source": {
         "kind": "tracked_raw",
-        "inferenceNote": "Abundance scale requires upstream confirmation; legacy binary label is explicitly mapped 1=AD and 0=NC."
+        "method": "DiTing community functional profiling",
+        "projectAccession": "PRJCA022804",
+        "studyAccession": "CRA014435",
+        "inferenceNote": "9537 standard KO plus 11 additional functional gene identifiers in original source; 95 paired DiTing pathway/functional indices. Labels joined by verified CRR sample IDs. Source values retained without closure; exact installed DiTing release remains unspecified."
       }
     }
   ]

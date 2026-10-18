@@ -1,0 +1,131 @@
+import assert from 'node:assert/strict';
+import { mkdir, writeFile, readFile } from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
+import path from 'node:path';
+import { chromium } from '@playwright/test';
+
+const api = process.env.EVIDENCE_API_URL || 'http://127.0.0.1:18100';
+const base = process.env.EVIDENCE_FRONTEND_URL || 'http://127.0.0.1:14174';
+const output = path.resolve('../.tmp/gmrepo-complete-qa');
+await mkdir(output, { recursive: true });
+async function request(endpoint, body) {
+  const response = await fetch(api + endpoint, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {});
+  assert.equal(response.status, 200, `${endpoint}: ${response.status} ${response.status === 200 ? '' : await response.text()}`);
+  return response.json();
+}
+const full = await request('/api/references/gmrepo/comparison-catalog?limit=2000');
+assert.equal(full.primaryFamilySize, 966);
+assert.equal(full.externalFamilySize, 322);
+assert.equal(full.items.length, full.total);
+const mapped = full.items.find(r => r.name === 'Bacteroides');
+const unmapped = full.items.find(r => r.mappingStatus === 'unmapped');
+const referenceOnly = full.items.find(r => r.mappingStatus === 'reference_only');
+assert(mapped && unmapped && referenceOnly);
+const source = full.primaryDerivative.provenance;
+const filtered = await request(`/api/references/gmrepo/comparison-catalog?query=Bacteroides&sourceRevision=${source.sourceRevision}`);
+assert.deepEqual(filtered.items.find(r => r.name === 'Bacteroides').primaryStatistic, mapped.primaryStatistic);
+const linked = await request(`/api/references/gmrepo/comparison-catalog?sourceRevision=${source.sourceRevision}&speciesIds=${mapped.primaryStatistic.genus.speciesFeatureIds[0]},NONEXISTENT`);
+assert.deepEqual(linked.unresolvedSpeciesIds, ['NONEXISTENT']);
+assert.equal(linked.items.length, 1);
+const selected = [mapped.candidateId, unmapped.candidateId, referenceOnly.candidateId];
+const batch = await request('/api/references/gmrepo/candidate-comparison', { candidateIds: selected, sourceRevision: source.sourceRevision, datasetSlug: source.datasetSlug });
+assert.equal(batch.currentStatus.status, 'current');
+assert.deepEqual(batch.payload.evaluation.selection, selected);
+const single = await request(`/api/references/gmrepo/evidence-summary?genus=NCBI:816&sourceRevision=${source.sourceRevision}`);
+assert.equal(single.primary.genusComparison.familySize, 966);
+assert.equal(single.primary.genusComparison.adjustedCount, 185);
+assert.equal(single.snapshotStatus.status, 'current');
+const resources = await request('/api/references/gmrepo/resources');
+assert(resources.researchLedger.sourceChecks.every(s => s.availability === 'verified'));
+assert.equal(resources.researchLedger.sourceChecks.length, 126);
+assert.equal(resources.discovery.coverage.allRunInventory.uniqueRuns, 184045);
+assert.equal(resources.discovery.coverage.allRunInventory.retrievedRows, 188061);
+const browser = await chromium.launch({ headless: true });
+const page = await browser.newPage({ viewport: { width: 1512, height: 980 } });
+const errors = [];
+page.on('pageerror', e => errors.push(e.message));
+page.on('console', e => { if (e.type() === 'error') errors.push(e.text()); });
+async function download(link, filename) {
+  const promised = page.waitForEvent('download');
+  await link.click();
+  const result = await promised;
+  await result.saveAs(path.join(output, filename));
+  assert.equal(await result.failure(), null);
+}
+try {
+  await page.goto(`${base}/reference/gmrepo/comparison?query=Bacteroides`);
+  await page.getByRole('checkbox', { name: '选择 Bacteroides', exact: true }).waitFor();
+  await page.getByRole('checkbox', { name: '选择 Bacteroides', exact: true }).check();
+  await page.getByRole('button', { name: '固定已选候选并导出' }).click();
+  await page.waitForURL(/evaluationId=/);
+  await page.getByRole('link', { name: '主外离线复算包' }).waitFor();
+  await page.getByRole('button', { name: '年龄 / 性别调整', exact: true }).click();
+  await page.getByRole('button', { name: '未调整', exact: true }).click();
+  await page.screenshot({ path: path.join(output, 'candidate-wide.png'), fullPage: true });
+  await download(page.getByRole('link', { name: '导出对照报告' }), 'browser-candidate-report.md');
+  await download(page.getByRole('link', { name: '完整证据 JSON' }), 'browser-candidate.json');
+  await download(page.getByRole('link', { name: '主外离线复算包' }), 'browser-candidate-replay.zip');
+  await page.goto(`${base}/reference/gmrepo/evidence?evaluationId=${single.evaluationId}`);
+  await page.getByRole('heading', { name: '主队列属级结果 · 与主分析同源' }).waitFor();
+  await page.getByRole('button', { name: '导出证据图形', exact: true }).waitFor();
+  await page.screenshot({ path: path.join(output, 'forest-wide.png'), fullPage: true });
+  await page.getByRole('button', { name: '导出证据图形', exact: true }).click();
+  // The shared MAG export menu provides format and resolution controls.
+  await download(page.getByRole('button', { name: '下载 SVG 图像' }), 'forest.svg');
+  const svg = await readFile(path.join(output, 'forest.svg'), 'utf8');
+  assert(svg.includes('<svg') && svg.includes('主队列'));
+  await page.getByRole('button', { name: '原始大小', exact: true }).first().click();
+  await page.getByRole('button', { name: '放大图形', exact: true }).first().click();
+  await page.getByRole('button', { name: '适应视口', exact: true }).first().click();
+  await page.getByRole('button', { name: '导出证据图形', exact: true }).click();
+  await page.getByRole('button', { name: /PNG.*位图/ }).click();
+  await download(page.getByRole('button', { name: '下载 PNG 图像' }), 'forest.png');
+  const png = await readFile(path.join(output, 'forest.png'));
+  assert.equal(png.subarray(1, 4).toString(), 'PNG');
+  await page.getByText('查看同一固定结果的全部主队列样本分布', { exact: true }).click();
+  await page.getByRole('button', { name: '导出主队列分布图', exact: true }).waitFor();
+  await page.getByRole('button', { name: 'log10(x + 1)', exact: true }).click();
+  await page.getByRole('button', { name: '导出主队列分布图', exact: true }).click();
+  await download(page.getByRole('button', { name: '下载 SVG 图像' }), 'primary-ecdf.svg');
+  assert((await readFile(path.join(output, 'primary-ecdf.svg'), 'utf8')).includes('n=122'));
+  await page.goto(`${base}/analysis/abundance?run=ad-nc-community-metaphlan4-2026-10-16&dataset=ad-nc-species&chart=species`);
+  const complete = page.locator('.complete-results');
+  await complete.locator('summary').waitFor({ timeout: 60000 });
+  if (await complete.getAttribute('open') === null) await complete.locator('summary').click();
+  const speciesId = mapped.primaryStatistic.genus.speciesFeatureIds[0];
+  await complete.getByRole('textbox', { name: '完整结果搜索' }).fill(speciesId);
+  await complete.getByRole('button', { name: '查询完整结果', exact: true }).click();
+  await complete.getByRole('checkbox', { name: `加入属级对照 ${speciesId}`, exact: true }).first().check();
+  await complete.getByRole('link', { name: '对照已选 1 个物种的属级外证', exact: true }).click();
+  await page.waitForURL(/comparison\?.*speciesIds=/);
+  await page.getByRole('checkbox', { name: '选择 Bacteroides', exact: true }).waitFor();
+  await page.getByRole('link', { name: '返回主分析', exact: true }).click();
+  await complete.getByRole('checkbox', { name: `加入属级对照 ${speciesId}`, exact: true }).first().waitFor({ timeout: 60000 });
+  assert.equal(await complete.getByRole('textbox', { name: '完整结果搜索' }).inputValue(), speciesId);
+  assert(await complete.getByRole('checkbox', { name: `加入属级对照 ${speciesId}`, exact: true }).first().isChecked());
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`${base}/reference/gmrepo/comparison?evaluationId=${batch.evaluationId}`);
+  await page.getByRole('heading', { name: '主队列与外部证据 · 多候选对照' }).waitFor();
+  await page.getByRole('link', { name: '主外离线复算包' }).waitFor();
+  assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 2), 'Mobile page overflow');
+  await page.screenshot({ path: path.join(output, 'candidate-mobile.png'), fullPage: true });
+  for (const [name, key] of [['single', single.evaluationId], ['batch', batch.evaluationId]]) {
+    const response = await fetch(`${api}/api/references/gmrepo/recompute-package?evaluationId=${key}`);
+    assert.equal(response.status, 200);
+    const zip = path.join(output, `${name}-replay.zip`), dir = path.join(output, `${name}-replay`);
+    await writeFile(zip, Buffer.from(await response.arrayBuffer()));
+    const extracted = spawnSync('../backend/.venv/Scripts/python.exe', ['-m', 'zipfile', '-e', zip, dir], { encoding: 'utf8' });
+    assert.equal(extracted.status, 0, extracted.stderr);
+    const verified = spawnSync('../backend/.venv/Scripts/python.exe', ['-I', path.join(dir, 'replay.py'), dir], { encoding: 'utf8', timeout: 120000 });
+    assert.equal(verified.status, 0, verified.stderr || verified.stdout);
+    const result = JSON.parse(verified.stdout);
+    assert.equal(result.primary.familySize, 966);
+    assert.equal(result.status, 'passed');
+    await writeFile(path.join(output, `${name}-replay-result.json`), JSON.stringify(result, null, 2));
+  }
+  assert.deepEqual(errors, []);
+  await writeFile(path.join(output, 'verification.json'), JSON.stringify({ status: 'passed', api, base, singleId: single.evaluationId, batchId: batch.evaluationId,
+    primaryFamily: 966, externalFamily: 322, primarySamples: 185, sourceChecks: 126, candidates: full.total, mappingCounts: full.mappingCounts,
+    checks: ['whole-family-FDR', 'source-feature-selection', 'missing-mapping', 'fixed-report-JSON-replay', 'models', 'wide-mobile', 'MAG-toolkit-SVG-PNG-zoom', 'primary-ECDF', 'independent-primary-external-replay'], errors }, null, 2));
+  console.log(JSON.stringify({ status: 'passed', output, singleId: single.evaluationId, batchId: batch.evaluationId }));
+} finally { await browser.close(); }

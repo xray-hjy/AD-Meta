@@ -49,10 +49,12 @@ export default function MagProcessingFlow({ provenance, capabilities = {}, onNav
       {steps.map((step, index) => <button type="button" key={step.label}
         className="mag-processing__step" aria-expanded={selected === index} aria-controls={panelId}
         onClick={() => setSelected(current => current === index ? null : index)}>
-        <span className="mag-processing__step-heading"><span>{step.label}</span>{profile && <span className="mag-processing__check" aria-hidden="true">✓</span>}</span>
-        <strong className={`mag-processing__value${index === 1 || index === 3 ? ' mag-processing__value--word' : ''}`}>{step.value}</strong>
-        <span className="mag-processing__caption">{step.caption}</span>
-        {index < steps.length - 1 && <span className="mag-processing__connector" aria-hidden="true">→</span>}
+        <span className="mag-processing__node" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+        <span className="mag-processing__step-content">
+          <span className="mag-processing__step-heading">{step.label}</span>
+          <strong className={`mag-processing__value${index === 1 || index === 3 ? ' mag-processing__value--word' : ''}`}>{step.value}</strong>
+          <span className="mag-processing__caption">{step.caption}</span>
+        </span>
       </button>)}
     </div>
     <p className="mag-processing__context"><span>本数据版本的处理结果</span><span>下方样本筛选不改变上游 MAG 集合</span></p>

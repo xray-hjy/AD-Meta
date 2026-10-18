@@ -1,4 +1,5 @@
 import StyledSelect from '../ui/StyledSelect';
+import SegmentedControl from '../ui/SegmentedControl';
 import { useEffect, useMemo, useState } from 'react';
 import { EntityCombobox } from '../ui/EntityAutocomplete';
 import AnalysisTopNControl from './AnalysisTopNControl';
@@ -130,7 +131,7 @@ export default function AnalysisScopeToolbar({
       <div className="projection-controls__primary">
         <div className="projection-controls__group">
           <span className="projection-controls__label">分析范围</span>
-          <div className="projection-segments" role="group" aria-label="分析范围">
+          <SegmentedControl className="projection-segments" role="group" aria-label="分析范围">
             {visibleOptions.map(option => (
               <button
                 key={option.key}
@@ -142,7 +143,7 @@ export default function AnalysisScopeToolbar({
                 {option.label}
               </button>
             ))}
-          </div>
+          </SegmentedControl>
         </div>
 
         {showTopN ? <AnalysisTopNControl control={topNControl} value={topN} featureLabel={featureLabel}

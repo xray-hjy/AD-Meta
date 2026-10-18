@@ -19,8 +19,10 @@ import { fetchJson } from './client';
 /** @typedef {FetchJsonOptions & {query?: string, limit?: number, offset?: number}} AuditOptionListOptions */
 
 /** @param {FetchJsonOptions} [options] @returns {Promise<AnalysisRun[]>} */
-export function listAnalysisRuns(options) {
-  return fetchJson('/api/analysis-runs', options);
+export async function listAnalysisRuns(options) {
+  const data = await fetchJson('/api/analysis-runs', options);
+  if (!Array.isArray(data)) throw new Error('分析运行目录响应格式无效，无法确认可用分析运行。');
+  return data;
 }
 
 /**

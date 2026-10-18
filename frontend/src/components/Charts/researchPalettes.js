@@ -1,9 +1,5 @@
-// Keep the published discrete colours unchanged. Journal names refer to the
-// ggsci palettes inspired by their figures, not journal submission requirements.
-// https://github.com/nanxstats/ggsci/blob/master/R/palettes.R
-// https://github.com/axismaps/colorbrewer/blob/master/colorbrewer_schemes.js
-// https://sronpersonalpages.nl/~pault/ (default order, no bad-data grey)
-// https://jfly.uni-koeln.de/color/ (Okabe–Ito / Color Universal Design)
+// Shared research-grade palettes for MAG, pathway, and other analysis charts.
+// Palette names refer to published palette collections, not journal requirements.
 const GGSCI = 'https://nanx.me/ggsci/articles/ggsci.html';
 const BREWER = 'https://colorbrewer2.org/';
 const TOL = 'https://sronpersonalpages.nl/~pault/';
@@ -41,9 +37,6 @@ export function researchPaletteOptions(kind, style = {}) {
 export function resolveResearchPalette(kind, style = {}) {
   const options = researchPaletteOptions(kind, style);
   const key = ALIASES[style.palette] || style.palette;
-  // A pair-only palette cannot supply five batch colours. Prefer the closest
-  // multi-category Tol palette when the grouping changes, with the same key in
-  // both the toolbar and renderer. No preference update or render side effect.
   const compatibleKey = key === 'tol-high-contrast' && isCategoricalPalette(kind, style) ? 'tol-bright' : key;
   return options.find(item => item.value === compatibleKey)
     || options.find(item => item.value === (kind === 'taxonomy' ? 'brewer-paired' : 'okabe-ito'));

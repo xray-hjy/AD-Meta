@@ -6,7 +6,7 @@ import * as api from '../../api/gmrepo';
 import { selectOption } from '../../test/selectOption';
 import GmrepoPage from './GmrepoPage';
 
-vi.mock('../../api/gmrepo', () => ({ getGmrepoCatalog: vi.fn(), getGmrepoOverview: vi.fn(), getGmrepoGenera: vi.fn(), getGmrepoSamples: vi.fn() }));
+vi.mock('../../api/gmrepo', () => ({ getGmrepoCatalog: vi.fn(), getGmrepoOverview: vi.fn(), getGmrepoGenera: vi.fn(), getGmrepoSamples: vi.fn(), getGmrepoResources: vi.fn(), resolveGmrepoSubject: vi.fn() }));
 vi.mock('./ReferenceChart', () => ({ default: ({ title }) => <div role="img" aria-label={title} /> }));
 
 const provenance = { version: 'test-v1', inputSnapshot: 'raw-v1', fingerprint: 'test-revision', processedAt: '2026-10-09', metadataTotal: 7, profileTotal: 5, genusTotal: 2, sources: [] };
@@ -24,11 +24,14 @@ beforeEach(() => {
   vi.clearAllMocks();
   api.getGmrepoCatalog.mockResolvedValue({ provenance, cohorts: [cohort], groups: [{ value: 'NC', label: 'NC' }], scopes: [{ value: 'all', label: '全部元数据' }, { value: 'plot_ready', label: '属级图表可用 AD/NC' }] });
   api.getGmrepoOverview.mockResolvedValue(overview);
+  api.getGmrepoResources.mockResolvedValue({ items: [], protocol: { steps: [], selection: '不按显著性纳入', counting: '不重复计票', version: 'test' },
+    discovery: { status: 'pending', note: '系统清点待完成', projects: [] }, counts: { installedProjects: 1, plotCohorts: 1, testableCohorts: 0 } });
   api.getGmrepoGenera.mockResolvedValue({ provenance, total: 1, items: [genus] });
+  api.resolveGmrepoSubject.mockResolvedValue({ subjectName: 'Bacteroides uniformis', status: 'mapped', genus, reasons: [] });
   api.getGmrepoSamples.mockImplementation(async params => ({ provenance, genus: params.genus ? genus : null, total: 50, limit: 25, offset: params.offset, items: [row] }));
 });
 
-function mount(entry = '/reference/gmrepo') {
+function mount(entry = '/reference/gmrepo?section=quality') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(<QueryClientProvider client={client}><MemoryRouter initialEntries={[entry]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><GmrepoPage /></MemoryRouter></QueryClientProvider>);
 }
@@ -74,7 +77,72 @@ test('empty selections keep the quality denominator unavailable', async () => {
     missingness: [{ ...overview.missingness[0], denominator: 0, unavailableCount: 0, unavailablePercent: null, intervalCount: 0 }] });
   api.getGmrepoSamples.mockResolvedValue({ provenance, total: 0, items: [], genus: null });
   mount();
+  await screen.findByText('当前元数据');
+  fireEvent.click(screen.getByText('各队列覆盖明细'));
   expect(await screen.findByText('当前筛选没有对应队列。')).toBeVisible();
   expect(screen.getByText(/年龄无精确数值：0 \/ 0（—）/)).toBeVisible();
   expect(await screen.findByText(/当前筛选没有样本记录/)).toBeVisible();
+});
+
+test('the default resource view is a searchable study directory, with quality and methods separate', async () => {
+  api.getGmrepoResources.mockResolvedValue({ items: [{ ...cohort, researchGroups: ['AD', 'NC'], platform: '16S 属级参考',
+    unadjustedStatus: 'eligible', libraryStrategies: ['AMPLICON'], sourceExperimentTypes: ['Amplicon'], evidenceFiles: [], reviewNote: '身份已核对', platformReview: '保留来源原字段' }],
+    protocol: { steps: [], version: 'v1' }, discovery: { projects: [], note: '来源范围说明' }, counts: { installedProjects: 1, plotCohorts: 1, testableCohorts: 1 } });
+  mount('/reference/gmrepo');
+  expect(await screen.findByRole('heading', { name: '研究目录', exact: true })).toBeVisible();
+  expect(screen.getByRole('link', { name: '研究目录', exact: true })).toHaveAttribute('aria-current', 'page');
+  expect(screen.queryByText('当前元数据')).not.toBeInTheDocument();
+  expect(api.getGmrepoOverview).not.toHaveBeenCalled();
+  fireEvent.change(screen.getByRole('searchbox', { name: '检索研究项目' }), { target: { value: 'missing' } });
+  expect(screen.getByText('没有匹配的研究项目。')).toBeVisible();
+  fireEvent.click(screen.getByRole('link', { name: '来源与方法', exact: true }));
+  expect(await screen.findByRole('heading', { name: '来源范围与接入方法' })).toBeVisible();
+  expect(screen.queryByText(/科研待审与资料补交|下载科研待审包/)).not.toBeInTheDocument();
+  expect(screen.queryByRole('searchbox', { name: '检索研究项目' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('link', { name: '数据质量', exact: true }));
+  expect(await screen.findByText('当前元数据')).toBeVisible();
+  expect(await screen.findByRole('img', { name: '各队列 AD/NC 可用记录' })).toBeVisible();
+});
+
+test('study details lead to the selected cohort quality and genus directory, with no automatic genus selection', async () => {
+  api.getGmrepoResources.mockResolvedValue({ items: [{ ...cohort, researchGroups: ['AD', 'NC'], platform: '16S 属级参考', unadjustedStatus: 'eligible',
+    libraryStrategies: ['AMPLICON'], sourceExperimentTypes: ['Amplicon'], evidenceFiles: [], reviewNote: '身份已核对', platformReview: '来源字段保留' }],
+    protocol: { steps: [], version: 'v1' }, discovery: { projects: [] }, counts: { installedProjects: 1, plotCohorts: 1, testableCohorts: 1 } });
+  mount('/reference/gmrepo');
+  fireEvent.click(await screen.findByRole('button', { name: 'PRJTEST1', exact: true }));
+  expect(screen.getByRole('heading', { name: 'PRJTEST1 · 队列详情' })).toBeVisible();
+  fireEvent.click(screen.getByRole('link', { name: '选择菌属查看分布 →' }));
+  expect(await screen.findByRole('heading', { name: '参考菌属目录' })).toBeVisible();
+  const target = new URL(screen.getByRole('link', { name: '评估 Bacteroides' }).getAttribute('href'), 'http://local');
+  expect(target.searchParams.get('analysisCohort')).toBe('PRJTEST1');
+  expect(target.searchParams.get('revision')).toBe('test-revision');
+  expect(api.resolveGmrepoSubject).not.toHaveBeenCalled();
+});
+
+test('resources preserve the active main subject through view changes and quality-filter resets', async () => {
+  mount('/reference/gmrepo?section=quality&cohort=PRJTEST1&subjectType=species&subjectId=1937&sourceRevision=fixed-main&returnTo=%2Fanalysis%2Fabundance%3Fchart%3Dboxplot');
+  await screen.findByText('Bacteroides uniformis');
+  expect(screen.getByRole('region', { name: '当前研究对象' })).toHaveTextContent('Bacteroides uniformis');
+  fireEvent.click(screen.getByRole('button', { name: '重置筛选' }));
+  const next = new URL(screen.getByRole('link', { name: '继续对象评估 →' }).getAttribute('href'), 'http://local');
+  expect(next.searchParams.get('subjectId')).toBe('1937'); expect(next.searchParams.get('sourceRevision')).toBe('fixed-main');
+  expect(screen.getByRole('link', { name: '返回主分析' })).toHaveAttribute('href', '/analysis/abundance?chart=boxplot');
+  fireEvent.click(screen.getByRole('link', { name: '来源与方法', exact: true }));
+  expect(await screen.findByRole('heading', { name: '来源范围与接入方法' })).toBeVisible();
+  expect(screen.getByRole('region', { name: '当前研究对象' })).toHaveTextContent('Bacteroides uniformis');
+});
+
+test('discovered-only projects have a first-class destination without invented local sample counts', async () => {
+  api.getGmrepoResources.mockResolvedValue({ items: [], protocol: { steps: [] }, discovery: { projects: [] },
+    counts: { installedProjects: 0, plotCohorts: 0, testableCohorts: 0 }, researchLedger: { records: [{ projectId: 'PRJNEW1', installed: false,
+      studyId: null, fields: {}, capabilities: { unadjusted: { status: 'not_loaded' } }, blockers: [], reviews: [],
+      comparison: { observationUnit: 'Run', plotReadyRuns: 0, adjustedCount: null } }] } });
+  mount('/reference/gmrepo');
+  fireEvent.click(await screen.findByRole('button', { name: /补充发现/ }));
+  expect(screen.getByText('未接入，尚无本地分母')).toBeVisible();
+  expect(screen.queryByRole('link', { name: '质量与样本 →' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'PRJNEW1', exact: true }));
+  expect(screen.getByRole('heading', { name: 'PRJNEW1 · 队列详情' })).toBeVisible();
+  expect(screen.getByText(/来源发现不等于已接入/)).toBeVisible();
+  expect(screen.getByRole('region', { name: 'PRJNEW1 研究依据与适用范围' })).toBeVisible();
 });

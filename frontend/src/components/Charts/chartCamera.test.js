@@ -1,4 +1,4 @@
-import { constrainCamera, fitCamera, visibleWorld, zoomCamera, rangeCamera } from './chartCamera';
+import { constrainCamera, fitCamera, visibleWorld, zoomCamera, rangeCamera, resizeCamera } from './chartCamera';
 
 const world = { width: 3700, height: 19184 };
 const plot = { left: 260, top: 89, width: 900, height: 480 };
@@ -38,6 +38,18 @@ test('width fit gives a continuous partial view rather than changing the selecte
   expect(visible.y).toBe(0);
   expect(visible.width).toBeCloseTo(world.width);
   expect(visible.height).toBeLessThan(world.height);
+});
+
+test.each(['x', 'y', 'both'])('releasing navigation space on %s preserves manual scale and observation center', axis => {
+  const camera = constrainCamera({ k: 2, x: -1000, y: -4000 }, world, plot, axis);
+  const enlarged = { ...plot, width: plot.width + 294, height: plot.height + 190 };
+  const center = (view, position, horizontal) => ((horizontal ? view.left + view.width / 2 : view.top + view.height / 2)
+    - (horizontal ? position.x : position.y)) / position.k;
+  const next = resizeCamera(camera, plot, enlarged, world, axis);
+  expect(next.k).toBe(camera.k);
+  if (axis !== 'y') expect(center(enlarged, next, true)).toBeCloseTo(center(plot, camera, true));
+  if (axis !== 'x') expect(center(enlarged, next, false)).toBeCloseTo(center(plot, camera, false));
+  expect(resizeCamera(next, enlarged, plot, world, axis)).toEqual(camera);
 });
 
 test('a small matrix stays centered on both axes after fit, zoom and attempted panning', () => {

@@ -1,0 +1,16 @@
+{
+  "runs": {
+    "ad-nc-community-diting-2026-10-16": {
+      "name": "AD/NC 群落分析",
+      "selectorVisible": true,
+      "isDefault": true
+    },
+    "ad-nc-community-crr-only-2026-09": {
+      "name": "AD/NC 群落分析（旧版）",
+      "selectorVisible": true
+    },
+    "ad-nc-community-metaphlan4-2026-10-16": {
+      "selectorVisible": false
+    }
+  }
+}

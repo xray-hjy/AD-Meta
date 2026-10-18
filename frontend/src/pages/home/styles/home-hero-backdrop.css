@@ -1,0 +1,85 @@
+/* Tilted local chart tiles, adapted as a quiet decorative layer for the hero. */
+.admeta-home .hero {
+  --hero-backdrop-extension: clamp(240px, 28vh, 360px);
+  --hero-bottom-padding: 48px;
+  isolation: isolate;
+  overflow: hidden;
+  padding-bottom: calc(var(--hero-bottom-padding) + var(--hero-backdrop-extension));
+}
+.admeta-home .hero > .hero-chart-backdrop {
+  --hero-background-opacity: .82;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  perspective: var(--hero-backdrop-perspective);
+  opacity: var(--hero-background-opacity);
+  mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+}
+.admeta-home .hero-chart-backdrop__plane {
+  position: absolute;
+  left: 50%; top: 50%;
+  display: grid;
+  grid-template-columns: repeat(var(--hero-backdrop-columns), minmax(0, 1fr));
+  gap: 18px;
+  width: max(2160px, calc(100% + 820px));
+  height: calc(1000px + var(--hero-backdrop-extension));
+  transform: translate3d(-50%, -50%, 0)
+    rotateX(var(--hero-tilt-x))
+    rotateY(var(--hero-tilt-y))
+    rotateZ(var(--hero-tilt-z));
+}
+.admeta-home .hero-chart-backdrop[data-running="true"] .hero-chart-backdrop__plane { will-change: transform; }
+.admeta-home .hero-chart-backdrop__column { min-width: 0; overflow: hidden; contain: paint; }
+.admeta-home .hero-chart-backdrop__track {
+  animation: admeta-home-chart-flow linear infinite;
+  animation-play-state: paused;
+}
+.admeta-home .hero-chart-backdrop__track[data-reverse="true"] { animation-direction: reverse; }
+.admeta-home .hero-chart-backdrop[data-running="true"] .hero-chart-backdrop__track {
+  animation-play-state: running;
+  will-change: transform;
+}
+.admeta-home .hero-chart-backdrop__sequence { display: grid; gap: 18px; padding-bottom: 18px; }
+.admeta-home .hero-chart-backdrop__tile {
+  aspect-ratio: 1.85;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid rgb(122 154 195 / 24%);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgb(33 62 106 / 9%);
+}
+.admeta-home .hero-chart-backdrop__tile img {
+  display: block;
+  width: 100%; height: 100%;
+  object-fit: contain;
+  user-select: none;
+}
+.admeta-home .hero::before {
+  z-index: 1;
+  opacity: 1;
+  mask-image: none;
+  background: radial-gradient(ellipse 58% 520px at 50% 260px,
+    rgb(248 251 255 / 98%) 0%, rgb(248 251 255 / 94%) 40%, rgb(248 251 255 / 65%) 70%, rgb(248 251 255 / 18%) 100%),
+    linear-gradient(to bottom, rgb(248 251 255 / 80%), transparent 20%, transparent 82%, #f6f9fe);
+}
+.admeta-home .hero > .hero-surface { position: relative; z-index: 2; }
+/* Three copies leave enough content below the loop seam in the taller plane.
+   Still travel exactly one sequence per cycle, preserving the current speed. */
+@keyframes admeta-home-chart-flow { to { transform: translate3d(0, -33.3333333333%, 0); } }
+@media (max-width: 1023px), (max-height: 649px), (prefers-reduced-motion: reduce) {
+  .admeta-home .hero { --hero-bottom-padding: 40px; }
+}
+@media (max-width: 760px) {
+  .admeta-home .hero { --hero-backdrop-extension: 140px; }
+  .admeta-home .hero-chart-backdrop__plane { width: 1280px; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .admeta-home .hero-chart-backdrop__column:nth-child(n+4) { display: none; }
+  .admeta-home .hero-chart-backdrop__track { animation: none; }
+  .admeta-home .hero > .hero-chart-backdrop { --hero-background-opacity: .52; }
+  .admeta-home .hero::before { background: radial-gradient(ellipse at center, rgb(248 251 255 / 96%) 32%, rgb(248 251 255 / 76%) 75%, rgb(248 251 255 / 45%)), linear-gradient(to bottom, #f8fbff, transparent 25%, #f6f9fe); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admeta-home .hero-chart-backdrop__track { animation: none; will-change: auto; }
+  .admeta-home .hero-chart-backdrop__plane { transition: none; }
+}

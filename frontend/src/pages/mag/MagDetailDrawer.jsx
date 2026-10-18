@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
+import SlidingTabs from '../../components/ui/SlidingTabs';
 import { useQuery } from '@tanstack/react-query';
 import { getMagCatalog, getMagDistribution, getMagLineage } from '../../api/mag';
 import LoadingState from '../../components/ui/LoadingState';
 import ErrorState from '../../components/ui/ErrorState';
 import { MagPlanCard, MAG_RESEARCH_PLANS } from './MagResearchPlans';
+import EvidenceLink from '../../components/evidence/EvidenceLink';
 
 const TABS = [['abundance', '丰度与差异'], ['taxonomy', '分类证据'], ['quality', '质量与组装'], ['lineage', '来源与去冗余'], ['function', '功能潜力']];
 const RANKS = [['domain', '域'], ['phylum', '门'], ['class', '纲'], ['order', '目'], ['family', '科'], ['genus', '属'], ['species', '种']];
@@ -12,10 +14,10 @@ const integer = value => value == null ? '—' : Number(value).toLocaleString('e
 const percent = value => value == null ? '—' : `${number(value * 100)}%`;
 function EvidenceList({ items }) { return <dl className="mag-detail-facts">{items.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value ?? '未提供'}</dd></div>)}</dl>; }
 
-export default function MagDetailDrawer({ magId, overview, scope, onClose, onNavigate }) {
+export default function MagDetailDrawer({ magId, overview, scope, onClose, onNavigate, onEvidenceOpen, initialTab = 'abundance' }) {
   const dialog = useRef(null);
   const closeButton = useRef(null);
-  const [tab, setTab] = useState('abundance');
+  const [tab, setTab] = useState(TABS.some(([key]) => key === initialTab) ? initialTab : 'abundance');
   const revision = overview.provenance.dataFingerprint;
   const evidence = useQuery({ queryKey: ['mag', 'lineage-evidence', magId, revision], queryFn: ({ signal }) => getMagLineage(magId, { revision }, { signal }), enabled: Boolean(overview.capabilities.lineage) });
   const catalog = useQuery({ queryKey: ['mag', 'catalog', revision], queryFn: ({ signal }) => getMagCatalog({ revision }, { signal }), staleTime: Infinity });
@@ -43,9 +45,9 @@ export default function MagDetailDrawer({ magId, overview, scope, onClose, onNav
     onCancel={event => { event.preventDefault(); onClose(); }} onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
     <div className="mag-detail-drawer__surface"><header><div><span className="mag-kicker">MAG 研究证据</span><h2 id="mag-detail-title">{magId}</h2><p>{isMember ? '聚类成员 · 丰度取自对应代表 MAG' : '代表 MAG'} · {overview.provenance.version}</p></div>
       <button ref={closeButton} type="button" className="mag-detail-drawer__close" aria-label="关闭 MAG 详情" onClick={onClose}>×</button></header>
-      <div className="mag-detail-tabs" role="tablist" aria-label="MAG 证据类型">{TABS.map(([key, label], index) => <button key={key} id={`mag-tab-${key}`} role="tab" type="button" aria-selected={tab === key} tabIndex={tab === key ? 0 : -1} aria-controls="mag-detail-panel" onClick={() => setTab(key)}
+      <SlidingTabs className="mag-detail-tabs" aria-label="MAG 证据类型">{TABS.map(([key, label], index) => <button key={key} id={`mag-tab-${key}`} role="tab" type="button" aria-selected={tab === key} tabIndex={tab === key ? 0 : -1} aria-controls="mag-detail-panel" onClick={() => setTab(key)}
         onKeyDown={event => { const next = event.key === 'ArrowRight' ? (index + 1) % TABS.length : event.key === 'ArrowLeft' ? (index + TABS.length - 1) % TABS.length : event.key === 'Home' ? 0 : event.key === 'End' ? TABS.length - 1 : null;
-          if (next != null) { event.preventDefault(); setTab(TABS[next][0]); dialog.current.querySelector(`#mag-tab-${TABS[next][0]}`).focus(); } }}>{label}</button>)}</div>
+          if (next != null) { event.preventDefault(); setTab(TABS[next][0]); dialog.current.querySelector(`#mag-tab-${TABS[next][0]}`).focus(); } }}>{label}</button>)}</SlidingTabs>
       <section id="mag-detail-panel" role="tabpanel" aria-labelledby={`mag-tab-${tab}`} className="mag-detail-drawer__body">
         {error ? <ErrorState message={error.message} onRetry={() => { catalog.refetch(); evidence.refetch(); distribution.refetch(); }} /> : null}
         {(catalog.isPending || (overview.capabilities.lineage && evidence.isPending)) && <LoadingState message="正在关联分类、质量与来源证据…" />}
@@ -62,13 +64,14 @@ export default function MagDetailDrawer({ magId, overview, scope, onClose, onNav
           ]} />}
           <p className="mag-muted">相对丰度保留上游百分比；阈值为严格大于，非检出判据。组间检验未做协变量校正；这些结果用于生成研究线索。</p>
         </>}
-        {tab === 'taxonomy' && <><h3>代表 MAG 分类与参考</h3>{taxonomy ? <EvidenceList items={[...RANKS.map(([key, label]) => [label, taxonomy[key] || '未解析']),
+        {tab === 'taxonomy' && <><h3>代表 MAG 分类与参考</h3><EvidenceLink subjectType="mag" subjectId={magId} sourceRevision={revision}
+          context={{ scope, magId, representative, source: 'MAG 分类证据', tab }} onOpen={() => onEvidenceOpen?.(tab)} />{taxonomy ? <EvidenceList items={[...RANKS.map(([key, label]) => [label, taxonomy[key] || '未解析']),
           ['分类方法', taxonomy.classificationMethod], ['最近参考', taxonomy.closestReference], ['参考 ANI', taxonomy.closestAni == null ? '未提供' : `${number(taxonomy.closestAni)}%`],
           ['参考比对比例 AF', percent(taxonomy.closestAf)], ['MSA 比例', taxonomy.msaPercent == null ? '未提供' : `${number(taxonomy.msaPercent)}%`]]} /> : <p>该版本未提供完整分类证据。</p>}
           {crosswalk && <><h3>分类标识符对应</h3><EvidenceList items={[
             ['GTDB 参考 accession', crosswalk.gtdbReferenceAccession], ['NCBI species TaxID', crosswalk.ncbiSpeciesTaxid], ['NCBI 名称', crosswalk.ncbiOrganismName],
-            ['Kraken / Bracken 物种', crosswalk.krakenSpeciesName], ['匹配状态', crosswalk.mappingStatus === 'matched_exact_ncbi_species_taxid' ? '精确 TaxID 对应' : crosswalk.mappingStatus === 'ncbi_species_taxid_not_observed_in_reads' ? 'TaxID 有效，本批未观察到' : '未解析'],
-          ]} /></>}<p className="mag-muted">分类标识符对应不证明 reads 直接比对到具体 MAG；未解析结果不按名称相似度补成确定匹配。</p></>}
+            ['Kraken / Bracken 物种', crosswalk.krakenSpeciesName], ['匹配状态', crosswalk.mappingStatus === 'matched_exact_ncbi_species_taxid' ? '精确 TaxID 对应' : crosswalk.mappingStatus === 'ncbi_species_taxid_not_observed_in_reads' ? 'TaxID 有效，Kraken/Bracken 来源批次未观察到' : '未解析'],
+          ]} /><p className="mag-muted">对应表随 MAG 数据包提供，观察状态来自其 Kraken/Bracken 结果，不代表当前 MetaPhlAn 物种矩阵的检出状态。</p></>}<p className="mag-muted">分类标识符对应不证明 reads 直接比对到具体 MAG；未解析结果不按名称相似度补成确定匹配。</p></>}
         {tab === 'quality' && <><h3>{isMember ? '成员质量与代表组装信息' : '质量与组装'}</h3>
           {isMember && member && <EvidenceList items={[
             ['成员完整度', `${number(member.memberCompletenessPercent)}%`], ['成员污染率', `${number(member.memberContaminationPercent)}%`],

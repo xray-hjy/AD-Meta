@@ -1,19 +1,19 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { select, zoom, zoomIdentity } from 'd3';
 import { createPortal } from 'react-dom';
-import ChartMinimap from './ChartMinimap';
-import ChartPanJoystick from './ChartPanJoystick';
+import ChartNavigationDock from './ChartNavigationDock';
 import ChartZoomControls from './ChartZoomControls';
-import { constrainCamera, fitCamera, visibleWorld, zoomCamera, rangeCamera } from './chartCamera';
+import { constrainCamera, fitCamera, visibleWorld, zoomCamera, rangeCamera, resizeCamera } from './chartCamera';
 import './chart-zoom.css';
 
 // Chart adapters draw in these coordinates; labels and tooltips are not CSS-scaled.
-export default function ZoomableChartViewport({ world, resetKey, preview, insets, children, toolbarTarget, coordinateKey, remapCamera, viewportHeight, navigationAxis = 'both', navigationUnit = 1, renderFooter: Footer, footerProps, extraBottom = 0, extraRight = 0, navigationDockBottom, nativeWheel = false, ariaLabel = '可缩放图表' }) {
+export default function ZoomableChartViewport({ world, resetKey, preview, insets, children, toolbarTarget, coordinateKey, remapCamera, viewportHeight, navigationAxis = 'both', navigationUnit = 1, renderFooter: Footer, footerProps, extraBottom = 0, extraRight = 0, navigationDockBottom, nativeWheel = false, interactionLocked = false, ariaLabel = '可缩放图表' }) {
   const hostRef = useRef(null), behaviorRef = useRef(null), cameraRef = useRef(null), modeRef = useRef('fit');
   const [dimensions, setDimensions] = useState({ width: 1000, height: 560 });
   const [manualCamera, setManualCamera] = useState(null);
   const [panMode, setPanMode] = useState(false);
-  const [coordinateLayout, setCoordinateLayout] = useState({ key: coordinateKey, plot: null });
+  const [navigationOpen, setNavigationOpen] = useState(true);
+  const [coordinateLayout, setCoordinateLayout] = useState({ key: coordinateKey, plot: null, navigationOpen: true });
   const scaleFrameRef = useRef(null), pendingScaleRef = useRef(null);
   const cameraFrameRef = useRef(null);
   const cancelCameraMotion = useCallback(() => {
@@ -38,22 +38,31 @@ export default function ZoomableChartViewport({ world, resetKey, preview, insets
     window.addEventListener('resize', measure);
     return () => { observer?.disconnect(); window.removeEventListener('resize', measure); };
   }, []);
+  // Only the expanded panel reserves chart space. Keep axis/slider gutters.
+  const navigationRight = navigationOpen && dimensions.width > 900 ? 310 : 16;
+  const navigationBottom = navigationOpen && dimensions.width <= 900 ? 285 : 95;
   const plot = useMemo(() => ({ left: Math.min(insets.left, dimensions.width * .35), top: insets.top,
-    width: Math.max(80, dimensions.width - Math.min(insets.left, dimensions.width * .35) - (dimensions.width > 900 ? 310 : 16) - extraRight),
-    height: Math.max(100, dimensions.height - insets.top - (dimensions.width > 900 ? 95 : 285) - extraBottom) }), [dimensions, insets, extraBottom, extraRight]);
+    width: Math.max(80, dimensions.width - Math.min(insets.left, dimensions.width * .35) - navigationRight - extraRight),
+    height: Math.max(100, dimensions.height - insets.top - navigationBottom - extraBottom) }), [dimensions, insets, extraBottom, extraRight, navigationRight, navigationBottom]);
   const fitted = useMemo(() => fitCamera(world, plot, false, navigationAxis), [world, plot, navigationAxis]);
   const coordinatesChanged = coordinateLayout.key !== coordinateKey;
+  const navigationChanged = coordinateLayout.navigationOpen !== navigationOpen;
   const mappedCamera = coordinatesChanged && remapCamera && manualCamera
-    ? remapCamera({ camera: manualCamera, previousPlot: coordinateLayout.plot || plot, plot, world }) : manualCamera;
+    ? remapCamera({ camera: manualCamera, previousPlot: coordinateLayout.plot || plot, plot, world })
+    : navigationChanged && manualCamera
+      ? resizeCamera(manualCamera, coordinateLayout.plot || plot, plot, world, navigationAxis)
+      : manualCamera;
   const camera = mappedCamera ? constrainCamera(mappedCamera, world, plot, navigationAxis) : fitted;
   useLayoutEffect(() => {
-    if (coordinatesChanged) {
+    if (coordinatesChanged || navigationChanged) {
       cancelScale(); cancelCameraMotion();
       cameraRef.current = camera;
       setManualCamera(manualCamera ? camera : null);
     }
-    if (coordinatesChanged || coordinateLayout.plot !== plot) setCoordinateLayout({ key: coordinateKey, plot });
-  }, [coordinatesChanged, coordinateLayout.plot, coordinateKey, camera, manualCamera, plot, cancelScale, cancelCameraMotion]);
+    if (coordinatesChanged || navigationChanged || coordinateLayout.plot !== plot) {
+      setCoordinateLayout({ key: coordinateKey, plot, navigationOpen });
+    }
+  }, [coordinatesChanged, navigationChanged, coordinateLayout.plot, coordinateKey, camera, manualCamera, plot, navigationOpen, cancelScale, cancelCameraMotion]);
   const minScale = navigationAxis === 'both' ? Math.min(.05, fitted.k) : fitted.k;
   const maxScale = Math.max(8, fitted.k, navigationAxis === 'both' ? 0 : (navigationAxis === 'x' ? plot.width : plot.height) / navigationUnit);
   useEffect(() => {
@@ -98,6 +107,7 @@ export default function ZoomableChartViewport({ world, resetKey, preview, insets
         return zoomIdentity.translate(bounded.x, bounded.y).scale(bounded.k);
       })
       .filter(event => {
+        if (interactionLocked) return false;
         if (event.target.closest?.('.chart-navigation-dock')) return false;
         // Native adapters own their dataZoom wheel action; D3 still owns drag,
         // keyboard and navigation controls. Never apply both to one gesture.
@@ -116,7 +126,7 @@ export default function ZoomableChartViewport({ world, resetKey, preview, insets
     select(host).call(behavior).on('dblclick.zoom', null);
     apply(modeRef.current === 'fit' ? fitted : constrainCamera(cameraRef.current || fitted, world, plot, navigationAxis), modeRef.current);
     return () => { cancelCameraMotion(); select(host).on('.zoom', null); behaviorRef.current = null; };
-  }, [world, plot, fitted, minScale, maxScale, panMode, apply, resetKey, cancelCameraMotion, navigationAxis, nativeWheel]);
+  }, [world, plot, fitted, minScale, maxScale, panMode, apply, resetKey, cancelCameraMotion, navigationAxis, nativeWheel, interactionLocked]);
   const scaleTo = useCallback((k, animate = true) => apply(zoomCamera(cameraRef.current || fitted, Math.min(maxScale, Math.max(minScale, k)), world, plot, undefined, navigationAxis), 'manual', animate),
     [apply, fitted, minScale, maxScale, world, plot, navigationAxis]);
   useEffect(() => cancelScale, [scaleTo, cancelScale]);
@@ -137,7 +147,7 @@ export default function ZoomableChartViewport({ world, resetKey, preview, insets
   }, [world, plot, apply, navigationAxis]);
   const canPan = { up: visible.y > .001, left: visible.x > .001,
     right: visible.x + visible.width < world.width - .001, down: visible.y + visible.height < world.height - .001 };
-  const naturalHeight = world.height * plot.width / world.width + insets.top + (dimensions.width > 900 ? 95 : 285);
+  const naturalHeight = world.height * plot.width / world.width + insets.top + navigationBottom;
   const fitMode = !manualCamera ? 'fit' : Math.abs(camera.k - 1) < .00001 ? 'native'
     : Math.abs(camera.k - fitCamera(world, plot, true, navigationAxis).k) < .00001 ? 'width' : null;
   const onRange = (start, end) => apply(rangeCamera(start, end, world, plot, navigationAxis));
@@ -159,11 +169,12 @@ export default function ZoomableChartViewport({ world, resetKey, preview, insets
       {/* Adapters receive deferred event handlers; they never run them in render. */}
       {/* eslint-disable-next-line react-hooks/refs */}
       {children({ camera, plot, dimensions, visible, panMode, onRange, onFit: () => apply(fitted, 'fit') })}
-      <div className="chart-navigation-dock" style={{ bottom: dimensions.width > 900 && navigationDockBottom != null ? navigationDockBottom : extraBottom ? extraBottom + 8 : undefined, '--chart-minimap-width': `${Math.max(116, Math.min(188, dimensions.width - 126))}px` }}>
-        <ChartPanJoystick onPan={panBy} canPan={canPan} panMode={panMode} world={world} visible={visible} viewport={plot} onTogglePan={() => setPanMode(value => !value)} />
-        <ChartMinimap world={world} visible={visible} preview={preview} stretch={navigationAxis !== 'both'} ariaLabel={`${ariaLabel}全局预览`} onNavigate={(x, y) => apply(constrainCamera({ ...camera,
+      <ChartNavigationDock open={navigationOpen} onOpenChange={setNavigationOpen}
+        style={{ bottom: !navigationOpen || dimensions.width > 900 ? navigationDockBottom : extraBottom ? extraBottom + 8 : undefined }}
+        onPan={panBy} canPan={canPan} panMode={panMode} world={world} visible={visible} viewport={plot}
+        onTogglePan={() => setPanMode(value => !value)} preview={preview} stretch={navigationAxis !== 'both'}
+        ariaLabel={`${ariaLabel}全局预览`} onNavigate={(x, y) => apply(constrainCamera({ ...camera,
           x: plot.left - x * camera.k, y: plot.top - y * camera.k }, world, plot, navigationAxis))} />
-      </div>
     </div>
     {Footer && <Footer {...footerProps} visible={visible} onRange={onRange} />}
   </section>;

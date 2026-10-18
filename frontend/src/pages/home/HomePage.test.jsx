@@ -29,7 +29,7 @@ function home() {
 
 test('renders the accepted copy and routes each real analysis entry to its dataset', () => {
   home();
-  expect(screen.getByRole('link', { name: 'GMrepo 参考' })).toHaveAttribute('href', '/reference/gmrepo');
+  expect(screen.getByRole('link', { name: '外部证据评估' })).toHaveAttribute('href', '/reference/gmrepo');
   expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(HOME_COPY.title.join(''));
   for (const chapter of HOME_CHAPTERS) {
     expect(screen.getByRole('link', { name: chapter.action })).toHaveAttribute('href', chapter.route);
@@ -37,6 +37,7 @@ test('renders the accepted copy and routes each real analysis entry to its datas
   }
   expect(document.querySelectorAll('.mobile-gallery')).toHaveLength(4);
   expect(document.querySelectorAll('.stage-carousel')).toHaveLength(0);
+  expect([...document.querySelectorAll('[data-home-section]')].map(element => element.dataset.homeSection)).toEqual(['hero', 'showcase', 'foundation']);
   const wheel = new WheelEvent('wheel', { deltaY: 120, cancelable: true, bubbles: true });
   window.dispatchEvent(wheel);
   expect(wheel.defaultPrevented).toBe(false);

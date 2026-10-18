@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import SlidingHighlight from '../ui/SlidingHighlight';
+import useSlidingHighlight from '../ui/useSlidingHighlight';
+import usePopupPresence from '../ui/usePopupPresence';
 
 export default function AuditFilterSelect({
   id,
@@ -23,6 +26,7 @@ export default function AuditFilterSelect({
   const rootRef = useRef(null);
   const triggerRef = useRef(null);
   const listboxRef = useRef(null);
+  const highlightRef = useRef(null);
   const selectedValueRef = useRef(null);
   const selectedValueTextRef = useRef(null);
   const selectedLabel = useMemo(() => {
@@ -38,6 +42,9 @@ export default function AuditFilterSelect({
     ],
     [emptyLabel, optionLabel, options, searching]
   );
+  const mounted = usePopupPresence(open);
+  useSlidingHighlight({ containerRef: listboxRef, highlightRef, enabled: mounted,
+    selector: '.is-active', resetKey: visibleOptions.map(option => option.value).join('\u001f') });
 
   useEffect(() => {
     if (!open) return undefined;
@@ -145,8 +152,8 @@ export default function AuditFilterSelect({
         </span>
         <span aria-hidden="true">⌄</span>
       </button>
-      {open ? (
-        <div className="projection-audit__select-menu">
+      {mounted ? (
+        <div className="projection-audit__select-menu selection-popup-motion" data-ending-style={!open ? '' : undefined} inert={!open} aria-hidden={!open || undefined}>
           <input
             type="search"
             value={search}
@@ -176,11 +183,13 @@ export default function AuditFilterSelect({
             id={listboxId}
             ref={listboxRef}
             role="listbox"
+            className="sliding-option-list"
             aria-label={`${label}选项`}
             aria-activedescendant={`${listboxId}-option-${activeIndex}`}
             tabIndex={0}
             onKeyDown={handleListboxKeyDown}
           >
+            <SlidingHighlight ref={highlightRef} />
             {visibleOptions.map((option, index) => (
               <button
                 type="button"
@@ -196,7 +205,7 @@ export default function AuditFilterSelect({
                 onClick={() => choose(option.value)}
                 onMouseEnter={() => setActiveIndex(index)}
               >
-                {option.label}
+                {option.label}<span className="audit-option-check" aria-hidden="true">{value === option.value ? '✓' : ''}</span>
               </button>
             ))}
             {searching ? <p role="status">正在检索匹配项...</p> : null}

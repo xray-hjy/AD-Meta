@@ -86,3 +86,14 @@ test('keeps missing, zero and tiny KO abundance distinct without converting to p
   expect(model.formatAxis(0.00000003)).not.toBe('0');
   expect(barStyleConfig).not.toHaveProperty('suffix');
 });
+
+test('displays fractional relative abundance as percent without changing input values', () => {
+  const input = { dataSemantics: { abundanceScale: 'relative_abundance' },
+    series: [{ key: 'AD', label: 'AD' }], items: [{ feature: 'Species', values: { AD: { mean: 0.125 } } }] };
+  render(<BarChart data={input} />);
+  const { model } = chartProps.mock.lastCall[0];
+  expect(model.items[0].values.AD).toBe(12.5);
+  expect(model.formatValue(12.5)).toBe('12.5%');
+  expect(model.axisName).toContain('相对丰度（%）');
+  expect(input.items[0].values.AD.mean).toBe(0.125);
+});

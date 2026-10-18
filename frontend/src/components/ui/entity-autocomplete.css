@@ -7,8 +7,8 @@
 .entity-input-group button:hover { background: var(--workspace-accent-soft, #b6577015); color: var(--workspace-accent, #b65770); }
 .entity-input-group[data-disabled] { opacity: .5; }
 .entity-positioner { z-index: 1600; width: min(510px, calc(100vw - 24px)); min-width: min(var(--anchor-width), calc(100vw - 24px)); max-width: calc(100vw - 24px); --entity-accent: #b65770; }
-.entity-popup { border-radius: 15px; border: 1px solid color-mix(in srgb, var(--entity-accent) 20%, #e5eaf1); color: #25324a; background: rgb(255 255 255 / .96); backdrop-filter: blur(18px); box-shadow: 0 14px 45px #17233b22, 0 2px 6px #17233b08; overflow: hidden; outline: none; font: 12px/1.5 system-ui, sans-serif; transition: opacity .12s, transform .12s; transform-origin: var(--transform-origin); }
-.entity-popup[data-starting-style], .entity-popup[data-ending-style] { opacity: 0; transform: translateY(-4px); }
+.entity-popup { border-radius: 15px; border: 1px solid color-mix(in srgb, var(--entity-accent) 20%, #e5eaf1); color: #25324a; background: rgb(255 255 255 / .96); backdrop-filter: blur(18px); box-shadow: 0 14px 45px #17233b22, 0 2px 6px #17233b08; overflow: hidden; outline: none; font: 12px/1.5 system-ui, sans-serif; }
+.entity-popup__list.sliding-option-list { --selection-accent: var(--entity-accent); --selection-soft: color-mix(in srgb, var(--entity-accent) 11%, white); --selection-radius: 9px; }
 .entity-popup__heading { display: flex; justify-content: space-between; gap: 12px; padding: 10px 14px; color: #718096; font-size: 11px; border-bottom: 1px solid #edf0f6; }
 .entity-popup__list { max-height: min(330px, max(100px, calc(var(--available-height) - 90px))); overflow-y: auto; overscroll-behavior: contain; padding: 5px; scrollbar-width: thin; }
 .entity-option { display: flex; flex-direction: column; gap: 3px; padding: 9px; border-radius: 9px; cursor: pointer; outline: none; }

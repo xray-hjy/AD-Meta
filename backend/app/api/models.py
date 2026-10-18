@@ -151,6 +151,8 @@ class AnalysisRunResponse(BaseModel):
     id: int
     key: str
     name: str
+    selectorVisible: bool = True
+    isDefault: bool = False
     description: str = ""
     status: str
     manifestVersion: str

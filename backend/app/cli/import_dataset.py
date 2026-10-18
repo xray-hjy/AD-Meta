@@ -246,6 +246,9 @@ def import_dataset(
     group_mapping: dict[str, str] | None = None,
     sample_id_prefixes: list[str] | None = None,
     duplicate_feature_policy: str = "reject",
+    input_format: str = "sample_feature_matrix",
+    sample_metadata_file: Path | None = None,
+    pathway_file: Path | None = None,
 ) -> int:
     """Validate, compute and atomically publish an immutable dataset revision."""
 
@@ -253,11 +256,29 @@ def import_dataset(
     source = file_path.expanduser().resolve()
     if not source.is_file():
         raise FileNotFoundError(source)
-    if source.suffix.lower() not in {".xlsx", ".xls", ".csv", ".tsv"}:
+    if source.suffix.lower() not in {".xlsx", ".xls", ".csv", ".tsv"} and not (input_format == "diting_ko" and source.suffix.lower() == ".tab"):
         raise InputValidationError("unsupported_file_type", f"Unsupported file type: {source.suffix.lower()}")
 
     covariates = list(covariates or [])
     source_metadata = dict(source_metadata or {})
+    prepared = None
+    pathway_payload = None
+    if input_format == "metaphlan4_taxonomy":
+        from app.services.metaphlan_import import normalize_metaphlan
+
+        if abundance_scale != "relative_abundance" or sample_metadata_file is None:
+            raise InputValidationError("invalid_metaphlan_policy", "MetaPhlAn requires relative_abundance and explicit sample metadata.")
+        prepared, report = normalize_metaphlan(source, sample_metadata_file)
+        source_metadata["preprocessing"] = report
+    elif input_format == "diting_ko":
+        from app.services.diting_import import normalize_diting
+
+        if abundance_scale != "normalized_abundance" or sample_metadata_file is None or pathway_file is None:
+            raise InputValidationError("invalid_diting_policy", "DiTing requires normalized abundance, sample metadata and paired pathways.")
+        prepared, report, pathway_payload = normalize_diting(source, sample_metadata_file, pathway_file)
+        source_metadata["preprocessing"] = report
+    elif input_format != "sample_feature_matrix":
+        raise InputValidationError("unsupported_input_format", f"Unsupported input format: {input_format}")
     group_mapping = dict(group_mapping or {})
     sample_id_prefixes = list(sample_id_prefixes or [])
     now = utcnow()
@@ -276,6 +297,8 @@ def import_dataset(
         "groupMapping": group_mapping,
         "sampleIdPrefixes": sample_id_prefixes,
         "duplicateFeaturePolicy": duplicate_feature_policy,
+        "inputFormat": input_format,
+        "preprocessing": source_metadata.get("preprocessing"),
     }
     params_hash = _stable_hash(parameters)
 
@@ -293,6 +316,15 @@ def import_dataset(
     published_files = False
 
     try:
+        matrix_path = stage_raw
+        if prepared is not None:
+            matrix_path = stage_dir / "analysis_matrix.csv"
+            prepared.to_csv(matrix_path, index=False)
+            shutil.copy2(sample_metadata_file, stage_dir / "sample_metadata.tsv")
+        if pathway_payload is not None:
+            shutil.copy2(pathway_file, stage_dir / "pathways_relative_abundance.tab")
+            pathway_payload["revision"] = revision_key
+            pathway_payload["koSourceSha256"] = source_sha256
         with connect() as conn:
             existing = conn.execute(
                 "SELECT id, current_revision_id FROM datasets WHERE slug = ?",
@@ -354,7 +386,7 @@ def import_dataset(
 
         published_at = utcnow()
         df, feature_cols, warnings = prepare_dataframe(
-            stage_raw,
+            matrix_path,
             abundance_scale=abundance_scale,
             missing_value_policy=missing_value_policy,
             minimum_group_size=2,
@@ -362,6 +394,7 @@ def import_dataset(
             sample_id_prefixes=sample_id_prefixes,
             duplicate_feature_policy=duplicate_feature_policy,
         )
+        df.attrs["normalization"] = normalization
         validate_covariates(df, feature_cols, covariates)
         summary, artifacts, warnings = precompute_prepared(
             df,
@@ -373,6 +406,8 @@ def import_dataset(
             abundance_scale=abundance_scale,
         )
         validation = dict(df.attrs["validation_report"])
+        if pathway_payload is not None:
+            artifacts["diting_pathways"] = pathway_payload
         _log_import_event(
             slug=slug,
             revision=revision_key,
@@ -585,7 +620,7 @@ def import_dataset(
 
 def main() -> None:  # pragma: no cover - exercised through the packaged CLI
     parser = argparse.ArgumentParser(description="Import and precompute an AD-Meta public dataset.")
-    parser.add_argument("--file", required=True, type=Path, help="Path to .xlsx, .csv, or .tsv input file.")
+    parser.add_argument("--file", required=True, type=Path, help="Path to .xlsx, .csv, .tsv, or paired DiTing .tab input.")
     parser.add_argument("--slug", required=True, help="Public dataset slug, for example ad-nc-species.")
     parser.add_argument("--name", required=True, help="Public dataset display name.")
     parser.add_argument("--description", default="", help="Optional public dataset description.")
@@ -595,6 +630,9 @@ def main() -> None:  # pragma: no cover - exercised through the packaged CLI
         default="unknown",
     )
     parser.add_argument("--normalization", default="unknown")
+    parser.add_argument("--input-format", choices=["sample_feature_matrix", "metaphlan4_taxonomy", "diting_ko"], default="sample_feature_matrix")
+    parser.add_argument("--sample-metadata-file", type=Path)
+    parser.add_argument("--pathway-file", type=Path)
     parser.add_argument("--missing-value-policy", choices=["error", "zero"], default="error")
     parser.add_argument(
         "--group-mapping",
@@ -626,6 +664,9 @@ def main() -> None:  # pragma: no cover - exercised through the packaged CLI
         group_mapping=json.loads(args.group_mapping),
         sample_id_prefixes=args.sample_id_prefix,
         duplicate_feature_policy=args.duplicate_feature_policy,
+        input_format=args.input_format,
+        sample_metadata_file=args.sample_metadata_file,
+        pathway_file=args.pathway_file,
     )
     print(f"Imported dataset {dataset_id} ({args.slug})")
 

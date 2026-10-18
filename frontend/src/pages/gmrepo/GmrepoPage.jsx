@@ -1,17 +1,20 @@
 import { lazy, Suspense, useEffect, useMemo } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getGmrepoCatalog, getGmrepoGenera, getGmrepoOverview, getGmrepoSamples } from '../../api/gmrepo';
-import BrandMark from '../../components/brand/BrandMark';
 import StyledSelect from '../../components/ui/StyledSelect';
 import LoadingState from '../../components/ui/LoadingState';
 import ErrorState from '../../components/ui/ErrorState';
 import PaginationControls from '../../components/data-display/PaginationControls';
-import { useColorVision } from '../../context/ColorVisionContext';
+import EvidenceHeader from './EvidenceHeader';
+import ReferenceRegistry from './ReferenceRegistry';
+import ReferenceGenusBrowser from './ReferenceGenusBrowser';
+import ReferenceSubjectContext from './ReferenceSubjectContext';
+import { referenceHref, referenceParams, subjectHref } from './referenceNavigation';
 import './gmrepo.css';
 
 const ReferenceChart = lazy(() => import('./ReferenceChart'));
-const GenusWorkspace = lazy(() => import('./GenusWorkspace'));
+const WgsReferencePanel = lazy(() => import('./WgsReferencePanel'));
 const PAGE_SIZE = 25;
 const number = value => value == null ? '—' : Number(value).toLocaleString('zh-CN', { maximumFractionDigits: 1 });
 const percent = value => value == null ? '—' : `${number(value)}%`;
@@ -84,26 +87,30 @@ function SampleTable({ result, pending, error, onRetry, page, onPageChange }) {
 export default function GmrepoPage() {
   useEffect(() => {
     const previous = document.title;
-    document.title = 'GMrepo 参考数据 — 微脑智库';
+    document.title = '外部证据评估 · 参考资源 — 微脑智库';
     return () => { document.title = previous; };
   }, []);
   const [params, setParams] = useSearchParams();
-  const { colorBlindFriendly, setColorBlindFriendly } = useColorVision();
   const cohort = params.get('cohort') || '';
   const group = params.get('group') || '';
   const scope = params.get('scope') || 'all';
   const genus = params.get('genus') || '';
   const view = params.get('view') === 'genus' ? 'genus' : 'overview';
+  const resourceView = ['directory', 'genera', 'quality', 'methods', 'wgs'].includes(params.get('section')) ? params.get('section')
+    : ['cohort', 'group', 'scope', 'genus', 'page'].some(key => params.has(key)) ? 'quality' : 'directory';
   const requestedPage = Number(params.get('page') || 1);
   const page = Number.isSafeInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
   const selection = useMemo(() => ({ cohort, group, scope }), [cohort, group, scope]);
   const catalog = useQuery({ queryKey: ['gmrepo', 'catalog'], queryFn: ({ signal }) => getGmrepoCatalog({ signal }), retry: false });
-  const revision = catalog.data?.provenance.fingerprint || '';
-  const overview = useQuery({ queryKey: ['gmrepo', 'overview', revision, selection], enabled: !!revision && view === 'overview', retry: false,
+  const revision = params.get('revision') || catalog.data?.provenance.fingerprint || '';
+  useEffect(() => {
+    if (revision && !params.has('revision')) setParams(current => referenceParams(current, { revision }), { replace: true });
+  }, [revision, params, setParams]);
+  const overview = useQuery({ queryKey: ['gmrepo', 'overview', revision, selection], enabled: !!revision && view === 'overview' && resourceView === 'quality', retry: false,
     queryFn: ({ signal }) => getGmrepoOverview({ ...selection, revision }, { signal }) });
   const genera = useQuery({ queryKey: ['gmrepo', 'genera', revision], enabled: !!revision, retry: false,
     queryFn: ({ signal }) => getGmrepoGenera({ revision }, { signal }) });
-  const samples = useQuery({ queryKey: ['gmrepo', 'samples', revision, selection, genus, page], enabled: !!revision && view === 'overview', retry: false,
+  const samples = useQuery({ queryKey: ['gmrepo', 'samples', revision, selection, genus, page], enabled: !!revision && view === 'overview' && resourceView === 'quality', retry: false,
     queryFn: ({ signal }) => getGmrepoSamples({ ...selection, revision, genus, limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE }, { signal }) });
   const update = (key, value) => {
     const next = new URLSearchParams(params);
@@ -115,27 +122,31 @@ export default function GmrepoPage() {
   const retry = () => { catalog.refetch(); overview.refetch(); genera.refetch(); samples.refetch(); };
   const data = overview.data;
   const version = catalog.data?.provenance.version;
-  return <div className="gmrepo-page">
-    <a className="gmrepo-skip" href="#gmrepo-content">跳转到参考数据</a>
-    <header className="gmrepo-header">
-      <Link className="gmrepo-brand brand-link" to="/" aria-label="微脑智库首页"><BrandMark /><strong>微脑智库</strong></Link>
-      <nav aria-label="参考页面导航"><Link to="/">首页</Link><Link to="/analysis/abundance">群落分析</Link><span aria-current="page">GMrepo 参考</span></nav>
-      <label className="gmrepo-color-control"><input type="checkbox" checked={colorBlindFriendly} onChange={e => setColorBlindFriendly(e.target.checked)} />色盲友好</label>
-    </header>
+  if (view === 'genus') {
+    const next = new URLSearchParams(params); next.delete('view');
+    if (revision && !next.has('revision')) next.set('revision', revision);
+    return <Navigate replace to={`/reference/gmrepo/evidence?${next}`} />;
+  }
+  return <div className="gmrepo-page reference-workspace">
+    <a className="gmrepo-skip" href="#gmrepo-content">跳转到参考资源</a>
+    <EvidenceHeader />
     <main id="gmrepo-content" className="gmrepo-main">
-      <div className="gmrepo-title"><div><p className="gmrepo-eyebrow">EXTERNAL REFERENCE</p><h1>GMrepo 参考数据</h1><p>按来源研究查看样本质量、AD/NC 菌属分布、探索性检验及证据对照。</p></div>
-        {version ? <span className="gmrepo-version">处理版本 {version}</span> : null}</div>
-      <div className="gmrepo-boundary"><strong>16S 属级参考 · 按队列查看</strong><p>Run 是测序记录，不等于已核实的独立参与者。百分比保留来源尺度，待解析部分不重新归一化；检验须通过身份及协变量核查，结果仅供提出研究线索。</p></div>
+      <div className="gmrepo-title reference-workspace-title"><div><h1>GMrepo 参考资源</h1><p>查找研究队列，核查数据条件，继续评估候选特征的外部证据。</p></div>
+        {version ? <span className="gmrepo-version">快照 {version}</span> : null}</div>
+      <ReferenceSubjectContext params={params} revision={revision} />
+      <nav className="evaluation-resource-tabs" aria-label="参考资源视图">{[['directory', '研究目录'], ['genera', '菌属检索'], ['wgs', 'WGS 扩展'], ['quality', '数据质量'], ['methods', '来源与方法']].map(([key, label]) => {
+        return <Link key={key} to={referenceHref(params, { section: key })} aria-current={resourceView === key ? 'page' : undefined}>{label}</Link>;
+      })}</nav>
+      <p className="evaluation-source-note reference-boundary-line"><span>{resourceView === 'wgs' ? '原研究 WGS · 临床前阶段参考' : 'GMrepo · AD 相关研究 · 16S 属级参考'}</span><span>Run 是测序记录，不等于独立参与者；分类背景不构成数值复现或临床结论。</span></p>
       {catalog.isPending ? <LoadingState /> : catalog.error ? <ErrorState title="参考数据暂不可用" message={catalog.error.message} onRetry={retry} /> : <>
-        <nav className="gmrepo-views" aria-label="参考数据视图"><button type="button" aria-pressed={view === 'overview'} onClick={() => update('view', '')}>队列与质量概览</button>
-          <button type="button" aria-pressed={view === 'genus'} onClick={() => update('view', 'genus')}>菌属分布与证据对照</button></nav>
-        {view === 'genus' ? genera.error ? <ErrorState message={genera.error.message} onRetry={genera.refetch} /> : genera.isPending ? <LoadingState /> :
-          <Suspense fallback={<LoadingState />}><GenusWorkspace revision={revision} genera={genera.data?.items || []} params={params} update={update} /></Suspense> : <>
+        {resourceView === 'wgs' ? <Suspense fallback={<LoadingState />}><WgsReferencePanel /></Suspense> : resourceView === 'genera' ? genera.isPending ? <LoadingState message="正在读取参考菌属目录…" /> : genera.error ? <ErrorState message={genera.error.message} onRetry={genera.refetch} /> : <ReferenceGenusBrowser items={genera.data.items} cohorts={catalog.data.cohorts} params={params} onChange={setParams} />
+          : resourceView !== 'quality' ? <ReferenceRegistry revision={revision} view={resourceView} /> : <>
+        {cohort ? <div className="reference-quality-scope"><span>当前核查队列 <strong>{cohort}</strong></span><Link to={referenceHref(params, { section: 'directory', study: cohort })}>返回队列详情 →</Link><Link to={referenceHref(params, { section: 'genera', cohort })}>查看该队列的菌属分布 →</Link></div> : null}
         <section className="gmrepo-filters" aria-label="参考数据筛选">
           <label htmlFor="reference-cohort">研究队列<StyledSelect id="reference-cohort" value={cohort} onChange={e => update('cohort', e.target.value)}><option value="">全部队列（{catalog.data.cohorts.length}）</option>{catalog.data.cohorts.map(c => <option value={c.projectId} key={c.projectId}>{c.projectId}</option>)}</StyledSelect></label>
           <label htmlFor="reference-group">研究分组<StyledSelect id="reference-group" value={group} onChange={e => update('group', e.target.value)}><option value="">全部研究分组</option>{catalog.data.groups.map(g => <option value={g.value} key={g.value}>{g.label}</option>)}</StyledSelect></label>
           <label htmlFor="reference-scope">记录范围<StyledSelect id="reference-scope" value={scope} onChange={e => update('scope', e.target.value)}>{catalog.data.scopes.map(s => <option value={s.value} key={s.value}>{s.label}</option>)}</StyledSelect></label>
-          <button type="button" className="analysis-button" onClick={() => setParams({})}>重置筛选</button>
+          <button type="button" className="analysis-button" onClick={() => setParams(referenceParams(params, { section: 'quality', cohort: null, group: null, scope: null, genus: null, page: null }))}>重置筛选</button>
         </section>
         {overview.error ? <ErrorState message={overview.error.message} onRetry={retry} /> : overview.isPending ? <LoadingState /> : data ? <>
           <Summary data={data} />
@@ -153,22 +164,21 @@ export default function GmrepoPage() {
               <p className="gmrepo-note">当前范围 {number(data.counts.noResolvedGenusRuns)} 个 profile 没有可确认目标属。待解析比例包含 Unknown、层级不符和目标类群不符，不能解释为菌不存在。</p>
             </ChartSection>
           </div>
-          <CohortTable data={data} onChoose={value => update('cohort', value)} />
+          <details className="evaluation-sample-disclosure"><summary>各队列覆盖明细</summary><CohortTable data={data} onChoose={value => update('cohort', value)} /></details>
         </> : null}
         <section className="gmrepo-panel gmrepo-samples" aria-labelledby="gmrepo-samples-title">
           <div className="gmrepo-panel-heading"><h2 id="gmrepo-samples-title">参考样本与核查依据</h2><p>保留来源标签和核对后的研究分组，可逐条查看纳入原因、身份关系及原研究。</p></div>
           <div className="gmrepo-genus-filter"><label htmlFor="reference-genus">菌属丰度列<StyledSelect id="reference-genus" value={genus} onChange={e => update('genus', e.target.value)} disabled={!genera.data}><option value="">不显示菌属丰度</option>{(genera.data?.items || []).map(g => <option key={g.featureId} value={g.featureId}>{g.name} · {g.featureId}</option>)}</StyledSelect></label>
-            <p>选择菌属只增加丰度列，保留零值记录和当前样本范围。</p></div>
+            <p>选择菌属只增加丰度列，保留零值记录和当前样本范围。{genus ? <Link to={subjectHref(params, { genus, cohort })}>评估该菌属的外部证据 →</Link> : null}</p></div>
           {genera.error ? <ErrorState title="菌属目录读取失败" message={genera.error.message} onRetry={retry} /> : null}
           <SampleTable result={samples.data} pending={samples.isPending} error={samples.error} onRetry={retry} page={page} onPageChange={value => update('page', value)} />
-        </section>
-        </>}
-        <details className="gmrepo-panel gmrepo-evidence"><summary>数据版本与来源</summary>
+        </section></>}
+        {resourceView === 'methods' ? <details className="gmrepo-panel gmrepo-evidence"><summary>数据版本与来源</summary>
           <dl><div><dt>处理版本</dt><dd>{version}</dd></div><div><dt>输入快照</dt><dd>{catalog.data.provenance.inputSnapshot}</dd></div>
             <div><dt>处理时间</dt><dd>{catalog.data.provenance.processedAt}</dd></div><div><dt>版本校验编号</dt><dd className="gmrepo-fingerprint">{revision}</dd></div></dl>
           <ul>{catalog.data.provenance.sources.map(source => <li key={source.url}><a href={source.url} target="_blank" rel="noreferrer">{source.label} ↗</a></li>)}</ul>
           <p>来源标签不自动等于确诊结论。队列分组按样本记录、原研究和作者公开资料核对；分组、协变量或独立受试者关系不足的记录保留相应标记。</p>
-        </details>
+        </details> : null}
       </>}
     </main>
   </div>;

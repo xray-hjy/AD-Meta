@@ -18,6 +18,7 @@ stats-worker/.Rprofile
 frontend/coverage
 backend/.coverage
 frontend/output/playwright
+frontend/output/startup
 
 # production
 /build

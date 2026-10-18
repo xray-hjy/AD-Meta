@@ -1,4 +1,5 @@
 import StyledSelect from '../ui/StyledSelect';
+import ChoiceGrid from '../ui/ChoiceGrid';
 import { useState } from 'react';
 
 const STORAGE_KEY = 'admeta:chart:export-defaults:v1';
@@ -44,12 +45,12 @@ export default function ChartImageExportSettings({ action, close, storageKey = S
     void action.onClick({ format: settings.format, width: size.width, height: size.height, pixelRatio: settings.pixelRatio });
     close();
   }}>
-    <div className="chart-image-export__formats" aria-label="图像格式">
+    <ChoiceGrid className="chart-image-export__formats" role="group" aria-label="图像格式">
       {['svg', 'png'].map(format => <button key={format} type="button" className="analysis-button"
         aria-pressed={settings.format === format} onClick={() => update('format', format)}>
         <strong>{format.toUpperCase()}</strong><span>{format === 'svg' ? '矢量 · 论文排版' : '位图 · 演示分享'}</span>
       </button>)}
-    </div>
+    </ChoiceGrid>
     <label className="chart-export-field">导出尺寸<StyledSelect aria-label="导出尺寸" value={settings.size} onChange={event => update('size', event.target.value)}>
       <option value="auto">自动适配完整图表（推荐）</option>
       <option value="standard">标准 · 1100 × 640</option>

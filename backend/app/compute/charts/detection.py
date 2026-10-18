@@ -33,13 +33,17 @@ def compute_detection_heatmap(
     nc_sample_count = int(len(nc))
     total_sample_count = ad_sample_count + nc_sample_count
     max_features = max(1, int(top_n))
+    # Reduce once: per-column access repeatedly copies large feature metadata
+    # from DataFrame.attrs on recent pandas releases (quadratic at 9k KOs).
+    ad_counts = ad_presence.sum(axis=0).to_numpy(dtype=int)
+    nc_counts = nc_presence.sum(axis=0).to_numpy(dtype=int)
 
     items = []
     audit_items = []
-    for col in species_cols:
+    for index, col in enumerate(species_cols):
         # 分别统计两组检出样本数，再换算成检出率。
-        ad_detected = int(ad_presence[col].sum())
-        nc_detected = int(nc_presence[col].sum())
+        ad_detected = int(ad_counts[index])
+        nc_detected = int(nc_counts[index])
         overall_detected = ad_detected + nc_detected
         ad_rate = ad_detected / ad_sample_count if ad_sample_count else 0.0
         nc_rate = nc_detected / nc_sample_count if nc_sample_count else 0.0

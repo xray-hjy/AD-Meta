@@ -327,6 +327,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/datasets/{slug}/revisions/{revision}/diting/download/{kind}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download */
+        get: operations["download_api_datasets__slug__revisions__revision__diting_download__kind__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/datasets/{slug}/revisions/{revision}/diting/pathways": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Pathways */
+        get: operations["pathways_api_datasets__slug__revisions__revision__diting_pathways_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/datasets/{slug}/summary": {
         parameters: {
             query?: never;
@@ -650,6 +684,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/references/gmrepo/candidate-comparison": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Candidate Comparison */
+        post: operations["candidate_comparison_api_references_gmrepo_candidate_comparison_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/references/gmrepo/candidate-report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Candidate Report */
+        get: operations["candidate_report_api_references_gmrepo_candidate_report_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/references/gmrepo/catalog": {
         parameters: {
             query?: never;
@@ -659,6 +727,23 @@ export interface paths {
         };
         /** Catalog */
         get: operations["catalog_api_references_gmrepo_catalog_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/references/gmrepo/comparison-catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Comparison Catalog */
+        get: operations["comparison_catalog_api_references_gmrepo_comparison_catalog_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -684,6 +769,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/references/gmrepo/evaluation-package": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Evaluation Package */
+        get: operations["evaluation_package_api_references_gmrepo_evaluation_package_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/references/gmrepo/evidence": {
         parameters: {
             query?: never;
@@ -693,6 +795,23 @@ export interface paths {
         };
         /** Evidence */
         get: operations["evidence_api_references_gmrepo_evidence_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/references/gmrepo/evidence-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Evidence Summary */
+        get: operations["evidence_summary_api_references_gmrepo_evidence_summary_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -735,6 +854,108 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/references/gmrepo/recompute-package": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recompute Package */
+        get: operations["recompute_package_api_references_gmrepo_recompute_package_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/references/gmrepo/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Report */
+        get: operations["report_api_references_gmrepo_report_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/references/gmrepo/resolve-subject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Resolve Subject */
+        get: operations["resolve_subject_api_references_gmrepo_resolve_subject_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/references/gmrepo/resources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Resources */
+        get: operations["resources_api_references_gmrepo_resources_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/references/gmrepo/review-dossier": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Review Dossier */
+        get: operations["review_dossier_api_references_gmrepo_review_dossier_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/references/gmrepo/review-workspace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Review Workspace */
+        get: operations["review_workspace_api_references_gmrepo_review_workspace_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/references/gmrepo/samples": {
         parameters: {
             query?: never;
@@ -761,6 +982,40 @@ export interface paths {
         };
         /** Statistics */
         get: operations["statistics_api_references_gmrepo_statistics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/references/gmrepo/wgs-distribution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Wgs Distribution */
+        get: operations["wgs_distribution_api_references_gmrepo_wgs_distribution_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/references/gmrepo/wgs-reference": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Wgs Reference */
+        get: operations["wgs_reference_api_references_gmrepo_wgs_reference_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -922,6 +1177,11 @@ export interface components {
             };
             /** Id */
             id: number;
+            /**
+             * Isdefault
+             * @default false
+             */
+            isDefault: boolean;
             /** Key */
             key: string;
             /** Manifestversion */
@@ -948,6 +1208,11 @@ export interface components {
             }[];
             /** Samplecount */
             sampleCount: number;
+            /**
+             * Selectorvisible
+             * @default true
+             */
+            selectorVisible: boolean;
             /** Status */
             status: string;
         };
@@ -1035,6 +1300,13 @@ export interface components {
             mode: "cohort" | "group" | "subset" | "sample";
             /** Samplecodes */
             sampleCodes?: string[];
+        };
+        /** CapabilityState */
+        CapabilityState: {
+            /** Reasoncodes */
+            reasonCodes?: string[];
+            /** Status */
+            status: string;
         };
         /** ChartArtifactResponse */
         ChartArtifactResponse: {
@@ -1268,6 +1540,30 @@ export interface components {
             /** Requestid */
             requestId?: string | null;
         };
+        /** EvidenceBlocker */
+        EvidenceBlocker: {
+            /** Affects */
+            affects: string[];
+            /** Evidencerefs */
+            evidenceRefs?: string[];
+            /** Message */
+            message: string;
+            /** Missingevidence */
+            missingEvidence: string;
+            /** Nextaction */
+            nextAction: string;
+            /** Projectid */
+            projectId: string;
+            /** Reasoncode */
+            reasonCode: string;
+            /** Scope */
+            scope: string;
+            /**
+             * Status
+             * @default pending
+             */
+            status: string;
+        };
         /**
          * FeatureSelection
          * @description A chart-independent feature selection that survives scope changes.
@@ -1298,7 +1594,26 @@ export interface components {
             /** Items */
             items: components["schemas"]["ReferenceAudit"][];
             methods: components["schemas"]["ReferenceMethods"];
+            /** Protocol */
+            protocol?: {
+                [key: string]: unknown;
+            };
             provenance: components["schemas"]["ReferenceProvenance"];
+        };
+        /** GmrepoCandidateRequest */
+        GmrepoCandidateRequest: {
+            /** Candidateids */
+            candidateIds: string[];
+            /**
+             * Datasetslug
+             * @default ad-nc-species
+             */
+            datasetSlug: string;
+            /**
+             * Sourcerevision
+             * @default
+             */
+            sourceRevision: string;
         };
         /** GmrepoCatalogResponse */
         GmrepoCatalogResponse: {
@@ -1332,6 +1647,78 @@ export interface components {
             code: string;
             /** Detail */
             detail: string;
+        };
+        /** GmrepoEvaluationPackageResponse */
+        GmrepoEvaluationPackageResponse: {
+            /**
+             * Canonicalization
+             * @default python-json-v0
+             */
+            canonicalization: string;
+            /** Currentstatus */
+            currentStatus: {
+                [key: string]: unknown;
+            };
+            /** Evaluationid */
+            evaluationId: string;
+            /** Payload */
+            payload: {
+                [key: string]: unknown;
+            };
+            /** Payloadsha256 */
+            payloadSha256: string;
+            /**
+             * Schemaversion
+             * @constant
+             */
+            schemaVersion: 1;
+        };
+        /** GmrepoEvaluationResponse */
+        GmrepoEvaluationResponse: {
+            /** Claims */
+            claims?: {
+                [key: string]: unknown;
+            }[];
+            /** Cohorts */
+            cohorts: {
+                [key: string]: unknown;
+            }[];
+            /** Evaluationid */
+            evaluationId?: string | null;
+            /** Familysize */
+            familySize: number;
+            /** Generatedat */
+            generatedAt: string;
+            /** Genus */
+            genus: {
+                [key: string]: unknown;
+            };
+            /** Methods */
+            methods: {
+                [key: string]: unknown;
+            };
+            /** Primary */
+            primary: {
+                [key: string]: unknown;
+            };
+            /** Protocol */
+            protocol: {
+                [key: string]: unknown;
+            };
+            provenance: components["schemas"]["ReferenceProvenance"];
+            researchLedger?: components["schemas"]["ResearchLedger"] | null;
+            /** Snapshotstatus */
+            snapshotStatus?: {
+                [key: string]: unknown;
+            } | null;
+            /** Summary */
+            summary: {
+                [key: string]: unknown;
+            };
+            /** Wgsreference */
+            wgsReference?: {
+                [key: string]: unknown;
+            };
         };
         /** GmrepoEvidenceResponse */
         GmrepoEvidenceResponse: {
@@ -1373,6 +1760,31 @@ export interface components {
             resolution: components["schemas"]["ReferenceResolution"][];
             selection: components["schemas"]["ReferenceSelection"];
         };
+        /** GmrepoResourcesResponse */
+        GmrepoResourcesResponse: {
+            /** Counts */
+            counts: {
+                [key: string]: number;
+            };
+            /** Discovery */
+            discovery: {
+                [key: string]: unknown;
+            };
+            /** Items */
+            items: {
+                [key: string]: unknown;
+            }[];
+            /** Primarycontext */
+            primaryContext?: {
+                [key: string]: unknown;
+            };
+            /** Protocol */
+            protocol: {
+                [key: string]: unknown;
+            };
+            provenance: components["schemas"]["ReferenceProvenance"];
+            researchLedger?: components["schemas"]["ResearchLedger"] | null;
+        };
         /** GmrepoSamplesResponse */
         GmrepoSamplesResponse: {
             genus: components["schemas"]["ReferenceGenus"] | null;
@@ -1403,6 +1815,41 @@ export interface components {
             summary: components["schemas"]["ReferenceStatisticsSummary"];
             /** Total */
             total: number;
+        };
+        /** GmrepoSubjectResponse */
+        GmrepoSubjectResponse: {
+            /** Artifactkey */
+            artifactKey: string;
+            /** Datasetslug */
+            datasetSlug: string;
+            /** Genus */
+            genus: {
+                [key: string]: unknown;
+            } | null;
+            /** Mappinglevel */
+            mappingLevel: string;
+            /** Mappingmethod */
+            mappingMethod: string;
+            /** Reasons */
+            reasons: string[];
+            /** Referencerevision */
+            referenceRevision: string;
+            /** Representativemag */
+            representativeMag: string | null;
+            /** Runkey */
+            runKey: string;
+            /** Sourcerevision */
+            sourceRevision: string;
+            /** Status */
+            status: string;
+            /** Subjectid */
+            subjectId: string;
+            /** Subjectname */
+            subjectName: string;
+            /** Subjecttype */
+            subjectType: string;
+        } & {
+            [key: string]: unknown;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -2498,8 +2945,18 @@ export interface components {
             adjustedCount: number;
             /** Adjustedreasons */
             adjustedReasons: string[];
+            /** Adjustedrunsetsha256 */
+            adjustedRunSetSha256?: string | null;
             /** Adjustedstatus */
             adjustedStatus: string;
+            /** Allrunsetsha256 */
+            allRunSetSha256?: string | null;
+            /** Blockers */
+            blockers?: components["schemas"]["EvidenceBlocker"][];
+            /** Capabilities */
+            capabilities?: {
+                [key: string]: components["schemas"]["CapabilityState"];
+            };
             /** Covariates */
             covariates: components["schemas"]["ReferenceCovariates"][];
             design: components["schemas"]["ReferenceDesign"];
@@ -2523,8 +2980,12 @@ export interface components {
             metadataRuns: number;
             /** Plotreadyruns */
             plotReadyRuns: number;
+            /** Plotrunsetsha256 */
+            plotRunSetSha256?: string | null;
             /** Projectid */
             projectId: string;
+            /** Registryfingerprint */
+            registryFingerprint?: string | null;
             /** Repeatedparticipantids */
             repeatedParticipantIds: number;
             /** Reviewfingerprint */
@@ -2762,6 +3223,10 @@ export interface components {
         ReferencePrimaryEvidence: {
             /** Abundancescale */
             abundanceScale: string | null;
+            /** Cohortevidence */
+            cohortEvidence?: {
+                [key: string]: unknown;
+            };
             /** Cohortid */
             cohortId: string | null;
             /** Comparisonnote */
@@ -2770,6 +3235,10 @@ export interface components {
             datasetRevision: string | null;
             /** Datasetslug */
             datasetSlug: string;
+            /** Genuscomparison */
+            genusComparison?: {
+                [key: string]: unknown;
+            };
             /** Groupcounts */
             groupCounts: {
                 [key: string]: number;
@@ -2956,6 +3425,111 @@ export interface components {
             url: string;
             /** Year */
             year: number;
+        };
+        /** ResearchField */
+        ResearchField: {
+            /** Evidencerefs */
+            evidenceRefs: string[];
+            /** Locator */
+            locator?: string | null;
+            /** Rawvalue */
+            rawValue?: string | string[] | null;
+            /** Status */
+            status: string;
+            /** Value */
+            value?: string | string[] | null;
+        };
+        /** ResearchLedger */
+        ResearchLedger: {
+            /** Acquisitions */
+            acquisitions: {
+                [key: string]: unknown;
+            }[];
+            /** Counts */
+            counts: {
+                [key: string]: number;
+            };
+            /** Discoveryfingerprint */
+            discoveryFingerprint?: string | null;
+            /** Discoverystatus */
+            discoveryStatus: string;
+            /** Records */
+            records: components["schemas"]["ResearchProjectRecord"][];
+            /** Referencefingerprint */
+            referenceFingerprint: string;
+            /** Registryfingerprint */
+            registryFingerprint: string;
+            /** Registrystatus */
+            registryStatus: string;
+            /** Relationships */
+            relationships?: {
+                [key: string]: unknown;
+            };
+            /**
+             * Schemaversion
+             * @default 1
+             * @constant
+             */
+            schemaVersion: 1;
+            /** Scientificreviewstatus */
+            scientificReviewStatus: string;
+            /** Scope */
+            scope: {
+                [key: string]: unknown;
+            };
+            /** Sourcechecks */
+            sourceChecks?: {
+                [key: string]: unknown;
+            }[];
+            /** Version */
+            version: string;
+        };
+        /** ResearchProjectRecord */
+        ResearchProjectRecord: {
+            /** Blockers */
+            blockers: components["schemas"]["EvidenceBlocker"][];
+            /** Capabilities */
+            capabilities: {
+                [key: string]: components["schemas"]["CapabilityState"];
+            };
+            /** Comparison */
+            comparison: {
+                [key: string]: unknown;
+            };
+            /** Evidencerefs */
+            evidenceRefs: string[];
+            /** Fields */
+            fields: {
+                [key: string]: components["schemas"]["ResearchField"];
+            };
+            /** Installed */
+            installed: boolean;
+            /** Issueresolutions */
+            issueResolutions?: {
+                [key: string]: unknown;
+            }[];
+            /** Projectid */
+            projectId: string;
+            /** Relationships */
+            relationships?: {
+                [key: string]: unknown;
+            }[];
+            /** Reviews */
+            reviews: {
+                [key: string]: unknown;
+            }[];
+            /** Screening */
+            screening?: {
+                [key: string]: unknown;
+            };
+            /** Sourceurl */
+            sourceUrl?: string | null;
+            /** Sources */
+            sources?: {
+                [key: string]: unknown;
+            }[];
+            /** Studyid */
+            studyId: string | null;
         };
         /**
          * ScopedFeatureRequest
@@ -3797,6 +4371,73 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_api_datasets__slug__revisions__revision__diting_download__kind__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+                revision: string;
+                kind: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    pathways_api_datasets__slug__revisions__revision__diting_pathways_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+                revision: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
             /** @description Validation Error */
@@ -4669,6 +5310,91 @@ export interface operations {
             };
         };
     };
+    candidate_comparison_api_references_gmrepo_candidate_comparison_post: {
+        parameters: {
+            query?: {
+                revision?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GmrepoCandidateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoEvaluationPackageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoErrorResponse"];
+                };
+            };
+        };
+    };
+    candidate_report_api_references_gmrepo_candidate_report_get: {
+        parameters: {
+            query: {
+                evaluationId: string;
+                revision?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": components["schemas"]["GmrepoErrorResponse"];
+                };
+            };
+        };
+    };
     catalog_api_references_gmrepo_catalog_get: {
         parameters: {
             query?: {
@@ -4687,6 +5413,52 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GmrepoCatalogResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoErrorResponse"];
+                };
+            };
+        };
+    };
+    comparison_catalog_api_references_gmrepo_comparison_catalog_get: {
+        parameters: {
+            query?: {
+                sourceRevision?: string;
+                datasetSlug?: string;
+                query?: string;
+                limit?: number;
+                offset?: number;
+                speciesIds?: string;
+                revision?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -4751,11 +5523,54 @@ export interface operations {
             };
         };
     };
+    evaluation_package_api_references_gmrepo_evaluation_package_get: {
+        parameters: {
+            query: {
+                evaluationId: string;
+                revision?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoEvaluationPackageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoErrorResponse"];
+                };
+            };
+        };
+    };
     evidence_api_references_gmrepo_evidence_get: {
         parameters: {
             query: {
                 cohort: string;
                 genus: string;
+                sourceRevision?: string;
+                datasetSlug?: string;
                 revision?: string;
             };
             header?: never;
@@ -4771,6 +5586,55 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GmrepoEvidenceResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoErrorResponse"];
+                };
+            };
+        };
+    };
+    evidence_summary_api_references_gmrepo_evidence_summary_get: {
+        parameters: {
+            query: {
+                genus: string;
+                sourceRevision?: string;
+                datasetSlug?: string;
+                subjectType?: string;
+                subjectId?: string;
+                runKey?: string;
+                artifactKey?: string;
+                sourceChart?: string;
+                sourceScope?: string;
+                revision?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoEvaluationResponse"];
                 };
             };
             /** @description Validation Error */
@@ -4877,6 +5741,259 @@ export interface operations {
             };
         };
     };
+    recompute_package_api_references_gmrepo_recompute_package_get: {
+        parameters: {
+            query: {
+                evaluationId: string;
+                revision?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoErrorResponse"];
+                };
+            };
+        };
+    };
+    report_api_references_gmrepo_report_get: {
+        parameters: {
+            query: {
+                genus: string;
+                subjectType?: string;
+                subjectId?: string;
+                sourceRevision?: string;
+                datasetSlug?: string;
+                runKey?: string;
+                artifactKey?: string;
+                sourceChart?: string;
+                sourceScope?: string;
+                evaluationId?: string;
+                revision?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": components["schemas"]["GmrepoErrorResponse"];
+                };
+            };
+        };
+    };
+    resolve_subject_api_references_gmrepo_resolve_subject_get: {
+        parameters: {
+            query: {
+                subjectType: string;
+                subjectId: string;
+                sourceRevision?: string;
+                datasetSlug?: string;
+                runKey?: string;
+                artifactKey?: string;
+                revision?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoSubjectResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoErrorResponse"];
+                };
+            };
+        };
+    };
+    resources_api_references_gmrepo_resources_get: {
+        parameters: {
+            query?: {
+                revision?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoResourcesResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoErrorResponse"];
+                };
+            };
+        };
+    };
+    review_dossier_api_references_gmrepo_review_dossier_get: {
+        parameters: {
+            query?: {
+                revision?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoErrorResponse"];
+                };
+            };
+        };
+    };
+    review_workspace_api_references_gmrepo_review_workspace_get: {
+        parameters: {
+            query?: {
+                revision?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoErrorResponse"];
+                };
+            };
+        };
+    };
     samples_api_references_gmrepo_samples_get: {
         parameters: {
             query?: {
@@ -4945,6 +6062,88 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GmrepoStatisticsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoErrorResponse"];
+                };
+            };
+        };
+    };
+    wgs_distribution_api_references_gmrepo_wgs_distribution_get: {
+        parameters: {
+            query: {
+                feature: string;
+                revision: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GmrepoErrorResponse"];
+                };
+            };
+        };
+    };
+    wgs_reference_api_references_gmrepo_wgs_reference_get: {
+        parameters: {
+            query?: {
+                query?: string;
+                level?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

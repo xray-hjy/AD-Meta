@@ -89,7 +89,7 @@
   animation: admeta-home-stage-reveal 1540ms cubic-bezier(.22,1,.36,1) both;
 }
 
-.admeta-home.motion-ready[data-intro-skipped="true"] [class] {
+.admeta-home.motion-ready[data-intro-skipped="true"] :is(.hero-title-line, .hero-lead, .entry-panel, .scroll-cue, .stage-rail) {
   animation-duration: 1ms !important;
 }
 

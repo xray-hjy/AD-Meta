@@ -32,6 +32,9 @@
     "openapi:types": "openapi-typescript ../backend/openapi.json -o src/api/generated.ts",
     "openapi:types:check": "node scripts/check-openapi-types.mjs",
     "preview": "vite preview --host 127.0.0.1 --port 4173",
+    "preview:checked": "node scripts/preview.mjs",
+    "benchmark:startup": "node scripts/benchmark-startup.mjs",
+    "verify:startup": "node scripts/verify-startup.mjs",
     "typecheck": "tsc --noEmit"
   },
   "browserslist": {

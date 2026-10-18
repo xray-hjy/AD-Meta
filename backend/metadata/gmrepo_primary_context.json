@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "recordedOn": "2026-10-17",
+  "cohortId": "cra014435-ad-nc-runs",
+  "sampleCount": 185,
+  "sampleSetSha256": "869f065b51cc89b360ae3be96e4f37f588e5e031b04cf21b36c1fee6fa05c3b0",
+  "groupCounts": {
+    "AD": 122,
+    "NC": 63
+  },
+  "projectUrl": "https://ngdc.cncb.ac.cn/bioproject/browse/PRJCA022804",
+  "publicationUrl": "https://www.nature.com/articles/s41380-025-02973-7",
+  "selection": "以 AD 与 NC 二分类为研究范围，纳入 PRJCA022804 两组全部样本：AD 122、NC 63，共 185 个；其他阶段不进入本次主分析。",
+  "participantStatus": "study_reported_person_counts_no_rowwise_subject_verification",
+  "participantNote": "项目与作者报告全队列 476 名受试者，登记 476 个样本；AD/NC 合计 185。人数与样本数一致，支持一人一份样本的解释；公开 host_subject_id 未提供，未完成逐受试者 ID 的重复采样核验。",
+  "crossCohortNote": "本队列的人数依据不证明它与 GMrepo 或其他论文的参与者互不重叠。",
+  "pipelineNote": "本项目使用 MetaPhlAn 4 / DiTing 结果及已取得脚本；来源论文方法仅用于了解原研究。脚本用于记录处理步骤，不据此推定已安装软件小版本或当前结果对应的实际执行记录。",
+  "sources": [
+    {
+      "sourceId": "primary-sample-map",
+      "url": "https://ngdc.cncb.ac.cn/gsa/browse/CRA014435",
+      "origin": "local_project_record",
+      "path": "ADMetaData/reference/gmrepo/closeout/2026-10-17-v3/primary-sample-map.tsv",
+      "sha256": "991cab48cbbbce07d297a0c9720e41ae86e6744900f29e9af9d0e346f3585979",
+      "bytes": 68731,
+      "retrievedAt": "2026-10-17T07:46:59.772687+00:00"
+    },
+    {
+      "sourceId": "primary-import-manifest",
+      "url": "https://ngdc.cncb.ac.cn/bioproject/browse/PRJCA022804",
+      "origin": "local_project_record",
+      "path": "ADMetaData/reference/gmrepo/closeout/2026-10-17-v3/primary-import-manifest.json",
+      "sha256": "b7510eb51999d9cbf583d4d4bbc9984063553f398de3483d6ee4002081673273",
+      "bytes": 3737,
+      "retrievedAt": "2026-10-17T07:46:59.773208+00:00"
+    },
+    {
+      "sourceId": "primary-transfer-audit",
+      "url": "https://ngdc.cncb.ac.cn/bioproject/browse/PRJCA022804",
+      "origin": "local_project_record",
+      "path": "ADMetaData/reference/gmrepo/closeout/2026-10-17-v3/primary-transfer-audit.md",
+      "sha256": "ee1572881830de602923bfb410c6cae287a7e159f29796bf4391aa02e288b3a5",
+      "bytes": 6929,
+      "retrievedAt": "2026-10-17T07:46:59.773674+00:00"
+    },
+    {
+      "sourceId": "primary-script-audit",
+      "url": "https://ngdc.cncb.ac.cn/bioproject/browse/PRJCA022804",
+      "origin": "local_project_record",
+      "path": "ADMetaData/reference/gmrepo/closeout/2026-10-17-v3/primary-script-audit.md",
+      "sha256": "f417f7350cbd5612d70c7e105207afc8480b90f12ca6d66a17ae02aa9ed6a654",
+      "bytes": 12770,
+      "retrievedAt": "2026-10-17T07:46:59.774117+00:00"
+    },
+    {
+      "sourceId": "primary-paper-record",
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:40164697%20AND%20SRC:MED&format=json&resultType=core",
+      "origin": "new_acquisition",
+      "path": "ADMetaData/reference/gmrepo/closeout/2026-10-17-v3/primary-paper.json",
+      "sha256": "8ba81a386901747b0da35a9ccf9d588b80edd0da3fc5be7fd7db15e84c4fab23",
+      "bytes": 13896,
+      "retrievedAt": "2026-10-17T07:47:21.155504+00:00"
+    },
+    {
+      "sourceId": "primary-author-description",
+      "url": "https://raw.githubusercontent.com/JiaLonghao1997/metaAD_analysis/main/README.md",
+      "origin": "new_acquisition",
+      "path": "ADMetaData/reference/gmrepo/closeout/2026-10-17-v3/primary-author-readme.md",
+      "sha256": "2533379b932b03ea4169b507e646069d89c91f416cca2e05d6b0e44229155d55",
+      "bytes": 6790,
+      "retrievedAt": "2026-10-17T07:47:21.156454+00:00"
+    },
+    {
+      "sourceId": "primary-ngdc-project",
+      "url": "https://ngdc.cncb.ac.cn/bioproject/browse/PRJCA022804",
+      "origin": "new_acquisition",
+      "path": "ADMetaData/reference/gmrepo/closeout/2026-10-17-v3/primary-project.html",
+      "sha256": "a1fb3e5b96fad4bfcf6ae7cab5d31c0e8f20b81368c087f5e966375e005ee304",
+      "bytes": 158393,
+      "retrievedAt": "2026-10-17T07:47:21.189030+00:00"
+    },
+    {
+      "sourceId": "primary-metaphlan-script",
+      "url": "https://ngdc.cncb.ac.cn/bioproject/browse/PRJCA022804",
+      "origin": "local_project_record",
+      "path": "ADMetaData/reference/gmrepo/closeout/2026-10-17-v3/primary-metaphlan-script.snakefile",
+      "sha256": "aa8330c9f655f760f7b40e57b799406352efde438d26f0dfd8effd8f92a4514f",
+      "bytes": 4917,
+      "retrievedAt": "2026-10-17T07:47:21.202946+00:00"
+    },
+    {
+      "sourceId": "primary-metaphlan-config",
+      "url": "https://ngdc.cncb.ac.cn/bioproject/browse/PRJCA022804",
+      "origin": "local_project_record",
+      "path": "ADMetaData/reference/gmrepo/closeout/2026-10-17-v3/primary-metaphlan-config.yaml",
+      "sha256": "c9568c47d75d30caf38370fc79557694bb737dd6ee10e66edad2678fb1e192e3",
+      "bytes": 306,
+      "retrievedAt": "2026-10-17T07:47:21.203518+00:00"
+    },
+    {
+      "sourceId": "primary-diting-script",
+      "url": "https://ngdc.cncb.ac.cn/bioproject/browse/PRJCA022804",
+      "origin": "local_project_record",
+      "path": "ADMetaData/reference/gmrepo/closeout/2026-10-17-v3/primary-diting-script.snakefile",
+      "sha256": "7d70d4392bbd344a0c93fd49e61439c21620bc9f68d58db2a657f759dc23691e",
+      "bytes": 2079,
+      "retrievedAt": "2026-10-17T07:47:21.204020+00:00"
+    },
+    {
+      "sourceId": "primary-diting-config",
+      "url": "https://ngdc.cncb.ac.cn/bioproject/browse/PRJCA022804",
+      "origin": "local_project_record",
+      "path": "ADMetaData/reference/gmrepo/closeout/2026-10-17-v3/primary-diting-config.yaml",
+      "sha256": "8e6386dcdf30b5d4438cbdeb7a0ae655282c27e195af7042823f9887bd1885b7",
+      "bytes": 184,
+      "retrievedAt": "2026-10-17T07:47:21.205587+00:00"
+    },
+    {
+      "sourceId": "primary-study-method-supplement",
+      "url": "https://www.nature.com/articles/s41380-025-02973-7",
+      "origin": "local_project_record",
+      "path": "backend/storage/raw/source-supplements/PRJCA022804/41380_2025_2973_MOESM1_ESM.docx",
+      "sha256": "0187021073141b81523289154520776005e1eb06c8ef2f247f3ddd15114d0910",
+      "bytes": 14781186,
+      "retrievedAt": "2026-10-17T07:47:21.216466+00:00"
+    },
+    {
+      "sourceId": "primary-study-sample-supplement",
+      "url": "https://www.nature.com/articles/s41380-025-02973-7",
+      "origin": "local_project_record",
+      "path": "backend/storage/raw/source-supplements/PRJCA022804/41380_2025_2973_MOESM2_ESM.xlsx",
+      "sha256": "2c474596c5e1697de01f2eaa711f9e9985bbe5957795bd2d0734cfb978f0b16e",
+      "bytes": 1255308,
+      "retrievedAt": "2026-10-17T07:47:21.218352+00:00"
+    }
+  ]
+}

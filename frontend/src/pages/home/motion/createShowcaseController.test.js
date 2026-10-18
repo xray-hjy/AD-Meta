@@ -118,3 +118,13 @@ test('releases native scrolling outside the section, ignores browser zoom, and r
   expect(page.querySelectorAll('.stage-carousel')).toHaveLength(0);
   expect(wheel(120).defaultPrevented).toBe(false);
 });
+
+test('exposes first and final reading stops and interaction ownership for the outer coordinator', () => {
+  const { timelines } = controller.state();
+  const first = timelines[0], last = timelines.at(-1);
+  expect(controller.sectionStops()).toEqual({ start: first.start + first.hold, end: last.start + last.hold + (HOME_CHAPTERS.at(-1).slides.length - 1) * last.step });
+  expect(controller.isBusy()).toBe(false);
+  wheel(120); expect(controller.isBusy()).toBe(true);
+  finishSlide(); vi.advanceTimersByTime(HOME_MOTION.gestureGap + 1);
+  expect(controller.isBusy()).toBe(false);
+});

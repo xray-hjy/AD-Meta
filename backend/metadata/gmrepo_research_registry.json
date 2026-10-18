@@ -1,0 +1,2597 @@
+{
+  "schemaVersion": 2,
+  "version": "gmrepo-research-ledger-2026-10-17-v6",
+  "recordedOn": "2026-10-17",
+  "referenceFingerprint": "68f003174b519a9aa8ec401a8e42223bf9e4b67aa26fe4b370b4b5b2e33f2971",
+  "scopeMode": "retrospective_harmonization",
+  "purpose": "回顾性组织当前来源与专项核查；登记不等于科研复核，不新增检验授权。",
+  "searchScope": [
+    "官方 AD 表型 D000544 与相关认知表型完整分页及来源差异核对",
+    "同研究 NC、AD/MCI/风险/临床前阶段和人体肠道材料逐项核查",
+    "Alzheimer、MCI、preclinical 等关键词及未标注研究补充发现",
+    "16S/WGS 来源可取得性核查；无可用数据不伪造接入",
+    "原研究去重、跨研究与主外重叠核查"
+  ],
+  "projects": [
+    {
+      "projectId": "PRJEB11419",
+      "screeningStatus": "insufficient_information",
+      "screeningNote": "固定包保留元数据；样本分组和原研究关系待核查，不能形成当前 AD/NC 比较。",
+      "screeningEvidenceRefs": [
+        "sealed-metadata"
+      ],
+      "facts": {
+        "projectTitle": {
+          "value": "American Gut Project",
+          "evidenceRefs": [
+            "release-project-PRJEB11419"
+          ],
+          "locator": "ENA PROJECT/TITLE or STUDY/STUDY_TITLE; project record, not automatically the paper title",
+          "recordedOn": "2026-10-16"
+        },
+        "projectDescription": {
+          "value": "The American Gut project is the largest crowdsourced citizen science project to date. Fecal, oral, skin, and other body site samples collected from thousands of participants represent the largest human microbiome cohort in existence. Detailed health and lifestyle and diet data associated with each sample is enabling us to deeply examine associations between the human microbiome and factors such as diet (from vegan to near carnivore and everything in between), season, amount of sleep, and disease states such as IBD, diabetes, or autism spectrum disorder-as well as many other factors not listed here. The American Gut project also encompasses the British Gut and Australian Gut projects, widening the cohort beyond North America. As the project continues to grow, we will be able to identify significant associations that would not be possible with smaller, geographically and health/disease status-limited cohorts.",
+          "evidenceRefs": [
+            "release-project-PRJEB11419"
+          ],
+          "locator": "ENA PROJECT/DESCRIPTION or STUDY/STUDY_ABSTRACT",
+          "recordedOn": "2026-10-16"
+        },
+        "sampleSourceCheck": {
+          "value": "公开样本表 34525 行；当前固定包 9 Run，BioSample 精确对应 0 条。样本别名和唯一 BioSample 不自动当作参与者 ID。",
+          "evidenceRefs": [
+            "complete-PRJEB11419-samples.tsv"
+          ],
+          "locator": "ENA sample portal all returned fields; exact accession join; full missing-field counts in complete-sample-audit",
+          "recordedOn": "2026-10-17"
+        },
+        "currentGmrepoAvailability": {
+          "value": "官方项目详情：14589 Run；QC valid 0，failed 5053；此数不代表具有疾病或参与者映射。",
+          "evidenceRefs": [
+            "complete-PRJEB11419-gmrepo.json"
+          ],
+          "locator": "project.Number_of_runs/valid_runs/failed_runs; endpoint-specific values supersede old overview, original overview retained",
+          "recordedOn": "2026-10-17"
+        }
+      }
+    },
+    {
+      "projectId": "PRJEB49329",
+      "screeningStatus": "insufficient_information",
+      "screeningNote": "原研究包含 AD/MCI/SCD；处理包尚无可连接的样本级临床阶段标签。",
+      "screeningEvidenceRefs": [
+        "sealed-rules"
+      ],
+      "facts": {
+        "country": {
+          "value": "荷兰，Amsterdam Dementia Cohort / SCIENCe",
+          "evidenceRefs": [
+            "release-paper-PRJEB49329"
+          ],
+          "locator": "Study Population",
+          "recordedOn": "2026-10-16"
+        },
+        "material": {
+          "value": "人体粪便",
+          "evidenceRefs": [
+            "release-paper-PRJEB49329"
+          ],
+          "locator": "Study Population / fecal sample collection",
+          "recordedOn": "2026-10-16"
+        },
+        "stages": {
+          "value": [
+            "AD 33",
+            "MCI 22",
+            "SCD 120"
+          ],
+          "evidenceRefs": [
+            "release-paper-PRJEB49329"
+          ],
+          "locator": "Study Population: 175 collected, 170 analyzed; no ordinary NC group established",
+          "recordedOn": "2026-10-16"
+        },
+        "sourceDesign": {
+          "value": "来自随访队列的粪便研究；原论文含 AD/MCI/SCD，不能把 SCD 自动改为健康 NC。",
+          "evidenceRefs": [
+            "release-paper-PRJEB49329"
+          ],
+          "locator": "Study Population / annual follow-up visits and clinical definitions",
+          "recordedOn": "2026-10-16"
+        },
+        "projectTitle": {
+          "value": "ADC: gut microbiota",
+          "evidenceRefs": [
+            "release-project-PRJEB49329"
+          ],
+          "locator": "ENA PROJECT/TITLE or STUDY/STUDY_TITLE; project record, not automatically the paper title",
+          "recordedOn": "2026-10-16"
+        },
+        "projectDescription": {
+          "value": "We included 170 patients from the Amsterdam Dementia Cohort, comprising 33 with Alzheimer's disease (AD) dementia, 21 with mild cognitive impairment and 116 with subjective cognitive decline. Fecal samples were collected and gut microbiome composition was determined using 16S rRNA sequencing",
+          "evidenceRefs": [
+            "release-project-PRJEB49329"
+          ],
+          "locator": "ENA PROJECT/DESCRIPTION or STUDY/STUDY_ABSTRACT",
+          "recordedOn": "2026-10-16"
+        },
+        "bibliography": {
+          "value": "Gut Microbiota Composition Is Related to AD Pathology. (2022-01-31); PMID 35173707; PMCID PMC8843078",
+          "evidenceRefs": [
+            "release-paper_candidate-PRJEB49329"
+          ],
+          "locator": "Europe PMC resultList/result; bibliographic candidate association inherited from sealed rules, not new scientific approval",
+          "recordedOn": "2026-10-16"
+        },
+        "studyTitle": {
+          "value": "Gut Microbiota Composition Is Related to AD Pathology",
+          "evidenceRefs": [
+            "release-paper-PRJEB49329"
+          ],
+          "locator": "article/front/article-meta/title-group/article-title; project accession explicitly present in archived article",
+          "recordedOn": "2026-10-16"
+        },
+        "supplementCatalog": {
+          "value": [
+            "Click here for additional data file."
+          ],
+          "evidenceRefs": [
+            "release-paper-PRJEB49329"
+          ],
+          "locator": "article//supplementary-material/caption; catalogue inspected, attachments not all acquired/parsed",
+          "recordedOn": "2026-10-16"
+        },
+        "sampleSourceCheck": {
+          "value": "公开样本表 175 行；当前固定包 175 Run，BioSample 精确对应 175 条。样本别名和唯一 BioSample 不自动当作参与者 ID。",
+          "evidenceRefs": [
+            "complete-PRJEB49329-samples.tsv"
+          ],
+          "locator": "ENA sample portal all returned fields; exact accession join; full missing-field counts in complete-sample-audit",
+          "recordedOn": "2026-10-17"
+        },
+        "currentGmrepoAvailability": {
+          "value": "官方项目详情：175 Run；QC valid 116，failed 59；此数不代表具有疾病或参与者映射。",
+          "evidenceRefs": [
+            "complete-PRJEB49329-gmrepo.json"
+          ],
+          "locator": "project.Number_of_runs/valid_runs/failed_runs; endpoint-specific values supersede old overview, original overview retained",
+          "recordedOn": "2026-10-17"
+        }
+      },
+      "studyId": "study:paper:PMC8843078",
+      "originalStudyUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8843078/",
+      "evidenceRefs": [
+        "release-paper-PRJEB49329"
+      ]
+    },
+    {
+      "projectId": "PRJEB50447",
+      "screeningStatus": "stage_reference",
+      "screeningNote": "原研究为认知正常 Aβ+/Aβ− 人群；个体 Aβ 状态对应仍不可得，不转为临床 AD/NC。",
+      "screeningEvidenceRefs": [
+        "sealed-rules"
+      ],
+      "facts": {
+        "country": {
+          "value": "韩国，KBASE / Seoul National University Hospital",
+          "evidenceRefs": [
+            "release-paper-PRJEB50447"
+          ],
+          "locator": "Participants",
+          "recordedOn": "2026-10-16"
+        },
+        "material": {
+          "value": "人体粪便",
+          "evidenceRefs": [
+            "release-paper-PRJEB50447"
+          ],
+          "locator": "Microbial sample collection and preparation",
+          "recordedOn": "2026-10-16"
+        },
+        "stages": {
+          "value": [
+            "78 名认知正常者",
+            "Aβ 阳性/阴性比较",
+            "无痴呆或 MCI，CDR=0"
+          ],
+          "evidenceRefs": [
+            "release-paper-PRJEB50447"
+          ],
+          "locator": "Participants / Measurement of cerebral amyloid deposition",
+          "recordedOn": "2026-10-16"
+        },
+        "sourcePlatform": {
+          "value": "16S rRNA 扩增子；不是 WGS 实测功能",
+          "evidenceRefs": [
+            "release-paper-PRJEB50447"
+          ],
+          "locator": "16S rRNA gene PCR amplification, sequencing, and processing",
+          "recordedOn": "2026-10-16"
+        },
+        "projectTitle": {
+          "value": "Gut microbiome alterations in preclinical Alzheimer’s disease   Running title: Microbiome alterations in preclinical AD",
+          "evidenceRefs": [
+            "release-project-PRJEB50447"
+          ],
+          "locator": "ENA PROJECT/TITLE or STUDY/STUDY_TITLE; project record, not automatically the paper title",
+          "recordedOn": "2026-10-16"
+        },
+        "projectDescription": {
+          "value": "Although some human studies have reported gut microbiome changes in individuals with Alzheimer’s disease (AD) dementia or mild cognitive impairment (MCI), to date, no study has examined gut microbiota in preclinical AD without cognitive impairment. We aimed to identify gut microbial alterations associated with preclinical AD by comparing cognitively normal (CN) older adults with cerebral Aβ deposition (Aβ+ CN) and those without cerebral Aβ deposition (Aβ- CN). Seventy-eight CN older participants (18 Aβ+ CN and 60 Aβ- CN) were included, and all participants underwent clinical assessment and Pittsburg compound B–positron emission tomography. The V3–V4 region of the 16S rRNA gene of genomic DNA extracted from feces was amplified and sequenced to establish the microbial community. Generalized linear model analysis revealed that the genera Megamonas, Serratia, Leptotrichia and Clostridium (family Clostridiaceae) were more abundant in the Aβ+ CN group than the Aβ- CN group. In contrast, genera CF231, Victivallis, Enterococcus, Mitsuokella and Clostridium (family Erysipelotrichaceae) were decreased in Aβ+ CN compared to Aβ- CN. In addition, predicted functional pathway analysis showed that the relatively decreased gene contents in Aβ+ CN participants were related to genetic information processing. There were no between-group differences in alpha and beta diversity. Our findings suggest that specific alterations of gut bacterial taxa are related to preclinical AD without cognitive impairment. Although further confirmatory studies are needed, the findings also support the possibility that modulation of the intestinal microbiota by administration of probiotics or through dietary intervention may be helpful as a preventive strategy against AD.",
+          "evidenceRefs": [
+            "release-project-PRJEB50447"
+          ],
+          "locator": "ENA PROJECT/DESCRIPTION or STUDY/STUDY_ABSTRACT",
+          "recordedOn": "2026-10-16"
+        },
+        "bibliography": {
+          "value": "Gut microbiome alterations in preclinical Alzheimer's disease. (2022-11-29); PMID 36445883; PMCID PMC9707757",
+          "evidenceRefs": [
+            "release-paper_candidate-PRJEB50447"
+          ],
+          "locator": "Europe PMC resultList/result; bibliographic candidate association inherited from sealed rules, not new scientific approval",
+          "recordedOn": "2026-10-16"
+        },
+        "studyTitle": {
+          "value": "Gut microbiome alterations in preclinical Alzheimer’s disease",
+          "evidenceRefs": [
+            "release-paper-PRJEB50447"
+          ],
+          "locator": "article/front/article-meta/title-group/article-title; project accession explicitly present in archived article",
+          "recordedOn": "2026-10-16"
+        },
+        "supplementCatalog": {
+          "value": [
+            "S1 FigComparison of α-diversities of the fecal microbiome between Aβ− CN participants and Aβ+ CN participants according to (A) evenness (B) observed species (C) Shannon index and (D) phylogenic diversity (PD). Abbreviations. Aβ+ CN: Cognitively normal participants with amyloid retention; Aβ− CN: Cognitively normal participants without amyloid retention; PD: phylogenetic diversity.(TIF)Click here for additional data file.",
+            "S2 Figβ-diversities of the fecal microbiome between Aβ− CN participants and Aβ+ CN participants based on (A) Bray-Curtis (B) unweighted UniFrac (C) weighted UniFrac and (D) Aitchison values. Abbreviations. Aβ+ CN: cognitively normal participants with amyloid retention; Aβ− CN: cognitively normal participants without amyloid retention.(TIF)Click here for additional data file.",
+            "S1 TableComparison of relative abundances of predicted KEGG functional pathway analysis between Aβ+ CN participants and Aβ− CN participants.(PDF)Click here for additional data file."
+          ],
+          "evidenceRefs": [
+            "release-paper-PRJEB50447"
+          ],
+          "locator": "article//supplementary-material/caption; catalogue inspected, attachments not all acquired/parsed",
+          "recordedOn": "2026-10-16"
+        },
+        "clinicalAccessRestriction": {
+          "value": "原论文明确：临床个体资料不自由公开，需合理申请并获 Seoul National University Hospital IRB 批准；本轮未外发申请。",
+          "evidenceRefs": [
+            "release-paper-PRJEB50447"
+          ],
+          "locator": "Data Availability Statement: clinical information not freely accessible owing to ethics/privacy restrictions",
+          "recordedOn": "2026-10-16"
+        },
+        "sampleSourceCheck": {
+          "value": "公开样本表 78 行；当前固定包 78 Run，BioSample 精确对应 78 条。样本别名和唯一 BioSample 不自动当作参与者 ID。",
+          "evidenceRefs": [
+            "complete-PRJEB50447-samples.tsv"
+          ],
+          "locator": "ENA sample portal all returned fields; exact accession join; full missing-field counts in complete-sample-audit",
+          "recordedOn": "2026-10-17"
+        },
+        "currentGmrepoAvailability": {
+          "value": "官方项目详情：78 Run；QC valid 78，failed 0；此数不代表具有疾病或参与者映射。",
+          "evidenceRefs": [
+            "complete-PRJEB50447-gmrepo.json"
+          ],
+          "locator": "project.Number_of_runs/valid_runs/failed_runs; endpoint-specific values supersede old overview, original overview retained",
+          "recordedOn": "2026-10-17"
+        }
+      },
+      "studyId": "study:paper:PMC9707757",
+      "originalStudyUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9707757/",
+      "evidenceRefs": [
+        "release-paper-PRJEB50447"
+      ]
+    },
+    {
+      "projectId": "PRJEB51982",
+      "studyId": "study:wisconsin-adrc-wrap-vogt2017",
+      "originalStudyUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5648830/",
+      "evidenceRefs": [
+        "ena-51982",
+        "paper-vogt"
+      ],
+      "screeningStatus": "reference_available",
+      "screeningNote": "保留固定包已有 AD/NC 参考及专项身份依据；本轮补充文献事实不等于全面科研复核。",
+      "screeningEvidenceRefs": [
+        "sealed-rules",
+        "ena-51982",
+        "paper-vogt"
+      ],
+      "facts": {
+        "studyTitle": {
+          "value": "Gut microbiome alterations in Alzheimer’s disease",
+          "evidenceRefs": [
+            "ena-51982",
+            "paper-vogt"
+          ],
+          "locator": "ENA PROJECT/TITLE 与 PUBMED 29051531；论文 front/article-title",
+          "recordedOn": "2026-10-15"
+        },
+        "country": {
+          "value": "美国，威斯康星州研究队列",
+          "evidenceRefs": [
+            "paper-vogt"
+          ],
+          "locator": "Methods / Participants：Wisconsin ADRC 与 WRAP 招募；不表示人群代表性",
+          "recordedOn": "2026-10-15"
+        },
+        "material": {
+          "value": "人体粪便",
+          "evidenceRefs": [
+            "paper-vogt"
+          ],
+          "locator": "Methods / Fecal sample collection and bacterial 16S rRNA sequencing and processing",
+          "recordedOn": "2026-10-15"
+        },
+        "stages": {
+          "value": [
+            "AD 痴呆",
+            "年龄/性别匹配的无痴呆对照"
+          ],
+          "evidenceRefs": [
+            "paper-vogt"
+          ],
+          "locator": "Study Design and Participant Characteristics；Table 1；主比较各 25 人，不混入次要 CSF 分析人群",
+          "recordedOn": "2026-10-15"
+        },
+        "sourceDesign": {
+          "value": "观察性组间比较；对照按年龄/性别匹配，当前公开个体配对关系仍缺失",
+          "evidenceRefs": [
+            "paper-vogt",
+            "sealed-rules"
+          ],
+          "locator": "Methods / Participants 与固定包身份/分组规则；不能据此声称配对模型已完成",
+          "recordedOn": "2026-10-15"
+        },
+        "sourcePlatform": {
+          "value": "16S rRNA V4，Illumina MiSeq；原始序列处理为 mothur / Greengenes v13.8",
+          "evidenceRefs": [
+            "paper-vogt"
+          ],
+          "locator": "Methods / Fecal sample collection and bacterial 16S rRNA sequencing and processing；与本项目属级重算口径分别保留",
+          "recordedOn": "2026-10-15"
+        },
+        "projectTitle": {
+          "value": "Gut microbiome alterations in Alzheimer’s disease",
+          "evidenceRefs": [
+            "release-project-PRJEB51982"
+          ],
+          "locator": "ENA PROJECT/TITLE or STUDY/STUDY_TITLE; project record, not automatically the paper title",
+          "recordedOn": "2026-10-16"
+        },
+        "projectDescription": {
+          "value": "Alzheimer’s disease (AD) is the most common form of dementia. However, the etiopathogenesis of this devastating disease is not fully understood. Recent studies in rodents suggest that alterations in the gut microbiome may contribute to amyloid deposition, yet the microbial communities associated with AD have not been characterized in humans. Towards this end, we characterized the bacterial taxonomic composition of fecal samples from participants with and without a diagnosis of dementia due to AD. Our analyses revealed that the gut microbiome of AD participants has decreased microbial diversity and is compositionally distinct from control age- and sex-matched individuals. We identified phylum- through genus-wide differences in bacterial abundance including decreased Firmicutes, increased Bacteroidetes, and decreased Bifidobacterium in the microbiome of AD participants. Furthermore, we observed correlations between levels of differentially abundant genera and cerebrospinal fluid (CSF) biomarkers of AD. These findings add AD to the growing list of diseases associated with gut microbial alterations, as well as suggest that gut bacterial communities may be a target for therapeutic intervention.",
+          "evidenceRefs": [
+            "release-project-PRJEB51982"
+          ],
+          "locator": "ENA PROJECT/DESCRIPTION or STUDY/STUDY_ABSTRACT",
+          "recordedOn": "2026-10-16"
+        },
+        "sampleSourceCheck": {
+          "value": "公开样本表 50 行；当前固定包 50 Run，BioSample 精确对应 50 条。样本别名和唯一 BioSample 不自动当作参与者 ID。",
+          "evidenceRefs": [
+            "complete-PRJEB51982-samples.tsv"
+          ],
+          "locator": "ENA sample portal all returned fields; exact accession join; full missing-field counts in complete-sample-audit",
+          "recordedOn": "2026-10-17"
+        },
+        "currentGmrepoAvailability": {
+          "value": "官方项目详情：50 Run；QC valid 50，failed 0；此数不代表具有疾病或参与者映射。",
+          "evidenceRefs": [
+            "complete-PRJEB51982-gmrepo.json"
+          ],
+          "locator": "project.Number_of_runs/valid_runs/failed_runs; endpoint-specific values supersede old overview, original overview retained",
+          "recordedOn": "2026-10-17"
+        }
+      }
+    },
+    {
+      "projectId": "PRJEB55056",
+      "evidenceRefs": [
+        "gmrepo-all-projects"
+      ],
+      "screeningStatus": "insufficient_information",
+      "screeningNote": "原研究为 CI-AD、CI-NAD、CU 阶段比较；公开 72 样本、GMrepo QC 合格 42/失败 30。D065626 在源端词典为非酒精性脂肪肝，与原研究冲突，不据此划分 AD/NC。取得 72 条原库样本信息，但缺临床分组映射；批量丰度接口返回错误。未纳入二分类分母。",
+      "screeningEvidenceRefs": [
+        "complete-PRJEB55056-gmrepo.json",
+        "complete-PRJEB55056-samples.tsv",
+        "complete-PMC10230724.xml",
+        "complete-receipts-2026-10-17-followup-v1"
+      ],
+      "facts": {
+        "projectDescription": {
+          "value": "Increasing evidence links the gut microbiota (GM) to Alzheimer’s Disease (AD) but the mechanisms through which gut bacteria influence the brain are still unclear. This study tests the hypothesis that GM and mediators of the microbiota-gut-brain axis (MGBA) are associated with the amyloid cascade in sporadic AD.",
+          "evidenceRefs": [
+            "gmrepo-all-projects"
+          ],
+          "locator": "ALLPROJECTS[project_id=PRJEB55056].Original_Project_description",
+          "recordedOn": "2026-10-17"
+        },
+        "sampleSourceCheck": {
+          "value": "公开样本表 72 行；当前固定包 0 Run，BioSample 精确对应 0 条。样本别名和唯一 BioSample 不自动当作参与者 ID。",
+          "evidenceRefs": [
+            "complete-PRJEB55056-samples.tsv"
+          ],
+          "locator": "ENA sample portal all returned fields; exact accession join; full missing-field counts in complete-sample-audit",
+          "recordedOn": "2026-10-17"
+        },
+        "currentGmrepoAvailability": {
+          "value": "官方项目详情：72 Run；QC valid 42，failed 30；此数不代表具有疾病或参与者映射。",
+          "evidenceRefs": [
+            "complete-PRJEB55056-gmrepo.json"
+          ],
+          "locator": "project.Number_of_runs/valid_runs/failed_runs; endpoint-specific values supersede old overview, original overview retained",
+          "recordedOn": "2026-10-17"
+        },
+        "stageDefinition": {
+          "value": [
+            "CI-AD：淀粉样蛋白阳性认知损害",
+            "CI-NAD：淀粉样蛋白阴性认知损害",
+            "CU：认知未损害、淀粉样蛋白阴性"
+          ],
+          "evidenceRefs": [
+            "complete-PMC10230724.xml"
+          ],
+          "locator": "Methods / Subjects; original 85 participants differs from sequenced/QC denominators",
+          "recordedOn": "2026-10-17"
+        },
+        "sourceReuse": {
+          "value": "2023 与 2025 论文引用同一 PRJEB55056；不作为两个独立队列计数。",
+          "evidenceRefs": [
+            "complete-PMC10230724.xml",
+            "complete-PMC11936893.xml"
+          ],
+          "locator": "Data availability / accession PRJEB55056 in both full texts",
+          "recordedOn": "2026-10-17"
+        }
+      }
+    },
+    {
+      "projectId": "PRJEB59009",
+      "studyId": "study:kiel-flensburg-troci-ad-stages",
+      "originalStudyUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10776369/",
+      "evidenceRefs": [
+        "ena-59009",
+        "paper-troci"
+      ],
+      "screeningStatus": "reference_available",
+      "screeningNote": "固定包只取粪便并按作者样本资料分阶段；AD/NC 子集与 MCI/风险组分开，保留现有专项身份依据。",
+      "screeningEvidenceRefs": [
+        "sealed-rules",
+        "ena-59009",
+        "paper-troci"
+      ],
+      "facts": {
+        "studyTitle": {
+          "value": "Disease- and stage-specific alterations of the oral and fecal microbiota in Alzheimer's disease",
+          "evidenceRefs": [
+            "paper-troci",
+            "ena-59009"
+          ],
+          "locator": "论文 front/article-title 与 Data Availability 中 PRJEB59009；ENA 项目记录",
+          "recordedOn": "2026-10-15"
+        },
+        "country": {
+          "value": "德国，Kiel / Flensburg 招募",
+          "evidenceRefs": [
+            "paper-troci"
+          ],
+          "locator": "Cohort characteristics and sampling / Patients’ characterization：UKSH Campus Kiel 与 DIAKO Flensburg",
+          "recordedOn": "2026-10-15"
+        },
+        "material": {
+          "value": "本参考包仅人体粪便；原研究另含口腔拭子，不混入当前比较",
+          "evidenceRefs": [
+            "paper-troci",
+            "sealed-rules"
+          ],
+          "locator": "Study design and participant characteristics；固定包 PRJEB59009 group_rule",
+          "recordedOn": "2026-10-15"
+        },
+        "stages": {
+          "value": [
+            "AD",
+            "MCI",
+            "APOE4 风险组",
+            "健康对照"
+          ],
+          "evidenceRefs": [
+            "paper-troci"
+          ],
+          "locator": "Study design and participant characteristics / Table 1；原研究人数不能替代处理后图表分母",
+          "recordedOn": "2026-10-15"
+        },
+        "sourcePlatform": {
+          "value": "16S rRNA V1–V2 扩增子；不是 WGS",
+          "evidenceRefs": [
+            "paper-troci"
+          ],
+          "locator": "Stool and swab sample processing and sequencing",
+          "recordedOn": "2026-10-15"
+        },
+        "projectTitle": {
+          "value": "Gut and Oral microbiota alterations in patients with Alzheimer’s disease",
+          "evidenceRefs": [
+            "release-project-PRJEB59009"
+          ],
+          "locator": "ENA PROJECT/TITLE or STUDY/STUDY_TITLE; project record, not automatically the paper title",
+          "recordedOn": "2026-10-16"
+        },
+        "projectDescription": {
+          "value": "Alzheimer’s disease (AD) is one of the most frequently diagnosed neurodegenerative disorders worldwide. However, the etiopathogenesis of this devastating disease is not completely understood. Recent studies suggest that alterations in the oral and gut microbiome may contribute to amyloid deposition, yet the microbial communities associated with AD have not been fully characterized in humans and little is known about the microbial composition in the course of the disease. Towards this end, we characterized the bacterial taxonomic composition of fecal and swab samples from participants in different stages of AD (AD, MCI, at risk).Our analyses revealed that the gut microbiota of AD participants has decreased microbial diversity and is compositionally distinct from control age- and sex-matched individuals. We identified phylum- through genus-wide differences in bacterial abundance including increased Firmicutes, increased Bacteroidetes, and decreased Roseburia in the gut microbiota of AD participants. Whereas significantly higher abundance of Porphyromonas and members of the Proteobacteria, especially Haemophilus, Neisseria and Actinobacillus was observed in the oral microbiota of AD patients. Furthermore, we observed correlations between levels of differentially abundant genera and cerebrospinal fluid (CSF) biomarkers of AD. These findings add AD to the growing list of diseases associated with gut and oral microbial alterations, as well as suggest that gut and oral bacterial communities may be a target for therapeutic intervention.",
+          "evidenceRefs": [
+            "release-project-PRJEB59009"
+          ],
+          "locator": "ENA PROJECT/DESCRIPTION or STUDY/STUDY_ABSTRACT",
+          "recordedOn": "2026-10-16"
+        },
+        "sampleSourceCheck": {
+          "value": "公开样本表 232 行；当前固定包 145 Run，BioSample 精确对应 145 条。样本别名和唯一 BioSample 不自动当作参与者 ID。",
+          "evidenceRefs": [
+            "complete-PRJEB59009-samples.tsv"
+          ],
+          "locator": "ENA sample portal all returned fields; exact accession join; full missing-field counts in complete-sample-audit",
+          "recordedOn": "2026-10-17"
+        },
+        "currentGmrepoAvailability": {
+          "value": "官方项目详情：232 Run；QC valid 145，failed 0；此数不代表具有疾病或参与者映射。",
+          "evidenceRefs": [
+            "complete-PRJEB59009-gmrepo.json"
+          ],
+          "locator": "project.Number_of_runs/valid_runs/failed_runs; endpoint-specific values supersede old overview, original overview retained",
+          "recordedOn": "2026-10-17"
+        }
+      }
+    },
+    {
+      "projectId": "PRJEB77146",
+      "studyId": "study:gero-chile-baseline-cognitive-complaints",
+      "originalStudyUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13082655/",
+      "evidenceRefs": [
+        "ena-77146",
+        "paper-gero"
+      ],
+      "screeningStatus": "stage_reference",
+      "screeningNote": "ENA 与论文关联的 GERO 基线认知主诉人群；原研究排除已诊断痴呆，不是临床 AD/同研究 NC 比较，也不自动认定临床前 AD。保留相关认知人群参考，未导入丰度。",
+      "screeningEvidenceRefs": [
+        "ena-77146",
+        "paper-gero"
+      ],
+      "facts": {
+        "studyTitle": {
+          "value": "The neuroactive potential of the elderly human gut microbiome is associated with mental health status",
+          "evidenceRefs": [
+            "ena-77146",
+            "paper-gero"
+          ],
+          "locator": "论文 front/article-title 与 Data Availability 的 PRJEB77146；ENA PROJECT/DESCRIPTION",
+          "recordedOn": "2026-10-15"
+        },
+        "country": {
+          "value": "智利，Santiago 社区 GERO 基线队列",
+          "evidenceRefs": [
+            "paper-gero",
+            "ena-77146"
+          ],
+          "locator": "2.1 Cohort；ENA PROJECT/DESCRIPTION",
+          "recordedOn": "2026-10-15"
+        },
+        "material": {
+          "value": "人体粪便",
+          "evidenceRefs": [
+            "paper-gero",
+            "ena-77146"
+          ],
+          "locator": "2.3 Sample collection；ENA PROJECT/DESCRIPTION",
+          "recordedOn": "2026-10-15"
+        },
+        "stages": {
+          "value": "老年认知主诉人群；排除已诊断痴呆，没有本文定义的临床 AD/NC 对照",
+          "evidenceRefs": [
+            "paper-gero"
+          ],
+          "locator": "2.1 Cohort：153 名基线参与者、CDR-FTLD ≤ 0.5、明确痴呆排除；不是当前本地样本数",
+          "recordedOn": "2026-10-15"
+        },
+        "sourcePlatform": {
+          "value": "16S rRNA V4，Illumina MiSeq；功能为 16S 推断，不是 WGS 实测功能",
+          "evidenceRefs": [
+            "paper-gero",
+            "ena-77146"
+          ],
+          "locator": "2.5 Sequencing；2.6 / 3.2 inferred genomic content；ENA PROJECT/DESCRIPTION",
+          "recordedOn": "2026-10-15"
+        },
+        "projectTitle": {
+          "value": "gut microbiome associations with mental health status in the elderly",
+          "evidenceRefs": [
+            "release-project-PRJEB77146"
+          ],
+          "locator": "ENA PROJECT/TITLE or STUDY/STUDY_TITLE; project record, not automatically the paper title",
+          "recordedOn": "2026-10-16"
+        },
+        "projectDescription": {
+          "value": "This study examines a cohort of 153 older adults from Chile with cognitive\ncomplaints, assessing anthropometric data, mental health via five distinct tests, and gut microbiome composition. Gut microbiome was profiled from stool samples using the V4 region of the 16S rRNA gene.",
+          "evidenceRefs": [
+            "release-project-PRJEB77146"
+          ],
+          "locator": "ENA PROJECT/DESCRIPTION or STUDY/STUDY_ABSTRACT",
+          "recordedOn": "2026-10-16"
+        },
+        "sampleSourceCheck": {
+          "value": "公开样本表 153 行；当前固定包 0 Run，BioSample 精确对应 0 条。样本别名和唯一 BioSample 不自动当作参与者 ID。",
+          "evidenceRefs": [
+            "complete-PRJEB77146-samples.tsv"
+          ],
+          "locator": "ENA sample portal all returned fields; exact accession join; full missing-field counts in complete-sample-audit",
+          "recordedOn": "2026-10-17"
+        },
+        "currentGmrepoAvailability": {
+          "value": "官方项目详情：153 Run；QC valid 153，failed 0；此数不代表具有疾病或参与者映射。",
+          "evidenceRefs": [
+            "complete-PRJEB77146-gmrepo.json"
+          ],
+          "locator": "project.Number_of_runs/valid_runs/failed_runs; endpoint-specific values supersede old overview, original overview retained",
+          "recordedOn": "2026-10-17"
+        }
+      }
+    },
+    {
+      "projectId": "PRJNA1028813",
+      "screeningStatus": "insufficient_information",
+      "screeningNote": "已有来源元数据，研究内阶段/对照对应尚不足；保留未知，不将来源标签直接升级为比较。",
+      "screeningEvidenceRefs": [
+        "sealed-metadata"
+      ],
+      "facts": {
+        "country": {
+          "value": "哈萨克斯坦，Astana City",
+          "evidenceRefs": [
+            "release-paper-PRJNA1028813"
+          ],
+          "locator": "2.1 Clinical Assessment",
+          "recordedOn": "2026-10-16"
+        },
+        "material": {
+          "value": "本论文分析人体粪便；项目描述另提口腔，不自动将项目内所有材料纳入粪便比较。",
+          "evidenceRefs": [
+            "release-paper-PRJNA1028813"
+          ],
+          "locator": "2.2 Fecal Sample Collection, Preprocessing, and Sequencing",
+          "recordedOn": "2026-10-16"
+        },
+        "stages": {
+          "value": [
+            "AD 41",
+            "认知正常对照 42"
+          ],
+          "evidenceRefs": [
+            "release-paper-PRJNA1028813"
+          ],
+          "locator": "2.1 Clinical Assessment",
+          "recordedOn": "2026-10-16"
+        },
+        "sourcePlatform": {
+          "value": "方法 2.5 明确采用 16S / LotuS2 / SILVA，功能为 PICRUSt2 推断；不能因项目名含 Metagenome 或 NovaSeq 型号认定 WGS。",
+          "evidenceRefs": [
+            "release-paper-PRJNA1028813"
+          ],
+          "locator": "2.5 Data and Statistical Analyses",
+          "recordedOn": "2026-10-16"
+        },
+        "sourceConflict": {
+          "value": "论文测序段写 NovaSeq 6000，当前来源元数据写 HiSeq 1500；保留仪器差异待核，不改写封存包。",
+          "evidenceRefs": [
+            "release-paper-PRJNA1028813"
+          ],
+          "locator": "2.2 Sequencing versus sealed sample_metadata_clean.instrument_model",
+          "recordedOn": "2026-10-16"
+        },
+        "projectTitle": {
+          "value": "Metagenome study of the gut and oral microbiome in association with peripheral inflammatory biomarkers in Alzheimer's patients",
+          "evidenceRefs": [
+            "release-project-PRJNA1028813"
+          ],
+          "locator": "ENA PROJECT/TITLE or STUDY/STUDY_TITLE; project record, not automatically the paper title",
+          "recordedOn": "2026-10-16"
+        },
+        "projectDescription": {
+          "value": "The goal of the project is to study the relationships between the human gut and oral microbiome diversity and composition, peripheral inflammation markers, biogeography, ethnicity, lifestyle, and Alzheimer's dementia. The Collaborative Research Program of Nazarbayev University, Kazakhstan, funds the study",
+          "evidenceRefs": [
+            "release-project-PRJNA1028813"
+          ],
+          "locator": "ENA PROJECT/DESCRIPTION or STUDY/STUDY_ABSTRACT",
+          "recordedOn": "2026-10-16"
+        },
+        "studyTitle": {
+          "value": "Inflammatory Manifestations Associated With Gut Dysbiosis in Alzheimer's Disease",
+          "evidenceRefs": [
+            "release-paper-PRJNA1028813"
+          ],
+          "locator": "article/front/article-meta/title-group/article-title; project accession explicitly present in archived article",
+          "recordedOn": "2026-10-16"
+        },
+        "supplementCatalog": {
+          "value": [
+            "Supporting Information 1Figure S1. α diversity within the major bacterial phyla indicated by the Shannon indexes.",
+            "Supporting Information 2Figure S2. Ordination using principal coordinate analysis (PCoA) based on Bray–Curtis dissimilarity showing differences in gut microbial composition between groups (beta diversity)."
+          ],
+          "evidenceRefs": [
+            "release-paper-PRJNA1028813"
+          ],
+          "locator": "article//supplementary-material/caption; catalogue inspected, attachments not all acquired/parsed",
+          "recordedOn": "2026-10-16"
+        },
+        "sampleSourceCheck": {
+          "value": "公开样本表 83 行；当前固定包 83 Run，BioSample 精确对应 83 条。样本别名和唯一 BioSample 不自动当作参与者 ID。",
+          "evidenceRefs": [
+            "complete-PRJNA1028813-samples.tsv"
+          ],
+          "locator": "ENA sample portal all returned fields; exact accession join; full missing-field counts in complete-sample-audit",
+          "recordedOn": "2026-10-17"
+        },
+        "currentGmrepoAvailability": {
+          "value": "官方项目详情：83 Run；QC valid 0，failed 83；此数不代表具有疾病或参与者映射。",
+          "evidenceRefs": [
+            "complete-PRJNA1028813-gmrepo.json"
+          ],
+          "locator": "project.Number_of_runs/valid_runs/failed_runs; endpoint-specific values supersede old overview, original overview retained",
+          "recordedOn": "2026-10-17"
+        }
+      },
+      "studyId": "study:paper:PMC11436273",
+      "originalStudyUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11436273/",
+      "evidenceRefs": [
+        "release-paper-PRJNA1028813"
+      ]
+    },
+    {
+      "projectId": "PRJNA373876",
+      "evidenceRefs": [
+        "gmrepo-all-projects"
+      ],
+      "screeningStatus": "outside_scope",
+      "screeningNote": "原项目研究肠易激综合征及脑影像；命中词 preclinical 为背景叙述，不是临床前 AD，不纳入本次 AD 证据范围。",
+      "screeningEvidenceRefs": [
+        "gmrepo-all-projects"
+      ],
+      "facts": {
+        "projectDescription": {
+          "value": "Preclinical and clinical evidence supports the concept of bidirectional brain gut microbiome interactions. We aimed to determine if subgroups of irritable bowel syndrome subjects (IBS) can be identified based on differences in gut microbial composition, and if there are correlations between gut microbial measures and structural brain signatures in IBS.\nBehavioral measures, stool samples and structural brain images were collected from 30 adult IBS and 23 healthy control subjects (HCs). 16S rRNA gene sequencing (V3-V5 region, 454 platform) was used to characterize stool microbial communities. T1 weighted brain images were acquired on a Siemens Allegra 3T scanner, and morphological measures were computed for 165 brain regions",
+          "evidenceRefs": [
+            "gmrepo-all-projects"
+          ],
+          "locator": "ALLPROJECTS[project_id=PRJNA373876].Original_Project_description",
+          "recordedOn": "2026-10-17"
+        }
+      }
+    },
+    {
+      "projectId": "PRJNA489760",
+      "screeningStatus": "insufficient_information",
+      "screeningNote": "已有来源元数据，分组及原研究关联仍待核查。",
+      "screeningEvidenceRefs": [
+        "sealed-metadata"
+      ],
+      "facts": {
+        "projectTitle": {
+          "value": "Fecal and blood microbiota of AD, MCI and normal controls",
+          "evidenceRefs": [
+            "release-project-PRJNA489760"
+          ],
+          "locator": "ENA PROJECT/TITLE or STUDY/STUDY_TITLE; project record, not automatically the paper title",
+          "recordedOn": "2026-10-16"
+        },
+        "projectDescription": {
+          "value": "Explore the changes in fecal and blood microbiota in patients of Alzheimer’s disease, mild cognitive impairment and healthy participants",
+          "evidenceRefs": [
+            "release-project-PRJNA489760"
+          ],
+          "locator": "ENA PROJECT/DESCRIPTION or STUDY/STUDY_ABSTRACT",
+          "recordedOn": "2026-10-16"
+        },
+        "sampleSourceCheck": {
+          "value": "公开样本表 180 行；当前固定包 90 Run，BioSample 精确对应 90 条。样本别名和唯一 BioSample 不自动当作参与者 ID。",
+          "evidenceRefs": [
+            "complete-PRJNA489760-samples.tsv"
+          ],
+          "locator": "ENA sample portal all returned fields; exact accession join; full missing-field counts in complete-sample-audit",
+          "recordedOn": "2026-10-17"
+        },
+        "currentGmrepoAvailability": {
+          "value": "官方项目详情：90 Run；QC valid 0，failed 90；此数不代表具有疾病或参与者映射。",
+          "evidenceRefs": [
+            "complete-PRJNA489760-gmrepo.json"
+          ],
+          "locator": "project.Number_of_runs/valid_runs/failed_runs; endpoint-specific values supersede old overview, original overview retained",
+          "recordedOn": "2026-10-17"
+        }
+      }
+    },
+    {
+      "projectId": "PRJNA496408",
+      "screeningStatus": "awaiting_acquisition",
+      "screeningNote": "来源实验别名有 AD/MCI/NC，但固定包没有可用 GMrepo profile；未补零，未开放比较。",
+      "screeningEvidenceRefs": [
+        "sealed-rules"
+      ],
+      "facts": {
+        "material": {
+          "value": "该关联论文采集基线粪便及血清；本项目未取得可用 GMrepo 丰度，不将血清当菌群 profile。",
+          "evidenceRefs": [
+            "release-paper-PRJNA496408"
+          ],
+          "locator": "2.1 Study Subjects",
+          "recordedOn": "2026-10-16"
+        },
+        "stages": {
+          "value": [
+            "该关联论文 AD 27",
+            "aMCI 22",
+            "HC 28"
+          ],
+          "evidenceRefs": [
+            "release-paper-PRJNA496408"
+          ],
+          "locator": "2.1 Study Subjects: 77-participant subset; accession reused, not automatically original full cohort",
+          "recordedOn": "2026-10-16"
+        },
+        "sourceDesign": {
+          "value": "关联论文说明多数健康对照为患者长期共同生活配偶；需另查家庭/配对与项目子集复用，不按项目编号自动认定独立队列。",
+          "evidenceRefs": [
+            "release-paper-PRJNA496408"
+          ],
+          "locator": "2.1 Study Subjects; HC majority spouses living together and sharing diet for at least 20 years",
+          "recordedOn": "2026-10-16"
+        },
+        "projectTitle": {
+          "value": "human gut metagenome Metagenome",
+          "evidenceRefs": [
+            "release-project-PRJNA496408"
+          ],
+          "locator": "ENA PROJECT/TITLE or STUDY/STUDY_TITLE; project record, not automatically the paper title",
+          "recordedOn": "2026-10-16"
+        },
+        "projectDescription": {
+          "value": "gut metagenome of AD patients",
+          "evidenceRefs": [
+            "release-project-PRJNA496408"
+          ],
+          "locator": "ENA PROJECT/DESCRIPTION or STUDY/STUDY_ABSTRACT",
+          "recordedOn": "2026-10-16"
+        },
+        "studyTitle": {
+          "value": "Altered Gut Microbial Metabolites in Amnestic Mild Cognitive Impairment and Alzheimer’s Disease: Signals in Host–Microbe Interplay",
+          "evidenceRefs": [
+            "release-paper-PRJNA496408"
+          ],
+          "locator": "article/front/article-meta/title-group/article-title; project accession explicitly present in archived article",
+          "recordedOn": "2026-10-16"
+        },
+        "supplementCatalog": {
+          "value": [
+            "Click here for additional data file."
+          ],
+          "evidenceRefs": [
+            "release-paper-PRJNA496408"
+          ],
+          "locator": "article//supplementary-material/caption; catalogue inspected, attachments not all acquired/parsed",
+          "recordedOn": "2026-10-16"
+        },
+        "sampleSourceCheck": {
+          "value": "公开样本表 1 行；当前固定包 93 Run，BioSample 精确对应 93 条。样本别名和唯一 BioSample 不自动当作参与者 ID。",
+          "evidenceRefs": [
+            "complete-PRJNA496408-samples.tsv"
+          ],
+          "locator": "ENA sample portal all returned fields; exact accession join; full missing-field counts in complete-sample-audit",
+          "recordedOn": "2026-10-17"
+        },
+        "currentGmrepoAvailability": {
+          "value": "官方项目详情：93 Run；QC valid 0，failed 93；此数不代表具有疾病或参与者映射。",
+          "evidenceRefs": [
+            "complete-PRJNA496408-gmrepo.json"
+          ],
+          "locator": "project.Number_of_runs/valid_runs/failed_runs; endpoint-specific values supersede old overview, original overview retained",
+          "recordedOn": "2026-10-17"
+        }
+      },
+      "studyId": "study:paper:PMC7829997",
+      "originalStudyUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7829997/",
+      "evidenceRefs": [
+        "release-paper-PRJNA496408"
+      ]
+    },
+    {
+      "projectId": "PRJNA554111",
+      "screeningStatus": "reference_available",
+      "screeningNote": "本轮取得 86 条原库样本信息，别名和年龄不能恢复逐人重复关系；保留现有分布，未放行独立两组检验。",
+      "screeningEvidenceRefs": [
+        "sealed-rules",
+        "complete-PRJNA554111-samples.tsv",
+        "complete-sample-audit"
+      ],
+      "facts": {
+        "projectTitle": {
+          "value": "The raw reads of gut Microbiota in Patients with Alzheimer’s Disease and normal people",
+          "evidenceRefs": [
+            "release-project-PRJNA554111"
+          ],
+          "locator": "ENA PROJECT/TITLE or STUDY/STUDY_TITLE; project record, not automatically the paper title",
+          "recordedOn": "2026-10-16"
+        },
+        "projectDescription": {
+          "value": "The composition of gut microbiota was different between the two groups.",
+          "evidenceRefs": [
+            "release-project-PRJNA554111"
+          ],
+          "locator": "ENA PROJECT/DESCRIPTION or STUDY/STUDY_ABSTRACT",
+          "recordedOn": "2026-10-16"
+        },
+        "bibliography": {
+          "value": "Gut Microbiota is Altered in Patients with Alzheimer's Disease. (2018-01-01); PMID 29758946; PMCID 本次未提供",
+          "evidenceRefs": [
+            "release-paper_candidate-PRJNA554111"
+          ],
+          "locator": "Europe PMC resultList/result; bibliographic candidate association inherited from sealed rules, not new scientific approval",
+          "recordedOn": "2026-10-16"
+        },
+        "fullTextAcquisition": {
+          "value": "本轮取得题录及摘要；Europe PMC 未提供 PMCID，尚未取得原全文/补充表。不能据此认定没有公开资料。",
+          "evidenceRefs": [
+            "release-paper_candidate-PRJNA554111"
+          ],
+          "locator": "Europe PMC resultList/result/pmcid, isOpenAccess and fullTextUrlList",
+          "recordedOn": "2026-10-16"
+        },
+        "registeredLibraryStrategy": {
+          "value": [
+            "OTHER"
+          ],
+          "evidenceRefs": [
+            "release-run_export-PRJNA554111"
+          ],
+          "locator": "ENA read_run export/library_strategy; OTHER is not inferred to be WGS",
+          "recordedOn": "2026-10-16"
+        },
+        "publicRunCount": {
+          "value": "本批 ENA 项目导出 86 Run；不是当前图表分母或独立参与者数。",
+          "evidenceRefs": [
+            "release-run_export-PRJNA554111"
+          ],
+          "locator": "ENA read_run export; includes all materials/experiments in project",
+          "recordedOn": "2026-10-16"
+        },
+        "sampleSourceCheck": {
+          "value": "公开样本表 86 行；当前固定包 86 Run，BioSample 精确对应 86 条。样本别名和唯一 BioSample 不自动当作参与者 ID。",
+          "evidenceRefs": [
+            "complete-PRJNA554111-samples.tsv"
+          ],
+          "locator": "ENA sample portal all returned fields; exact accession join; full missing-field counts in complete-sample-audit",
+          "recordedOn": "2026-10-17"
+        },
+        "currentGmrepoAvailability": {
+          "value": "官方项目详情：86 Run；QC valid 73，failed 13；此数不代表具有疾病或参与者映射。",
+          "evidenceRefs": [
+            "complete-PRJNA554111-gmrepo.json"
+          ],
+          "locator": "project.Number_of_runs/valid_runs/failed_runs; endpoint-specific values supersede old overview, original overview retained",
+          "recordedOn": "2026-10-17"
+        }
+      }
+    },
+    {
+      "projectId": "PRJNA611839",
+      "screeningStatus": "insufficient_information",
+      "screeningNote": "原研究 21 AD/44 NC 与来源全 AD 标签矛盾；个体映射未解决，不猜解未说明的 tmp 字段。",
+      "screeningEvidenceRefs": [
+        "sealed-rules"
+      ],
+      "facts": {
+        "country": {
+          "value": "中国上海，Huashan Hospital / Shanghai Aging Study",
+          "evidenceRefs": [
+            "release-paper-PRJNA611839"
+          ],
+          "locator": "Study participants",
+          "recordedOn": "2026-10-16"
+        },
+        "material": {
+          "value": "人体粪便，另有粪便代谢组；两种测量不混作同一丰度",
+          "evidenceRefs": [
+            "release-paper-PRJNA611839"
+          ],
+          "locator": "Sample collection / DNA extraction and 16S rRNA gene sequencing / Metabolomics profiling",
+          "recordedOn": "2026-10-16"
+        },
+        "stages": {
+          "value": [
+            "AD 21",
+            "认知正常对照 44"
+          ],
+          "evidenceRefs": [
+            "release-paper-PRJNA611839"
+          ],
+          "locator": "Study participants; original groups conflict with source all-AD annotation",
+          "recordedOn": "2026-10-16"
+        },
+        "sourceDesign": {
+          "value": "2018-04 至 2019-07 招募；公开原文人数不能自动建立每条 Run 的组别对应。",
+          "evidenceRefs": [
+            "release-paper-PRJNA611839"
+          ],
+          "locator": "Study participants",
+          "recordedOn": "2026-10-16"
+        },
+        "sourcePlatform": {
+          "value": "16S V3–V4，Illumina MiSeq，paired-end 2×300",
+          "evidenceRefs": [
+            "release-paper-PRJNA611839"
+          ],
+          "locator": "DNA extraction and 16S rRNA gene sequencing",
+          "recordedOn": "2026-10-16"
+        },
+        "projectTitle": {
+          "value": "Alzheimer's disease microbial community diversity",
+          "evidenceRefs": [
+            "release-project-PRJNA611839"
+          ],
+          "locator": "ENA PROJECT/TITLE or STUDY/STUDY_TITLE; project record, not automatically the paper title",
+          "recordedOn": "2026-10-16"
+        },
+        "projectDescription": {
+          "value": "Altered gut microbiota composition in the fecal samples that are relevant with AD",
+          "evidenceRefs": [
+            "release-project-PRJNA611839"
+          ],
+          "locator": "ENA PROJECT/DESCRIPTION or STUDY/STUDY_ABSTRACT",
+          "recordedOn": "2026-10-16"
+        },
+        "bibliography": {
+          "value": "Disturbed microbial ecology in Alzheimer's disease: evidence from the gut microbiota and fecal metabolome. (2021-08-12); PMID 34384375; PMCID PMC8361629",
+          "evidenceRefs": [
+            "release-paper_candidate-PRJNA611839"
+          ],
+          "locator": "Europe PMC resultList/result; bibliographic candidate association inherited from sealed rules, not new scientific approval",
+          "recordedOn": "2026-10-16"
+        },
+        "supplementCatalog": {
+          "value": [
+            "Additional file 1: Fig. S1. The OUTs distribution and the control analyses of global microbial phenotypes.",
+            "Additional file 2: Table S1. α-phylogenetic diversity analysis.",
+            "Additional file 3: Table S2. Linear discriminant analysis effect size (LEfSe) analysis for differential bacteria between AD group and NC group.",
+            "Additional file 4: Table S3. The coefficient of correlation between microbial genus and fecal metabolites, clinical parameters and inflammatory cytokines.",
+            "Additional file 5: Table S4. The P valued of correlation between microbial genus and fecal metabolites, clinical parameters and inflammatory cytokines.",
+            "Additional file 6: Table S5. The coefficient of correlation between fecal metabolites and clinical parameters and inflammatory cytokines.",
+            "Additional file 7: Table S6. The P valued of correlation between fecal metabolites, clinical parameters and inflammatory cytokines."
+          ],
+          "evidenceRefs": [
+            "release-paper-PRJNA611839"
+          ],
+          "locator": "article//supplementary-material/caption; catalogue inspected, attachments not all acquired/parsed",
+          "recordedOn": "2026-10-16"
+        },
+        "sampleSourceCheck": {
+          "value": "公开样本表 65 行；当前固定包 65 Run，BioSample 精确对应 65 条。样本别名和唯一 BioSample 不自动当作参与者 ID。",
+          "evidenceRefs": [
+            "complete-PRJNA611839-samples.tsv"
+          ],
+          "locator": "ENA sample portal all returned fields; exact accession join; full missing-field counts in complete-sample-audit",
+          "recordedOn": "2026-10-17"
+        },
+        "currentGmrepoAvailability": {
+          "value": "官方项目详情：65 Run；QC valid 65，failed 0；此数不代表具有疾病或参与者映射。",
+          "evidenceRefs": [
+            "complete-PRJNA611839-gmrepo.json"
+          ],
+          "locator": "project.Number_of_runs/valid_runs/failed_runs; endpoint-specific values supersede old overview, original overview retained",
+          "recordedOn": "2026-10-17"
+        }
+      }
+    },
+    {
+      "projectId": "PRJNA633959",
+      "screeningStatus": "reference_available",
+      "screeningNote": "本轮原库样本表仅 1 条公共 BioSample，对应多实验的逐人关系仍缺失；不可将共享 BioSample 合并成一人或认定为 171 名独立参与者。",
+      "screeningEvidenceRefs": [
+        "sealed-rules",
+        "complete-PRJNA633959-samples.tsv",
+        "complete-sample-audit"
+      ],
+      "facts": {
+        "country": {
+          "value": "中国浙江丽水，2019-02 至 2019-11 招募",
+          "evidenceRefs": [
+            "release-paper-PRJNA633959"
+          ],
+          "locator": "Subjects' Enrollment",
+          "recordedOn": "2026-10-16"
+        },
+        "material": {
+          "value": "人体新鲜粪便",
+          "evidenceRefs": [
+            "release-paper-PRJNA633959"
+          ],
+          "locator": "Fecal Sample Collection and DNA Extraction",
+          "recordedOn": "2026-10-16"
+        },
+        "stages": {
+          "value": [
+            "AD 100",
+            "认知正常对照 71"
+          ],
+          "evidenceRefs": [
+            "release-paper-PRJNA633959"
+          ],
+          "locator": "Subjects' Enrollment; original cohort denominator, not current retained profile count",
+          "recordedOn": "2026-10-16"
+        },
+        "sourceDesign": {
+          "value": "临床病例与认知正常对照比较；原文逐人招募描述不代替公开实验别名到参与者的映射。",
+          "evidenceRefs": [
+            "release-paper-PRJNA633959"
+          ],
+          "locator": "Subjects' Enrollment / questionnaire and exclusion criteria",
+          "recordedOn": "2026-10-16"
+        },
+        "bibliography": {
+          "value": "Structural and Functional Dysbiosis of Fecal Microbiota in Chinese Patients With Alzheimer's Disease. (2021-02-04); PMID 33614635; PMCID PMC7889981",
+          "evidenceRefs": [
+            "release-paper_candidate-PRJNA633959"
+          ],
+          "locator": "Europe PMC resultList/result; bibliographic candidate association inherited from sealed rules, not new scientific approval",
+          "recordedOn": "2026-10-16"
+        },
+        "projectTitle": {
+          "value": "Altered fecal microbiota in Chinese patients with AD",
+          "evidenceRefs": [
+            "release-project-PRJNA633959"
+          ],
+          "locator": "ENA PROJECT/TITLE or STUDY/STUDY_TITLE; project record, not automatically the paper title",
+          "recordedOn": "2026-10-16"
+        },
+        "projectDescription": {
+          "value": "With the development of the next-generation sequencing techniques, the higher sequencing depth and coverage made it possible to decipher those unknown key functional taxa in Chinese AD patients. In our present study, the AD associated fecal microbiota were analyzed from AD patients and matched healthy controls from Lishui by 16S rRNA gene high-throughput sequencing platform, which will provide novel targets for the non-invasive diagnosis and personalized treatment of AD as well as the development of tailor-made probiotics designed for Chinese AD patients.",
+          "evidenceRefs": [
+            "release-project-PRJNA633959"
+          ],
+          "locator": "ENA PROJECT/DESCRIPTION or STUDY/STUDY_ABSTRACT",
+          "recordedOn": "2026-10-16"
+        },
+        "supplementCatalog": {
+          "value": [
+            "Supplementary Figure 1Variations in the compositions of fecal microbiota in the Chinese AD patients and the healthy controls. Relative proportions of bacterial phyla in AD patients (n = 100) and healthy controls (n = 71).Click here for additional data file.",
+            "Supplementary Figure 2Variations in the composition of fecal microbiota in the Chinese AD patients and the healthy controls. Relative proportions of bacterial genera in AD patients (n = 100) and healthy controls (n = 71).Click here for additional data file.",
+            "Supplementary Figure 3Heatmap of the genus-level taxa in the fecal microbiota of the Chinese AD patients and the healthy controls. The color of the spots in the panel represents the relative abundance (normalized and log10 transformed) of the genus in each sample. The relative abundance of the bacteria in each genus is indicated by a gradient of colors from blue (low abundance) to red (high abundance). The taxonomic classifications of the family are shown on the right. The corresponding Shannon's index in each sample is shown under the heatmap.Click here for additional data file.",
+            "Supplementary Figure 4Mean concentrations (pg/ml) of pro- and anti-inflammatory cytokines and chemokines in patients with AD and in healthy controls determined using Bio-Plex immunoassays. The concentrations of TNF-α (A) and IP-10 (D) increased significantly in patients with AD, while those of IL-8 (B), MCP-1 (E), MIP-1a (F), and IFN-γ (C) decreased significantly. *p < 0.05.Click here for additional data file."
+          ],
+          "evidenceRefs": [
+            "release-paper-PRJNA633959"
+          ],
+          "locator": "article//supplementary-material/caption; catalogue inspected, attachments not all acquired/parsed",
+          "recordedOn": "2026-10-16"
+        },
+        "participantEvidence": {
+          "value": "原论文附录目录为菌群组成/热图/炎症因子图；本轮尚无可逐条连接 171 个实验别名的参与者身份表，共享 BioSample 不按 171 名独立人放行。",
+          "evidenceRefs": [
+            "release-paper-PRJNA633959"
+          ],
+          "locator": "Supplementary Material captions; fixed cohort_rules identity_rule; no participant map supplied in inspected catalogue",
+          "recordedOn": "2026-10-16"
+        },
+        "registeredLibraryStrategy": {
+          "value": [
+            "AMPLICON"
+          ],
+          "evidenceRefs": [
+            "release-run_export-PRJNA633959"
+          ],
+          "locator": "ENA read_run export/library_strategy; OTHER is not inferred to be WGS",
+          "recordedOn": "2026-10-16"
+        },
+        "publicRunCount": {
+          "value": "本批 ENA 项目导出 171 Run；不是当前图表分母或独立参与者数。",
+          "evidenceRefs": [
+            "release-run_export-PRJNA633959"
+          ],
+          "locator": "ENA read_run export; includes all materials/experiments in project",
+          "recordedOn": "2026-10-16"
+        },
+        "sampleSourceCheck": {
+          "value": "公开样本表 1 行；当前固定包 171 Run，BioSample 精确对应 171 条。样本别名和唯一 BioSample 不自动当作参与者 ID。",
+          "evidenceRefs": [
+            "complete-PRJNA633959-samples.tsv"
+          ],
+          "locator": "ENA sample portal all returned fields; exact accession join; full missing-field counts in complete-sample-audit",
+          "recordedOn": "2026-10-17"
+        },
+        "currentGmrepoAvailability": {
+          "value": "官方项目详情：171 Run；QC valid 136，failed 0；此数不代表具有疾病或参与者映射。",
+          "evidenceRefs": [
+            "complete-PRJNA633959-gmrepo.json"
+          ],
+          "locator": "project.Number_of_runs/valid_runs/failed_runs; endpoint-specific values supersede old overview, original overview retained",
+          "recordedOn": "2026-10-17"
+        }
+      }
+    },
+    {
+      "projectId": "PRJNA665245",
+      "evidenceRefs": [
+        "gmrepo-all-projects"
+      ],
+      "screeningStatus": "insufficient_information",
+      "screeningNote": "纵向 WGS 项目，原描述含基线/6月/12月。最新项目详情为 81 Run 且 QC valid=81，修正总览旧值 0；ENA 取得 81 条样本记录，但缺疾病、逐人及访视对应。subject_* 为样本别名，不据此任选首条当基线。丰度接口返回错误，当前不开放独立两组检验或分布。",
+      "screeningEvidenceRefs": [
+        "complete-PRJNA665245-gmrepo.json",
+        "complete-PRJNA665245-samples.tsv",
+        "complete-SAMN16247262-biosamples.json",
+        "complete-receipts-2026-10-17-sample-tables-v2"
+      ],
+      "facts": {
+        "projectDescription": {
+          "value": "This study (a pilot to the MOTION Study) is a longitudinal observational multi-domain pilot study that investigates the Gut-Brain axis in healthy elderly at differential genetic risk for developing Alzheimer's disease (AD) and compares this to a small group of AD patients. The project explores how the gut microbiome changes with healthy ageing over time and investigates the role of potential risk factors for AD on cognition, brain health and microbiome profiles. The gut microbiota is assessed at three time points (baseline, 6 months, 12 months) over the period of 12 months using whole metagenomic shotgun sequencing.",
+          "evidenceRefs": [
+            "gmrepo-all-projects"
+          ],
+          "locator": "ALLPROJECTS[project_id=PRJNA665245].Original_Project_description",
+          "recordedOn": "2026-10-17"
+        },
+        "sampleSourceCheck": {
+          "value": "公开样本表 81 行；当前固定包 0 Run，BioSample 精确对应 0 条。样本别名和唯一 BioSample 不自动当作参与者 ID。",
+          "evidenceRefs": [
+            "complete-PRJNA665245-samples.tsv"
+          ],
+          "locator": "ENA sample portal all returned fields; exact accession join; full missing-field counts in complete-sample-audit",
+          "recordedOn": "2026-10-17"
+        },
+        "currentGmrepoAvailability": {
+          "value": "官方项目详情：81 Run；QC valid 81，failed 0；此数不代表具有疾病或参与者映射。",
+          "evidenceRefs": [
+            "complete-PRJNA665245-gmrepo.json"
+          ],
+          "locator": "project.Number_of_runs/valid_runs/failed_runs; endpoint-specific values supersede old overview, original overview retained",
+          "recordedOn": "2026-10-17"
+        }
+      }
+    },
+    {
+      "projectId": "PRJNA734525",
+      "screeningStatus": "insufficient_information",
+      "screeningNote": "原研究有 AD/MCI/NC，来源 Alzheimer 标签混合 AD/MCI；个体疾病阶段仍待对应。",
+      "screeningEvidenceRefs": [
+        "sealed-rules"
+      ],
+      "facts": {
+        "country": {
+          "value": "土耳其研究队列",
+          "evidenceRefs": [
+            "release-paper-PRJNA734525"
+          ],
+          "locator": "article-title: Turkish Cohort",
+          "recordedOn": "2026-10-16"
+        },
+        "sourcePlatform": {
+          "value": "16S rRNA；原研究疾病阶段另审，不按统一 Alzheimer 标签合并 AD/MCI。",
+          "evidenceRefs": [
+            "release-paper-PRJNA734525"
+          ],
+          "locator": "Data Availability Statement / PRJNA734525 16S sequences; sealed cohort rule on merged stages",
+          "recordedOn": "2026-10-16"
+        },
+        "projectTitle": {
+          "value": "Gut microbiome profiles of Alzheimers disease patients with different cognitive states",
+          "evidenceRefs": [
+            "release-project-PRJNA734525"
+          ],
+          "locator": "ENA PROJECT/TITLE or STUDY/STUDY_TITLE; project record, not automatically the paper title",
+          "recordedOn": "2026-10-16"
+        },
+        "projectDescription": {
+          "value": "Gut microbiome profiles of Alzheimers disease patients with different cognitive states",
+          "evidenceRefs": [
+            "release-project-PRJNA734525"
+          ],
+          "locator": "ENA PROJECT/DESCRIPTION or STUDY/STUDY_ABSTRACT",
+          "recordedOn": "2026-10-16"
+        },
+        "bibliography": {
+          "value": "Stratification of the Gut Microbiota Composition Landscape across the Alzheimer's Disease Continuum in a Turkish Cohort. (2022-02-08); PMID 35133187; PMCID PMC8823292",
+          "evidenceRefs": [
+            "release-paper_candidate-PRJNA734525"
+          ],
+          "locator": "Europe PMC resultList/result; bibliographic candidate association inherited from sealed rules, not new scientific approval",
+          "recordedOn": "2026-10-16"
+        },
+        "studyTitle": {
+          "value": "Stratification of the Gut Microbiota Composition Landscape across the Alzheimer's Disease Continuum in a Turkish Cohort",
+          "evidenceRefs": [
+            "release-paper-PRJNA734525"
+          ],
+          "locator": "article/front/article-meta/title-group/article-title; project accession explicitly present in archived article",
+          "recordedOn": "2026-10-16"
+        },
+        "supplementCatalog": {
+          "value": [
+            "TABLE S1Levels of cerebrospinal fluid biomarkers of a subset of AD patients. The cutoff values discriminating AD from controls were determined as reported before (69). Download Table S1, DOCX file, 0.02 MB.Copyright © 2022 Yıldırım et al.This content is distributed under the terms of the Creative Commons Attribution 4.0 International license.",
+            "TABLE S2Differentially abundant ASV and genus-level taxa between cohort groups as detected by Limma-Voom model (age and sex adjusted). Parts A and B show a list of differentially abundant ASVs between AD versus C and MCI versus C, respectively. Parts C and D show differentially abundant genus-level taxa between AD versus C and MCI versus C, respectively. Download Table S2, XLSX file, 0.02 MB.Copyright © 2022 Yıldırım et al.This content is distributed under the terms of the Creative Commons Attribution 4.0 International license.",
+            "FIG S1Alpha diversity analysis. Alpha diversity indices were calculated using a rarefied ASV table as input to the phyloseq R package. Violin plots show (A) Chao1 index, (B) inverse Simpson, (C) observed species, and (D) Shannon diversity index. The Shannon and inverse Simpson results did not show significant differences after multiple testing corrections (Kruskal-Wallis, FDR > 0.05), but the richness index, Chao1, showed significant differences between MCI and the control group (pairwise Wilcoxon rank sum test, P = 0.008074). Download FIG S1, PDF file, 0.2 MB.Copyright © 2022 Yıldırım et al.This content is distributed under the terms of the Creative Commons Attribution 4.0 International license.",
+            "FIG S2Multidimensional scale (MDS) analysis of genus relative abundances show gradient of Prevotella_9 and Bacteroides. (A) MDS analysis of 16S rRNA genus-level abundances. (B) Gradient of Prevotella_9 abundances across the samples. (C) Gradient of Bacteroides abundances across the samples. Download FIG S2, PDF file, 0.2 MB.Copyright © 2022 Yıldırım et al.This content is distributed under the terms of the Creative Commons Attribution 4.0 International license.",
+            "TABLE S3PERMANOVA of covariates using the adonis2 function in the qiime2 diversity plugin. Download Table S3, DOCX file, 0.02 MB.Copyright © 2022 Yıldırım et al.This content is distributed under the terms of the Creative Commons Attribution 4.0 International license.",
+            "TABLE S4Taxon names from the enrichment analysis as determined by multinomial regression embedded in Songbird. Sets 1 and 2 are listed in part A, and sets 3 and 4 are listed in part B. Download Table S4, XLSX file, 0.09 MB.Copyright © 2022 Yıldırım et al.This content is distributed under the terms of the Creative Commons Attribution 4.0 International license.",
+            "FIG S3Determining the number of clusters in the gut microbiota. Shown are the optimal number of clusters based on (A) the Gap statistic with standard error bars for PAM analysis and (B) the Laplace method for evaluating model fit for increasing number of Dirichlet mixture components. Both Gap statistics and Laplace method show 3 clusters as optimum. Download FIG S3, PDF file, 0.1 MB.Copyright © 2022 Yıldırım et al.This content is distributed under the terms of the Creative Commons Attribution 4.0 International license.",
+            "FIG S4Latent Dirichlet allocation model performance. The LDA model’s perplexity parameter (top) and log-likelihood values (bottom) do not show a clear optimum point. Download FIG S4, PDF file, 0.2 MB.Copyright © 2022 Yıldırım et al.This content is distributed under the terms of the Creative Commons Attribution 4.0 International license.",
+            "DATA SET S1(Tab 1) Ranking of SAFE scores calculated using the “filter” function based on Bray-Curtis distance. (Tab 2) Ranking of SAFE scores calculated using the “filter” function based on Jensen-Shannon distance. Download Data Set S1, XLSX file, 0.05 MB.Copyright © 2022 Yıldırım et al.This content is distributed under the terms of the Creative Commons Attribution 4.0 International license.",
+            "FIG S5Associations of the patient drugs with genus-level features. The heat map shows per-feature testing in MaAsLin 2 using linear mixed models to identify microbial species associated with drugs used by the patients. Colors of the heat map reflect the beta coefficient for drugs and age and sex from linear mixed models in MaAsLin 2 with genus-level features as outcomes. Download FIG S5, PDF file, 0.3 MB.Copyright © 2022 Yıldırım et al.This content is distributed under the terms of the Creative Commons Attribution 4.0 International license."
+          ],
+          "evidenceRefs": [
+            "release-paper-PRJNA734525"
+          ],
+          "locator": "article//supplementary-material/caption; catalogue inspected, attachments not all acquired/parsed",
+          "recordedOn": "2026-10-16"
+        },
+        "sampleSourceCheck": {
+          "value": "公开样本表 125 行；当前固定包 125 Run，BioSample 精确对应 125 条。样本别名和唯一 BioSample 不自动当作参与者 ID。",
+          "evidenceRefs": [
+            "complete-PRJNA734525-samples.tsv"
+          ],
+          "locator": "ENA sample portal all returned fields; exact accession join; full missing-field counts in complete-sample-audit",
+          "recordedOn": "2026-10-17"
+        },
+        "currentGmrepoAvailability": {
+          "value": "官方项目详情：125 Run；QC valid 50，failed 75；此数不代表具有疾病或参与者映射。",
+          "evidenceRefs": [
+            "complete-PRJNA734525-gmrepo.json"
+          ],
+          "locator": "project.Number_of_runs/valid_runs/failed_runs; endpoint-specific values supersede old overview, original overview retained",
+          "recordedOn": "2026-10-17"
+        }
+      },
+      "studyId": "study:paper:PMC8823292",
+      "originalStudyUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8823292/",
+      "evidenceRefs": [
+        "release-paper-PRJNA734525"
+      ]
+    },
+    {
+      "projectId": "PRJNA770746",
+      "screeningStatus": "reference_available",
+      "screeningNote": "本轮取得 198 条原库样本信息；粪便与口腔保留原材料边界，样本别名不能认证口腔—粪便—参与者对应；继续保留仅分布用途。",
+      "screeningEvidenceRefs": [
+        "sealed-rules",
+        "complete-PRJNA770746-samples.tsv",
+        "complete-sample-audit"
+      ],
+      "facts": {
+        "projectTitle": {
+          "value": "Alzheimer's Oral and Gut Microbiome Vancouver Canada",
+          "evidenceRefs": [
+            "release-project-PRJNA770746"
+          ],
+          "locator": "ENA PROJECT/TITLE or STUDY/STUDY_TITLE; project record, not automatically the paper title",
+          "recordedOn": "2026-10-16"
+        },
+        "projectDescription": {
+          "value": "A study of the oral and gut microbiome in a human cohort of Alzheimer's disease and matched controls from Vancouver, Canada",
+          "evidenceRefs": [
+            "release-project-PRJNA770746"
+          ],
+          "locator": "ENA PROJECT/DESCRIPTION or STUDY/STUDY_ABSTRACT",
+          "recordedOn": "2026-10-16"
+        },
+        "bibliography": {
+          "value": "The Oral and Fecal Microbiota in a Canadian Cohort of Alzheimer's Disease. (2022-01-01); PMID 35275538; PMCID 本次未提供",
+          "evidenceRefs": [
+            "release-paper_candidate-PRJNA770746"
+          ],
+          "locator": "Europe PMC resultList/result; bibliographic candidate association inherited from sealed rules, not new scientific approval",
+          "recordedOn": "2026-10-16"
+        },
+        "fullTextAcquisition": {
+          "value": "本轮取得题录及摘要；Europe PMC 未提供 PMCID，尚未取得原全文/补充表。不能据此认定没有公开资料。",
+          "evidenceRefs": [
+            "release-paper_candidate-PRJNA770746"
+          ],
+          "locator": "Europe PMC resultList/result/pmcid, isOpenAccess and fullTextUrlList",
+          "recordedOn": "2026-10-16"
+        },
+        "registeredLibraryStrategy": {
+          "value": [
+            "AMPLICON"
+          ],
+          "evidenceRefs": [
+            "release-run_export-PRJNA770746"
+          ],
+          "locator": "ENA read_run export/library_strategy; OTHER is not inferred to be WGS",
+          "recordedOn": "2026-10-16"
+        },
+        "publicRunCount": {
+          "value": "本批 ENA 项目导出 198 Run；不是当前图表分母或独立参与者数。",
+          "evidenceRefs": [
+            "release-run_export-PRJNA770746"
+          ],
+          "locator": "ENA read_run export; includes all materials/experiments in project",
+          "recordedOn": "2026-10-16"
+        },
+        "sampleSourceCheck": {
+          "value": "公开样本表 198 行；当前固定包 99 Run，BioSample 精确对应 99 条。样本别名和唯一 BioSample 不自动当作参与者 ID。",
+          "evidenceRefs": [
+            "complete-PRJNA770746-samples.tsv"
+          ],
+          "locator": "ENA sample portal all returned fields; exact accession join; full missing-field counts in complete-sample-audit",
+          "recordedOn": "2026-10-17"
+        },
+        "currentGmrepoAvailability": {
+          "value": "官方项目详情：198 Run；QC valid 97，failed 2；此数不代表具有疾病或参与者映射。",
+          "evidenceRefs": [
+            "complete-PRJNA770746-gmrepo.json"
+          ],
+          "locator": "project.Number_of_runs/valid_runs/failed_runs; endpoint-specific values supersede old overview, original overview retained",
+          "recordedOn": "2026-10-17"
+        }
+      }
+    },
+    {
+      "projectId": "PRJNA807473",
+      "evidenceRefs": [
+        "gmrepo-all-projects"
+      ],
+      "screeningStatus": "outside_scope",
+      "screeningNote": "原项目研究老年精神分裂症；命中词 preclinical 为背景叙述，未建立 AD/NC 或 AD 相关阶段比较，不纳入本次 AD 证据范围。",
+      "screeningEvidenceRefs": [
+        "gmrepo-all-projects"
+      ],
+      "facts": {
+        "projectDescription": {
+          "value": "Schizophrenia (SZ) is a severe neuropsychiatric disorder, and its etiology and pathogenesis remain largely unknown. Mounting preclinical and clinical evidence suggest that the gut microbiome is a vital player in SZ. However, the gut microbiota characteristics as well as its host response in elderly SZ patients are not well understood.",
+          "evidenceRefs": [
+            "gmrepo-all-projects"
+          ],
+          "locator": "ALLPROJECTS[project_id=PRJNA807473].Original_Project_description",
+          "recordedOn": "2026-10-17"
+        }
+      }
+    }
+  ],
+  "reviews": [],
+  "sources": [
+    {
+      "sourceId": "closeout-acquisition-receipts",
+      "url": "https://gmrepo.humangut.info/",
+      "origin": "local_project_record",
+      "path": "ADMetaData/reference/gmrepo/closeout/2026-10-17-v3/acquisitions.json",
+      "sha256": "eaab74fb368f0a85275f0758c2e9b0006828ab83f55407f81bda5091c4459ecf",
+      "bytes": 2712,
+      "retrievedAt": "2026-10-17T07:47:21.228662+00:00"
+    },
+    {
+      "sourceId": "complete-PMC10230724.xml",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PMC10230724.xml",
+      "sha256": "8f5aa463e6b7170f23a922f62ba1a56f36c89c384a7fecae000f6718e07bb714",
+      "bytes": 136626,
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10230724/fullTextXML",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.887181+00:00"
+    },
+    {
+      "sourceId": "complete-PMC11936893.xml",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PMC11936893.xml",
+      "sha256": "54d1849bc00742be8669d176b0d48dd775075485d19f813264026bf0df719117",
+      "bytes": 146141,
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11936893/fullTextXML",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.887554+00:00"
+    },
+    {
+      "sourceId": "complete-PRJEB11419-gmrepo.json",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJEB11419-gmrepo.json",
+      "sha256": "7e065a1d1521c19cb01fd9e8c61a8dc381edf2f0f84942c7194833a70dc796db",
+      "bytes": 13441,
+      "url": "https://gmrepo.humangut.info/api/getProjectDetailsByID/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.868204+00:00"
+    },
+    {
+      "sourceId": "complete-PRJEB11419-runs.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJEB11419-runs.tsv",
+      "sha256": "fef450b6b6350fed57f9ea86829ab253202fddf58938fdb5ff735658f75bad4b",
+      "bytes": 6986128,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJEB11419&result=read_run&fields=run_accession%2Csample_accession%2Csecondary_sample_accession%2Cexperiment_accession%2Csample_alias%2Cexperiment_alias%2Clibrary_strategy%2Clibrary_source%2Cinstrument_model&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.884523+00:00"
+    },
+    {
+      "sourceId": "complete-PRJEB11419-samples.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-sample-tables-v2/PRJEB11419-samples.tsv",
+      "sha256": "c3d12c63fcb35a0055cedfe747b1be9f26de82ae0d899987c910108b1956ea13",
+      "bytes": 19496347,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/search?result=sample&query=study_accession%3DPRJEB11419&fields=all&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.917483+00:00"
+    },
+    {
+      "sourceId": "complete-PRJEB29421-project.json",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-recovered-projects-v1/PRJEB29421-project.json",
+      "sha256": "97ae9c50ab42f141d0db3c6eaad77e1b9ae527f73f96b83fc3461c196213b9cc",
+      "bytes": 13581,
+      "url": "https://gmrepo.humangut.info/api/getProjectDetailsByID/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.933983+00:00"
+    },
+    {
+      "sourceId": "complete-PRJEB49329-gmrepo.json",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJEB49329-gmrepo.json",
+      "sha256": "feb36948549a546c306c4b6657a8b30df4701584de91b4367bea990c9c4f23d8",
+      "bytes": 12375,
+      "url": "https://gmrepo.humangut.info/api/getProjectDetailsByID/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.869005+00:00"
+    },
+    {
+      "sourceId": "complete-PRJEB49329-runs.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJEB49329-runs.tsv",
+      "sha256": "d13bef9d2db2839a542f0be31297155809e73252547e9679528953eccff9b568",
+      "bytes": 23608,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJEB49329&result=read_run&fields=run_accession%2Csample_accession%2Csecondary_sample_accession%2Cexperiment_accession%2Csample_alias%2Cexperiment_alias%2Clibrary_strategy%2Clibrary_source%2Cinstrument_model&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.872201+00:00"
+    },
+    {
+      "sourceId": "complete-PRJEB49329-samples.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-sample-tables-v2/PRJEB49329-samples.tsv",
+      "sha256": "9245d802588266dd49347dd73711a2757f1cdd87aa48354a6c84ada782183428",
+      "bytes": 65571,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/search?result=sample&query=study_accession%3DPRJEB49329&fields=all&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.919695+00:00"
+    },
+    {
+      "sourceId": "complete-PRJEB50447-gmrepo.json",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJEB50447-gmrepo.json",
+      "sha256": "8baa8c6a0fb898bcf216ac46792ad6a84e7caa111e4c6498d0f34ab17dbba0b6",
+      "bytes": 13908,
+      "url": "https://gmrepo.humangut.info/api/getProjectDetailsByID/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.868458+00:00"
+    },
+    {
+      "sourceId": "complete-PRJEB50447-runs.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJEB50447-runs.tsv",
+      "sha256": "f7eddc1717d619073bcfd45a9bb21998c25417c7eecfff946c04705bb0425f53",
+      "bytes": 11000,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJEB50447&result=read_run&fields=run_accession%2Csample_accession%2Csecondary_sample_accession%2Cexperiment_accession%2Csample_alias%2Cexperiment_alias%2Clibrary_strategy%2Clibrary_source%2Cinstrument_model&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.872414+00:00"
+    },
+    {
+      "sourceId": "complete-PRJEB50447-samples.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-sample-tables-v2/PRJEB50447-samples.tsv",
+      "sha256": "6a7ddc20da66b4bafc84750f9ec995b6a20f3ae6ded8400cfcc041c6dce0211f",
+      "bytes": 31941,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/search?result=sample&query=study_accession%3DPRJEB50447&fields=all&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.920028+00:00"
+    },
+    {
+      "sourceId": "complete-PRJEB51982-gmrepo.json",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJEB51982-gmrepo.json",
+      "sha256": "6524214a213ac019ffaab30afd358e275994a7a7c01713d7e51c793a1d16d560",
+      "bytes": 28827,
+      "url": "https://gmrepo.humangut.info/api/getProjectDetailsByID/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.868730+00:00"
+    },
+    {
+      "sourceId": "complete-PRJEB51982-runs.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJEB51982-runs.tsv",
+      "sha256": "37a77f29900155cdc1c8c4388c8f170b4b1b04d9c6fe30f1aeb2336081705182",
+      "bytes": 6758,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJEB51982&result=read_run&fields=run_accession%2Csample_accession%2Csecondary_sample_accession%2Cexperiment_accession%2Csample_alias%2Cexperiment_alias%2Clibrary_strategy%2Clibrary_source%2Cinstrument_model&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.872638+00:00"
+    },
+    {
+      "sourceId": "complete-PRJEB51982-samples.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-sample-tables-v2/PRJEB51982-samples.tsv",
+      "sha256": "79b55f17978ec7e058fceea14f7841c813bd28b61462c0542494ae8beaf50269",
+      "bytes": 32916,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/search?result=sample&query=study_accession%3DPRJEB51982&fields=all&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.920253+00:00"
+    },
+    {
+      "sourceId": "complete-PRJEB55056-gmrepo.json",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJEB55056-gmrepo.json",
+      "sha256": "dc30ed7bdd78c644316042fd3d313ba2ac3c07830e37b311929afa2ff848445d",
+      "bytes": 12404,
+      "url": "https://gmrepo.humangut.info/api/getProjectDetailsByID/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.869253+00:00"
+    },
+    {
+      "sourceId": "complete-PRJEB55056-runs.json",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-recovered-projects-v1/PRJEB55056-runs.json",
+      "sha256": "d7a9a8c3633c36c6b127d794ee0795e7efbaac80f0cf3ac2abfe0e68c7334f30",
+      "bytes": 62208,
+      "url": "https://gmrepo.humangut.info/api/getAllRunsByProjectIDAsync/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.955893+00:00"
+    },
+    {
+      "sourceId": "complete-PRJEB55056-runs.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJEB55056-runs.tsv",
+      "sha256": "20a2a5c4fc0e1732f3062faf62837cbe878e6f62068a516d4bfe7f36c5ac7554",
+      "bytes": 10310,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJEB55056&result=read_run&fields=run_accession%2Csample_accession%2Csecondary_sample_accession%2Cexperiment_accession%2Csample_alias%2Cexperiment_alias%2Clibrary_strategy%2Clibrary_source%2Cinstrument_model&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.872849+00:00"
+    },
+    {
+      "sourceId": "complete-PRJEB55056-samples.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-sample-tables-v2/PRJEB55056-samples.tsv",
+      "sha256": "fb8830603e8396887fa522a81dfbd2f6dfd5c41cdbf7699659db7c76a56a5108",
+      "bytes": 40536,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/search?result=sample&query=study_accession%3DPRJEB55056&fields=all&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.920488+00:00"
+    },
+    {
+      "sourceId": "complete-PRJEB59009-gmrepo.json",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJEB59009-gmrepo.json",
+      "sha256": "bb24ab0cd967e96771f9d6e9de3a5e26e9051ff3972d09413d1fd1f8b8d705bd",
+      "bytes": 41702,
+      "url": "https://gmrepo.humangut.info/api/getProjectDetailsByID/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.869768+00:00"
+    },
+    {
+      "sourceId": "complete-PRJEB59009-runs.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJEB59009-runs.tsv",
+      "sha256": "114ed22d5f0ceb96db3823093a917abd91fdedcb36861937dd88d688bc0f66c0",
+      "bytes": 33472,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJEB59009&result=read_run&fields=run_accession%2Csample_accession%2Csecondary_sample_accession%2Cexperiment_accession%2Csample_alias%2Cexperiment_alias%2Clibrary_strategy%2Clibrary_source%2Cinstrument_model&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.873147+00:00"
+    },
+    {
+      "sourceId": "complete-PRJEB59009-samples.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-sample-tables-v2/PRJEB59009-samples.tsv",
+      "sha256": "3fb01a1dde5647c3f5119c23604ccc81ec4197d33edc950ae2dddca44b67970b",
+      "bytes": 125701,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/search?result=sample&query=study_accession%3DPRJEB59009&fields=all&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.920883+00:00"
+    },
+    {
+      "sourceId": "complete-PRJEB77146-gmrepo.json",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJEB77146-gmrepo.json",
+      "sha256": "38a168f634a571521dbddc7e9b3c4e8991da4d7e11bb65caabf3ee8e6f617322",
+      "bytes": 12359,
+      "url": "https://gmrepo.humangut.info/api/getProjectDetailsByID/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.869505+00:00"
+    },
+    {
+      "sourceId": "complete-PRJEB77146-runs.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJEB77146-runs.tsv",
+      "sha256": "22d0e3aea32f3535cd57de84a59757af829cccb67b1a16e50adf28e18b6f5566",
+      "bytes": 22190,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJEB77146&result=read_run&fields=run_accession%2Csample_accession%2Csecondary_sample_accession%2Cexperiment_accession%2Csample_alias%2Cexperiment_alias%2Clibrary_strategy%2Clibrary_source%2Cinstrument_model&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.873384+00:00"
+    },
+    {
+      "sourceId": "complete-PRJEB77146-samples.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-sample-tables-v2/PRJEB77146-samples.tsv",
+      "sha256": "49d3eb2b549bfa7eb437638b8bfd06a2d9f1939b9e5643fee6f63d097ae9c8d2",
+      "bytes": 86895,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/search?result=sample&query=study_accession%3DPRJEB77146&fields=all&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.921198+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA1028813-gmrepo.json",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJNA1028813-gmrepo.json",
+      "sha256": "0ffa8bee69c614def6ed977dad6b5f15311eff08ed7b323590c881f9215a57d1",
+      "bytes": 12398,
+      "url": "https://gmrepo.humangut.info/api/getProjectDetailsByID/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.869997+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA1028813-runs.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJNA1028813-runs.tsv",
+      "sha256": "0b9966b2aa7648fc5e51040147fb3a52bfcc9595b325ea8df9075c23b3b0ec91",
+      "bytes": 8458,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA1028813&result=read_run&fields=run_accession%2Csample_accession%2Csecondary_sample_accession%2Cexperiment_accession%2Csample_alias%2Cexperiment_alias%2Clibrary_strategy%2Clibrary_source%2Cinstrument_model&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.873595+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA1028813-samples.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-sample-tables-v2/PRJNA1028813-samples.tsv",
+      "sha256": "8d93714e94dccae3c6b2b4449cda4f665fd52e0928e4a431723d5c73d9d79e19",
+      "bytes": 42440,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/search?result=sample&query=study_accession%3DPRJNA1028813&fields=all&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.921534+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA373876-gmrepo.json",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJNA373876-gmrepo.json",
+      "sha256": "ef19fe6a127107310d9a824f816e415c2bf7058509529bec95701d3028b4a2f9",
+      "bytes": 14382,
+      "url": "https://gmrepo.humangut.info/api/getProjectDetailsByID/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.870186+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA436440-project.json",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-recovered-projects-v1/PRJNA436440-project.json",
+      "sha256": "d42910650eea85c9aa9f203d92c698733c1ddb4537c012b0b0d6d9e06b81dae2",
+      "bytes": 12229,
+      "url": "https://gmrepo.humangut.info/api/getProjectDetailsByID/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.934188+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA489760-gmrepo.json",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJNA489760-gmrepo.json",
+      "sha256": "dfc493f1326a17f348637c4ff06581a0d08909a3c081530b2ad75e156d90305c",
+      "bytes": 12343,
+      "url": "https://gmrepo.humangut.info/api/getProjectDetailsByID/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.870566+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA489760-runs.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJNA489760-runs.tsv",
+      "sha256": "336ba7f87aab0a8c3f5fac6517b4dfac4981828bffcf30135a7fb6a3f2205285",
+      "bytes": 19070,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA489760&result=read_run&fields=run_accession%2Csample_accession%2Csecondary_sample_accession%2Cexperiment_accession%2Csample_alias%2Cexperiment_alias%2Clibrary_strategy%2Clibrary_source%2Cinstrument_model&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.885412+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA489760-samples.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-sample-tables-v2/PRJNA489760-samples.tsv",
+      "sha256": "2bff1fc7a0c1978417c159d0a8ad0b92c8a55aa0770eae44a3e8a2fb9fb00c55",
+      "bytes": 114927,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/search?result=sample&query=study_accession%3DPRJNA489760&fields=all&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.922027+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA496408-gmrepo.json",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJNA496408-gmrepo.json",
+      "sha256": "646ec393fc917ef8331056dbeca166c03fb9f6406b2c38e9bee94311d7d920ad",
+      "bytes": 12196,
+      "url": "https://gmrepo.humangut.info/api/getProjectDetailsByID/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.870377+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA496408-runs.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJNA496408-runs.tsv",
+      "sha256": "861536b426dc26bd7cc9c0e0e3d2fcaacd9e6a5bdf5ad12ca260dfc5e5fbf475",
+      "bytes": 8374,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA496408&result=read_run&fields=run_accession%2Csample_accession%2Csecondary_sample_accession%2Cexperiment_accession%2Csample_alias%2Cexperiment_alias%2Clibrary_strategy%2Clibrary_source%2Cinstrument_model&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.885712+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA496408-samples.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-sample-tables-v2/PRJNA496408-samples.tsv",
+      "sha256": "554d3f26528c6f0a1e5db347175139098c6deed218510e04db253bdbd83b30a1",
+      "bytes": 1988,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/search?result=sample&query=study_accession%3DPRJNA496408&fields=all&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.922267+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA529598-project.json",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-recovered-projects-v1/PRJNA529598-project.json",
+      "sha256": "eab5730173668825b9fc2d637bb682f78edf1e3a5a91519b430928e58f19f22f",
+      "bytes": 12491,
+      "url": "https://gmrepo.humangut.info/api/getProjectDetailsByID/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.934398+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA533120-project.json",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-recovered-projects-v1/PRJNA533120-project.json",
+      "sha256": "4e60afd7f009feadd318db94b8052a61c126244573296a9cba4994e9bb3f051a",
+      "bytes": 12251,
+      "url": "https://gmrepo.humangut.info/api/getProjectDetailsByID/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.934829+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA554111-gmrepo.json",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJNA554111-gmrepo.json",
+      "sha256": "6fdb761a4f83b8b442601feedade5c7d07e4b50d4d08c1035e8ce99ca927f564",
+      "bytes": 30139,
+      "url": "https://gmrepo.humangut.info/api/getProjectDetailsByID/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.870774+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA554111-samples.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-sample-tables-v2/PRJNA554111-samples.tsv",
+      "sha256": "169c2bd568219bd2293b3a04c26c4feeee1753719b2127819212df45341033ae",
+      "bytes": 48478,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/search?result=sample&query=study_accession%3DPRJNA554111&fields=all&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.922525+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA611839-gmrepo.json",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJNA611839-gmrepo.json",
+      "sha256": "5f676a96e0d84c2ad5566ee15e3e76db7a1031f0e922c5b7dae5ef1d2ebfe56c",
+      "bytes": 12158,
+      "url": "https://gmrepo.humangut.info/api/getProjectDetailsByID/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.870975+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA611839-runs.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJNA611839-runs.tsv",
+      "sha256": "2f0d77707cdc5e6e1385c3004e5338b58930b4345a830aee52a7c34eb3b836aa",
+      "bytes": 6541,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA611839&result=read_run&fields=run_accession%2Csample_accession%2Csecondary_sample_accession%2Cexperiment_accession%2Csample_alias%2Cexperiment_alias%2Clibrary_strategy%2Clibrary_source%2Cinstrument_model&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.886160+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA611839-samples.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-sample-tables-v2/PRJNA611839-samples.tsv",
+      "sha256": "cc6b6f1a13c9d1a30293cc15b30fb2aabebdddd802a716b3f6fed01641d02189",
+      "bytes": 25545,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/search?result=sample&query=study_accession%3DPRJNA611839&fields=all&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.922760+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA633959-gmrepo.json",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJNA633959-gmrepo.json",
+      "sha256": "fa6d36ae32f4e9d8f974854ad60a30843d7371b00798147e5c30fe2234d14eb5",
+      "bytes": 12690,
+      "url": "https://gmrepo.humangut.info/api/getProjectDetailsByID/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.871167+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA633959-runs.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJNA633959-runs.tsv",
+      "sha256": "4b1f2435ec36a3f4ee95318c91d1bec3b1177cb043ddaba46d0eec3884e2ce5c",
+      "bytes": 16870,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA633959&result=read_run&fields=run_accession%2Csample_accession%2Csecondary_sample_accession%2Cexperiment_accession%2Csample_alias%2Cexperiment_alias%2Clibrary_strategy%2Clibrary_source%2Cinstrument_model&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.885950+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA633959-samples.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-sample-tables-v2/PRJNA633959-samples.tsv",
+      "sha256": "9527b441ac885dca074dd2d00419e2988d8de5b7579e803dc86de2eeb6adcc73",
+      "bytes": 2077,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/search?result=sample&query=study_accession%3DPRJNA633959&fields=all&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.922959+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA642975-project.json",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-recovered-projects-v1/PRJNA642975-project.json",
+      "sha256": "9b19a331378740ded5782b7679323d465ac91633b4925e45a7804d033e37ae05",
+      "bytes": 12386,
+      "url": "https://gmrepo.humangut.info/api/getProjectDetailsByID/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.935113+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA665245-gmrepo.json",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJNA665245-gmrepo.json",
+      "sha256": "fed7a84460c324d9cb97e10d9d997e435834c2cddff6e0280699d1ba498f4e05",
+      "bytes": 12687,
+      "url": "https://gmrepo.humangut.info/api/getProjectDetailsByID/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.871356+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA665245-runs.json",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-recovered-projects-v1/PRJNA665245-runs.json",
+      "sha256": "ddafb83243b694bb3078c8c00770c9ca3e5128dcffd45ccc2d2658566ff6d764",
+      "bytes": 66663,
+      "url": "https://gmrepo.humangut.info/api/getAllRunsByProjectIDAsync/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.965888+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA665245-runs.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJNA665245-runs.tsv",
+      "sha256": "5eda3be7e14b9c0c0fdaf14b3ec2be9a93c2990f825304a7ce76be47a4fbde1d",
+      "bytes": 8665,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA665245&result=read_run&fields=run_accession%2Csample_accession%2Csecondary_sample_accession%2Cexperiment_accession%2Csample_alias%2Cexperiment_alias%2Clibrary_strategy%2Clibrary_source%2Cinstrument_model&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.886597+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA665245-samples.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-sample-tables-v2/PRJNA665245-samples.tsv",
+      "sha256": "c0b778eaf28085e6e94b169ffcfd73033d2c56b9749f6cf8a02fb1c6764b9713",
+      "bytes": 65350,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/search?result=sample&query=study_accession%3DPRJNA665245&fields=all&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.923217+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA734525-gmrepo.json",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJNA734525-gmrepo.json",
+      "sha256": "8bbee8c9d75b6569e68320d5fdc3af6756783f9137d21cc6b5c6e1e4aa5d453a",
+      "bytes": 12232,
+      "url": "https://gmrepo.humangut.info/api/getProjectDetailsByID/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.871541+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA734525-runs.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJNA734525-runs.tsv",
+      "sha256": "e0a029d9b78e181c24934f25e759ec71523480d0de96bc6519cf9f4a6bcac9b0",
+      "bytes": 12074,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA734525&result=read_run&fields=run_accession%2Csample_accession%2Csecondary_sample_accession%2Cexperiment_accession%2Csample_alias%2Cexperiment_alias%2Clibrary_strategy%2Clibrary_source%2Cinstrument_model&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.886378+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA734525-samples.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-sample-tables-v2/PRJNA734525-samples.tsv",
+      "sha256": "a4a8f5e6fca9964ed8cf4d9cc65cc9335f5834787acf59bad5a004561864b20b",
+      "bytes": 81104,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/search?result=sample&query=study_accession%3DPRJNA734525&fields=all&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.923655+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA770746-gmrepo.json",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJNA770746-gmrepo.json",
+      "sha256": "0ed5f8e164073d7526ba5f73d47adbc57e3fe12837ef5f5974a562c5d06424db",
+      "bytes": 31621,
+      "url": "https://gmrepo.humangut.info/api/getProjectDetailsByID/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.871777+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA770746-runs.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJNA770746-runs.tsv",
+      "sha256": "d5212e850edcbff80835544e7db9184de582486f7ac09ba88f2c944c52de198c",
+      "bytes": 20354,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA770746&result=read_run&fields=run_accession%2Csample_accession%2Csecondary_sample_accession%2Cexperiment_accession%2Csample_alias%2Cexperiment_alias%2Clibrary_strategy%2Clibrary_source%2Cinstrument_model&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.886817+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA770746-samples.tsv",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-sample-tables-v2/PRJNA770746-samples.tsv",
+      "sha256": "8ea2f7cbcd81ae64ac18716244ef6b32972ff97d0811510e25fa222c6fb219af",
+      "bytes": 132102,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/search?result=sample&query=study_accession%3DPRJNA770746&fields=all&format=tsv",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.924072+00:00"
+    },
+    {
+      "sourceId": "complete-PRJNA807473-gmrepo.json",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/PRJNA807473-gmrepo.json",
+      "sha256": "eefb67d8f7a7bf6c7dc91d0ed4492b1b55ac77c4944daebeb3917d61f7b4dcdd",
+      "bytes": 12440,
+      "url": "https://gmrepo.humangut.info/api/getProjectDetailsByID/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.871978+00:00"
+    },
+    {
+      "sourceId": "complete-SAMEA110670870-biosamples.json",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-sample-tables-v2/SAMEA110670870-biosamples.json",
+      "sha256": "2ef94cc6f1d265613f63a96ee4923c202652b48b51a134d0964aa3469602a684",
+      "bytes": 3305,
+      "url": "https://www.ebi.ac.uk/biosamples/samples/SAMEA110670870",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.924293+00:00"
+    },
+    {
+      "sourceId": "complete-SAMN16247262-biosamples.json",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-sample-tables-v2/SAMN16247262-biosamples.json",
+      "sha256": "f95d7403666088015bad452db42d59883a51ec3f0764549a809ec11c905eb419",
+      "bytes": 2985,
+      "url": "https://www.ebi.ac.uk/biosamples/samples/SAMN16247262",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.924500+00:00"
+    },
+    {
+      "sourceId": "complete-all-projects.json",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/all-projects.json",
+      "sha256": "81100376dd51c09589304687034f6196def44e88c5d0c668309ae87363a06604",
+      "bytes": 954903,
+      "url": "https://gmrepo.humangut.info/api/getAllProjectsWithMetadataAndSomeStatistics/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.889045+00:00"
+    },
+    {
+      "sourceId": "complete-all-run-inventory",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-inventory/reconciliation.json",
+      "sha256": "53348b17c615f2ef4f4c53919de73b86f01aeeffd79a88b7679732c09c6099af",
+      "bytes": 49290,
+      "url": "https://gmrepo.humangut.info/api/getAllRunsAsync/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:37.021665+00:00"
+    },
+    {
+      "sourceId": "complete-receipts-2026-10-17-acquisition-v1",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-acquisition-v1/receipts.json",
+      "sha256": "b41914b2e9b772a214744c1c4a648982516e5d00c78f4ca0ad7c267006b4f267",
+      "bytes": 25960,
+      "url": "https://gmrepo.humangut.info/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.867882+00:00"
+    },
+    {
+      "sourceId": "complete-receipts-2026-10-17-followup-v1",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-followup-v1/receipts.json",
+      "sha256": "0924f605a319e14b83e474256f6d8bb4b932771420fc2a86c342a09d15593539",
+      "bytes": 50263,
+      "url": "https://gmrepo.humangut.info/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.889536+00:00"
+    },
+    {
+      "sourceId": "complete-receipts-2026-10-17-recovered-projects-v1",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-recovered-projects-v1/receipts.json",
+      "sha256": "12171191a13db4bf892faa1ff22b670aab3625b964b155044430a6bdcd18493f",
+      "bytes": 3110,
+      "url": "https://gmrepo.humangut.info/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.933755+00:00"
+    },
+    {
+      "sourceId": "complete-receipts-2026-10-17-sample-tables-v1",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-sample-tables-v1/receipts.json",
+      "sha256": "6c46b208258a279f46957394c2b854d9029b168f7d66a2695f00778f23561ebc",
+      "bytes": 7721,
+      "url": "https://gmrepo.humangut.info/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.889828+00:00"
+    },
+    {
+      "sourceId": "complete-receipts-2026-10-17-sample-tables-v2",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-sample-tables-v2/receipts.json",
+      "sha256": "7531d11829e44d1949be4e9bc06d4ded68c6167dea1f2c735943ceb8e3082b4c",
+      "bytes": 8717,
+      "url": "https://gmrepo.humangut.info/",
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-17T13:17:36.890786+00:00"
+    },
+    {
+      "sourceId": "complete-sample-audit",
+      "path": "ADMetaData/reference/gmrepo/complete/2026-10-17-release-v2/sample-audit.json",
+      "sha256": "ee6bc3b05fea805f8431217a8b40652d9dddce587cb7a5818551a8f8757b1854",
+      "bytes": 9822,
+      "url": "https://www.ebi.ac.uk/ena/portal/api/search",
+      "origin": "local_project_record",
+      "retrievedAt": "2026-10-17T13:17:37.462805+00:00"
+    },
+    {
+      "sourceId": "ena-51982",
+      "url": "https://www.ebi.ac.uk/ena/browser/api/xml/PRJEB51982",
+      "path": "ADMetaData/reference/gmrepo/study-records/2026-10-15-v2/PRJEB51982.xml",
+      "sha256": "9ff81a7b5683061b331e13ab6621920cb96c9dee9a7f42b1a623289959d04959",
+      "bytes": 3136,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T09:04:34.668431+00:00"
+    },
+    {
+      "sourceId": "ena-59009",
+      "url": "https://www.ebi.ac.uk/ena/browser/api/xml/PRJEB59009",
+      "path": "ADMetaData/reference/gmrepo/study-records/2026-10-15-v2/PRJEB59009.xml",
+      "sha256": "bd5b51d50c16d7efeb519f91ae00629fd03f01db2891567a146dcbcc74cc31dd",
+      "bytes": 3348,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T09:04:59.610175+00:00"
+    },
+    {
+      "sourceId": "ena-77146",
+      "url": "https://www.ebi.ac.uk/ena/browser/api/xml/PRJEB77146",
+      "path": "ADMetaData/reference/gmrepo/study-records/2026-10-15-v2/PRJEB77146.xml",
+      "sha256": "bf74655ab353a09837ab04777e5e3250a249d41672850debb10963edb5fb6190",
+      "bytes": 2081,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T09:05:12.294742+00:00"
+    },
+    {
+      "sourceId": "gmrepo-all-projects",
+      "url": "https://gmrepo.humangut.info/api/getAllProjectsWithMetadataAndSomeStatistics/",
+      "origin": "new_acquisition",
+      "path": "ADMetaData/reference/gmrepo/closeout/2026-10-17-v3/all-projects.json",
+      "sha256": "81100376dd51c09589304687034f6196def44e88c5d0c668309ae87363a06604",
+      "bytes": 954903,
+      "retrievedAt": "2026-10-17T07:47:21.202349+00:00"
+    },
+    {
+      "sourceId": "paper-gero",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13082655/",
+      "path": "ADMetaData/reference/gmrepo/study-records/2026-10-15-v2/PMC13082655.xml",
+      "sha256": "0526fc7321fc9ccc5e4ac150ffe7b020757f77f7b8891a4a37dd67f257b35c65",
+      "bytes": 195750,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T09:05:15.733887+00:00"
+    },
+    {
+      "sourceId": "paper-troci",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10776369/",
+      "path": "raw/papers/PMC10776369.xml",
+      "sha256": "ab452bba89d6cfb2ad41ce033400550714125ce852bbba7dd43d25d0192655aa",
+      "bytes": 205529,
+      "origin": "sealed_package"
+    },
+    {
+      "sourceId": "paper-vogt",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5648830/",
+      "path": "raw/papers/PMC5648830.xml",
+      "sha256": "3b1ca86d57f51e39bf42855f42ac1687fce0a670d6e110f59d4c12fc55bdbaa8",
+      "bytes": 115933,
+      "origin": "sealed_package"
+    },
+    {
+      "sourceId": "primary-author-description",
+      "url": "https://raw.githubusercontent.com/JiaLonghao1997/metaAD_analysis/main/README.md",
+      "origin": "new_acquisition",
+      "path": "ADMetaData/reference/gmrepo/closeout/2026-10-17-v3/primary-author-readme.md",
+      "sha256": "2533379b932b03ea4169b507e646069d89c91f416cca2e05d6b0e44229155d55",
+      "bytes": 6790,
+      "retrievedAt": "2026-10-17T07:47:21.156454+00:00"
+    },
+    {
+      "sourceId": "primary-diting-config",
+      "url": "https://ngdc.cncb.ac.cn/bioproject/browse/PRJCA022804",
+      "origin": "local_project_record",
+      "path": "ADMetaData/reference/gmrepo/closeout/2026-10-17-v3/primary-diting-config.yaml",
+      "sha256": "8e6386dcdf30b5d4438cbdeb7a0ae655282c27e195af7042823f9887bd1885b7",
+      "bytes": 184,
+      "retrievedAt": "2026-10-17T07:47:21.205587+00:00"
+    },
+    {
+      "sourceId": "primary-diting-script",
+      "url": "https://ngdc.cncb.ac.cn/bioproject/browse/PRJCA022804",
+      "origin": "local_project_record",
+      "path": "ADMetaData/reference/gmrepo/closeout/2026-10-17-v3/primary-diting-script.snakefile",
+      "sha256": "7d70d4392bbd344a0c93fd49e61439c21620bc9f68d58db2a657f759dc23691e",
+      "bytes": 2079,
+      "retrievedAt": "2026-10-17T07:47:21.204020+00:00"
+    },
+    {
+      "sourceId": "primary-import-manifest",
+      "url": "https://ngdc.cncb.ac.cn/bioproject/browse/PRJCA022804",
+      "origin": "local_project_record",
+      "path": "ADMetaData/reference/gmrepo/closeout/2026-10-17-v3/primary-import-manifest.json",
+      "sha256": "b7510eb51999d9cbf583d4d4bbc9984063553f398de3483d6ee4002081673273",
+      "bytes": 3737,
+      "retrievedAt": "2026-10-17T07:46:59.773208+00:00"
+    },
+    {
+      "sourceId": "primary-metaphlan-config",
+      "url": "https://ngdc.cncb.ac.cn/bioproject/browse/PRJCA022804",
+      "origin": "local_project_record",
+      "path": "ADMetaData/reference/gmrepo/closeout/2026-10-17-v3/primary-metaphlan-config.yaml",
+      "sha256": "c9568c47d75d30caf38370fc79557694bb737dd6ee10e66edad2678fb1e192e3",
+      "bytes": 306,
+      "retrievedAt": "2026-10-17T07:47:21.203518+00:00"
+    },
+    {
+      "sourceId": "primary-metaphlan-script",
+      "url": "https://ngdc.cncb.ac.cn/bioproject/browse/PRJCA022804",
+      "origin": "local_project_record",
+      "path": "ADMetaData/reference/gmrepo/closeout/2026-10-17-v3/primary-metaphlan-script.snakefile",
+      "sha256": "aa8330c9f655f760f7b40e57b799406352efde438d26f0dfd8effd8f92a4514f",
+      "bytes": 4917,
+      "retrievedAt": "2026-10-17T07:47:21.202946+00:00"
+    },
+    {
+      "sourceId": "primary-ngdc-project",
+      "url": "https://ngdc.cncb.ac.cn/bioproject/browse/PRJCA022804",
+      "origin": "new_acquisition",
+      "path": "ADMetaData/reference/gmrepo/closeout/2026-10-17-v3/primary-project.html",
+      "sha256": "a1fb3e5b96fad4bfcf6ae7cab5d31c0e8f20b81368c087f5e966375e005ee304",
+      "bytes": 158393,
+      "retrievedAt": "2026-10-17T07:47:21.189030+00:00"
+    },
+    {
+      "sourceId": "primary-paper-record",
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:40164697%20AND%20SRC:MED&format=json&resultType=core",
+      "origin": "new_acquisition",
+      "path": "ADMetaData/reference/gmrepo/closeout/2026-10-17-v3/primary-paper.json",
+      "sha256": "8ba81a386901747b0da35a9ccf9d588b80edd0da3fc5be7fd7db15e84c4fab23",
+      "bytes": 13896,
+      "retrievedAt": "2026-10-17T07:47:21.155504+00:00"
+    },
+    {
+      "sourceId": "primary-sample-map",
+      "url": "https://ngdc.cncb.ac.cn/gsa/browse/CRA014435",
+      "origin": "local_project_record",
+      "path": "ADMetaData/reference/gmrepo/closeout/2026-10-17-v3/primary-sample-map.tsv",
+      "sha256": "991cab48cbbbce07d297a0c9720e41ae86e6744900f29e9af9d0e346f3585979",
+      "bytes": 68731,
+      "retrievedAt": "2026-10-17T07:46:59.772687+00:00"
+    },
+    {
+      "sourceId": "primary-script-audit",
+      "url": "https://ngdc.cncb.ac.cn/bioproject/browse/PRJCA022804",
+      "origin": "local_project_record",
+      "path": "ADMetaData/reference/gmrepo/closeout/2026-10-17-v3/primary-script-audit.md",
+      "sha256": "f417f7350cbd5612d70c7e105207afc8480b90f12ca6d66a17ae02aa9ed6a654",
+      "bytes": 12770,
+      "retrievedAt": "2026-10-17T07:46:59.774117+00:00"
+    },
+    {
+      "sourceId": "primary-study-method-supplement",
+      "url": "https://www.nature.com/articles/s41380-025-02973-7",
+      "origin": "local_project_record",
+      "path": "backend/storage/raw/source-supplements/PRJCA022804/41380_2025_2973_MOESM1_ESM.docx",
+      "sha256": "0187021073141b81523289154520776005e1eb06c8ef2f247f3ddd15114d0910",
+      "bytes": 14781186,
+      "retrievedAt": "2026-10-17T07:47:21.216466+00:00"
+    },
+    {
+      "sourceId": "primary-study-sample-supplement",
+      "url": "https://www.nature.com/articles/s41380-025-02973-7",
+      "origin": "local_project_record",
+      "path": "backend/storage/raw/source-supplements/PRJCA022804/41380_2025_2973_MOESM2_ESM.xlsx",
+      "sha256": "2c474596c5e1697de01f2eaa711f9e9985bbe5957795bd2d0734cfb978f0b16e",
+      "bytes": 1255308,
+      "retrievedAt": "2026-10-17T07:47:21.218352+00:00"
+    },
+    {
+      "sourceId": "primary-transfer-audit",
+      "url": "https://ngdc.cncb.ac.cn/bioproject/browse/PRJCA022804",
+      "origin": "local_project_record",
+      "path": "ADMetaData/reference/gmrepo/closeout/2026-10-17-v3/primary-transfer-audit.md",
+      "sha256": "ee1572881830de602923bfb410c6cae287a7e159f29796bf4391aa02e288b3a5",
+      "bytes": 6929,
+      "retrievedAt": "2026-10-17T07:46:59.773674+00:00"
+    },
+    {
+      "sourceId": "release-paper-PRJEB49329",
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC8843078/fullTextXML",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v2/PMC8843078.xml",
+      "sha256": "82fa9d7bcd8c98b2d63620ad700a7a2a3f9504992cf9abfe7ca3c58faf56321e",
+      "bytes": 137712,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:37:49.478197+00:00"
+    },
+    {
+      "sourceId": "release-paper-PRJEB50447",
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC9707757/fullTextXML",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v2/PMC9707757.xml",
+      "sha256": "c149f71d557f648e2e48bb2c832ba183fce78cd00000d9cdbad140eb3930ffcb",
+      "bytes": 123881,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:37:50.154300+00:00"
+    },
+    {
+      "sourceId": "release-paper-PRJNA1028813",
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11436273/fullTextXML",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v4/PMC11436273.xml",
+      "sha256": "3b5e50d2f708268497f56bc072fc0a652c45e1f09d621122c5e249488ac34417",
+      "bytes": 114918,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:47:57.615366+00:00"
+    },
+    {
+      "sourceId": "release-paper-PRJNA496408",
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7829997/fullTextXML",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v4/PMC7829997.xml",
+      "sha256": "8ce45c1685574461d7608765b54f711b0f8fe26672b0695a78e572c9cd48f9af",
+      "bytes": 128255,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:47:58.312694+00:00"
+    },
+    {
+      "sourceId": "release-paper-PRJNA611839",
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC8361629/fullTextXML",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v2/PMC8361629.xml",
+      "sha256": "4d00ac14d58259bd2fd6598d3535b9ac7be11c1dbb9d559096124fa23b360ba5",
+      "bytes": 156697,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:37:52.406571+00:00"
+    },
+    {
+      "sourceId": "release-paper-PRJNA633959",
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7889981/fullTextXML",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v2/PMC7889981.xml",
+      "sha256": "5a53fa6aa73bd4034c9c13cc51bb5fc3ef6328fb9fdcd892484eeb8b1d1a34ce",
+      "bytes": 172468,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:37:49.616636+00:00"
+    },
+    {
+      "sourceId": "release-paper-PRJNA734525",
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC8823292/fullTextXML",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v2/PMC8823292.xml",
+      "sha256": "0609d04faeb531f76ad2952b745cad3f50226b64db9eb71b473eb9dbc2286ea7",
+      "bytes": 192334,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:37:52.518934+00:00"
+    },
+    {
+      "sourceId": "release-paper_candidate-PRJEB49329",
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=PMCID%3APMC8843078&format=json&resultType=core",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v1/PRJEB49329-paper.json",
+      "sha256": "1a8e801f6fb56af6a7122623c2cda96afaa68fe64a31bf04d36225880f77fb8b",
+      "bytes": 12201,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:36:38.377861+00:00"
+    },
+    {
+      "sourceId": "release-paper_candidate-PRJEB50447",
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=PMCID%3APMC9707757&format=json&resultType=core",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v1/PRJEB50447-paper.json",
+      "sha256": "0e0796d8e63d38f603cdef9cbd0e0022d48355660543c38a84fe26056bdc2206",
+      "bytes": 8683,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:36:40.247580+00:00"
+    },
+    {
+      "sourceId": "release-paper_candidate-PRJNA554111",
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID%3A29758946+AND+SRC%3AMED&format=json&resultType=core",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v1/PRJNA554111-paper.json",
+      "sha256": "2ffce73023763eab7bc3ab70e9f83f547853335bba7c091a3c90352b1de7f3de",
+      "bytes": 8869,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:36:32.107001+00:00"
+    },
+    {
+      "sourceId": "release-paper_candidate-PRJNA611839",
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=PMCID%3APMC8361629&format=json&resultType=core",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v1/PRJNA611839-paper.json",
+      "sha256": "bdc239b380a3cecbaa707e417a732468fc4c8feb87c0a398f685a4652c741e44",
+      "bytes": 11067,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:36:42.192988+00:00"
+    },
+    {
+      "sourceId": "release-paper_candidate-PRJNA633959",
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=PMCID%3APMC7889981&format=json&resultType=core",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v1/PRJNA633959-paper.json",
+      "sha256": "f04fd73524c5f3f00298a2e798aef9f17fb13ca961015cf7aa3a339f04ddd2ce",
+      "bytes": 7960,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:36:36.677675+00:00"
+    },
+    {
+      "sourceId": "release-paper_candidate-PRJNA734525",
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=PMCID%3APMC8823292&format=json&resultType=core",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v1/PRJNA734525-paper.json",
+      "sha256": "9533d3a2994c04470abd7e27e1385dc661b322a987fa201a8021a3babfdd323f",
+      "bytes": 12847,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:36:44.113701+00:00"
+    },
+    {
+      "sourceId": "release-paper_candidate-PRJNA770746",
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID%3A35275538+AND+SRC%3AMED&format=json&resultType=core",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v1/PRJNA770746-paper.json",
+      "sha256": "815b3e1497a6d1077987bfdf9720779cbecf7081dcc1e4a711825cfbb2da114c",
+      "bytes": 10295,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:36:33.793013+00:00"
+    },
+    {
+      "sourceId": "release-project-PRJEB11419",
+      "url": "https://www.ebi.ac.uk/ena/browser/api/xml/PRJEB11419",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v1/PRJEB11419.xml",
+      "sha256": "238289f23d298356ae5e4651fc04ba4d46be87870e9920327e96967868b460f5",
+      "bytes": 2600,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:34:59.559004+00:00"
+    },
+    {
+      "sourceId": "release-project-PRJEB49329",
+      "url": "https://www.ebi.ac.uk/ena/browser/api/xml/PRJEB49329",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v1/PRJEB49329.xml",
+      "sha256": "41d06edbff5622d3bc2e530a102922b409eac61c5d4aa04b40e37572353524b6",
+      "bytes": 1994,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:35:08.833235+00:00"
+    },
+    {
+      "sourceId": "release-project-PRJEB50447",
+      "url": "https://www.ebi.ac.uk/ena/browser/api/xml/PRJEB50447",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v1/PRJEB50447.xml",
+      "sha256": "998b4ac1e464bb7cde377e4e254e887e9cd0edd1d20c0626ae2b5964cdae3b2a",
+      "bytes": 3716,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:35:44.806052+00:00"
+    },
+    {
+      "sourceId": "release-project-PRJEB51982",
+      "url": "https://www.ebi.ac.uk/ena/browser/api/xml/PRJEB51982",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v1/PRJEB51982.xml",
+      "sha256": "9ff81a7b5683061b331e13ab6621920cb96c9dee9a7f42b1a623289959d04959",
+      "bytes": 3136,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:35:07.555223+00:00"
+    },
+    {
+      "sourceId": "release-project-PRJEB59009",
+      "url": "https://www.ebi.ac.uk/ena/browser/api/xml/PRJEB59009",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v1/PRJEB59009.xml",
+      "sha256": "bd5b51d50c16d7efeb519f91ae00629fd03f01db2891567a146dcbcc74cc31dd",
+      "bytes": 3348,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:35:10.042437+00:00"
+    },
+    {
+      "sourceId": "release-project-PRJEB77146",
+      "url": "https://www.ebi.ac.uk/ena/browser/api/xml/PRJEB77146",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v1/PRJEB77146.xml",
+      "sha256": "bf74655ab353a09837ab04777e5e3250a249d41672850debb10963edb5fb6190",
+      "bytes": 2081,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:35:10.825807+00:00"
+    },
+    {
+      "sourceId": "release-project-PRJNA1028813",
+      "url": "https://www.ebi.ac.uk/ena/browser/api/xml/PRJNA1028813",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v1/PRJNA1028813.xml",
+      "sha256": "c8c422fa76430d32f5efefb16a4ab9380aad1d07d5c855761233cf65d23d1040",
+      "bytes": 2240,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:35:20.022525+00:00"
+    },
+    {
+      "sourceId": "release-project-PRJNA489760",
+      "url": "https://www.ebi.ac.uk/ena/browser/api/xml/PRJNA489760",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v1/PRJNA489760.xml",
+      "sha256": "6804b71bbfe2536742400eca234f74556ef99d7ec5fba8e75fa4e963df16bd10",
+      "bytes": 2132,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:35:42.083941+00:00"
+    },
+    {
+      "sourceId": "release-project-PRJNA496408",
+      "url": "https://www.ebi.ac.uk/ena/browser/api/xml/PRJNA496408",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v1/PRJNA496408.xml",
+      "sha256": "2bb22262c5b1b7f4158dd24559cb6566192f2589d5b6d7fb3eafd9055a45e0cd",
+      "bytes": 2010,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:35:42.844870+00:00"
+    },
+    {
+      "sourceId": "release-project-PRJNA554111",
+      "url": "https://www.ebi.ac.uk/ena/browser/api/xml/PRJNA554111",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v1/PRJNA554111.xml",
+      "sha256": "1a7e0133050e8a777b063ceec5e7ba1db6157ba00c19b86aff2a3c3f34b823f1",
+      "bytes": 2048,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:35:54.868689+00:00"
+    },
+    {
+      "sourceId": "release-project-PRJNA611839",
+      "url": "https://www.ebi.ac.uk/ena/browser/api/xml/PRJNA611839",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v1/PRJNA611839.xml",
+      "sha256": "0b82e9c70a144a6966d533200269140a34c598c46be2bdd6cc16ba294fc5a22e",
+      "bytes": 1911,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:35:54.848429+00:00"
+    },
+    {
+      "sourceId": "release-project-PRJNA633959",
+      "url": "https://www.ebi.ac.uk/ena/browser/api/xml/PRJNA633959",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v1/PRJNA633959.xml",
+      "sha256": "48f8babc7be17d9ff811d092a9ef93313a5f07ef5cb1168caf17bfc3a3180b58",
+      "bytes": 2400,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:37:06.022065+00:00"
+    },
+    {
+      "sourceId": "release-project-PRJNA734525",
+      "url": "https://www.ebi.ac.uk/ena/browser/api/xml/PRJNA734525",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v1/PRJNA734525.xml",
+      "sha256": "bef78aa4f2e8960fd9625d968d5ac75e151b6522d132fe87d443ae6f4105d14a",
+      "bytes": 1975,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:35:57.464355+00:00"
+    },
+    {
+      "sourceId": "release-project-PRJNA770746",
+      "url": "https://www.ebi.ac.uk/ena/browser/api/xml/PRJNA770746",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v1/PRJNA770746.xml",
+      "sha256": "4587743792bb15a87123992da161c9f071099971e663e5cec81cfce9be449052",
+      "bytes": 1984,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:36:18.401734+00:00"
+    },
+    {
+      "sourceId": "release-run_export-PRJNA554111",
+      "url": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA554111&result=read_run&fields=run_accession%2Csample_accession%2Cexperiment_accession%2Clibrary_strategy%2Clibrary_source%2Cinstrument_model&format=tsv",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v4/PRJNA554111-runs.tsv",
+      "sha256": "e3de2dfbd3d41b3ea33e51bffb14322bb5da6fc3d2b625de48a9dcfc872be30e",
+      "bytes": 5949,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:48:35.137296+00:00"
+    },
+    {
+      "sourceId": "release-run_export-PRJNA633959",
+      "url": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA633959&result=read_run&fields=run_accession%2Csample_accession%2Cexperiment_accession%2Clibrary_strategy%2Clibrary_source%2Cinstrument_model&format=tsv",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v4/PRJNA633959-runs.tsv",
+      "sha256": "064787ae24b7dbadd86a3a1e68f884706f30958a63040259e94675476fe72b09",
+      "bytes": 12413,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:49:07.896867+00:00"
+    },
+    {
+      "sourceId": "release-run_export-PRJNA770746",
+      "url": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA770746&result=read_run&fields=run_accession%2Csample_accession%2Cexperiment_accession%2Clibrary_strategy%2Clibrary_source%2Cinstrument_model&format=tsv",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v4/PRJNA770746-runs.tsv",
+      "sha256": "322c36032be9a67a21f20684a6aa81e008e0d8bf6bb6036f3004d63fb9355ddb",
+      "bytes": 14555,
+      "origin": "new_acquisition",
+      "retrievedAt": "2026-10-15T12:48:38.353169+00:00"
+    },
+    {
+      "sourceId": "sealed-metadata",
+      "url": "https://gmrepo.humangut.info/phenotypes/D000544",
+      "path": "tables/sample_metadata_clean.json",
+      "sha256": "8847e4565f62c157a44f3e66540eac52059a0c3d2dd479e03060fc24aace80f7",
+      "bytes": 2490441,
+      "origin": "sealed_package"
+    },
+    {
+      "sourceId": "sealed-rules",
+      "url": "https://gmrepo.humangut.info/phenotypes/D000544",
+      "path": "cohort_rules.json",
+      "sha256": "bf35669cbf7b1371655f4a4955ac5460a46c57b266686902c3fbedb74816aac6",
+      "bytes": 4082,
+      "origin": "sealed_package"
+    },
+    {
+      "sourceId": "wgs-author-analysis",
+      "url": "https://zenodo.org/api/records/14991167/files/221007_preclinADAnalyses_v2.R/content",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v2/221007_preclinADAnalyses_v2.R",
+      "sha256": "57620340c518a54806c24bd6e8afc81a15dd31de2bcddb179e396bf37f5c7aca",
+      "bytes": 128441,
+      "origin": "new_acquisition"
+    },
+    {
+      "sourceId": "wgs-author-data",
+      "url": "https://zenodo.org/api/records/14991167/files/230118_preclinicalAD_Ferreiro_etal_DATA_v2.RData/content",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v2/230118_preclinicalAD_Ferreiro_etal_DATA_v2.RData",
+      "sha256": "d70a8b5fafbd17a5e924eb9e9bf5bd73c507ad74fc0dbad9023e3569c24e9aeb",
+      "bytes": 4273769,
+      "origin": "new_acquisition"
+    },
+    {
+      "sourceId": "wgs-author-record",
+      "url": "https://zenodo.org/api/records/14991167",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v1/wgs-author-record.json",
+      "sha256": "08cad4a0b4e1de9762bb06b6dd1c106949baf59be31c8e387e7acba437954754",
+      "bytes": 4660,
+      "origin": "new_acquisition"
+    },
+    {
+      "sourceId": "wgs-project-runs",
+      "url": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA798058&result=read_run&fields=run_accession,sample_accession,experiment_accession,library_strategy,library_source,instrument_model&format=tsv",
+      "path": "ADMetaData/reference/gmrepo/release-sources/2026-10-15-v4/PRJNA798058-runs.tsv",
+      "sha256": "bfa458995a04f5fe86b8dc98b4bc81cc4a2c91d427a45ff7c173a5f7bdbd06c9",
+      "bytes": 12401,
+      "origin": "new_acquisition"
+    }
+  ],
+  "resolutions": [
+    {
+      "projectId": "PRJEB77146",
+      "reasonCode": "NOT_INSTALLED",
+      "status": "evidence_added",
+      "note": "已取得项目与原论文；筛查为相关认知主诉参考而非临床 AD/NC，不因原件获取成功自动导入丰度。",
+      "evidenceRefs": [
+        "ena-77146",
+        "paper-gero"
+      ]
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
+import { HOME_MOTION } from '../src/pages/home/motion/motionConfig.js';
 
 const SPECIES_DATASET = 'ad-nc-species';
 const KO_DATASET = 'ad-nc-ko-abundance';
@@ -30,6 +31,49 @@ test('home page opens the analysis workspace and passes the accessibility gate',
   await expect(page).toHaveURL(/\/analysis\/abundance/);
   await expect(page.getByRole('heading', { name: /Top N (物种|KO)丰度对比/, level: 2 })).toBeVisible();
   await expectNoBlockingAccessibilityViolations(page);
+});
+
+test('skipping the intro preserves the slow hero background cycle', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.goto('/');
+  const home = page.locator('.admeta-home');
+  await expect(home).toHaveAttribute('data-intro', 'full');
+  const tracks = page.locator('.hero-chart-backdrop__track');
+  const durations = () => tracks.evaluateAll(nodes => nodes.map(node => getComputedStyle(node).animationDuration));
+  const before = await durations();
+  expect(before).toHaveLength(6);
+  // Guard against the former 1ms intro override without fixing the design speed.
+  expect(before.every(duration => parseFloat(duration) >= 10)).toBe(true);
+  await page.getByRole('button', { name: '重播微脑智库 Logo 拼装动画' }).click();
+  await expect(home).toHaveAttribute('data-intro-skipped', 'true');
+  await expect.poll(durations).toEqual(before);
+});
+
+test('home sections settle at reading stops without interrupting gallery browsing', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.goto('/');
+  await expect(page.locator('.admeta-home')).toHaveAttribute('data-intro', 'full');
+  await page.getByRole('button', { name: '重播微脑智库 Logo 拼装动画' }).click();
+  await expect(page.locator('[data-home-section]')).toHaveCount(3);
+  const firstStop = await page.evaluate(hold => {
+    const pageElement = document.querySelector('.admeta-home');
+    const track = pageElement.querySelector('.chapter-track');
+    return track.getBoundingClientRect().top + scrollY - parseFloat(pageElement.style.getPropertyValue('--stage-top')) + hold;
+  }, HOME_MOTION.chapterHold);
+  await page.evaluate(top => window.scrollTo({ top, behavior: 'instant' }), firstStop - 180);
+  await expect.poll(() => page.evaluate(() => scrollY)).toBeCloseTo(firstStop, 0);
+  await page.evaluate(top => window.scrollTo({ top, behavior: 'instant' }), firstStop + 1300);
+  // Wait beyond the settle and animation windows to detect unsolicited snapping.
+  await page.waitForTimeout(HOME_MOTION.snap.idleDelay + HOME_MOTION.snap.duration + 150);
+  expect(await page.evaluate(() => scrollY)).toBeCloseTo(firstStop + 1300, 0);
+  const before = await page.locator('.slide-count').textContent();
+  await page.mouse.move(700, 450); await page.mouse.wheel(0, 120);
+  await expect(page.locator('.slide-count')).not.toHaveText(before);
+  await page.getByRole('link', { name: '数据基础', exact: true }).click();
+  await expect(page.locator('[data-home-section="foundation"]')).toHaveAttribute('data-home-active', 'true');
+  await expect(page.getByRole('link', { name: '打开分析工作区' })).toBeVisible();
 });
 
 test('deep links restore all taxonomy modes and dataset switching', async ({ page }) => {

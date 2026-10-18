@@ -26,10 +26,8 @@
 .zoomable-chart__viewport { position: relative; overflow: hidden; width: 100%; height: clamp(450px, 65vh, 720px); outline-offset: -2px; }
 .zoomable-chart__viewport.is-panning { cursor: grab; touch-action: none; }
 .zoomable-chart__viewport.is-panning:active { cursor: grabbing; }
-.chart-navigation-dock { position: absolute; right: 8px; bottom: 8px; z-index: 2; display: flex; align-items: flex-end; justify-content: flex-end; gap: 10px; flex-wrap: wrap-reverse; max-width: calc(100% - 16px); cursor: default; }
+.chart-navigation-dock { position: absolute; right: 8px; bottom: 8px; z-index: 2; cursor: default; }
 .chart-minimap { width: var(--chart-minimap-width, 188px); flex: 0 0 auto; padding: 6px; box-sizing: border-box; border: 1px solid var(--color-border); border-radius: 5px; background: color-mix(in srgb, var(--workspace-header-background) 78%, transparent); backdrop-filter: blur(10px); }
-.chart-minimap.is-collapsed { width: auto; }
-.chart-minimap__toggle { display: flex; align-items: center; justify-content: space-between; gap: 18px; border: 0; background: transparent; color: var(--color-text-main); width: 100%; padding: 2px 3px 5px; font-size: 11px; cursor: pointer; }
 .chart-minimap svg { display: block; width: 100%; height: auto; aspect-ratio: 174 / 116; cursor: crosshair; touch-action: none; }
 .chart-minimap__hint { display: block; padding-top: 4px; text-align: center; color: var(--color-text-muted); font-size: 10px; }
 .chart-pan-joystick { width: 96px; flex: 0 0 96px; display: grid; justify-items: center; gap: 5px; color: var(--color-text-muted); user-select: none; }

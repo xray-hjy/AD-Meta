@@ -1,0 +1,577 @@
+{
+  "schemaVersion": 1,
+  "status": "partial",
+  "retrievedAt": "2026-10-17T13:17:37.563143+00:00",
+  "referenceFingerprint": "68f003174b519a9aa8ec401a8e42223bf9e4b67aa26fe4b370b4b5b2e33f2971",
+  "officialRelease": null,
+  "scopes": [
+    {
+      "phenotype": "D000544",
+      "term": "Alzheimer Disease",
+      "expectedRuns": 798,
+      "retrievedRuns": 798,
+      "paginationComplete": true,
+      "apiProjects": 13,
+      "platformTypes": {
+        "AMPLICON": 583,
+        "Amplicon": 215
+      }
+    },
+    {
+      "phenotype": "D060825",
+      "term": "Cognitive Dysfunction",
+      "expectedRuns": 215,
+      "retrievedRuns": 215,
+      "paginationComplete": true,
+      "apiProjects": 3,
+      "platformTypes": {
+        "AMPLICON": 153,
+        "Amplicon": 62
+      }
+    }
+  ],
+  "projects": [
+    {
+      "projectId": "PRJEB11419",
+      "phenotypes": [
+        "D000544"
+      ],
+      "platformTypes": {
+        "Amplicon": 9
+      },
+      "installed": true,
+      "reviewStatus": "pending_original_study_review",
+      "controlsStatus": "pending_same_study_control_review",
+      "phenotype": "D000544",
+      "platform": "Amplicon",
+      "originalDescription": "The American Gut project is the largest crowdsourced citizen science project to date. Fecal, oral, skin, and other body site samples collected from thousands of participants represent the largest human microbiome cohort in existence. Detailed health and lifestyle and diet data associated with each sample is enabling us to deeply examine associations between the human microbiome and factors such as diet (from vegan to near carnivore and everything in between), season, amount of sleep, and disease states such as IBD, diabetes, or autism spectrum disorder-as well as many other factors not listed here. The American Gut project also encompasses the British Gut and Australian Gut projects, widening the cohort beyond North America. As the project continues to grow, we will be able to identify significant associations that would not be possible with smaller, geographically and health/disease status-limited cohorts.",
+      "publications": "31182859, 34133453, 34542625, 35130266, 36477426, 36573834, 36846952, 39749132, 40691525, 41023348"
+    },
+    {
+      "projectId": "PRJEB49329",
+      "phenotypes": [
+        "D000544"
+      ],
+      "platformTypes": {
+        "AMPLICON": 175
+      },
+      "installed": true,
+      "reviewStatus": "pending_original_study_review",
+      "controlsStatus": "pending_same_study_control_review",
+      "phenotype": "D000544",
+      "platform": "AMPLICON",
+      "originalDescription": "We included 170 patients from the Amsterdam Dementia Cohort, comprising 33 with Alzheimer's disease (AD) dementia, 21 with mild cognitive impairment and 116 with subjective cognitive decline. Fecal samples were collected and gut microbiome composition was determined using 16S rRNA sequencing",
+      "publications": "35173707"
+    },
+    {
+      "projectId": "PRJEB50447",
+      "phenotypes": [
+        "D000544"
+      ],
+      "platformTypes": {
+        "AMPLICON": 78
+      },
+      "installed": true,
+      "reviewStatus": "pending_original_study_review",
+      "controlsStatus": "pending_same_study_control_review",
+      "phenotype": "D000544",
+      "platform": "AMPLICON",
+      "originalDescription": "Although some human studies have reported gut microbiome changes in individuals with Alzheimer’s disease (AD) dementia or mild cognitive impairment (MCI), to date, no study has examined gut microbiota in preclinical AD without cognitive impairment. We aimed to identify gut microbial alterations associated with preclinical AD by comparing cognitively normal (CN) older adults with cerebral Aβ deposition (Aβ+ CN) and those without cerebral Aβ deposition (Aβ- CN). Seventy-eight CN older participants (18 Aβ+ CN and 60 Aβ- CN) were included, and all participants underwent clinical assessment and Pittsburg compound B–positron emission tomography. The V3–V4 region of the 16S rRNA gene of genomic DNA extracted from feces was amplified and sequenced to establish the microbial community. Generalized linear model analysis revealed that the genera Megamonas, Serratia, Leptotrichia and Clostridium (family Clostridiaceae) were more abundant in the Aβ+ CN group than the Aβ- CN group. In contrast, genera CF231, Victivallis, Enterococcus, Mitsuokella and Clostridium (family Erysipelotrichaceae) were decreased in Aβ+ CN compared to Aβ- CN. In addition, predicted functional pathway analysis showed that the relatively decreased gene contents in Aβ+ CN participants were related to genetic information processing. There were no between-group differences in alpha and beta diversity. Our findings suggest that specific alterations of gut bacterial taxa are related to preclinical AD without cognitive impairment. Although further confirmatory studies are needed, the findings also support the possibility that modulation of the intestinal microbiota by administration of probiotics or through dietary intervention may be helpful as a preventive strategy against AD.",
+      "publications": "36445883"
+    },
+    {
+      "projectId": "PRJEB51982",
+      "phenotypes": [
+        "D000544"
+      ],
+      "platformTypes": {
+        "AMPLICON": 25
+      },
+      "installed": true,
+      "reviewStatus": "pending_original_study_review",
+      "controlsStatus": "pending_same_study_control_review",
+      "phenotype": "D000544",
+      "platform": "AMPLICON",
+      "originalDescription": "Alzheimer’s disease (AD) is the most common form of dementia. However, the etiopathogenesis of this devastating disease is not fully understood. Recent studies in rodents suggest that alterations in the gut microbiome may contribute to amyloid deposition, yet the microbial communities associated with AD have not been characterized in humans. Towards this end, we characterized the bacterial taxonomic composition of fecal samples from participants with and without a diagnosis of dementia due to AD. Our analyses revealed that the gut microbiome of AD participants has decreased microbial diversity and is compositionally distinct from control age- and sex-matched individuals. We identified phylum- through genus-wide differences in bacterial abundance including decreased Firmicutes, increased Bacteroidetes, and decreased Bifidobacterium in the microbiome of AD participants. Furthermore, we observed correlations between levels of differentially abundant genera and cerebrospinal fluid (CSF) biomarkers of AD. These findings add AD to the growing list of diseases associated with gut microbial alterations, as well as suggest that gut bacterial communities may be a target for therapeutic intervention.",
+      "publications": "40335465, 41782023, 41879312"
+    },
+    {
+      "projectId": "PRJEB55056",
+      "phenotype": "官方全项目描述关键词",
+      "phenotypes": [],
+      "platformTypes": {},
+      "platform": "来源策略待逐 Run 核对",
+      "installed": false,
+      "originalDescription": "Increasing evidence links the gut microbiota (GM) to Alzheimer’s Disease (AD) but the mechanisms through which gut bacteria influence the brain are still unclear. This study tests the hypothesis that GM and mediators of the microbiota-gut-brain axis (MGBA) are associated with the amyloid cascade in sporadic AD.",
+      "publications": "37254223, 40144018",
+      "reviewStatus": "metadata_keyword_candidate",
+      "controlsStatus": "not_established"
+    },
+    {
+      "projectId": "PRJEB59009",
+      "phenotypes": [
+        "D000544"
+      ],
+      "platformTypes": {
+        "AMPLICON": 80
+      },
+      "installed": true,
+      "reviewStatus": "pending_original_study_review",
+      "controlsStatus": "pending_same_study_control_review",
+      "phenotype": "D000544",
+      "platform": "AMPLICON",
+      "originalDescription": "Alzheimer’s disease (AD) is one of the most frequently diagnosed neurodegenerative disorders worldwide. However, the etiopathogenesis of this devastating disease is not completely understood. Recent studies suggest that alterations in the oral and gut microbiome may contribute to amyloid deposition, yet the microbial communities associated with AD have not been fully characterized in humans and little is known about the microbial composition in the course of the disease. Towards this end, we characterized the bacterial taxonomic composition of fecal and swab samples from participants in different stages of AD (AD, MCI, at risk).Our analyses revealed that the gut microbiota of AD participants has decreased microbial diversity and is compositionally distinct from control age- and sex-matched individuals. We identified phylum- through genus-wide differences in bacterial abundance including increased Firmicutes, increased Bacteroidetes, and decreased Roseburia in the gut microbiota of AD participants. Whereas significantly higher abundance of Porphyromonas and members of the Proteobacteria, especially Haemophilus, Neisseria and Actinobacillus was observed in the oral microbiota of AD patients. Furthermore, we observed correlations between levels of differentially abundant genera and cerebrospinal fluid (CSF) biomarkers of AD. These findings add AD to the growing list of diseases associated with gut and oral microbial alterations, as well as suggest that gut and oral bacterial communities may be a target for therapeutic intervention.",
+      "publications": "38205031"
+    },
+    {
+      "projectId": "PRJEB77146",
+      "phenotypes": [
+        "D060825"
+      ],
+      "platformTypes": {
+        "AMPLICON": 153
+      },
+      "installed": false,
+      "reviewStatus": "pending_original_study_review",
+      "controlsStatus": "pending_same_study_control_review",
+      "phenotype": "D060825",
+      "platform": "AMPLICON",
+      "originalDescription": "This study examines a cohort of 153 older adults from Chile with cognitive complaints, assessing anthropometric data, mental health via five distinct tests, and gut microbiome composition. Gut microbiome was profiled from stool samples using the V4 region of the 16S rRNA gene.",
+      "publications": "41984783"
+    },
+    {
+      "projectId": "PRJNA1028813",
+      "phenotypes": [
+        "D000544"
+      ],
+      "platformTypes": {
+        "AMPLICON": 41
+      },
+      "installed": true,
+      "reviewStatus": "pending_original_study_review",
+      "controlsStatus": "pending_same_study_control_review",
+      "phenotype": "D000544",
+      "platform": "AMPLICON",
+      "originalDescription": "The goal of the project is to study the relationships between the human gut and oral microbiome diversity and composition, peripheral inflammation markers, biogeography, ethnicity, lifestyle, and Alzheimer's dementia. The Collaborative Research Program of Nazarbayev University, Kazakhstan, funds the study",
+      "publications": "39346576"
+    },
+    {
+      "projectId": "PRJNA373876",
+      "phenotype": "官方全项目描述关键词",
+      "phenotypes": [],
+      "platformTypes": {},
+      "platform": "来源策略待逐 Run 核对",
+      "installed": false,
+      "originalDescription": "Preclinical and clinical evidence supports the concept of bidirectional brain gut microbiome interactions. We aimed to determine if subgroups of irritable bowel syndrome subjects (IBS) can be identified based on differences in gut microbial composition, and if there are correlations between gut microbial measures and structural brain signatures in IBS.\nBehavioral measures, stool samples and structural brain images were collected from 30 adult IBS and 23 healthy control subjects (HCs). 16S rRNA gene sequencing (V3-V5 region, 454 platform) was used to characterize stool microbial communities. T1 weighted brain images were acquired on a Siemens Allegra 3T scanner, and morphological measures were computed for 165 brain regions",
+      "publications": "28457228, 34178718, 34950190",
+      "reviewStatus": "metadata_keyword_candidate",
+      "controlsStatus": "not_established"
+    },
+    {
+      "projectId": "PRJNA489760",
+      "phenotypes": [
+        "D000544",
+        "D060825"
+      ],
+      "platformTypes": {
+        "Amplicon": 30
+      },
+      "installed": true,
+      "reviewStatus": "pending_original_study_review",
+      "controlsStatus": "pending_same_study_control_review",
+      "phenotype": "D000544 / D060825",
+      "platform": "Amplicon",
+      "originalDescription": "Explore the changes in fecal and blood microbiota in patients of Alzheimer’s disease, mild cognitive impairment and healthy participants\n",
+      "publications": "35837118, 36362360, 36376937, 40065353, 40335465, 41782023, 41879312"
+    },
+    {
+      "projectId": "PRJNA496408",
+      "phenotypes": [
+        "D000544",
+        "D060825"
+      ],
+      "platformTypes": {
+        "Amplicon": 32
+      },
+      "installed": true,
+      "reviewStatus": "pending_original_study_review",
+      "controlsStatus": "pending_same_study_control_review",
+      "phenotype": "D000544 / D060825",
+      "platform": "Amplicon",
+      "originalDescription": "gut metagenome of AD patients\n",
+      "publications": "33466861, 35837118, 36362360, 37140125, 37892440, 41879312, 41963962"
+    },
+    {
+      "projectId": "PRJNA554111",
+      "phenotypes": [
+        "D000544"
+      ],
+      "platformTypes": {
+        "Amplicon": 43
+      },
+      "installed": true,
+      "reviewStatus": "pending_original_study_review",
+      "controlsStatus": "pending_same_study_control_review",
+      "phenotype": "D000544",
+      "platform": "Amplicon",
+      "originalDescription": "The composition of gut microbiota was different between the two groups.\n",
+      "publications": "40065353, 40335465, 40964399, 41879312"
+    },
+    {
+      "projectId": "PRJNA611839",
+      "phenotypes": [
+        "D000544"
+      ],
+      "platformTypes": {
+        "AMPLICON": 65
+      },
+      "installed": true,
+      "reviewStatus": "pending_original_study_review",
+      "controlsStatus": "pending_same_study_control_review",
+      "phenotype": "D000544",
+      "platform": "AMPLICON",
+      "originalDescription": "Altered gut microbiota composition in the fecal samples that are relevant with AD",
+      "publications": "41879312"
+    },
+    {
+      "projectId": "PRJNA633959",
+      "phenotypes": [
+        "D000544"
+      ],
+      "platformTypes": {
+        "Amplicon": 100
+      },
+      "installed": true,
+      "reviewStatus": "pending_original_study_review",
+      "controlsStatus": "pending_same_study_control_review",
+      "phenotype": "D000544",
+      "platform": "Amplicon",
+      "originalDescription": "With the development of the next-generation sequencing techniques, the higher sequencing depth and coverage made it possible to decipher those unknown key functional taxa in Chinese AD patients. In our present study, the AD associated fecal microbiota were analyzed from AD patients and matched healthy controls from Lishui by 16S rRNA gene high-throughput sequencing platform, which will provide novel targets for the non-invasive diagnosis and personalized treatment of AD as well as the development of tailor-made probiotics designed for Chinese AD patients.\n",
+      "publications": "40065353, 40335465, 41782023, 41879312"
+    },
+    {
+      "projectId": "PRJNA665245",
+      "phenotype": "官方全项目描述关键词",
+      "phenotypes": [],
+      "platformTypes": {},
+      "platform": "来源策略待逐 Run 核对",
+      "installed": false,
+      "originalDescription": "This study (a pilot to the MOTION Study) is a longitudinal observational multi-domain pilot study that investigates the Gut-Brain axis in healthy elderly at differential genetic risk for developing Alzheimer's disease (AD) and compares this to a small group of AD patients. The project explores how the gut microbiome changes with healthy ageing over time and investigates the role of potential risk factors for AD on cognition, brain health and microbiome profiles. The gut microbiota is assessed at three time points (baseline, 6 months, 12 months) over the period of 12 months using whole metagenomic shotgun sequencing.",
+      "publications": null,
+      "reviewStatus": "metadata_keyword_candidate",
+      "controlsStatus": "not_established"
+    },
+    {
+      "projectId": "PRJNA734525",
+      "phenotypes": [
+        "D000544"
+      ],
+      "platformTypes": {
+        "AMPLICON": 74
+      },
+      "installed": true,
+      "reviewStatus": "pending_original_study_review",
+      "controlsStatus": "pending_same_study_control_review",
+      "phenotype": "D000544",
+      "platform": "AMPLICON",
+      "originalDescription": "Gut microbiome profiles of Alzheimers disease patients with different cognitive states",
+      "publications": "35133187, 36362360, 40065353, 40335465, 41269303, 41879312"
+    },
+    {
+      "projectId": "PRJNA770746",
+      "phenotypes": [
+        "D000544"
+      ],
+      "platformTypes": {
+        "AMPLICON": 45
+      },
+      "installed": true,
+      "reviewStatus": "pending_original_study_review",
+      "controlsStatus": "pending_same_study_control_review",
+      "phenotype": "D000544",
+      "platform": "AMPLICON",
+      "originalDescription": "A study of the oral and gut microbiome in a human cohort of Alzheimer's disease and matched controls from Vancouver, Canada",
+      "publications": "37892440, 41634017, 41879312"
+    },
+    {
+      "projectId": "PRJNA807473",
+      "phenotype": "官方全项目描述关键词",
+      "phenotypes": [],
+      "platformTypes": {},
+      "platform": "来源策略待逐 Run 核对",
+      "installed": false,
+      "originalDescription": "Schizophrenia (SZ) is a severe neuropsychiatric disorder, and its etiology and pathogenesis remain largely unknown. Mounting preclinical and clinical evidence suggest that the gut microbiome is a vital player in SZ. However, the gut microbiota characteristics as well as its host response in elderly SZ patients are not well understood.",
+      "publications": "35719348, 37680457",
+      "reviewStatus": "metadata_keyword_candidate",
+      "controlsStatus": "not_established"
+    }
+  ],
+  "queries": [
+    {
+      "url": "https://gmrepo.humangut.info/api/get_all_phenotypes/",
+      "method": "POST",
+      "body": {},
+      "status": "retrieved",
+      "retrievedAt": "2026-10-17T05:25:54.116095+00:00",
+      "file": "phenotypes.json",
+      "sha256": "6e5c7b567898439af03f182378b1dd0403af554ec729f3a407550f2334b0d9f1",
+      "bytes": 63415,
+      "contentType": "application/json"
+    },
+    {
+      "url": "https://gmrepo.humangut.info/api/getAssociatedMicrobiotaDatasetsByPhenotypeMeshID/",
+      "method": "POST",
+      "body": {
+        "mesh_id": "D000544"
+      },
+      "status": "retrieved",
+      "retrievedAt": "2026-10-17T05:25:58.678418+00:00",
+      "file": "D000544-metadata.json",
+      "sha256": "0995e96d98af71d9cc0f0aaedf6ea73d0919322d3500a94852e3dc67edde1547",
+      "bytes": 102388,
+      "contentType": "application/json"
+    },
+    {
+      "url": "https://gmrepo.humangut.info/api/getAssociatedRunsByPhenotypeMeshIDLimit/",
+      "method": "POST",
+      "body": {
+        "mesh_id": "D000544",
+        "limit": 250,
+        "skip": 0
+      },
+      "status": "retrieved",
+      "retrievedAt": "2026-10-17T05:26:03.443020+00:00",
+      "file": "D000544-runs-0.json",
+      "sha256": "b90d39f902c2d81d44312e5737048f8b8571769e3c4be1704f8f1099e6709234",
+      "bytes": 212963,
+      "contentType": "application/json"
+    },
+    {
+      "url": "https://gmrepo.humangut.info/api/getAssociatedRunsByPhenotypeMeshIDLimit/",
+      "method": "POST",
+      "body": {
+        "mesh_id": "D000544",
+        "limit": 250,
+        "skip": 250
+      },
+      "status": "retrieved",
+      "retrievedAt": "2026-10-17T05:26:08.085057+00:00",
+      "file": "D000544-runs-250.json",
+      "sha256": "b86201c26b291bc3e5167e84c7595df06126fe62bc21a29604bd7b7f0776f625",
+      "bytes": 219883,
+      "contentType": "application/json"
+    },
+    {
+      "url": "https://gmrepo.humangut.info/api/getAssociatedRunsByPhenotypeMeshIDLimit/",
+      "method": "POST",
+      "body": {
+        "mesh_id": "D000544",
+        "limit": 250,
+        "skip": 500
+      },
+      "status": "retrieved",
+      "retrievedAt": "2026-10-17T05:26:18.790077+00:00",
+      "file": "D000544-runs-500.json",
+      "sha256": "295e4f6d24942e3dd64d5221b733a76bd6ac380df423a682084bee5c416e46ee",
+      "bytes": 207999,
+      "contentType": "application/json"
+    },
+    {
+      "url": "https://gmrepo.humangut.info/api/getAssociatedRunsByPhenotypeMeshIDLimit/",
+      "method": "POST",
+      "body": {
+        "mesh_id": "D000544",
+        "limit": 250,
+        "skip": 750
+      },
+      "status": "retrieved",
+      "retrievedAt": "2026-10-17T05:26:21.871433+00:00",
+      "file": "D000544-runs-750.json",
+      "sha256": "523a0b36787195486e667cfb9ba0d5db0cbb3500a50e156a71b354819eab1ab0",
+      "bytes": 39456,
+      "contentType": "application/json"
+    },
+    {
+      "url": "https://gmrepo.humangut.info/api/getAssociatedMicrobiotaDatasetsByPhenotypeMeshID/",
+      "method": "POST",
+      "body": {
+        "mesh_id": "D060825"
+      },
+      "status": "retrieved",
+      "retrievedAt": "2026-10-17T05:26:25.411740+00:00",
+      "file": "D060825-metadata.json",
+      "sha256": "9d2f01394974951ca2dd042e50d51610e7283ab5b879c10c835c7958161f0394",
+      "bytes": 47266,
+      "contentType": "application/json"
+    },
+    {
+      "url": "https://gmrepo.humangut.info/api/getAssociatedRunsByPhenotypeMeshIDLimit/",
+      "method": "POST",
+      "body": {
+        "mesh_id": "D060825",
+        "limit": 250,
+        "skip": 0
+      },
+      "status": "retrieved",
+      "retrievedAt": "2026-10-17T05:26:29.585638+00:00",
+      "file": "D060825-runs-0.json",
+      "sha256": "e36b79ee6994a48f314260a85fc9dc5f21eff2391935b57e780c2bc46f35afb4",
+      "bytes": 178470,
+      "contentType": "application/json"
+    },
+    {
+      "url": "https://gmrepo.humangut.info/Downloads/ProjectsByPhenotypeID/all_projects_contain_samples_of_D000544.tsv",
+      "method": "GET",
+      "body": null,
+      "status": "retrieved",
+      "retrievedAt": "2026-10-17T05:26:32.532413+00:00",
+      "file": "D000544-projects.tsv",
+      "sha256": "a3996881edfb5ff3fef11eb7fd827ac1b8e8524205722c7223ef6840c61f2d26",
+      "bytes": 5895,
+      "contentType": "application/octet-stream",
+      "label": "官方 AD 表型项目 TSV"
+    }
+  ],
+  "installedNotDiscovered": [],
+  "discoveredNotInstalled": [
+    "PRJEB55056",
+    "PRJEB77146",
+    "PRJNA373876",
+    "PRJNA665245",
+    "PRJNA807473"
+  ],
+  "errors": [],
+  "exportDiscrepancy": {
+    "adTsvProjects": 8,
+    "adApiProjects": 13,
+    "apiOnly": [
+      "PRJEB11419",
+      "PRJNA489760",
+      "PRJNA496408",
+      "PRJNA554111",
+      "PRJNA633959"
+    ],
+    "tsvOnly": []
+  },
+  "archivePath": "ADMetaData/reference/gmrepo/discovery/2026-10-17-closeout-v2",
+  "note": "已查询官方 AD 与相关认知表型目录，并分页核对 Run；API 和静态 TSV 的范围差异保留。关键词未标注研究、同研究对照、疾病阶段和独立性仍需原研究审查；此目录不等于全部 AD 研究或全部可检验队列。",
+  "coverage": {
+    "status": "complete_for_listed_phenotypes",
+    "wholeDatabaseComplete": false,
+    "scope": "官方表型分页已核对，并已检索本次项目接口返回的全部描述；源端总项目数与返回数分别记录，未返回或描述未命中者不算已排除。",
+    "uniqueRuns": 1013,
+    "summedPhenotypeRuns": 1013,
+    "uniqueProjects": 18,
+    "platformTypes": {
+      "AMPLICON": 736,
+      "Amplicon": 277
+    },
+    "globalSearchChecks": [
+      {
+        "url": "https://gmrepo.humangut.info/api/getCuratedProjectsList/",
+        "validation": "unavailable_or_invalid",
+        "retrievedAt": "2026-10-17T07:47:01.158713+00:00",
+        "error": "HTTP Error 500: Internal Server Error"
+      },
+      {
+        "url": "https://gmrepo.humangut.info/Downloads/AllSummaryData/all_projects_metadata.tsv.gz",
+        "validation": "unavailable_or_invalid",
+        "retrievedAt": "2026-10-17T07:47:01.898049+00:00",
+        "error": "Project export did not return gzip data; HTML is not an empty directory."
+      },
+      {
+        "url": "https://gmrepo.humangut.info/api/getAllProjectsWithMetadataAndSomeStatistics/",
+        "validation": "valid",
+        "retrievedAt": "2026-10-17T07:47:04.057113+00:00"
+      }
+    ],
+    "evidenceSourceId": "closeout-acquisition-receipts",
+    "keywordScope": {
+      "status": "complete_for_returned_project_descriptions",
+      "projectsScreened": 1243,
+      "sourceTotalProjects": 1349,
+      "notReturnedProjects": 106,
+      "matches": 12,
+      "pattern": "alzheimer|mild cognitive|preclinical|dementia|cognitive decline|subjective cognitive|cognitive dysfunction",
+      "sourceId": "gmrepo-all-projects",
+      "note": "只筛项目描述，不证明所有生物样本疾病阶段或 WGS/独立性符合纳入条件。",
+      "additionalProjects": [
+        "PRJEB55056",
+        "PRJNA373876",
+        "PRJNA665245",
+        "PRJNA807473"
+      ],
+      "originalDescriptionResponse": 1238,
+      "recoveredDescriptions": 5
+    },
+    "allRunInventory": {
+      "retrievedRows": 188061,
+      "uniqueRuns": 184045,
+      "multiLabelRuns": 2089,
+      "retrievedProjects": 1219,
+      "sourceProjects": 1349,
+      "descriptionProjects": 1238,
+      "unionProjects": 1243,
+      "paginationComplete": true,
+      "uniqueRunCountMatches": true,
+      "projectsMissingFromDescriptionCatalog": [
+        "PRJEB29421",
+        "PRJNA436440",
+        "PRJNA529598",
+        "PRJNA533120",
+        "PRJNA642975"
+      ],
+      "sourceRef": "complete-all-run-inventory",
+      "unrecoveredProjectIdentities": 106,
+      "recoveredDescriptionStatus": "五项已补取项目详情；四项为自闭症研究，一项重新测序描述不含本次关键词，均未形成新增 AD 候选。",
+      "note": "接口是 Run × disease 行；去重 Run 数不应等于源端行总数。项目身份联合覆盖不等于所有项目均有描述或临床分组。"
+    },
+    "sourceCorrections": [
+      "Run × 表型分页到末页 188061 行，去重 184045 Run。",
+      "PRJNA665245 项目详情 QC valid=81；旧总览 0 保留为源端字段冲突。",
+      "PRJEB55056 D065626 标签与原研究冲突；不改标为 AD/NC。"
+    ],
+    "recoveredProjectScreening": [
+      {
+        "projectId": "PRJEB29421",
+        "sourceId": "complete-PRJEB29421-project.json",
+        "description": "Proliferation and/or depletion of clusters of specific bacteria regulate intestinal functions and may interfere with neuro-immune communication and behavior in patients with autism spectrum disorder (ASD). Consistently, qualitative and quantitative alteration of bacterial metabolites may functionally affect autism pathophysiology. Up to date, assigning a specific microbial signature to ASD is quite difficult also because of the lack of age-restricted cohort studies. We investigated the gut microbiota (GM) composition and fecal short chain fatty acids (SCFAs) levels in a cohort of young children (2-4 years of age) with ASD, with respect to age-matched neurotypical healthy controls. Strong increase of Bacteroidetes and Proteobacteria and decrease of Actinobacteria was observed in these patients. Among the 91 OTUs whose relative abundance was altered in ASD patients, we observed a striking depletion of Bifidobacterium longum, one of the dominant bacteria in infant GM and, conversely, an increase of Faecalibacterium prausnitzii, a late colonizer of healthy human gut and a major butyrate producer. High levels of F. prausnitzii were associated to increase of fecal butyrate levels within normal range, and over representation of KEGG functions related to butyrate production in ASD patients. Here we report unbalance of GM composition and shift in colonization of gut beneficial bacterial species in ASD patients as off early childhood.",
+        "keywordMatch": false,
+        "disposition": "outside_scope_autism",
+        "note": "仅判定所列来源描述的检索去向；无命中不等于证明研究与 AD 毫无关系。"
+      },
+      {
+        "projectId": "PRJNA436440",
+        "sourceId": "complete-PRJNA436440-project.json",
+        "description": "Metagenome Analysis of Human Gut Microbiome and its Prospective Influence in Autism\nGut Microbiome analysis",
+        "keywordMatch": false,
+        "disposition": "outside_scope_autism",
+        "note": "仅判定所列来源描述的检索去向；无命中不等于证明研究与 AD 毫无关系。"
+      },
+      {
+        "projectId": "PRJNA529598",
+        "sourceId": "complete-PRJNA529598-project.json",
+        "description": "This study explores the impact of a fecal microbiota transplant protocol on children with autism and relates them to age and gender matched controls. This project contains data from our initial study which tracked subjects for 18 weeks, and a follow-up sampling event approximately two years after fecal transplant.",
+        "keywordMatch": false,
+        "disposition": "outside_scope_autism",
+        "note": "仅判定所列来源描述的检索去向；无命中不等于证明研究与 AD 毫无关系。"
+      },
+      {
+        "projectId": "PRJNA533120",
+        "sourceId": "complete-PRJNA533120-project.json",
+        "description": "MISEQ Resequencing of data reported in Kang et al 2017 and 2013 ( doi: 10.1371/journal.pone.0068322, doi: 10.1016/j.anaerobe.2017.12.007)",
+        "keywordMatch": false,
+        "disposition": "no_ad_keyword_in_resequencing_description",
+        "note": "仅判定所列来源描述的检索去向；无命中不等于证明研究与 AD 毫无关系。"
+      },
+      {
+        "projectId": "PRJNA642975",
+        "sourceId": "complete-PRJNA642975-project.json",
+        "description": "In this study, we attempt to characterize the gut microbiome of Chinese children with autism spectrum disorders (ASDs) and identify differentially abundant microbiota associated with inflammation.",
+        "keywordMatch": false,
+        "disposition": "outside_scope_autism",
+        "note": "仅判定所列来源描述的检索去向；无命中不等于证明研究与 AD 毫无关系。"
+      }
+    ]
+  }
+}

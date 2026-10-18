@@ -711,6 +711,7 @@ function Heatmap({ data, featureLabel = '物种' }) {
       </div>
 
       {/* AD → NC → 合并 → 差异纵向排列，列顺序保持一致 */}
+      {result.valueTransformNote ? <p className="chart-toolbar__summary">{result.valueTransformNote}</p> : null}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         <HeatmapCanvas
           title="AD 组丰度热图"

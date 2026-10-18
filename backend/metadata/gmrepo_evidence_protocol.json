@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "version": "ad-external-evidence-2026-10-14-v1",
+  "status": "implemented_rules_pending_scientific_review",
+  "reviewStatus": "pending",
+  "purpose": "AD 肠道菌群研究对象的外部参考评估；现有统计为队列内探索性证据。",
+  "phenotype": "D000544",
+  "discoveryTerms": ["Alzheimer", "Alzheimer Disease", "mild cognitive impairment", "MCI", "preclinical"],
+  "population": "human",
+  "material": "gut_or_fecal",
+  "platforms": ["16S", "WGS"],
+  "comparison": "AD versus same-study NC; MCI, at-risk and preclinical groups are separate",
+  "selection": "不按显著性筛选研究；纳入和排除均保留理由；未取得数据不补零。",
+  "counting": "来源 LDA、重算、调整前后模型均不增加独立研究数。研究间独立性未审查时不报告独立验证数量。",
+  "mapping": "精确稳定 ID 或经审查的属名及旧名，要求域一致；属级背景不认证物种、MAG 或功能复现。",
+  "methodVersion": "2026-10-12-rank-hc3-v1",
+  "rulesVersion": "evidence-summary-v1",
+  "discoveryStatus": "pending_live_inventory",
+  "sourceReceiptStatus": "legacy_snapshot_receipts_incomplete",
+  "modelValidationStatus": "not_available",
+  "steps": [
+    {"key": "scope", "label": "研究范围与纳排规则", "status": "defined_pending_review"},
+    {"key": "discovery", "label": "AD 相关资源系统清点", "status": "pending"},
+    {"key": "source", "label": "原件获取与来源留存", "status": "partial"},
+    {"key": "identity", "label": "样本分组、身份与重叠核查", "status": "partial"},
+    {"key": "taxonomy", "label": "分类与单位标准化", "status": "reference_genus_only"},
+    {"key": "statistics", "label": "队列内统计与复核", "status": "exploratory"},
+    {"key": "mapping", "label": "主分析对象关联与解释", "status": "implemented_with_gates"},
+    {"key": "release", "label": "版本发布与科研复核", "status": "pending_scientific_review"}
+  ]
+}

@@ -1,4 +1,4 @@
-import { researchPaletteOptions, resolveResearchPalette, isCategoricalPalette } from './magResearchPalettes';
+import { researchPaletteOptions, resolveResearchPalette, isCategoricalPalette } from '../../components/Charts/researchPalettes';
 
 export const DEFAULT_RESEARCH_STYLE = { palette: 'okabe-ito', labels: false, hover: true, grid: true,
   legend: true, outline: true, reference: true, band: true, metric: 'count', mappingView: 'auto', groupBy: 'disease',

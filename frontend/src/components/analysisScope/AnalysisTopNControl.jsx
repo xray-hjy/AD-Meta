@@ -21,7 +21,7 @@ export default function AnalysisTopNControl({ control, value, featureLabel, onCh
         Top {value}<span aria-hidden="true">⌄</span>
       </Popover.Trigger>
       <Popover.Portal><Popover.Positioner className="selection-positioner" align="start" sideOffset={8} positionMethod="fixed" collisionPadding={16} style={theme}>
-        <Popover.Popup className="selection-count-popup">
+        <Popover.Popup className="selection-count-popup selection-popup-transition">
           <div className="selection-count-heading"><Popover.Title>{featureLabel}显示数量{control.purpose === 'feature_selection' ? ' / 参与计算' : ''}</Popover.Title>
             <Popover.Close type="button" aria-label="关闭数量设置">×</Popover.Close></div>
           <TopNSettingsPanel control={control} value={value} featureLabel={featureLabel} availableCount={availableCount} loading={loading}

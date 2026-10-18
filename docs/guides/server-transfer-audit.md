@@ -2,6 +2,8 @@
 
 核查日期：2026-10-01。来源 `G:/project/server_transfer`，整理目录 `G:/project/AD_data_provenance/2026-10-01`。
 
+2026-10-16 更新：主物种数据已选择用户新交付的 MetaPhlAn 4 标记 TSV 作为替换源（185 个样本、1,828 个种级特征），详见 [物种原始资料说明](../../backend/storage/raw/ad-nc-species/PRJCA022804/README.md)。下文 Excel 与服务器 Bracken 的差异核对保留为历史来源记录；MAG crosswalk 的观察状态仍属于该批 Bracken 结果，不属于新 MetaPhlAn 矩阵。
+
 ## 本次保存
 
 源目录 857 个文件，约 1.43 GB；按完整 SHA-256 去重后，805 份不同内容，885,474,294 字节。分类复制到新目录，保留全部源文件；52 个重复副本保留在登记表的原路径关系中。整理目录包含原始报告、矩阵、脚本、日志、参考资料及本次核对报告。

@@ -4,7 +4,7 @@
   padding: 90px clamp(24px, 6vw, 96px);
   background: #eaf1fa;
   border-block: 1px solid #d2deed;
-  scroll-margin-top: 138px;
+  scroll-margin-top: var(--home-anchor-offset);
 }
 
 .admeta-home .evidence-inner {
@@ -70,7 +70,7 @@
   max-width: 1500px;
   margin: 0 auto;
   padding: 92px clamp(24px, 6vw, 96px);
-  scroll-margin-top: 138px;
+  scroll-margin-top: var(--home-anchor-offset);
 }
 
 .admeta-home .final-cta p {

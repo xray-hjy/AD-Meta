@@ -1,3 +1,6 @@
+import subprocess
+import sys
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -26,6 +29,33 @@ def test_prepare_runtime_bootstraps_an_empty_database() -> None:
     bootstrap.assert_called_once()
     sync.assert_not_called()
     assert action == "bootstrapped_storage"
+
+
+def test_existing_database_preparation_does_not_import_computation_pipeline() -> None:
+    code = '''
+import sys
+from unittest.mock import MagicMock, patch
+from app.cli.prepare_runtime import prepare_runtime
+connection = MagicMock()
+connection.execute.return_value.fetchone.return_value = {"value": 2}
+context = MagicMock()
+context.__enter__.return_value = connection
+with patch("app.cli.prepare_runtime.upgrade_database"), patch("app.cli.prepare_runtime.connect", return_value=context), patch("app.cli.prepare_runtime.sync_analysis_runs_from_manifest"):
+    assert prepare_runtime() == "synced_analysis_runs"
+for name in ("app.cli.import_dataset", "app.compute.precompute", "pandas", "scipy", "statsmodels"):
+    assert name not in sys.modules, name
+import app.api.gmrepo
+assert "app.services.gmrepo_analysis_service" not in sys.modules
+assert "statsmodels.regression.linear_model" not in sys.modules
+'''
+    result = subprocess.run(
+        [sys.executable, "-c", code],
+        cwd=Path(__file__).resolve().parents[1],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode == 0, result.stderr
 
 
 def test_prepare_runtime_only_syncs_runs_when_datasets_exist() -> None:

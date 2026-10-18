@@ -3,18 +3,31 @@ import { Autocomplete } from '@base-ui/react/autocomplete';
 import { Combobox } from '@base-ui/react/combobox';
 import { matchSuggestions } from './entitySuggestions';
 import './entity-autocomplete.css';
+import SlidingHighlight from './SlidingHighlight';
+import useSlidingHighlight from './useSlidingHighlight';
 
 function SuggestionText({ item }) {
   return <><span className="entity-option__heading"><strong>{item.label}</strong><small>{item.approximate ? '相近名称' : item.kind}</small></span>
     <span className="entity-option__detail" title={item.detail}>{item.detail}</span></>;
 }
 
+function GlidingEntityList({ Parts, items }) {
+  const containerRef = useRef(null);
+  const highlightRef = useRef(null);
+  useSlidingHighlight({ containerRef, highlightRef, observeItems: true, selector: '[data-highlighted]',
+    resetKey: items.map(item => item.key).join('\u001f') });
+  return <Parts.List ref={containerRef} className="entity-popup__list sliding-option-list"
+    render={props => <div {...props}><SlidingHighlight ref={highlightRef} />{props.children}</div>}>
+    {item => <Parts.Item key={item.key} value={item} className="entity-option" title={`${item.label}\n${item.detail}`}><SuggestionText item={item} /></Parts.Item>}
+  </Parts.List>;
+}
+
 function PopupContents({ Parts, items, total, loading, error, retry, note, allowFreeText = true }) {
-  return <Parts.Popup className="entity-popup" aria-busy={loading || undefined}>
+  return <Parts.Popup className="entity-popup selection-popup-transition" aria-busy={loading || undefined}>
     <div className="entity-popup__heading"><span>{note}</span><span>{loading ? '检索中…' : `${total} 个候选`}</span></div>
     {error ? <div className="entity-popup__message" role="alert">{allowFreeText ? '候选加载失败；可继续输入关键词' : '候选加载失败，请重试'}{retry && <button type="button" onClick={retry}>重试</button>}</div> : null}
     {!loading && !error && !items.length ? <div className="entity-popup__message">{allowFreeText ? '没有匹配候选，可继续输入关键词' : '没有匹配候选，请调整名称或编号'}</div> : null}
-    <Parts.List className="entity-popup__list">{item => <Parts.Item key={item.key} value={item} className="entity-option" title={`${item.label}\n${item.detail}`}><SuggestionText item={item} /></Parts.Item>}</Parts.List>
+    <GlidingEntityList Parts={Parts} items={items} />
     <div className="entity-popup__footer">{total > items.length ? `展示前 ${items.length} 个 · 输入更多字符缩小范围` : '↑ ↓ 选择 · Enter 确认 · Esc 收起'}</div>
   </Parts.Popup>;
 }

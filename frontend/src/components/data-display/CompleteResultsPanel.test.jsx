@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter } from 'react-router-dom';
 import { vi } from 'vitest';
 import { getCompleteResults } from '../../api/completeResults';
 import CompleteResultsPanel from './CompleteResultsPanel';
@@ -29,4 +30,25 @@ test('lazy loads full results, paginates, resets search and exports all matching
   expect(href).toContain('query=CRR');
   expect(href).not.toContain('offset');
   expect(screen.getByText(/不会补零/)).toBeTruthy();
+});
+
+test('species result rows link the exact feature, source version and artifact to external evaluation', async () => {
+  getCompleteResults.mockResolvedValue({
+    total: 1, featureKind: 'species', datasetSlug: 'ad-nc-species', datasetRevision: 'fixed-revision',
+    columns: ['sampleCode', 'featureId', 'featureName', 'abundance'], abundanceScale: 'percent', normalization: 'none',
+    items: [{ sampleCode: 'CRR1', featureId: 1937, featureName: 'Bacteroides uniformis', abundance: 0.2 }],
+  });
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const result = render(<MemoryRouter initialEntries={['/analysis/abundance?chart=boxplot']}>
+    <QueryClientProvider client={client}><CompleteResultsPanel runKey="species-run" artifactKey="species-matrix" /></QueryClientProvider>
+  </MemoryRouter>);
+  const details = result.container.querySelector('details');
+  details.open = true;
+  fireEvent(details, new Event('toggle'));
+  const link = await screen.findByRole('link', { name: '外部证据评估', exact: true });
+  const params = new URL(link.getAttribute('href'), 'http://localhost').searchParams;
+  expect(Object.fromEntries(params)).toMatchObject({ subjectType: 'species', subjectId: '1937',
+    sourceRevision: 'fixed-revision', datasetSlug: 'ad-nc-species', runKey: 'species-run', artifactKey: 'species-matrix',
+    returnTo: '/analysis/abundance?chart=boxplot' });
+  expect(JSON.parse(params.get('sourceScope')).source).toContain('单行不代表总体差异');
 });

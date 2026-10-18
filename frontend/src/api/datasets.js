@@ -7,8 +7,10 @@ import { fetchJson } from './client';
 /** @typedef {import('./client').FetchJsonOptions} FetchJsonOptions */
 
 /** @param {FetchJsonOptions} [options] @returns {Promise<Dataset[]>} */
-export function listDatasets(options) {
-  return fetchJson('/api/datasets', options);
+export async function listDatasets(options) {
+  const data = await fetchJson('/api/datasets', options);
+  if (!Array.isArray(data)) throw new Error('数据集目录响应格式无效，无法确认已发布数据。');
+  return data;
 }
 
 /** @param {string} slug @param {FetchJsonOptions} [options] @returns {Promise<DatasetSummary>} */

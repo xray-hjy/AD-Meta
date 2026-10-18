@@ -7,6 +7,7 @@ from typing import Any
 
 from app.core.database import connect, utcnow
 from app.domain.analysis_manifest import AnalysisRunManifest, canonical_manifest_json, load_analysis_manifest
+from app.services.analysis_run_presentation import present_analysis_runs
 
 
 class AnalysisManifestConflict(ValueError):
@@ -403,7 +404,7 @@ def _load_analysis_runs(run_key: str | None = None) -> list[dict[str, Any]]:
                     "publishedAt": run["published_at"],
                 }
             )
-    return payloads
+    return present_analysis_runs(payloads)
 
 
 def list_analysis_runs() -> list[dict[str, Any]]:

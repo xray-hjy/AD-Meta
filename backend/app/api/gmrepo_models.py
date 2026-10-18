@@ -1,6 +1,8 @@
-from typing import Literal
+from typing import Any, Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from app.services.gmrepo_ledger_models import CapabilityState, EvidenceBlocker, ResearchLedger
 
 ReferenceScope = Literal["all", "complete", "plot_ready", "group_confirmed", "stage_reference", "pending", "no_profile"]
 ReferenceGroup = Literal["", "AD", "NC", "MCI", "at_risk", "cognitively_normal_amyloid_status_unresolved", "unresolved", "other"]
@@ -56,6 +58,66 @@ class GmrepoCatalogResponse(BaseModel):
     cohorts: list[ReferenceCohort]
     groups: list[ReferenceOption]
     scopes: list[ReferenceOption]
+
+
+class GmrepoResourcesResponse(BaseModel):
+    provenance: ReferenceProvenance
+    protocol: dict[str, Any]
+    items: list[dict[str, Any]]
+    discovery: dict[str, Any]
+    counts: dict[str, int]
+    researchLedger: ResearchLedger | None = None
+    primaryContext: dict[str, Any] = Field(default_factory=dict)
+
+
+class GmrepoCandidateRequest(BaseModel):
+    candidateIds: list[str] = Field(min_length=1, max_length=2000)
+    sourceRevision: str = Field(default="", max_length=128)
+    datasetSlug: str = Field(default="ad-nc-species", max_length=100)
+
+
+class GmrepoSubjectResponse(BaseModel):
+    model_config = {"extra": "allow"}
+    subjectType: str
+    subjectId: str
+    subjectName: str
+    sourceRevision: str
+    datasetSlug: str
+    runKey: str
+    artifactKey: str
+    referenceRevision: str
+    status: str
+    mappingLevel: str
+    genus: dict[str, Any] | None
+    reasons: list[str]
+    mappingMethod: str
+    representativeMag: str | None
+
+
+class GmrepoEvaluationResponse(BaseModel):
+    wgsReference: dict = Field(default_factory=dict)
+    provenance: ReferenceProvenance
+    genus: dict[str, Any]
+    cohorts: list[dict[str, Any]]
+    methods: dict[str, Any]
+    familySize: int
+    protocol: dict[str, Any]
+    summary: dict[str, Any]
+    primary: dict[str, Any]
+    generatedAt: str
+    researchLedger: ResearchLedger | None = None
+    claims: list[dict[str, Any]] = Field(default_factory=list)
+    evaluationId: str | None = None
+    snapshotStatus: dict[str, Any] | None = None
+
+
+class GmrepoEvaluationPackageResponse(BaseModel):
+    schemaVersion: Literal[1]
+    evaluationId: str = Field(pattern=r"^[0-9a-f]{64}$")
+    payloadSha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    payload: dict[str, Any]
+    currentStatus: dict[str, Any]
+    canonicalization: str = "python-json-v0"
 
 
 class ReferenceCounts(BaseModel):
@@ -213,12 +275,19 @@ class ReferenceAudit(BaseModel):
     adjustedReasons: list[str]
     adjustedCount: int
     excludedMissingCovariates: int
+    registryFingerprint: str | None = None
+    allRunSetSha256: str | None = None
+    plotRunSetSha256: str | None = None
+    adjustedRunSetSha256: str | None = None
+    blockers: list[EvidenceBlocker] = Field(default_factory=list)
+    capabilities: dict[str, CapabilityState] = Field(default_factory=dict)
 
 
 class GmrepoAuditResponse(BaseModel):
     provenance: ReferenceProvenance
     methods: ReferenceMethods
     items: list[ReferenceAudit]
+    protocol: dict[str, Any] = Field(default_factory=dict)
 
 
 class ReferencePoint(BaseModel):
@@ -336,6 +405,8 @@ class ReferencePrimaryEvidence(BaseModel):
     quantitativeStatus: str
     reasons: list[str]
     comparisonNote: str
+    cohortEvidence: dict[str, Any] = Field(default_factory=dict)
+    genusComparison: dict[str, Any] = Field(default_factory=dict)
 
 
 class GmrepoEvidenceResponse(BaseModel):

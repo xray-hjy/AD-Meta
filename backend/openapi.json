@@ -346,6 +346,11 @@
             "title": "Id",
             "type": "integer"
           },
+          "isDefault": {
+            "default": false,
+            "title": "Isdefault",
+            "type": "boolean"
+          },
           "key": {
             "title": "Key",
             "type": "string"
@@ -396,6 +401,11 @@
           "sampleCount": {
             "title": "Samplecount",
             "type": "integer"
+          },
+          "selectorVisible": {
+            "default": true,
+            "title": "Selectorvisible",
+            "type": "boolean"
           },
           "status": {
             "title": "Status",
@@ -587,6 +597,26 @@
           }
         },
         "title": "AnalysisScope",
+        "type": "object"
+      },
+      "CapabilityState": {
+        "properties": {
+          "reasonCodes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reasoncodes",
+            "type": "array"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "CapabilityState",
         "type": "object"
       },
       "ChartArtifactResponse": {
@@ -1159,6 +1189,64 @@
         "title": "ErrorResponse",
         "type": "object"
       },
+      "EvidenceBlocker": {
+        "properties": {
+          "affects": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Affects",
+            "type": "array"
+          },
+          "evidenceRefs": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Evidencerefs",
+            "type": "array"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "missingEvidence": {
+            "title": "Missingevidence",
+            "type": "string"
+          },
+          "nextAction": {
+            "title": "Nextaction",
+            "type": "string"
+          },
+          "projectId": {
+            "title": "Projectid",
+            "type": "string"
+          },
+          "reasonCode": {
+            "title": "Reasoncode",
+            "type": "string"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          },
+          "status": {
+            "default": "pending",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reasonCode",
+          "projectId",
+          "scope",
+          "affects",
+          "message",
+          "missingEvidence",
+          "nextAction"
+        ],
+        "title": "EvidenceBlocker",
+        "type": "object"
+      },
       "FeatureSelection": {
         "description": "A chart-independent feature selection that survives scope changes.",
         "properties": {
@@ -1208,6 +1296,11 @@
           "methods": {
             "$ref": "#/components/schemas/ReferenceMethods"
           },
+          "protocol": {
+            "additionalProperties": true,
+            "title": "Protocol",
+            "type": "object"
+          },
           "provenance": {
             "$ref": "#/components/schemas/ReferenceProvenance"
           }
@@ -1218,6 +1311,36 @@
           "items"
         ],
         "title": "GmrepoAuditResponse",
+        "type": "object"
+      },
+      "GmrepoCandidateRequest": {
+        "properties": {
+          "candidateIds": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 2000,
+            "minItems": 1,
+            "title": "Candidateids",
+            "type": "array"
+          },
+          "datasetSlug": {
+            "default": "ad-nc-species",
+            "maxLength": 100,
+            "title": "Datasetslug",
+            "type": "string"
+          },
+          "sourceRevision": {
+            "default": "",
+            "maxLength": 128,
+            "title": "Sourcerevision",
+            "type": "string"
+          }
+        },
+        "required": [
+          "candidateIds"
+        ],
+        "title": "GmrepoCandidateRequest",
         "type": "object"
       },
       "GmrepoCatalogResponse": {
@@ -1323,6 +1446,156 @@
           "code"
         ],
         "title": "GmrepoErrorResponse",
+        "type": "object"
+      },
+      "GmrepoEvaluationPackageResponse": {
+        "properties": {
+          "canonicalization": {
+            "default": "python-json-v0",
+            "title": "Canonicalization",
+            "type": "string"
+          },
+          "currentStatus": {
+            "additionalProperties": true,
+            "title": "Currentstatus",
+            "type": "object"
+          },
+          "evaluationId": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Evaluationid",
+            "type": "string"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "title": "Payload",
+            "type": "object"
+          },
+          "payloadSha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Payloadsha256",
+            "type": "string"
+          },
+          "schemaVersion": {
+            "const": 1,
+            "title": "Schemaversion",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "evaluationId",
+          "payloadSha256",
+          "payload",
+          "currentStatus"
+        ],
+        "title": "GmrepoEvaluationPackageResponse",
+        "type": "object"
+      },
+      "GmrepoEvaluationResponse": {
+        "properties": {
+          "claims": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Claims",
+            "type": "array"
+          },
+          "cohorts": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Cohorts",
+            "type": "array"
+          },
+          "evaluationId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evaluationid"
+          },
+          "familySize": {
+            "title": "Familysize",
+            "type": "integer"
+          },
+          "generatedAt": {
+            "title": "Generatedat",
+            "type": "string"
+          },
+          "genus": {
+            "additionalProperties": true,
+            "title": "Genus",
+            "type": "object"
+          },
+          "methods": {
+            "additionalProperties": true,
+            "title": "Methods",
+            "type": "object"
+          },
+          "primary": {
+            "additionalProperties": true,
+            "title": "Primary",
+            "type": "object"
+          },
+          "protocol": {
+            "additionalProperties": true,
+            "title": "Protocol",
+            "type": "object"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/ReferenceProvenance"
+          },
+          "researchLedger": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResearchLedger"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "snapshotStatus": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snapshotstatus"
+          },
+          "summary": {
+            "additionalProperties": true,
+            "title": "Summary",
+            "type": "object"
+          },
+          "wgsReference": {
+            "additionalProperties": true,
+            "title": "Wgsreference",
+            "type": "object"
+          }
+        },
+        "required": [
+          "provenance",
+          "genus",
+          "cohorts",
+          "methods",
+          "familySize",
+          "protocol",
+          "summary",
+          "primary",
+          "generatedAt"
+        ],
+        "title": "GmrepoEvaluationResponse",
         "type": "object"
       },
       "GmrepoEvidenceResponse": {
@@ -1475,6 +1748,62 @@
         "title": "GmrepoOverviewResponse",
         "type": "object"
       },
+      "GmrepoResourcesResponse": {
+        "properties": {
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Counts",
+            "type": "object"
+          },
+          "discovery": {
+            "additionalProperties": true,
+            "title": "Discovery",
+            "type": "object"
+          },
+          "items": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "primaryContext": {
+            "additionalProperties": true,
+            "title": "Primarycontext",
+            "type": "object"
+          },
+          "protocol": {
+            "additionalProperties": true,
+            "title": "Protocol",
+            "type": "object"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/ReferenceProvenance"
+          },
+          "researchLedger": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResearchLedger"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "provenance",
+          "protocol",
+          "items",
+          "discovery",
+          "counts"
+        ],
+        "title": "GmrepoResourcesResponse",
+        "type": "object"
+      },
       "GmrepoSamplesResponse": {
         "properties": {
           "genus": {
@@ -1575,6 +1904,103 @@
           "summary"
         ],
         "title": "GmrepoStatisticsResponse",
+        "type": "object"
+      },
+      "GmrepoSubjectResponse": {
+        "additionalProperties": true,
+        "properties": {
+          "artifactKey": {
+            "title": "Artifactkey",
+            "type": "string"
+          },
+          "datasetSlug": {
+            "title": "Datasetslug",
+            "type": "string"
+          },
+          "genus": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Genus"
+          },
+          "mappingLevel": {
+            "title": "Mappinglevel",
+            "type": "string"
+          },
+          "mappingMethod": {
+            "title": "Mappingmethod",
+            "type": "string"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "referenceRevision": {
+            "title": "Referencerevision",
+            "type": "string"
+          },
+          "representativeMag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Representativemag"
+          },
+          "runKey": {
+            "title": "Runkey",
+            "type": "string"
+          },
+          "sourceRevision": {
+            "title": "Sourcerevision",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "subjectId": {
+            "title": "Subjectid",
+            "type": "string"
+          },
+          "subjectName": {
+            "title": "Subjectname",
+            "type": "string"
+          },
+          "subjectType": {
+            "title": "Subjecttype",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subjectType",
+          "subjectId",
+          "subjectName",
+          "sourceRevision",
+          "datasetSlug",
+          "runKey",
+          "artifactKey",
+          "referenceRevision",
+          "status",
+          "mappingLevel",
+          "genus",
+          "reasons",
+          "mappingMethod",
+          "representativeMag"
+        ],
+        "title": "GmrepoSubjectResponse",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -4561,9 +4987,45 @@
             "title": "Adjustedreasons",
             "type": "array"
           },
+          "adjustedRunSetSha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Adjustedrunsetsha256"
+          },
           "adjustedStatus": {
             "title": "Adjustedstatus",
             "type": "string"
+          },
+          "allRunSetSha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allrunsetsha256"
+          },
+          "blockers": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceBlocker"
+            },
+            "title": "Blockers",
+            "type": "array"
+          },
+          "capabilities": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CapabilityState"
+            },
+            "title": "Capabilities",
+            "type": "object"
           },
           "covariates": {
             "items": {
@@ -4617,9 +5079,31 @@
             "title": "Plotreadyruns",
             "type": "integer"
           },
+          "plotRunSetSha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plotrunsetsha256"
+          },
           "projectId": {
             "title": "Projectid",
             "type": "string"
+          },
+          "registryFingerprint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Registryfingerprint"
           },
           "repeatedParticipantIds": {
             "title": "Repeatedparticipantids",
@@ -5389,6 +5873,11 @@
             ],
             "title": "Abundancescale"
           },
+          "cohortEvidence": {
+            "additionalProperties": true,
+            "title": "Cohortevidence",
+            "type": "object"
+          },
           "cohortId": {
             "anyOf": [
               {
@@ -5418,6 +5907,11 @@
           "datasetSlug": {
             "title": "Datasetslug",
             "type": "string"
+          },
+          "genusComparison": {
+            "additionalProperties": true,
+            "title": "Genuscomparison",
+            "type": "object"
           },
           "groupCounts": {
             "additionalProperties": {
@@ -6017,6 +6511,288 @@
           "relationship"
         ],
         "title": "RelatedPublicationResponse",
+        "type": "object"
+      },
+      "ResearchField": {
+        "properties": {
+          "evidenceRefs": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Evidencerefs",
+            "type": "array"
+          },
+          "locator": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Locator"
+          },
+          "rawValue": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rawvalue"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "status",
+          "evidenceRefs"
+        ],
+        "title": "ResearchField",
+        "type": "object"
+      },
+      "ResearchLedger": {
+        "properties": {
+          "acquisitions": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Acquisitions",
+            "type": "array"
+          },
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Counts",
+            "type": "object"
+          },
+          "discoveryFingerprint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discoveryfingerprint"
+          },
+          "discoveryStatus": {
+            "title": "Discoverystatus",
+            "type": "string"
+          },
+          "records": {
+            "items": {
+              "$ref": "#/components/schemas/ResearchProjectRecord"
+            },
+            "title": "Records",
+            "type": "array"
+          },
+          "referenceFingerprint": {
+            "title": "Referencefingerprint",
+            "type": "string"
+          },
+          "registryFingerprint": {
+            "title": "Registryfingerprint",
+            "type": "string"
+          },
+          "registryStatus": {
+            "title": "Registrystatus",
+            "type": "string"
+          },
+          "relationships": {
+            "additionalProperties": true,
+            "title": "Relationships",
+            "type": "object"
+          },
+          "schemaVersion": {
+            "const": 1,
+            "default": 1,
+            "title": "Schemaversion",
+            "type": "integer"
+          },
+          "scientificReviewStatus": {
+            "title": "Scientificreviewstatus",
+            "type": "string"
+          },
+          "scope": {
+            "additionalProperties": true,
+            "title": "Scope",
+            "type": "object"
+          },
+          "sourceChecks": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Sourcechecks",
+            "type": "array"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "referenceFingerprint",
+          "registryFingerprint",
+          "registryStatus",
+          "discoveryStatus",
+          "scientificReviewStatus",
+          "counts",
+          "records",
+          "acquisitions",
+          "scope"
+        ],
+        "title": "ResearchLedger",
+        "type": "object"
+      },
+      "ResearchProjectRecord": {
+        "properties": {
+          "blockers": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceBlocker"
+            },
+            "title": "Blockers",
+            "type": "array"
+          },
+          "capabilities": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CapabilityState"
+            },
+            "title": "Capabilities",
+            "type": "object"
+          },
+          "comparison": {
+            "additionalProperties": true,
+            "title": "Comparison",
+            "type": "object"
+          },
+          "evidenceRefs": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Evidencerefs",
+            "type": "array"
+          },
+          "fields": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ResearchField"
+            },
+            "title": "Fields",
+            "type": "object"
+          },
+          "installed": {
+            "title": "Installed",
+            "type": "boolean"
+          },
+          "issueResolutions": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Issueresolutions",
+            "type": "array"
+          },
+          "projectId": {
+            "title": "Projectid",
+            "type": "string"
+          },
+          "relationships": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Relationships",
+            "type": "array"
+          },
+          "reviews": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Reviews",
+            "type": "array"
+          },
+          "screening": {
+            "additionalProperties": true,
+            "title": "Screening",
+            "type": "object"
+          },
+          "sourceUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourceurl"
+          },
+          "sources": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "studyId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Studyid"
+          }
+        },
+        "required": [
+          "projectId",
+          "studyId",
+          "installed",
+          "fields",
+          "comparison",
+          "capabilities",
+          "blockers",
+          "reviews",
+          "evidenceRefs"
+        ],
+        "title": "ResearchProjectRecord",
         "type": "object"
       },
       "ScopedFeatureRequest": {
@@ -7704,6 +8480,117 @@
         "summary": "Description",
         "tags": [
           "datasets"
+        ]
+      }
+    },
+    "/api/datasets/{slug}/revisions/{revision}/diting/download/{kind}": {
+      "get": {
+        "operationId": "download_api_datasets__slug__revisions__revision__diting_download__kind__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "revision",
+            "required": true,
+            "schema": {
+              "title": "Revision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "title": "Kind",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Download",
+        "tags": [
+          "DiTing"
+        ]
+      }
+    },
+    "/api/datasets/{slug}/revisions/{revision}/diting/pathways": {
+      "get": {
+        "operationId": "pathways_api_datasets__slug__revisions__revision__diting_pathways_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "revision",
+            "required": true,
+            "schema": {
+              "title": "Revision",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Pathways Api Datasets  Slug  Revisions  Revision  Diting Pathways Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Pathways",
+        "tags": [
+          "DiTing"
         ]
       }
     },
@@ -10742,6 +11629,134 @@
         ]
       }
     },
+    "/api/references/gmrepo/candidate-comparison": {
+      "post": {
+        "operationId": "candidate_comparison_api_references_gmrepo_candidate_comparison_post",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GmrepoCandidateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoEvaluationPackageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Candidate Comparison",
+        "tags": [
+          "gmrepo"
+        ]
+      }
+    },
+    "/api/references/gmrepo/candidate-report": {
+      "get": {
+        "operationId": "candidate_report_api_references_gmrepo_candidate_report_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "evaluationId",
+            "required": true,
+            "schema": {
+              "pattern": "^[0-9a-f]{64}$",
+              "title": "Evaluationid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Candidate Report",
+        "tags": [
+          "gmrepo"
+        ]
+      }
+    },
     "/api/references/gmrepo/catalog": {
       "get": {
         "operationId": "catalog_api_references_gmrepo_catalog_get",
@@ -10791,6 +11806,123 @@
           }
         },
         "summary": "Catalog",
+        "tags": [
+          "gmrepo"
+        ]
+      }
+    },
+    "/api/references/gmrepo/comparison-catalog": {
+      "get": {
+        "operationId": "comparison_catalog_api_references_gmrepo_comparison_catalog_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "sourceRevision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Sourcerevision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "datasetSlug",
+            "required": false,
+            "schema": {
+              "default": "ad-nc-species",
+              "title": "Datasetslug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 160,
+              "title": "Query",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 2000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "speciesIds",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 20000,
+              "title": "Speciesids",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Comparison Catalog",
         "tags": [
           "gmrepo"
         ]
@@ -10873,6 +12005,70 @@
         ]
       }
     },
+    "/api/references/gmrepo/evaluation-package": {
+      "get": {
+        "operationId": "evaluation_package_api_references_gmrepo_evaluation_package_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "evaluationId",
+            "required": true,
+            "schema": {
+              "pattern": "^[0-9a-f]{64}$",
+              "title": "Evaluationid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoEvaluationPackageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Evaluation Package",
+        "tags": [
+          "gmrepo"
+        ]
+      }
+    },
     "/api/references/gmrepo/evidence": {
       "get": {
         "operationId": "evidence_api_references_gmrepo_evidence_get",
@@ -10897,6 +12093,28 @@
               "maxLength": 32,
               "pattern": "^NCBI:\\d+$",
               "title": "Genus",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sourceRevision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Sourcerevision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "datasetSlug",
+            "required": false,
+            "schema": {
+              "default": "ad-nc-species",
+              "maxLength": 100,
+              "title": "Datasetslug",
               "type": "string"
             }
           },
@@ -10945,6 +12163,158 @@
           }
         },
         "summary": "Evidence",
+        "tags": [
+          "gmrepo"
+        ]
+      }
+    },
+    "/api/references/gmrepo/evidence-summary": {
+      "get": {
+        "operationId": "evidence_summary_api_references_gmrepo_evidence_summary_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "genus",
+            "required": true,
+            "schema": {
+              "pattern": "^NCBI:\\d+$",
+              "title": "Genus",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sourceRevision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Sourcerevision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "datasetSlug",
+            "required": false,
+            "schema": {
+              "default": "ad-nc-species",
+              "maxLength": 100,
+              "title": "Datasetslug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subjectType",
+            "required": false,
+            "schema": {
+              "default": "",
+              "pattern": "^(species|mag|genus)?$",
+              "title": "Subjecttype",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subjectId",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 160,
+              "title": "Subjectid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "runKey",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 150,
+              "title": "Runkey",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "artifactKey",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 150,
+              "title": "Artifactkey",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sourceChart",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 100,
+              "title": "Sourcechart",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sourceScope",
+            "required": false,
+            "schema": {
+              "default": "{}",
+              "maxLength": 4000,
+              "title": "Sourcescope",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoEvaluationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Evidence Summary",
         "tags": [
           "gmrepo"
         ]
@@ -11115,6 +12485,498 @@
           }
         },
         "summary": "Overview",
+        "tags": [
+          "gmrepo"
+        ]
+      }
+    },
+    "/api/references/gmrepo/recompute-package": {
+      "get": {
+        "operationId": "recompute_package_api_references_gmrepo_recompute_package_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "evaluationId",
+            "required": true,
+            "schema": {
+              "pattern": "^[0-9a-f]{64}$",
+              "title": "Evaluationid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Recompute Package",
+        "tags": [
+          "gmrepo"
+        ]
+      }
+    },
+    "/api/references/gmrepo/report": {
+      "get": {
+        "operationId": "report_api_references_gmrepo_report_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "genus",
+            "required": true,
+            "schema": {
+              "pattern": "^NCBI:\\d+$",
+              "title": "Genus",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subjectType",
+            "required": false,
+            "schema": {
+              "default": "",
+              "pattern": "^(species|mag|genus|ko)?$",
+              "title": "Subjecttype",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subjectId",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 160,
+              "title": "Subjectid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sourceRevision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Sourcerevision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "datasetSlug",
+            "required": false,
+            "schema": {
+              "default": "ad-nc-species",
+              "maxLength": 100,
+              "title": "Datasetslug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "runKey",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 150,
+              "title": "Runkey",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "artifactKey",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 150,
+              "title": "Artifactkey",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sourceChart",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 100,
+              "title": "Sourcechart",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sourceScope",
+            "required": false,
+            "schema": {
+              "default": "{}",
+              "maxLength": 4000,
+              "title": "Sourcescope",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "evaluationId",
+            "required": false,
+            "schema": {
+              "default": "",
+              "pattern": "^([0-9a-f]{64})?$",
+              "title": "Evaluationid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Report",
+        "tags": [
+          "gmrepo"
+        ]
+      }
+    },
+    "/api/references/gmrepo/resolve-subject": {
+      "get": {
+        "operationId": "resolve_subject_api_references_gmrepo_resolve_subject_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "subjectType",
+            "required": true,
+            "schema": {
+              "pattern": "^(species|mag|genus|ko)$",
+              "title": "Subjecttype",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subjectId",
+            "required": true,
+            "schema": {
+              "maxLength": 160,
+              "minLength": 1,
+              "title": "Subjectid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sourceRevision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Sourcerevision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "datasetSlug",
+            "required": false,
+            "schema": {
+              "default": "ad-nc-species",
+              "maxLength": 100,
+              "title": "Datasetslug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "runKey",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 150,
+              "title": "Runkey",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "artifactKey",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 150,
+              "title": "Artifactkey",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoSubjectResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Resolve Subject",
+        "tags": [
+          "gmrepo"
+        ]
+      }
+    },
+    "/api/references/gmrepo/resources": {
+      "get": {
+        "operationId": "resources_api_references_gmrepo_resources_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoResourcesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Resources",
+        "tags": [
+          "gmrepo"
+        ]
+      }
+    },
+    "/api/references/gmrepo/review-dossier": {
+      "get": {
+        "operationId": "review_dossier_api_references_gmrepo_review_dossier_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Review Dossier",
+        "tags": [
+          "gmrepo"
+        ]
+      }
+    },
+    "/api/references/gmrepo/review-workspace": {
+      "get": {
+        "operationId": "review_workspace_api_references_gmrepo_review_workspace_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Review Workspace",
         "tags": [
           "gmrepo"
         ]
@@ -11355,6 +13217,130 @@
           }
         },
         "summary": "Statistics",
+        "tags": [
+          "gmrepo"
+        ]
+      }
+    },
+    "/api/references/gmrepo/wgs-distribution": {
+      "get": {
+        "operationId": "wgs_distribution_api_references_gmrepo_wgs_distribution_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "feature",
+            "required": true,
+            "schema": {
+              "pattern": "^MPA3:[0-9a-f]{20}$",
+              "title": "Feature",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": true,
+            "schema": {
+              "pattern": "^[0-9a-f]{64}$",
+              "title": "Revision",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Wgs Distribution",
+        "tags": [
+          "gmrepo"
+        ]
+      }
+    },
+    "/api/references/gmrepo/wgs-reference": {
+      "get": {
+        "operationId": "wgs_reference_api_references_gmrepo_wgs_reference_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "query",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 160,
+              "title": "Query",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "level",
+            "required": false,
+            "schema": {
+              "default": "genus",
+              "pattern": "^(genus|species)$",
+              "title": "Level",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmrepoErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Wgs Reference",
         "tags": [
           "gmrepo"
         ]

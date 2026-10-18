@@ -5,11 +5,10 @@ import json
 from pathlib import Path
 from typing import Any
 
-from app.cli import import_dataset as import_module
+from app.core.storage_paths import DEFAULT_MANIFEST
 from app.services.analysis_run_service import sync_analysis_runs_from_manifest
 
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_MANIFEST = BACKEND_ROOT / "storage_manifest.json"
 
 
 def _required_text(dataset: dict[str, Any], key: str, index: int) -> str:
@@ -46,6 +45,9 @@ def load_manifest(manifest_path: Path = DEFAULT_MANIFEST) -> list[dict[str, Any]
                 "name": _required_text(dataset, "name", index),
                 "description": str(dataset.get("description") or "").strip(),
                 "file": _required_text(dataset, "file", index),
+                "inputFormat": str(dataset.get("inputFormat") or "sample_feature_matrix"),
+                "sampleMetadataFile": dataset.get("sampleMetadataFile"),
+                "pathwayFile": dataset.get("pathwayFile"),
                 "abundanceScale": str(dataset.get("abundanceScale") or "unknown").strip(),
                 "normalization": str(dataset.get("normalization") or "unknown").strip(),
                 "missingValuePolicy": str(dataset.get("missingValuePolicy") or "error").strip(),
@@ -73,8 +75,16 @@ def bootstrap_storage(
     manifest_path: Path = DEFAULT_MANIFEST,
     *,
     backend_root: Path = BACKEND_ROOT,
+    slugs: list[str] | None = None,
 ) -> list[dict[str, Any]]:
+    from app.cli import import_dataset as import_module
+
     datasets = load_manifest(manifest_path)
+    if slugs:
+        unknown = set(slugs) - {dataset["slug"] for dataset in datasets}
+        if unknown:
+            raise ValueError(f"Unknown dataset slugs: {sorted(unknown)}")
+        datasets = [dataset for dataset in datasets if dataset["slug"] in slugs]
     root = backend_root.expanduser().resolve()
     results: list[dict[str, Any]] = []
 
@@ -96,6 +106,15 @@ def bootstrap_storage(
             group_mapping=dataset["groupMapping"],
             sample_id_prefixes=dataset["sampleIdPrefixes"],
             duplicate_feature_policy=dataset["duplicateFeaturePolicy"],
+            input_format=dataset["inputFormat"],
+            sample_metadata_file=(
+                _resolve_raw_file(dataset["sampleMetadataFile"], root)
+                if dataset["sampleMetadataFile"] else None
+            ),
+            pathway_file=(
+                _resolve_raw_file(dataset["pathwayFile"], root)
+                if dataset["pathwayFile"] else None
+            ),
         )
         results.append(
             {
@@ -117,9 +136,10 @@ def main() -> None:
         type=Path,
         help="Path to backend/storage_manifest.json.",
     )
+    parser.add_argument("--slug", action="append", help="Import only this dataset; repeat to select multiple datasets.")
     args = parser.parse_args()
 
-    results = bootstrap_storage(args.manifest)
+    results = bootstrap_storage(args.manifest, slugs=args.slug)
     print(f"Bootstrapped {len(results)} dataset(s).")
     for result in results:
         print(f"- {result['slug']}: dataset {result['datasetId']}")

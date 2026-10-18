@@ -4,7 +4,10 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
-from collections import Counter
+from collections import Counter, OrderedDict
+from copy import deepcopy
+from functools import lru_cache
+from threading import RLock
 from typing import Any
 
 import numpy as np
@@ -14,11 +17,14 @@ from statsmodels.regression.linear_model import OLS
 from app.compute.charts.boxplot import _box_summary
 from app.compute.statistics import benjamini_hochberg, rank_biserial_from_u
 from app.core.config import BACKEND_ROOT
+from app.services import gmrepo_ledger_service as ledger
 from app.services import gmrepo_service as reference
 
 REVIEW_PATH = BACKEND_ROOT / "metadata" / "gmrepo_inference_review.json"
 METHOD_VERSION = "2026-10-12-rank-hc3-v1"
 MIN_GROUP_SIZE = 10
+_STATISTICS_CACHE: OrderedDict[str, dict] = OrderedDict()
+_STATISTICS_LOCK = RLock()
 METHODS: dict[str, Any] = {
     "version": METHOD_VERSION,
     "unadjusted": "Mann–Whitney U，双侧、渐近法、并列秩与连续性校正；秩二列相关正值表示 AD 倾向更高。",
@@ -91,21 +97,34 @@ def cohort_audit(data: reference.ReferenceDataset, cohort: str) -> dict[str, Any
     repeats = sum(n > 1 for n in participants.values())
     group_counts = Counter(s["research_group"] for s in samples)
     confirmed = [s for s in all_samples if s["research_group"] in {"AD", "NC"} and s["analysis_decision"] == "group_confirmed_ad_nc"]
-    reasons = []
-    if not entry.get("identityReviewed"):
-        reasons.append("缺少与当前数据版本相符的受试者身份审查；样本别名或 BioSample 不能替代独立参与者编号。")
+    issues = []
+
+    def hold(code, message, missing, action, affects=None):
+        issues.append(ledger.blocker(cohort, code, message, affects or ["unadjusted", "adjusted"], missing, action,
+                                     entry.get("evidence", [])))
+
+    supplemental_identity = ledger.effective_opinion(data, cohort, "identity")
+    if not entry.get("identityReviewed") and not (supplemental_identity and supplemental_identity["decision"] == "confirmed"):
+        hold("IDENTITY_REVIEW_REQUIRED", "缺少与当前数据版本相符的受试者身份审查；样本别名或 BioSample 不能替代独立参与者编号。",
+             "绑定参考版本与全部 Run 集合的有效身份依据", "核对原研究参与者映射与依据文件完整性，完成专项审查。")
     if known != len(all_samples):
-        reasons.append("部分测序记录没有明确的研究内受试者编号，不能确认独立性。")
+        hold("PARTICIPANT_ID_MISSING", "部分测序记录没有明确的研究内受试者编号，不能确认独立性。",
+             "缺失记录的研究内参与者对应", "核查作者公开资料，不能用 Run 或 BioSample 编号替代参与者。")
     if repeats:
-        reasons.append("存在重复参与者编号；需核对技术重复与时间点并制定重复测量方案。")
+        hold("REPEATED_PARTICIPANT", "存在重复参与者编号；需核对技术重复与时间点并制定重复测量方案。",
+             "重复记录的采样时间点与技术重复关系", "确定重复测量处理方案，重新发布比较范围。")
     if min(group_counts.get("AD", 0), group_counts.get("NC", 0)) < MIN_GROUP_SIZE:
-        reasons.append(f"任一组少于 {MIN_GROUP_SIZE} 个可用记录；当前渐近检验不执行。")
+        hold("GROUP_TOO_SMALL", f"任一组少于 {MIN_GROUP_SIZE} 个可用记录；当前渐近检验不执行。",
+             "满足当前方法门槛的组内样本范围", "保留描述性分布；不拼接其他研究对照。")
+    restrictions, registry_digest = ledger.review_restrictions(data, cohort, all_samples)
+    issues.extend(restrictions)
+    reasons = [i["message"] for i in issues if "unadjusted" in i["affects"]]
     complete = [s for s in samples if s["age_years"] is not None and _sex_value(s, entry) is not None]
     adjusted_groups = Counter(s["research_group"] for s in complete)
-    adjusted_reasons = list(reasons)
     design_info: dict[str, Any] = {"columns": [], "rank": None, "conditionNumber": None, "maxLeverage": None, "residualDf": None}
     if min(adjusted_groups.get("AD", 0), adjusted_groups.get("NC", 0)) < MIN_GROUP_SIZE:
-        adjusted_reasons.append("年龄和性别完整的任一组少于 10 人，无法进行当前协变量调整。")
+        hold("ADJUSTED_SAMPLE_TOO_SMALL", "年龄和性别完整的任一组少于 10 人，无法进行当前协变量调整。",
+             "完整且语义明确的年龄与性别资料", "核对协变量原值；不插补未知字段来获得资格。", ["adjusted"])
     elif complete:
         design, names = _design(complete, entry)
         rank = int(np.linalg.matrix_rank(design))
@@ -114,7 +133,8 @@ def cohort_audit(data: reference.ReferenceDataset, cohort: str) -> dict[str, Any
         design_info = {"columns": names, "rank": rank, "conditionNumber": float(np.linalg.cond(design)),
                        "maxLeverage": float(leverage.max()), "residualDf": len(complete) - rank}
         if rank < design.shape[1] or len(complete) - rank <= 0 or leverage.max() >= 1 - 1e-8:
-            adjusted_reasons.append("协变量设计矩阵不可辨识或杠杆值达到 1，HC3 推断不能可靠估计。")
+            hold("DESIGN_NOT_ESTIMABLE", "协变量设计矩阵不可辨识或杠杆值达到 1，HC3 推断不能可靠估计。",
+                 "可辨识且有残差自由度的设计", "复核共线性与样本分布；不输出当前调整推断。", ["adjusted"])
             if not np.isfinite(design_info["conditionNumber"]):
                 design_info["conditionNumber"] = None
     covariates = []
@@ -127,7 +147,8 @@ def cohort_audit(data: reference.ReferenceDataset, cohort: str) -> dict[str, Any
                            "ageIntervalCount": sum("+" in str(s.get("age_raw") or "") and s["age_years"] is None for s in selected),
                            "sexKnown": len(selected) - sex["unknown"], "sexCategories": dict(sex),
                            "adjustedCount": adjusted_groups[group]})
-    return {"projectId": cohort, "metadataRuns": len(all_samples), "plotReadyRuns": len(samples), "groupCounts": dict(group_counts),
+    adjusted_reasons = [i["message"] for i in issues if "adjusted" in i["affects"]]
+    result = {"projectId": cohort, "metadataRuns": len(all_samples), "plotReadyRuns": len(samples), "groupCounts": dict(group_counts),
             "groupConfirmedRuns": len(confirmed), "excludedNoGenusRuns": sum(reference.decision(s) == "no_genus" for s in confirmed),
             "knownParticipantRuns": known, "uniqueKnownParticipants": len(participants), "repeatedParticipantIds": repeats,
             "identityStatus": "reviewed_unique_participants" if not reasons else "pending",
@@ -138,12 +159,17 @@ def cohort_audit(data: reference.ReferenceDataset, cohort: str) -> dict[str, Any
             "sexMode": entry.get("sexMode", "decoded"), "covariates": covariates, "design": design_info,
             "unadjustedStatus": "eligible" if not reasons else "blocked", "unadjustedReasons": reasons,
             "adjustedStatus": "eligible" if not adjusted_reasons else "blocked", "adjustedReasons": adjusted_reasons,
-            "adjustedCount": len(complete), "excludedMissingCovariates": len(samples) - len(complete)}
+            "adjustedCount": len(complete), "excludedMissingCovariates": len(samples) - len(complete),
+            "registryFingerprint": registry_digest, "allRunSetSha256": ledger.run_set_digest(all_samples),
+            "plotRunSetSha256": ledger.run_set_digest(samples), "adjustedRunSetSha256": ledger.run_set_digest(complete),
+            "blockers": issues}
+    return {**result, **ledger.assessment(data, cohort, result, all_samples)}
 
 
 def audit_catalog(data: reference.ReferenceDataset) -> dict:
     cohorts = sorted({s["project_id"] for s in data.samples if reference.decision(s) == "plot_ready"})
-    return {"provenance": reference.provenance(data), "methods": METHODS, "items": [cohort_audit(data, c) for c in cohorts]}
+    return {"provenance": reference.provenance(data), "methods": METHODS, "protocol": ledger.runtime_protocol(data),
+            "items": [cohort_audit(data, c) for c in cohorts]}
 
 
 def distribution(data: reference.ReferenceDataset, cohort: str, genus: str) -> dict:
@@ -189,7 +215,25 @@ def _adjusted(values: np.ndarray, design: np.ndarray) -> dict:
 
 
 def cohort_statistics(data: reference.ReferenceDataset, cohort: str) -> dict:
+    # Recheck sealed identity evidence even on a cache hit. Audit revocation must
+    # never leave eligible statistics visible; return copies to protect FDR rows.
     audit = cohort_audit(data, cohort)
+    samples = reference.select_samples(data, cohort)
+    key = hashlib.sha256(json.dumps({
+        "fingerprint": data.fingerprint, "method": METHOD_VERSION, "audit": audit,
+        "samples": samples, "genera": data.genera,
+        "values": {s["run_id"]: data.abundance.get((cohort, s["run_id"]), {}) for s in samples},
+    }, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+    with _STATISTICS_LOCK:
+        if key not in _STATISTICS_CACHE:
+            _STATISTICS_CACHE[key] = _compute_cohort_statistics(data, cohort, audit)
+            if len(_STATISTICS_CACHE) > 16:
+                _STATISTICS_CACHE.popitem(last=False)
+        _STATISTICS_CACHE.move_to_end(key)
+        return deepcopy(_STATISTICS_CACHE[key])
+
+
+def _compute_cohort_statistics(data: reference.ReferenceDataset, cohort: str, audit: dict) -> dict:
     if audit["unadjustedStatus"] != "eligible":
         return {"provenance": reference.provenance(data), "audit": audit, "methods": METHODS,
                 "familySize": len(data.genera), "total": 0, "items": [], "summary": {"unadjustedFdrCount": 0, "adjustedFdrCount": 0, "concordantFdrCount": 0}}
@@ -246,14 +290,20 @@ def rank_effect_interval(data: reference.ReferenceDataset, cohort: str, genus: s
     if min(len(v) for v in groups.values()) < MIN_GROUP_SIZE:
         return None
     seed = int(hashlib.sha256(f"{data.fingerprint}:{cohort}:{genus}:{METHOD_VERSION}".encode()).hexdigest()[:16], 16)
+    return list(_rank_interval(seed, tuple(groups["AD"]), tuple(groups["NC"])))
+
+
+@lru_cache(maxsize=128)
+def _rank_interval(seed: int, ad_values: tuple, nc_values: tuple) -> tuple[float, float]:
     rng = np.random.default_rng(seed)
     estimates = []
     for _ in range(2000):
-        ad = rng.choice(groups["AD"], size=len(groups["AD"]), replace=True)
-        nc = rng.choice(groups["NC"], size=len(groups["NC"]), replace=True)
+        ad = rng.choice(ad_values, size=len(ad_values), replace=True)
+        nc = rng.choice(nc_values, size=len(nc_values), replace=True)
         pairs = ad[:, None] - nc[None, :]
         estimates.append(float(np.mean(pairs > 0) - np.mean(pairs < 0)))
-    return np.quantile(estimates, [.025, .975]).tolist()
+    lower, upper = np.quantile(estimates, [.025, .975])
+    return float(lower), float(upper)
 
 
 def source_markers(data: reference.ReferenceDataset, cohort: str, genus: str) -> list[dict]:
@@ -277,7 +327,7 @@ def source_markers(data: reference.ReferenceDataset, cohort: str, genus: str) ->
         raise reference.GmrepoDataError("GMrepo 来源证据暂不可用。") from exc
 
 
-def evidence(data: reference.ReferenceDataset, cohort: str, genus: str) -> dict:
+def evidence(data: reference.ReferenceDataset, cohort: str, genus: str, source_revision: str = "", dataset_slug: str = "ad-nc-species") -> dict:
     if genus not in data.genera:
         raise ValueError("请选择当前目录中可确认的目标菌属。")
     result = cohort_statistics(data, cohort)
@@ -289,4 +339,4 @@ def evidence(data: reference.ReferenceDataset, cohort: str, genus: str) -> dict:
             "statistic": row, "rankBiserialCi": rank_effect_interval(data, cohort, genus) if row else None,
             "ciMethod": "固定种子、独立组内 2,000 次 bootstrap 的 95% 百分位区间；单个效应区间没有多重性校正。",
             "sourceMarkers": markers, "sourceNote": "来源 LDA 不等于 p/q，也不与本次效应相加。未返回 marker 不能解释为没有差异；混合疾病阶段的来源比较不可作纯 AD/NC 复现。",
-            "primary": primary_evidence(data.genera[genus])}
+            "primary": primary_evidence(data.genera[genus], source_revision, dataset_slug) if source_revision else primary_evidence(data.genera[genus])}

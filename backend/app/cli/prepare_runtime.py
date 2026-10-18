@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from app.cli.bootstrap_storage import DEFAULT_MANIFEST, bootstrap_storage
+from app.cli.bootstrap_storage import bootstrap_storage
 from app.core.database import connect
 from app.core.migrations import upgrade_database
+from app.core.storage_paths import DEFAULT_MANIFEST
 from app.services.analysis_run_service import sync_analysis_runs_from_manifest
 
 

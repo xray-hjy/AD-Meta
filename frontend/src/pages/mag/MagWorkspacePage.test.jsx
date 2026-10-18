@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { vi } from 'vitest';
 import * as api from '../../api/mag';
+import { ApiError } from '../../api/client';
 import MagWorkspacePage from './MagWorkspacePage';
 
 // These workspace integration cases perform several renders and user actions.
@@ -85,6 +86,22 @@ function mount(props = {}) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(<QueryClientProvider client={client}><MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><MagWorkspacePage datasets={datasets} onDatasetChange={vi.fn()} onDomainChange={vi.fn()} {...props} /></MemoryRouter></QueryClientProvider>);
 }
+
+test('automatically recovers from one transient overview timeout without a retry click', async () => {
+  api.getMagOverview.mockRejectedValueOnce(new ApiError('请求超时，请重试', { kind: 'timeout' }));
+  mount();
+  await waitFor(() => expect(api.getMagOverview).toHaveBeenCalledTimes(2), { timeout: 3000 });
+  await screen.findByTestId('chart-features');
+  expect(screen.queryByText('数据读取失败')).not.toBeInTheDocument();
+});
+
+test('does not automatically retry MAG validation failures', async () => {
+  api.getMagOverview.mockRejectedValue(new ApiError('MAG 数据校验失败', { kind: 'server', status: 503 }));
+  mount();
+  await screen.findByText('MAG 数据校验失败');
+  expect(api.getMagOverview).toHaveBeenCalledTimes(1);
+  expect(screen.getByRole('button', { name: '重试', exact: true })).toBeVisible();
+});
 
 test('keeps a collapsible data description card above the MAG processing flow', async () => {
   api.getMagOverview.mockResolvedValue({ provenance: { ...audit, sampleCount: 1, excludedSampleCount: 184, groupCounts: { AD: 1, NC: 0 } },
@@ -473,6 +490,9 @@ test('MAG details preserve the chart and list page while distinguishing member a
   expect(screen.getByRole('button', { name: '第 2 页' })).toHaveAttribute('aria-current', 'page');
 
   fireEvent.click(screen.getByRole('button', { name: /来源与去冗余/ }));
+  // This view is lazy-loaded. Wait for its member request before repeatedly
+  // traversing the full workspace's accessibility tree for the row button.
+  await waitFor(() => expect(api.getMagLineageCluster).toHaveBeenCalled());
   fireEvent.click(await screen.findByRole('button', { name: 'MEMBER_A', exact: true }));
   const memberDrawer = await screen.findByRole('dialog');
   expect(await within(memberDrawer).findByText(/当前成员未单独进入代表 MAG 丰度矩阵/)).toHaveTextContent('MAG_A');

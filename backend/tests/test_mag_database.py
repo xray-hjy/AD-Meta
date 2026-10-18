@@ -1,13 +1,18 @@
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
+from functools import lru_cache
 from pathlib import Path
-from unittest.mock import patch
+from threading import Barrier
+from time import sleep
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
 
 from app.core import database
 from app.core.migrations import upgrade_database
+from app.services import mag_database_service as mag_database
 from app.services.mag_data_service import MagDataset
 from app.services.mag_database_service import (
     MagDatabaseError,
@@ -181,3 +186,38 @@ def test_mag_database_roundtrip_is_complete_and_idempotent(tmp_path) -> None:
                 import_mag_dataset(sample_dataset(package_root, fingerprint="d" * 64))
     finally:
         database.dispose_engine()
+
+
+def test_concurrent_cold_mag_requests_share_one_snapshot(tmp_path) -> None:
+    expected = sample_dataset(tmp_path)
+    connection = MagicMock()
+    connection.execute.return_value.fetchone.return_value = {
+        "id": 1, "version_key": "mag_v3", "status": "ready", "source_root": str(tmp_path),
+        "data_fingerprint": expected.fingerprint, "manifest_json": {}, "max_mapping_error": 0,
+    }
+    context = MagicMock()
+    context.__enter__.return_value = connection
+    builds = []
+
+    @lru_cache(maxsize=4)
+    def slow_snapshot(*args):
+        builds.append(args)
+        sleep(0.05)  # Simulate database decoding while another request reaches the same cold key.
+        return expected
+
+    ready = Barrier(4)
+
+    def load(_):
+        ready.wait(timeout=5)
+        return load_mag_dataset_from_database("mag_v3")
+
+    with (
+        patch.object(mag_database, "connect", return_value=context),
+        patch.object(mag_database, "_load_database_snapshot", slow_snapshot),
+        ThreadPoolExecutor(max_workers=4) as pool,
+    ):
+        results = list(pool.map(load, range(4)))
+
+    assert len(builds) == 1
+    assert all(result is expected for result in results)
+    assert slow_snapshot.cache_info().hits == 3

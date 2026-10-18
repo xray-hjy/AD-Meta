@@ -99,8 +99,12 @@ run_maaslin2 <- function(validated, payload) {
   dir.create(output_dir, recursive = TRUE)
   on.exit(unlink(output_dir, recursive = TRUE, force = TRUE), add = TRUE)
   covariates <- setdiff(strsplit(gsub(" ", "", payload$formula), "\\+")[[1]], "Group")
+  # Model-safe IDs avoid R name sanitization changing taxonomy strings.
+  model_data <- as.data.frame(validated$values, check.names = FALSE)
+  feature_keys <- sprintf("feature_%07d", seq_along(payload$features))
+  colnames(model_data) <- feature_keys
   fit <- Maaslin2(
-    input_data = as.data.frame(validated$values),
+    input_data = model_data,
     input_metadata = validated$metadata,
     output = output_dir,
     fixed_effects = c("Group", covariates),
@@ -109,18 +113,21 @@ run_maaslin2 <- function(validated, payload) {
     transform = "LOG",
     analysis_method = "LM",
     standardize = FALSE,
+    min_prevalence = as.numeric(payload$prevalence %||% 0.1),
     plot_heatmap = FALSE,
     plot_scatter = FALSE
   )
   result <- as.data.frame(fit$results)
   group_result <- result[result$metadata == "Group" & result$value == "AD", , drop = FALSE]
-  normalized_items(group_result$feature, group_result$pval, group_result$qval, group_result$coef, "maaslin2_model_coefficient")
+  original_features <- payload$features[match(group_result$feature, feature_keys)]
+  if (anyNA(original_features)) stop("MaAsLin2 returned an unknown model feature ID")
+  normalized_items(original_features, group_result$pval, group_result$qval, group_result$coef, "maaslin2_model_coefficient")
 }
 
 `%||%` <- function(left, right) if (is.null(left)) right else left
 
 build_router <- function() {
-  router <- pr()
+  router <- pr_set_serializer(pr(), serializer_json(auto_unbox = TRUE))
   router$handle("GET", "/health", function() list(status = "ok"))
   router$handle("POST", "/v1/differential-abundance", function(req, res) {
     tryCatch({

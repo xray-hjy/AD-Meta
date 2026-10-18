@@ -208,6 +208,11 @@ def compute_heatmap(
     payload = {
         "method": "Mann-Whitney U with Benjamini-Hochberg FDR",
         "inferenceLevel": "exploratory_fdr",
+        "valueTransformNote": (
+            "颜色值为 log10(相对丰度比例 + 1)，输入为 0–1 比例；组间热图为该变换值的均值差。"
+            if df.attrs.get("abundance_scale") == "relative_abundance"
+            else "颜色值为 log10(输入丰度 + 1)。"
+        ),
         "filter": _heatmap_filter(
             max_features,
             q_value_max,

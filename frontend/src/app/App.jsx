@@ -1,4 +1,5 @@
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { selectAnalysisRun } from '../components/analysisRun/analysisRunSelection';
 import { useSearchParams } from 'react-router-dom';
 import { getChart } from '../api/datasets';
 import { queryClient } from '../api/queryClient';
@@ -28,6 +29,7 @@ import DatasetDescription, { DatasetSemanticsNotice } from '../components/datase
 import DatasetDescriptionCard from '../components/dataset/DatasetDescriptionCard';
 import TopBar from '../components/layout/TopBar';
 import CompleteResultsPanel from '../components/data-display/CompleteResultsPanel';
+import { EvidenceContext } from '../components/evidence/EvidenceLink';
 import useActiveChart from '../hooks/useActiveChart';
 import useChartData from '../hooks/useChartData';
 import useDatasetSummary from '../hooks/useDatasetSummary';
@@ -39,7 +41,9 @@ import useAnalysisProjection, {
 } from '../hooks/useAnalysisProjection';
 import useFeatureSelection from '../hooks/useFeatureSelection';
 
-function renderChartComponent(chartType, chartData, summary) {
+const ATTACHED_SOURCE = Object.freeze({});
+
+function renderChartComponent(chartType, chartData, summary, context = {}) {
   const definition = getChartDefinition(chartType);
   if (!definition || !chartData) return null;
 
@@ -48,6 +52,12 @@ function renderChartComponent(chartType, chartData, summary) {
   const featureLabel = summary?.featureLabel || '物种';
   let chart;
   switch (chartType) {
+    case 'ditingOverview':
+    case 'ditingEffects':
+    case 'ditingDistribution':
+      chart = <ChartComponent key={`${context.slug}:${context.revision}:${definition.mode}`} slug={context.slug}
+        revision={context.revision} mode={definition.mode} />;
+      break;
     case 'phylum':
       chart = <ChartComponent data={chartData} featureKind={featureKind} featureLabel={featureLabel} />;
       break;
@@ -82,7 +92,7 @@ function renderChartComponent(chartType, chartData, summary) {
       break;
     case 'species':
     case 'heatmap':
-      chart = <ChartComponent data={chartData} featureLabel={featureLabel} />;
+      chart = <ChartComponent data={chartData} featureLabel={featureLabel} abundanceScale={summary?.abundanceScale} />;
       break;
     default:
       chart = <ChartComponent data={chartData} />;
@@ -103,7 +113,7 @@ function App({ datasetsState, onDomainChange }) {
     [requestedChartDefinition?.analysisPolicy, searchParams]
   );
   const activeRun = useMemo(
-    () => runsState.data.find(run => run.key === requestedRun) || runsState.data[0] || null,
+    () => selectAnalysisRun(runsState.data, requestedRun),
     [requestedRun, runsState.data]
   );
   const runDatasetSlugs = useMemo(
@@ -277,7 +287,8 @@ function App({ datasetsState, onDomainChange }) {
       : { parameters: projectionSelection.parameters }),
     ...(projectionKind === 'boxplot' ? { selection: boxplotSelection.request } : {}),
   }), [boxplotSelection.request, projectionKind, projectionSelection]);
-  const chartState = useChartData(activeDataset, chartDataKey, !projectionKind);
+  const attachedSource = Boolean(activeChartDefinition?.attachedSource);
+  const chartState = useChartData(activeDataset, chartDataKey, !projectionKind && !attachedSource);
   const projectionState = useAnalysisProjection(
     activeRun?.key,
     activeArtifact?.key,
@@ -290,7 +301,7 @@ function App({ datasetsState, onDomainChange }) {
     ? projectionKind === 'abundance'
       ? projectionState.data
       : projectionState.data?.payload ?? null
-    : projectionKind ? null : activeDataState.data;
+    : projectionKind ? null : attachedSource ? ATTACHED_SOURCE : activeDataState.data;
 
   const changeProjection = useCallback((scope, topN, parameters = {}) => {
     saveProjectionState(
@@ -393,7 +404,7 @@ function App({ datasetsState, onDomainChange }) {
     ? <EmptyState message="当前图表不支持所选分析范围，请在上方选择可用范围。" />
     : scopeInvalid
       ? <EmptyState message={scopeValidation.reason} />
-      : renderChartComponent(activeChart, activeChartData, summaryState.data);
+      : renderChartComponent(activeChart, activeChartData, summaryState.data, { slug: activeDataset, revision: descriptionRevision });
   const activeChartMeta = useMemo(
     () => resolveChartMeta(activeChart, {
       featureKind: summaryState.data?.featureKind,
@@ -431,6 +442,7 @@ function App({ datasetsState, onDomainChange }) {
           dirtyCount={boxplotSelection.dirtyCount}
           applying={projectionState.refreshing}
           featureLabel={summaryState.data?.featureLabel || '物种'}
+          evidenceEnabled={summaryState.data?.featureKind === 'taxonomy'}
           config={activeChartDefinition?.analysisPolicy?.featureSelection}
         />
       ) : null}
@@ -447,7 +459,7 @@ function App({ datasetsState, onDomainChange }) {
   const chartDisclosure = projectionDisclosure || (
     <DatasetSemanticsNotice
       abundanceScale={datasetSemantics?.abundanceScale}
-      normalization={datasetSemantics?.normalization}
+      normalization={attachedSource ? 'DiTing 标准化丰度（上游原值）' : datasetSemantics?.normalization}
     />
   );
   const descriptionPanel = (
@@ -473,7 +485,10 @@ function App({ datasetsState, onDomainChange }) {
   ) : null;
 
   let mainContent;
-  if (!activeDataset && !datasetsState.loading && datasetsState.data.length === 0) {
+  if (datasetsState.error || runsState.error) {
+    mainContent = <ErrorState title="分析数据加载失败" message={datasetsState.error || runsState.error}
+      onRetry={() => { datasetsState.reload(); runsState.reload(); }} />;
+  } else if (!activeDataset && !datasetsState.loading && !runsState.loading && datasetsState.data.length === 0) {
     mainContent = <EmptyState message="暂无已发布分析数据" />;
   } else if (error && !loading) {
     mainContent = <ErrorState message={error} onRetry={retry} />;
@@ -503,7 +518,7 @@ function App({ datasetsState, onDomainChange }) {
         controls={projectionControls}
         description={descriptionPanel}
         disclosure={chartDisclosure}
-        audit={<>{projectionAudit}{activeRun && activeArtifact ? <CompleteResultsPanel key={`${activeRun.key}:${activeArtifact.key}`} runKey={activeRun.key} artifactKey={activeArtifact.key} /> : null}</>}
+        audit={<>{projectionAudit}{!attachedSource && activeRun && activeArtifact ? <CompleteResultsPanel key={`${activeRun.key}:${activeArtifact.key}`} runKey={activeRun.key} artifactKey={activeArtifact.key} /> : null}</>}
         loadingState={projectionKind ? <ProjectionLoadingState /> : null}
       >
         {chartBody}
@@ -512,6 +527,9 @@ function App({ datasetsState, onDomainChange }) {
   }
 
   return (
+    <EvidenceContext.Provider value={{ sourceRevision: descriptionRevision, datasetSlug: activeDataset,
+      runKey: activeRun?.key, artifactKey: activeArtifact?.key, sourceChart: activeChart,
+      featureKind: summaryState.data?.featureKind, scope: { ...projectionSelection, selection: boxplotSelection.applied } }}>
     <AppShell
       tone={summaryState.data?.featureKind === 'ko' ? 'function' : 'species'}
       topbar={
@@ -540,6 +558,7 @@ function App({ datasetsState, onDomainChange }) {
       }
       main={<MainWorkspace chartKey={activeChart}>{mainContent}</MainWorkspace>}
     />
+    </EvidenceContext.Provider>
   );
 }
 

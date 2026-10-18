@@ -7,10 +7,59 @@
     <link rel="icon" type="image/svg+xml" href="/src/assets/brand/microbrain-logo.svg" />
     <meta name="description" content="肠道菌群宏基因组可视化分析平台" />
     <title>AD-Meta — 肠道菌群宏基因组可视化分析平台</title>
+    <style>
+      .app-startup { box-sizing: border-box; min-height: 100vh; display: grid; place-content: center; gap: 16px; padding: 32px; color: #22334a; background: #f8fafc; font-family: system-ui, "Microsoft YaHei", sans-serif; text-align: center; }
+      .app-startup h1 { margin: 0; font-size: 28px; }
+      .app-startup p { margin: 0; line-height: 1.7; }
+      .app-startup button { justify-self: center; border: 1px solid #bcc9d9; border-radius: 8px; padding: 10px 20px; color: #22334a; background: white; font: inherit; cursor: pointer; }
+      .app-startup button:focus-visible { outline: 3px solid #2469db; outline-offset: 3px; }
+      .app-startup [hidden] { display: none; }
+    </style>
   </head>
   <body>
     <noscript>请启用 JavaScript 以运行此应用。</noscript>
-    <div id="root"></div>
-    <script type="module" src="/src/index.jsx"></script>
+    <div id="root">
+      <section class="app-startup" id="app-startup" role="status" aria-label="网站加载状态">
+        <h1>微脑智库</h1>
+        <p id="app-startup-message">正在加载，请稍候…</p>
+        <button id="app-startup-retry" type="button" hidden>刷新重试</button>
+      </section>
+    </div>
+    <script>
+      (() => {
+        const message = document.getElementById('app-startup-message');
+        const retry = document.getElementById('app-startup-retry');
+        let finished = false;
+        const show = text => {
+          if (finished) return;
+          message.textContent = text;
+          retry.hidden = false;
+        };
+        const onError = event => {
+          if (event.target === window || (event.target instanceof HTMLScriptElement && event.target.type === 'module')) {
+            show('页面加载失败，请刷新重试。');
+          }
+        };
+        const onRejection = () => show('页面加载失败，请刷新重试。');
+        const onRetry = () => window.location.reload();
+        const timer = window.setTimeout(() => show('加载时间较长，请稍候，或刷新重试。'), 15000);
+        retry.addEventListener('click', onRetry);
+        window.addEventListener('error', onError, true);
+        window.addEventListener('unhandledrejection', onRejection);
+        window.__AD_META_STARTUP__ = {
+          finish() {
+            if (finished) return;
+            finished = true;
+            window.clearTimeout(timer);
+            retry.removeEventListener('click', onRetry);
+            window.removeEventListener('error', onError, true);
+            window.removeEventListener('unhandledrejection', onRejection);
+            document.documentElement.dataset.appReady = 'true';
+            performance.mark('ad-meta:react-ready');
+          },
+        };
+      })();
+    </script>
+    <script id="app-entry" type="module" src="/src/index.jsx"></script>
   </body>
 </html>

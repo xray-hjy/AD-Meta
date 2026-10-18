@@ -1,8 +1,10 @@
 import StyledSelect from '../ui/StyledSelect';
+import SegmentedControl from '../ui/SegmentedControl';
 import { useEffect, useMemo, useState } from 'react';
 import useDebouncedValue from '../../hooks/useDebouncedValue';
 import useScopedFeatures from '../../hooks/useScopedFeatures';
 import EntityAutocomplete from '../ui/EntityAutocomplete';
+import EvidenceLink from '../evidence/EvidenceLink';
 
 function normalizeFeature(item) {
   return {
@@ -33,6 +35,7 @@ export default function BoxplotFeatureSelector({
   dirtyCount = 0,
   applying = false,
   featureLabel = '物种',
+  evidenceEnabled = false,
   config = {},
 }) {
   const {
@@ -130,7 +133,7 @@ export default function BoxplotFeatureSelector({
     <section className="boxplot-feature-selector" aria-label={`${featureLabel}选择`}>
       <div className="boxplot-feature-selector__heading">
         <span className="projection-controls__label">{featureLabel}选择</span>
-        <div className="projection-segments" aria-label="选择方式">
+        <SegmentedControl className="projection-segments" role="group" aria-label="选择方式">
           <button
             type="button"
             className={value.mode === 'ranked' ? 'is-active' : ''}
@@ -147,7 +150,7 @@ export default function BoxplotFeatureSelector({
           >
             自定义{featureLabel}
           </button>
-        </div>
+        </SegmentedControl>
         <div className="boxplot-feature-selector__actions">
           {isDirty ? (
             <span className="boxplot-feature-selector__pending" aria-live="polite">
@@ -246,6 +249,7 @@ export default function BoxplotFeatureSelector({
                     >
                       {selected ? '−' : '+'}
                     </button>
+                    {evidenceEnabled && !isDirty ? <EvidenceLink subjectId={feature.featureId} className="boxplot-feature-selector__candidate-action" /> : null}
                   </div>
                 );
               })}
@@ -289,6 +293,7 @@ export default function BoxplotFeatureSelector({
                   >
                     ×
                   </button>
+                  {evidenceEnabled && !isDirty ? <EvidenceLink subjectId={item.featureId} className="evidence-entry">评估</EvidenceLink> : null}
                 </span>
                 );
               })}

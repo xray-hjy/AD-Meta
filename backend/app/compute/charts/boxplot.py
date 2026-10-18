@@ -26,6 +26,25 @@ BOXPLOT_VALUE_TRANSFORM_NOTE = (
 )
 
 
+def boxplot_display(abundance_scale: str) -> tuple[float, dict]:
+    """Keep storage fractional while displaying relative abundances as percent."""
+    if abundance_scale == "relative_abundance":
+        return 100.0, {
+            "valueTransforms": [
+                {"key": "raw", "label": "相对丰度（%）", "formula": "100 × x"},
+                {"key": "sqrt", "label": "sqrt(丰度 %)", "formula": "sqrt(100 × x)"},
+                {"key": "log", "label": "log10(丰度 % + 1)", "formula": "log10(100 × x + 1)"},
+            ],
+            "defaultValueTransform": "raw",
+            "valueTransformNote": "存储与分析使用 0–1 比例；本图先换算为百分数，再应用所选展示变换。",
+        }
+    return 1.0, {
+        "valueTransforms": [dict(item) for item in BOXPLOT_VALUE_TRANSFORMS],
+        "defaultValueTransform": BOXPLOT_DEFAULT_VALUE_TRANSFORM,
+        "valueTransformNote": BOXPLOT_VALUE_TRANSFORM_NOTE,
+    }
+
+
 def _box_summary(values: np.ndarray, samples: list[str] | np.ndarray | None = None) -> dict[str, list[Any]]:
     """计算单组样本的箱线图统计值。
 
@@ -97,6 +116,7 @@ def compute_boxplot(df: pd.DataFrame, species_cols: list[str], top_n: int = 30) 
     """
 
     ranked = compute_species(df, species_cols, top_n=top_n)
+    display_scale, display = boxplot_display(df.attrs.get("abundance_scale", "unknown"))
     ad, nc = group_frames(df, species_cols)
 
     # 样本名和丰度值一起传入 `_box_summary`，这样离群点能追踪回具体样本。
@@ -106,8 +126,8 @@ def compute_boxplot(df: pd.DataFrame, species_cols: list[str], top_n: int = 30) 
     for item in ranked:
         col = item["fullName"]
         # 每个特征分别计算 AD/NC 原始丰度和 log 丰度的箱线图统计值。
-        ad_values = ad[col].to_numpy(dtype=float)
-        nc_values = nc[col].to_numpy(dtype=float)
+        ad_values = ad[col].to_numpy(dtype=float) * display_scale
+        nc_values = nc[col].to_numpy(dtype=float) * display_scale
         ad_summary = _box_summary(ad_values, ad_samples)
         nc_summary = _box_summary(nc_values, nc_samples)
         ad_sqrt_summary = _box_summary(_sqrt_abundance(ad_values), ad_samples)
@@ -141,7 +161,5 @@ def compute_boxplot(df: pd.DataFrame, species_cols: list[str], top_n: int = 30) 
         )
     return {
         "items": items,
-        "valueTransforms": [dict(transform) for transform in BOXPLOT_VALUE_TRANSFORMS],
-        "defaultValueTransform": BOXPLOT_DEFAULT_VALUE_TRANSFORM,
-        "valueTransformNote": BOXPLOT_VALUE_TRANSFORM_NOTE,
+        **display,
     }

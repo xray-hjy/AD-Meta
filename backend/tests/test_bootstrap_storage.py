@@ -19,8 +19,8 @@ class BootstrapStorageTests(unittest.TestCase):
             db_path = temp_root / "ad_meta.sqlite3"
             raw_root = temp_root / "storage" / "raw"
             cache_root = temp_root / "storage" / "cache"
-            species_path = raw_root / "ad-nc-species" / "raw.csv"
-            ko_path = raw_root / "ad-nc-ko-abundance" / "raw.csv"
+            species_path = raw_root / "ad-nc-species" / "PROJECT-A" / "raw.csv"
+            ko_path = raw_root / "ad-nc-ko-abundance" / "PROJECT-A" / "raw.csv"
             species_path.parent.mkdir(parents=True)
             ko_path.parent.mkdir(parents=True)
             species_path.write_text(
@@ -57,14 +57,14 @@ class BootstrapStorageTests(unittest.TestCase):
                                 "slug": "ad-nc-species",
                                 "name": "AD vs NC Species Abundance",
                                 "description": "Species abundance comparison between AD and NC groups.",
-                                "file": "storage/raw/ad-nc-species/raw.csv",
+                                "file": "storage/raw/ad-nc-species/PROJECT-A/raw.csv",
                                 "sampleIdPrefixes": ["AD", "NC"],
                             },
                             {
                                 "slug": "ad-nc-ko-abundance",
                                 "name": "AD vs NC KO Abundance",
                                 "description": "KO abundance comparison between AD and NC groups.",
-                                "file": "storage/raw/ad-nc-ko-abundance/raw.csv",
+                                "file": "storage/raw/ad-nc-ko-abundance/PROJECT-A/raw.csv",
                             },
                         ]
                     }

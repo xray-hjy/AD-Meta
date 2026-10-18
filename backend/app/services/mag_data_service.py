@@ -16,6 +16,7 @@ from collections import Counter
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
+from threading import Lock
 from typing import Any
 
 import numpy as np
@@ -218,6 +219,7 @@ def _signatures(root: Path, version: str) -> tuple:
 
 
 DEFAULT_CONTRACT = MagContract()
+_snapshot_load_lock = Lock()
 
 
 def load_mag_dataset(
@@ -237,7 +239,8 @@ def load_mag_dataset(
     configured = package_root if package_root is not None else SETTINGS.mag_data_root
     package = configured if configured.is_absolute() else BACKEND_ROOT.parent / configured
     root = package / "development_input" / configured_version
-    return _load_snapshot(root, _signatures(root, configured_version), contract, configured_version)
+    with _snapshot_load_lock:
+        return _load_snapshot(root, _signatures(root, configured_version), contract, configured_version)
 
 
 @lru_cache(maxsize=2)

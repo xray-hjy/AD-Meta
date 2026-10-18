@@ -117,6 +117,12 @@ export function createShowcaseController({ page, story, host, chapters, onSelect
     goto(key) { setActive(key, 0); anchor(0); paint(); },
     shift(direction) { input.move(gallery.state().target + direction); },
     state: () => ({ ...gallery.state(), timelines }),
+    sectionStops() {
+      if (!timelines.length) return null;
+      const first = timelines[0], last = timelines.at(-1);
+      return { start: first.start + first.hold, end: last.start + last.hold + (chapters.at(-1).slides.length - 1) * last.step };
+    },
+    isBusy: () => input.isOwned() || Boolean(gallery.state()?.swiper.animating),
     dispose() {
       disposed = true; events.abort(); cancelAnimationFrame(frame);
       input.dispose(); transition.clear(); gallery.dispose();

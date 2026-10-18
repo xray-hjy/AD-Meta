@@ -64,6 +64,21 @@ test('loss of window focus stops a held control', () => {
   expect(frames.size).toBe(0);
 });
 
+test('hiding the navigation panel stops held movement and preserves drag mode', () => {
+  const onPan = vi.fn(), onTogglePan = vi.fn();
+  const props = { onPan, onTogglePan, panMode: true, canPan };
+  const { rerender } = render(<ChartPanJoystick {...props} />);
+  fireEvent.pointerDown(screen.getByRole('button', { name: '向右平移' }), { button: 0 });
+  expect(frames.size).toBe(1);
+  rerender(<ChartPanJoystick {...props} enabled={false} />);
+  expect(frames.size).toBe(0);
+  expect(screen.getByRole('button', { name: '图内拖动模式' })).toBeDisabled();
+  expect(onTogglePan).not.toHaveBeenCalled();
+  rerender(<ChartPanJoystick {...props} enabled />);
+  expect(screen.getByRole('button', { name: '图内拖动模式' })).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.getByRole('button', { name: '向右平移' })).toBeEnabled();
+});
+
 test('frequent stick moves preserve elapsed frame time and full speed', () => {
   const onPan = vi.fn();
   render(<ChartPanJoystick onPan={onPan} panMode={false} onTogglePan={vi.fn()} canPan={canPan} />);

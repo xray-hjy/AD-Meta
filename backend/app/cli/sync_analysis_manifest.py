@@ -3,8 +3,8 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from app.cli.bootstrap_storage import DEFAULT_MANIFEST
 from app.core.migrations import upgrade_database
+from app.core.storage_paths import DEFAULT_MANIFEST
 from app.services.analysis_run_service import sync_analysis_runs_from_manifest
 
 

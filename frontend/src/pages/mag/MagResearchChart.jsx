@@ -5,7 +5,7 @@ import ChartStyleToolbar from '../../components/Charts/ChartStyleToolbar';
 import useChartStylePreferences from '../../components/Charts/useChartStylePreferences';
 import { useChartFrameToolbarTarget } from '../../components/Charts/ChartFrameActionsContext';
 import { DEFAULT_RESEARCH_STYLE, decorateResearchOption, researchFields } from './magResearchStyle';
-import { resolveResearchPalette } from './magResearchPalettes';
+import { resolveResearchPalette } from '../../components/Charts/researchPalettes';
 const EMPTY_SELECTION = [];
 
 export default function MagResearchChart({ kind, buildOption, data, exportConfig, onSelect, onBrush, selected = EMPTY_SELECTION, height = 480 }) {

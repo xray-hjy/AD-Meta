@@ -1,0 +1,47 @@
+{
+  "recordedOn": "2026-10-16",
+  "note": "依据本轮实际取得的原文整理，均待科研复核；原论文人数不得替代运行包分母。",
+  "projects": {
+    "PRJEB49329": {
+      "country": {"value": "荷兰，Amsterdam Dementia Cohort / SCIENCe", "source": "release-paper-PRJEB49329", "locator": "Study Population"},
+      "material": {"value": "人体粪便", "source": "release-paper-PRJEB49329", "locator": "Study Population / fecal sample collection"},
+      "stages": {"value": ["AD 33", "MCI 22", "SCD 120"], "source": "release-paper-PRJEB49329", "locator": "Study Population: 175 collected, 170 analyzed; no ordinary NC group established"},
+      "sourceDesign": {"value": "来自随访队列的粪便研究；原论文含 AD/MCI/SCD，不能把 SCD 自动改为健康 NC。", "source": "release-paper-PRJEB49329", "locator": "Study Population / annual follow-up visits and clinical definitions"}
+    },
+    "PRJEB50447": {
+      "country": {"value": "韩国，KBASE / Seoul National University Hospital", "source": "release-paper-PRJEB50447", "locator": "Participants"},
+      "material": {"value": "人体粪便", "source": "release-paper-PRJEB50447", "locator": "Microbial sample collection and preparation"},
+      "stages": {"value": ["78 名认知正常者", "Aβ 阳性/阴性比较", "无痴呆或 MCI，CDR=0"], "source": "release-paper-PRJEB50447", "locator": "Participants / Measurement of cerebral amyloid deposition"},
+      "sourcePlatform": {"value": "16S rRNA 扩增子；不是 WGS 实测功能", "source": "release-paper-PRJEB50447", "locator": "16S rRNA gene PCR amplification, sequencing, and processing"}
+    },
+    "PRJNA611839": {
+      "country": {"value": "中国上海，Huashan Hospital / Shanghai Aging Study", "source": "release-paper-PRJNA611839", "locator": "Study participants"},
+      "material": {"value": "人体粪便，另有粪便代谢组；两种测量不混作同一丰度", "source": "release-paper-PRJNA611839", "locator": "Sample collection / DNA extraction and 16S rRNA gene sequencing / Metabolomics profiling"},
+      "stages": {"value": ["AD 21", "认知正常对照 44"], "source": "release-paper-PRJNA611839", "locator": "Study participants; original groups conflict with source all-AD annotation"},
+      "sourceDesign": {"value": "2018-04 至 2019-07 招募；公开原文人数不能自动建立每条 Run 的组别对应。", "source": "release-paper-PRJNA611839", "locator": "Study participants"},
+      "sourcePlatform": {"value": "16S V3–V4，Illumina MiSeq，paired-end 2×300", "source": "release-paper-PRJNA611839", "locator": "DNA extraction and 16S rRNA gene sequencing"}
+    },
+    "PRJNA633959": {
+      "country": {"value": "中国浙江丽水，2019-02 至 2019-11 招募", "source": "release-paper-PRJNA633959", "locator": "Subjects' Enrollment"},
+      "material": {"value": "人体新鲜粪便", "source": "release-paper-PRJNA633959", "locator": "Fecal Sample Collection and DNA Extraction"},
+      "stages": {"value": ["AD 100", "认知正常对照 71"], "source": "release-paper-PRJNA633959", "locator": "Subjects' Enrollment; original cohort denominator, not current retained profile count"},
+      "sourceDesign": {"value": "临床病例与认知正常对照比较；原文逐人招募描述不代替公开实验别名到参与者的映射。", "source": "release-paper-PRJNA633959", "locator": "Subjects' Enrollment / questionnaire and exclusion criteria"}
+    },
+    "PRJNA734525": {
+      "country": {"value": "土耳其研究队列", "source": "release-paper-PRJNA734525", "locator": "article-title: Turkish Cohort"},
+      "sourcePlatform": {"value": "16S rRNA；原研究疾病阶段另审，不按统一 Alzheimer 标签合并 AD/MCI。", "source": "release-paper-PRJNA734525", "locator": "Data Availability Statement / PRJNA734525 16S sequences; sealed cohort rule on merged stages"}
+    },
+    "PRJNA1028813": {
+      "country": {"value": "哈萨克斯坦，Astana City", "source": "release-paper-PRJNA1028813", "locator": "2.1 Clinical Assessment"},
+      "material": {"value": "本论文分析人体粪便；项目描述另提口腔，不自动将项目内所有材料纳入粪便比较。", "source": "release-paper-PRJNA1028813", "locator": "2.2 Fecal Sample Collection, Preprocessing, and Sequencing"},
+      "stages": {"value": ["AD 41", "认知正常对照 42"], "source": "release-paper-PRJNA1028813", "locator": "2.1 Clinical Assessment"},
+      "sourcePlatform": {"value": "方法 2.5 明确采用 16S / LotuS2 / SILVA，功能为 PICRUSt2 推断；不能因项目名含 Metagenome 或 NovaSeq 型号认定 WGS。", "source": "release-paper-PRJNA1028813", "locator": "2.5 Data and Statistical Analyses"},
+      "sourceConflict": {"value": "论文测序段写 NovaSeq 6000，当前来源元数据写 HiSeq 1500；保留仪器差异待核，不改写封存包。", "source": "release-paper-PRJNA1028813", "locator": "2.2 Sequencing versus sealed sample_metadata_clean.instrument_model"}
+    },
+    "PRJNA496408": {
+      "material": {"value": "该关联论文采集基线粪便及血清；本项目未取得可用 GMrepo 丰度，不将血清当菌群 profile。", "source": "release-paper-PRJNA496408", "locator": "2.1 Study Subjects"},
+      "stages": {"value": ["该关联论文 AD 27", "aMCI 22", "HC 28"], "source": "release-paper-PRJNA496408", "locator": "2.1 Study Subjects: 77-participant subset; accession reused, not automatically original full cohort"},
+      "sourceDesign": {"value": "关联论文说明多数健康对照为患者长期共同生活配偶；需另查家庭/配对与项目子集复用，不按项目编号自动认定独立队列。", "source": "release-paper-PRJNA496408", "locator": "2.1 Study Subjects; HC majority spouses living together and sharing diet for at least 20 years"}
+    }
+  }
+}

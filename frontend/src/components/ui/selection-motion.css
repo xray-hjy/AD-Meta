@@ -1,0 +1,64 @@
+.sliding-choice-group, .sliding-option-list {
+  --selection-accent: var(--control-accent, var(--workspace-accent, #2f80ed));
+  --selection-soft: var(--control-soft, var(--workspace-accent-soft, #edf4ff));
+  --selection-duration: 240ms;
+  --selection-ease: cubic-bezier(.22, 1, .36, 1);
+  position: relative;
+  isolation: isolate;
+}
+.sliding-highlight {
+  position: absolute; top: 0; left: 0; z-index: 0;
+  border-radius: var(--selection-radius, 7px);
+  background: var(--selection-soft);
+  box-shadow: var(--selection-highlight-shadow, none);
+  pointer-events: none; opacity: 0;
+}
+[data-highlight-ready] > .sliding-highlight {
+  transition: transform var(--selection-duration) var(--selection-ease),
+    width var(--selection-duration) var(--selection-ease),
+    height var(--selection-duration) var(--selection-ease), opacity 120ms ease;
+}
+.sliding-choice-group > button, .sliding-option-list > [role="option"] { position: relative; z-index: 1; }
+.sliding-choice-group > button {
+  transition: color 140ms ease, border-color 140ms ease;
+}
+/* Override legacy individual fills so there is only one selected background.
+   Keep every button's border width and weight stable during measurement. */
+.sliding-choice-group.sliding-choice-group.sliding-choice-group > button,
+.sliding-choice-group.sliding-choice-group.sliding-choice-group > button:hover,
+.sliding-choice-group.sliding-choice-group.sliding-choice-group > button:is([aria-pressed="true"], [aria-selected="true"], .is-active, .chart-chip--active) {
+  background: transparent; box-shadow: none; font-weight: 500;
+  border-color: var(--color-border, #dbe3ee);
+}
+.sliding-choice-group.sliding-choice-group.sliding-choice-group > button:is([aria-pressed="true"], [aria-selected="true"]) {
+  color: var(--selection-accent); border-color: transparent;
+}
+.sliding-choice-group.sliding-choice-group.sliding-choice-group > button:hover:not(:disabled) { color: var(--selection-accent); }
+.sliding-choice-group.sliding-choice-group > button:focus-visible {
+  outline: 2px solid var(--selection-accent); outline-offset: 2px;
+}
+.sliding-choice-group.sliding-choice-group > button:disabled { opacity: .45; cursor: not-allowed; }
+.sliding-choice-group--segments { --selection-highlight-shadow: 0 1px 3px rgb(23 32 51 / 7%); }
+.sliding-choice-group--segments:is(.selection-count-modes, .mag-top-n-settings__modes, .chart-zoom-toolbar__fit) > .sliding-highlight { background: var(--color-bg-panel, #fff); }
+.sliding-choice-group--grid { --selection-highlight-shadow: inset 0 0 0 1px color-mix(in srgb, var(--selection-accent) 45%, transparent); }
+.sliding-choice-group--tabs { --selection-highlight-shadow: inset 0 -2px var(--selection-accent); }
+.boxplot-chart__transforms { display: inline-flex; flex-wrap: wrap; gap: 5px; }
+.sliding-option-list.sliding-option-list > [role="option"]:is(:hover, :focus-visible, [data-highlighted], .is-active, .is-selected, [aria-selected="true"]) { background: transparent; }
+.sliding-option-list.sliding-option-list > [role="option"]:is([data-highlighted], .is-active) { color: var(--selection-accent); }
+.sliding-option-list.sliding-option-list > [role="option"][aria-selected="true"] { border-color: transparent; }
+.audit-option-check { float: right; margin-left: 10px; color: var(--selection-accent); }
+.selection-popup-transition.selection-popup-transition {
+  transform-origin: var(--transform-origin, top center);
+  transition: opacity 220ms cubic-bezier(.22, 1, .36, 1), transform 220ms cubic-bezier(.22, 1, .36, 1);
+}
+.selection-popup-transition:is([data-starting-style], [data-ending-style]) { opacity: 0; transform: scale(.95); }
+.selection-popup-transition[data-ending-style] { transition-duration: 140ms; }
+.selection-popup-motion { transform-origin: var(--transform-origin, top center); animation: selection-popup-enter 220ms cubic-bezier(.22, 1, .36, 1); }
+.selection-popup-motion[data-ending-style] { animation: none; opacity: 0; transform: scale(.95); transition: opacity 140ms ease, transform 140ms ease; pointer-events: none; }
+@keyframes selection-popup-enter { from { opacity: 0; transform: scale(.95); } to { opacity: 1; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) {
+  [data-highlight-ready] > .sliding-highlight, .sliding-choice-group > button { transition: none; }
+  .selection-popup-motion { animation: none; transition: none; }
+  .selection-popup-motion[data-ending-style] { transition: none; }
+  .selection-popup-transition.selection-popup-transition { transition: none; }
+}

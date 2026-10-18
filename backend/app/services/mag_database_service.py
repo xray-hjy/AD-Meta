@@ -4,6 +4,7 @@ import json
 from collections import defaultdict
 from functools import lru_cache
 from pathlib import Path
+from threading import Lock
 from typing import Any, Iterable
 
 import numpy as np
@@ -14,6 +15,10 @@ from app.services.mag_data_service import MagDataError, MagDataset
 
 class MagDatabaseError(RuntimeError):
     pass
+
+
+# lru_cache can run the same cold build concurrently; share one validated snapshot.
+_snapshot_load_lock = Lock()
 
 
 def _json_value(value: Any, fallback: Any) -> Any:
@@ -454,15 +459,16 @@ def load_mag_dataset_from_database(version: str) -> MagDataset:
         if isinstance(row["manifest_json"], str)
         else json.dumps(row["manifest_json"] or {}, ensure_ascii=False, sort_keys=True)
     )
-    return _load_database_snapshot(
-        database_key,
-        int(row["id"]),
-        row["version_key"],
-        row["source_root"],
-        row["data_fingerprint"],
-        serialized_manifest,
-        float(row["max_mapping_error"]),
-    )
+    with _snapshot_load_lock:
+        return _load_database_snapshot(
+            database_key,
+            int(row["id"]),
+            row["version_key"],
+            row["source_root"],
+            row["data_fingerprint"],
+            serialized_manifest,
+            float(row["max_mapping_error"]),
+        )
 
 
 @lru_cache(maxsize=4)
@@ -496,15 +502,9 @@ def _load_database_snapshot(
         ).fetchall()
         abundance_rows = conn.execute(
             """
-            SELECT sample.position AS sample_position,
-                   representative.position AS representative_position,
-                   abundance.abundance_percent
-            FROM mag_abundances abundance
-            JOIN mag_samples sample ON sample.id = abundance.sample_id
-            JOIN mag_representatives representative
-              ON representative.id = abundance.representative_id
-            WHERE abundance.dataset_version_id = ?
-            ORDER BY sample.position, representative.position
+            SELECT sample_id, representative_id, abundance_percent
+            FROM mag_abundances
+            WHERE dataset_version_id = ?
             """,
             (version_id,),
         ).fetchall()
@@ -583,10 +583,15 @@ def _load_database_snapshot(
     sample_ids = tuple(row["sample_code"] for row in sample_rows)
     mag_ids = tuple(row["mag_code"] for row in representative_rows)
     matrix = np.full((len(sample_rows), len(representative_rows)), np.nan, dtype=float)
+    sample_positions = {int(row["id"]): int(row["position"]) for row in sample_rows}
+    representative_positions = {int(row["id"]): int(row["position"]) for row in representative_rows}
     for row in abundance_rows:
-        matrix[int(row["sample_position"]), int(row["representative_position"])] = float(
-            row["abundance_percent"]
-        )
+        try:
+            sample_position = sample_positions[int(row["sample_id"])]
+            representative_position = representative_positions[int(row["representative_id"])]
+        except KeyError as exc:
+            raise MagDataError("mag_abundances", "本版本的样本和 MAG 主键", "存在跨版本或未知主键", version) from exc
+        matrix[sample_position, representative_position] = float(row["abundance_percent"])
     if not np.isfinite(matrix).all():
         raise MagDataError(
             "mag_abundances",
@@ -740,4 +745,5 @@ def _load_database_snapshot(
 
 
 def clear_mag_database_cache() -> None:
-    _load_database_snapshot.cache_clear()
+    with _snapshot_load_lock:
+        _load_database_snapshot.cache_clear()

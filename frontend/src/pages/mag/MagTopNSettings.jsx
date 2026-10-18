@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import SegmentedControl from '../../components/ui/SegmentedControl';
+import ChoiceGrid from '../../components/ui/ChoiceGrid';
 
 export default function MagTopNSettings({ value, matchedCount, loading, onApply, close }) {
   const max = Math.max(1, matchedCount);
@@ -13,16 +15,16 @@ export default function MagTopNSettings({ value, matchedCount, loading, onApply,
     onApply(all ? 0 : number); close();
   }}>
     <p className="mag-top-n-settings__context">{loading ? '正在更新匹配数量…' : <>当前搜索匹配 <strong>{matchedCount.toLocaleString()} 个 MAG</strong></>}</p>
-    <div className="mag-top-n-settings__modes" aria-label="显示范围">
+    <SegmentedControl className="mag-top-n-settings__modes" role="group" aria-label="显示范围">
       <button type="button" className="analysis-button" aria-pressed={!all} onClick={() => setAll(false)}>Top N</button>
       <button type="button" className="analysis-button" aria-pressed={all} onClick={() => setAll(true)}>全部匹配</button>
-    </div>
+    </SegmentedControl>
     <fieldset disabled={all}>
       <legend>常用数量</legend>
-      <div className="mag-top-n-settings__presets">
+      <ChoiceGrid className="mag-top-n-settings__presets" role="group" aria-label="常用数量">
         {[10, 20, 30, 50, 100, 200].filter(n => n <= max).map(n => <button type="button" key={n}
-          className="analysis-button" aria-pressed={!all && number === n} onClick={() => choose(n)}>Top {n}</button>)}
-      </div>
+          className="analysis-button" aria-pressed={!all && valid && number === n} onClick={() => choose(n)}>Top {n}</button>)}
+      </ChoiceGrid>
       <label className="mag-top-n-settings__number">自定义 Top N
         <input aria-label="自定义 Top N" type="number" min="1" max={max} step="1" required={!all} value={draft}
           aria-invalid={!all && !valid} onChange={event => setDraft(event.target.value)} />

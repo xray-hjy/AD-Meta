@@ -4,6 +4,8 @@ import HomePage from '../pages/home/HomePage';
 
 const AnalysisWorkspacePage = lazy(() => import('../pages/analysis/AnalysisWorkspacePage'));
 const GmrepoPage = lazy(() => import('../pages/gmrepo/GmrepoPage'));
+const FeatureEvidencePage = lazy(() => import('../pages/gmrepo/FeatureEvidencePage'));
+const CandidateComparisonPage = lazy(() => import('../pages/gmrepo/CandidateComparisonPage'));
 
 export default function AppRouter() {
   return (
@@ -11,6 +13,9 @@ export default function AppRouter() {
       <Routes>
         <Route index element={<HomePage />} />
         <Route path="reference/gmrepo" element={<Suspense fallback={<div className="route-loading">正在打开 GMrepo 参考数据...</div>}><GmrepoPage /></Suspense>} />
+        <Route path="reference/gmrepo/evidence" element={<Suspense fallback={<div className="route-loading">正在打开外部证据评估…</div>}><FeatureEvidencePage /></Suspense>} />
+        <Route path="reference/gmrepo/comparison" element={<Suspense fallback={<div className="route-loading">正在打开多候选对照…</div>}><CandidateComparisonPage /></Suspense>} />
+        <Route path="reference/gmrepo/evidence/:genusId" element={<Suspense fallback={<div className="route-loading">正在打开外部证据评估…</div>}><FeatureEvidencePage /></Suspense>} />
         <Route path="analysis/mag" element={<Navigate to="/analysis/abundance?domain=mag" replace />} />
         <Route
           path="analysis/abundance"

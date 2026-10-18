@@ -217,7 +217,7 @@ def species_comparison(source, root, cohort):
                     key = final[3:].replace(" ", "_")
                     species[key].append((row[0], array("d", map(float, row[1:]))))
             data[mode] = (sample_columns, species)
-    book = openpyxl.load_workbook(root / "backend/storage/raw/ad-nc-species/raw.xlsx", read_only=True, data_only=True)
+    book = openpyxl.load_workbook(root / "backend/storage/raw/ad-nc-species/PRJCA022804/raw.xlsx", read_only=True, data_only=True)
     iterator = book.active.iter_rows(values_only=True)
     header = next(iterator)
     details = []

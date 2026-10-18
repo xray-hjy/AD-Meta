@@ -1,0 +1,143 @@
+/* Keep navigation at its natural width while its space closes around it. */
+.sidebar-region {
+  --sidebar-width: 260px;
+  --sidebar-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-rows: 1fr;
+  width: var(--sidebar-width);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  visibility: visible;
+  transition: width 440ms var(--sidebar-ease), visibility 0s;
+}
+
+.sidebar-region__content {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.sidebar-region__content > .sidebar {
+  width: var(--sidebar-width);
+  height: 100%;
+  min-height: 0;
+  overflow-x: hidden;
+  transform: translateX(0);
+  transition: transform 440ms var(--sidebar-ease);
+}
+
+.sidebar-region .sidebar-section {
+  --sidebar-layer: 0;
+  opacity: 1;
+  transform: translateX(0) translateY(0);
+  transition:
+    opacity 240ms ease-out,
+    transform 340ms var(--sidebar-ease);
+  transition-delay: calc(55ms + var(--sidebar-layer) * 45ms);
+}
+
+.sidebar-region .sidebar-section:nth-child(2) { --sidebar-layer: 1; }
+.sidebar-region .sidebar-section:nth-child(3) { --sidebar-layer: 2; }
+.sidebar-region .sidebar-section:nth-child(n + 4) { --sidebar-layer: 3; }
+
+.app--sidebar-collapsed .sidebar-region {
+  width: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: width 440ms var(--sidebar-ease), visibility 0s 440ms;
+}
+
+.app--sidebar-collapsed .sidebar-region__content > .sidebar {
+  transform: translateX(-32px);
+}
+
+.app--sidebar-collapsed .sidebar-region .sidebar-section {
+  opacity: 0;
+  transform: translateX(-24px) translateY(3px);
+  transition-delay: calc(var(--sidebar-layer) * 30ms);
+}
+
+/* A quiet glyph in the existing topbar, without button chrome. */
+.sidebar-toggle {
+  position: relative;
+  flex-shrink: 0;
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin-left: -5px;
+  padding: 5px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: rgba(233, 241, 251, 0.72);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 160ms ease;
+}
+
+.sidebar-toggle::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.13), transparent 72%);
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 160ms ease, transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sidebar-toggle:hover { color: #fff; }
+.sidebar-toggle:hover::before { opacity: 1; transform: scale(1); }
+.sidebar-toggle:focus-visible { outline: 2px solid #c7defe; outline-offset: 3px; }
+
+.sidebar-toggle svg {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.65;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sidebar-toggle__arrow {
+  transform-origin: 13px 12px;
+  transition: transform 360ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sidebar-toggle[aria-expanded='false'] .sidebar-toggle__arrow { transform: rotate(180deg); }
+
+@media (max-width: 900px) {
+  .sidebar-region,
+  .app--sidebar-collapsed .sidebar-region {
+    width: 100%;
+    transition: grid-template-rows 440ms var(--sidebar-ease), visibility 0s;
+  }
+
+  .sidebar-region__content > .sidebar { width: 100%; height: auto; }
+
+  .app--sidebar-collapsed .sidebar-region {
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 440ms var(--sidebar-ease), visibility 0s 440ms;
+  }
+}
+
+@media (pointer: coarse) {
+  .sidebar-toggle { width: 44px; height: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-region,
+  .app--sidebar-collapsed .sidebar-region,
+  .sidebar-region__content > .sidebar,
+  .sidebar-region .sidebar-section,
+  .sidebar-toggle,
+  .sidebar-toggle::before,
+  .sidebar-toggle__arrow {
+    transition: none;
+  }
+}

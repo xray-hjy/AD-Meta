@@ -339,6 +339,21 @@ def _abundance_aggregates(
     artifact,
     series_sample_ids: dict[str, tuple[int, ...]],
 ):
+    if artifact["feature_kind"] == "ko":
+        from app.services.diting_matrix import revision_diting_matrix
+
+        snapshot = revision_diting_matrix(conn, artifact)
+        if snapshot is not None:
+            matrix, _ = snapshot
+            rows = []
+            for series_key, sample_ids in series_sample_ids.items():
+                values = matrix.loc[list(sample_ids)]
+                totals = values.sum(axis=0)
+                squares = (values * values).sum(axis=0)
+                rows.extend({"feature": feature, "full_name": feature, "series_key": series_key,
+                             "total": float(totals[feature]), "sum_squares": float(squares[feature])}
+                            for feature in matrix.columns)
+            return rows
     rows = []
     for series_key, sample_ids in series_sample_ids.items():
         placeholders = ", ".join("?" for _ in sample_ids)
@@ -370,6 +385,9 @@ def _abundance_aggregates(
                 params,
             ).fetchall()
         else:
+            # MySQL otherwise prefers the KO-leading GROUP BY index, scanning
+            # every retained revision. Restrict reads to this revision/scope.
+            ko_index_hint = "FORCE INDEX (uk_revision_ko_abundance)" if database.is_mysql() else ""
             result = conn.execute(
                 f"""
                 SELECT revision_ko_abundance.ko_id AS feature,
@@ -380,7 +398,7 @@ def _abundance_aggregates(
                            revision_ko_abundance.abundance
                            * revision_ko_abundance.abundance
                        ) AS sum_squares
-                FROM revision_ko_abundance
+                FROM revision_ko_abundance {ko_index_hint}
                 WHERE revision_ko_abundance.revision_id = ?
                   AND revision_ko_abundance.sample_id IN ({placeholders})
                 GROUP BY revision_ko_abundance.ko_id
@@ -543,6 +561,10 @@ def _compute_abundance_projection(
         "datasetRevision": artifact["revision_key"],
         "featureKind": artifact["feature_kind"],
         "featureLabel": artifact["feature_label"],
+        "dataSemantics": {
+            "abundanceScale": artifact["abundance_scale"] or "unknown",
+            "normalization": artifact["normalization"] or "unknown",
+        },
         "scope": scope.model_dump(),
         "series": series,
         "items": returned,

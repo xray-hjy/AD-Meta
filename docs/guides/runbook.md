@@ -30,7 +30,11 @@ cd ..
 
 Root npm commands select the backend virtual environment's Windows or Unix
 Python executable automatically. On Windows, `Start-ADMeta.ps1` also uses a
-project-local Node runtime under `frontend/.tmp/runtime/` when installed:
+project-local Node/R runtime when installed. Runtime resolution uses
+`AD_META_RUNTIME_ROOT` (absolute or relative to the repository), then
+`.tmp/runtime/`, then the existing `frontend/.tmp/runtime/`. Node 22.12.0 or newer
+is required. Existing environments can stay at the old path; moving R/renv
+libraries requires checking their links and configuration separately.
 
 ```powershell
 .\Start-ADMeta.ps1 prepare
@@ -43,6 +47,13 @@ npm run verify:gmrepo
 .\Start-ADMeta.ps1 worker
 # Run the normal verification gate:
 .\Start-ADMeta.ps1 verify
+# Build once, then preview the build locally at http://127.0.0.1:4173:
+.\Start-ADMeta.ps1 build
+.\Start-ADMeta.ps1 preview
+# Measure isolated development cold/restart/repeat navigation (three runs each):
+.\Start-ADMeta.ps1 benchmark
+# After building, check loading feedback, recovery, HMR and direct routes:
+npm run verify:startup
 ```
 
 The backend startup command first installs/verifies the shipped GMrepo runtime
@@ -50,6 +61,20 @@ bundle at its default location, then prepares an empty database from the tracked
 raw files or synchronizes analysis registrations for an existing published dataset.
 Existing GMrepo files are never overwritten. Custom `AD_META_GMREPO_DATA_ROOT`
 locations remain operator-managed; see [GMrepo data installation](../reference/gmrepo.md).
+
+The development server listens on port 3000. Vite scans `index.html` as the
+dependency entry and excludes `.tmp`, coverage and output directories from
+file watching. It retains source and CSS hot updates. The homepage can open
+without the API running; data pages display their own unavailable-service state.
+Development and preview ports fail explicitly when occupied.
+
+`preview` checks for a build and warns when source files are newer. Rebuild after
+source changes. Preview is for local demonstrations; production should serve
+`frontend/dist` using a static server with SPA fallback and API reverse proxy.
+Startup benchmark reports are written to ignored `frontend/output/startup/`.
+Each navigation uses a new browser context and reduced motion; filesystem cache
+is not flushed. Existing Vite and scientific-data caches are not removed.
+`verify:startup` also checks the build preview, so run `build` before this check.
 
 Restore the statistics worker's locked R 4.5.2 / Bioconductor 3.21 environment
 once. The first command installs `renv` only when it is not already available:
@@ -157,8 +182,19 @@ available at `http://127.0.0.1:8000`, and its OpenAPI page is at
 `http://127.0.0.1:8000/docs`. The statistics worker listens on
 `http://127.0.0.1:8001` and should be reachable only by the backend host.
 
-Vite proxies `/api` to `http://127.0.0.1:8000` in development. For another API
-host, set `VITE_API_BASE_URL`.
+Vite proxies `/api` to `http://127.0.0.1:8000` in development and build preview.
+Start the backend before opening the frontend. To change the proxy destination,
+set `VITE_API_PROXY_TARGET` in the process environment or a Vite `.env` file in
+`frontend/`; process settings take precedence. Restart Vite after changing it.
+`VITE_API_BASE_URL` instead makes the browser call an API host directly and
+requires the corresponding CORS configuration.
+
+The temporary GMrepo QA backend on port `18100` is not an automatic fallback for
+the normal development server. A proxy connection failure returns HTTP 503 with
+an explicit backend-service error; it must not be interpreted as an empty data
+catalog. “暂无已发布分析数据” is displayed only after both catalog requests succeed
+and the dataset catalog is empty. Use the retry button after restoring the API;
+there is no need to reimport datasets to resolve a connectivity failure.
 
 ## Import A Dataset
 

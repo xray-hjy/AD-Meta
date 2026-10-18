@@ -11,6 +11,7 @@ const KoLdaBarChart = lazy(() => import('../components/Charts/KoLdaBarChart'));
 const TaxonomyChart = lazy(() => import('../components/Charts/TaxonomyChart'));
 const PCAPlot = lazy(() => import('../components/Charts/PCAPlot'));
 const PCoAPlot = lazy(() => import('../components/Charts/PCoAPlot'));
+const DitingPathwayChart = lazy(() => import('../components/Charts/DitingPathwayChart'));
 
 const TAXONOMY_GROUP = {
   key: 'taxonomyHierarchy',
@@ -332,6 +333,24 @@ export const CHART_REGISTRY = {
         ellipse: 'group_data_distribution_95',
       },
     }),
+  },
+  ditingOverview: {
+    navLabel: '通路概览', navSubtitle: '覆盖率散点 · 哑铃 · 聚类热图',
+    title: 'DiTing 通路概览', subtitle: 'AD / NC 功能指标概况 · 点击通路查看样本分布',
+    availableFor: ['ko'], availability: 'analysis_projection', attachedSource: true,
+    component: DitingPathwayChart, mode: 'overview', layout: 'special', prefetchPolicy: 'on_navigation',
+  },
+  ditingEffects: {
+    navLabel: '组间效应', navSubtitle: '森林图 · 效应与显著性',
+    title: 'DiTing 通路组间效应', subtitle: 'Cliff’s δ · 95% 置信区间 · AD / NC 未调整组间比较',
+    availableFor: ['ko'], availability: 'analysis_projection', attachedSource: true,
+    component: DitingPathwayChart, mode: 'effects', layout: 'special', prefetchPolicy: 'on_navigation',
+  },
+  ditingDistribution: {
+    navLabel: '样本分布', navSubtitle: '雨云 · 小提琴 · 蜂群 · ECDF',
+    title: 'DiTing 通路样本分布', subtitle: '选择通路，查看两组分布形状与每个样本的丰度',
+    availableFor: ['ko'], availability: 'analysis_projection', attachedSource: true,
+    component: DitingPathwayChart, mode: 'distribution', layout: 'special', prefetchPolicy: 'on_navigation',
   },
 };
 

@@ -40,4 +40,8 @@ relative_payload$abundanceScale <- "relative_abundance"
 relative_payload$matrix <- t(apply(counts_payload$matrix, 1, function(row) row / sum(row)))
 assert_result(run_maaslin2(validate_request(relative_payload), relative_payload), "MaAsLin2")
 
+relative_payload$features <- c("k__Bacteria|g__GGB123|s__GGB123_SGB456", "k__Bacteria|g__Bacteroides|s__Bacteroides_fragilis", "k__Bacteria|s__Species.with.dot")
+taxonomy_items <- run_maaslin2(validate_request(relative_payload), relative_payload)
+stopifnot(all(vapply(taxonomy_items, function(item) item$featureId, character(1)) %in% relative_payload$features))
+
 cat("R model smoke tests passed\n")

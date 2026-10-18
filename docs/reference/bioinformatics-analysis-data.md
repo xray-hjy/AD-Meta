@@ -90,16 +90,16 @@ CRR 是测序运行编号，不等同于受试者身份。后端导入和 Manife
 
 ### Sample x Species
 
-该矩阵来源于 Clean Reads 的 Reads 水平分类和丰度校正结果：
+2026-10-16 起，当前物种输入切换为用户交付的 MetaPhlAn 4 标记结果表：
 
 ```text
-Clean Reads -> Kraken2 分类 -> Bracken 丰度校正 -> Sample x Species
+taxonomy.tsv（MetaPhlAn 4 标记）-> 种级行筛选 -> 样本编号关联分组 -> 百分数除以100 -> Sample x Species
 ```
 
 当前发布范围限定为 CRA014435 的 185 个 CRR AD/NC 样本（AD 122、NC 63）。
-原始交付表中的 ERR 与 SRR 行保留用于来源审计，但不会进入当前物种数据集、缓存或分析运行。
+样本集合不变；新表包含 1,828 个种级特征。原始 TSV、分组表和转换规则见 `backend/storage/raw/ad-nc-species/PRJCA022804/README.md`。SGB/GGB 标识原样保留，不自动作为 NCBI TaxID 或已命名物种。
 
-2026-10-01 新服务器交付已提供 Kraken2/Bracken 脚本、配置与逐样本报告；但其物种特征和数值尚不能直接对应当前 Excel。上述流程为方法说明，当前 Excel 的具体生成批次及转换规则仍需确认，详见[服务器转交核对](../guides/server-transfer-audit.md)。交叉表中的 Reads 观察状态也需与明确结果版本关联。
+具体 MetaPhlAn 小版本、数据库、命令、质控和成功日志仍需实际运行记录，不能沿用论文作者或历史 Kraken2/Bracken 方法。历史 `raw.csv` 留存，旧版本结果保留其原始解释；MAG 分类交叉表的 Reads 观察标签仍属于其 Kraken/Bracken 来源，不等同于新物种矩阵的检出状态。
 
 它支持群落物种组成概览、AD/NC 物种分布与差异分析、分类层级关系可视化，以及基于物种矩阵的样本结构与距离分析。
 
@@ -111,9 +111,15 @@ Clean Reads -> Kraken2 分类 -> Bracken 丰度校正 -> Sample x Species
 Clean Reads -> Assembly -> 基因预测与功能注释 -> Reads 定量 -> Sample x KO
 ```
 
-当前发布范围同样为上述 185 个 CRR AD/NC 样本。
+当前发布范围同样为上述 185 个 CRR AD/NC 样本。2026-10-16 起接入新版 DiTing KO 原表：9,537 个标准 KO；11 个附加功能基因标识保留在原表。丰度为上游标准化原值，平台不按百分比解释、不二次闭合。原表及样本匹配、来源校验说明见 `backend/storage/raw/ad-nc-ko-abundance/PRJCA022804/README.md`。
 
 它描述群落整体功能组成，支持 KO 丰度、检出情况和组间差异分析，并可继续扩展 KO 到 KEGG Pathway 或 Module 的解释。`Sample x KO` 不能单独证明某项功能来自某个具体物种。
+
+### DiTing 通路与功能指标
+
+与新版 KO 同批交付的 `pathways_relative_abundance.tab` 包含 95 项通路及功能指标，按同一 CRR 样本表关联疾病分组，与 KO 结果共同绑定不可变数据版本。该表是 DiTing 的生物地球化学功能指标集，不能称为完整 KEGG 通路集，也不能把重叠指标相加视为组成百分比。
+
+群落功能导航分为“KO 功能”和“DiTing 通路”。通路提供气泡概览、Cliff's delta 森林图、单通路雨云图，以及可切换的样本热图；支持原表下载、全表统计导出和点击通路联动。通路统计采用双侧 Mann–Whitney U、1,000 次组内 bootstrap 区间与覆盖全部指标的 BH 校正，未调整其他协变量。具体 DiTing 安装和数据库版本尚未注明。
 
 ## MAG 分析数据与接入状态
 

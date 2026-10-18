@@ -14,12 +14,10 @@ import numpy as np
 import pandas as pd
 
 from app.compute.charts.boxplot import (
-    BOXPLOT_DEFAULT_VALUE_TRANSFORM,
-    BOXPLOT_VALUE_TRANSFORM_NOTE,
-    BOXPLOT_VALUE_TRANSFORMS,
     _box_summary,
     _log10_abundance,
     _sqrt_abundance,
+    boxplot_display,
 )
 from app.compute.charts.detection import compute_detection_heatmap
 from app.compute.charts.heatmap import compute_heatmap
@@ -234,6 +232,15 @@ def _build_revision_matrix(artifact) -> RevisionMatrixSnapshot:
     revision_id = int(artifact["dataset_revision_id"])
     feature_kind = str(artifact["feature_kind"])
     with connect() as conn:
+        if feature_kind == "ko":
+            from app.services.diting_matrix import revision_diting_matrix
+
+            replay = revision_diting_matrix(conn, artifact)
+            if replay is not None:
+                matrix, samples = replay
+                features = tuple(str(column) for column in matrix.columns)
+                return RevisionMatrixSnapshot(matrix=matrix, sample_by_id=samples,
+                                              features=features, feature_ids=features)
         if feature_kind == "taxonomy":
             rows = conn.execute(
                 """
@@ -512,11 +519,12 @@ def _compute_boxplot(
         )
     series = _scope_series(df, scope)
     items = []
+    display_scale, display = boxplot_display(df.attrs.get("abundance_scale", "unknown"))
     for feature in selected_features:
         values_by_series = {}
         for series_item in series:
             rows = df if scope.mode == "sample" else df.loc[df["Group"] == series_item["group"]]
-            values = rows[feature].to_numpy(dtype=float)
+            values = rows[feature].to_numpy(dtype=float) * display_scale
             samples = rows["Sample"].astype(str).to_numpy()
             raw = _box_summary(values, samples)
             square_root = _box_summary(_sqrt_abundance(values), samples)
@@ -549,9 +557,7 @@ def _compute_boxplot(
             "requestedCount": resolved.limit if resolved.mode == "ranked" else len(resolved.featureIds),
             "selectedCount": len(items),
         },
-        "valueTransforms": [dict(item) for item in BOXPLOT_VALUE_TRANSFORMS],
-        "defaultValueTransform": BOXPLOT_DEFAULT_VALUE_TRANSFORM,
-        "valueTransformNote": BOXPLOT_VALUE_TRANSFORM_NOTE,
+        **display,
     }
 
 

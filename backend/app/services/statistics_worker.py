@@ -152,6 +152,7 @@ def run_formal_differential(
                 f"{STATS_WORKER_URL}/v1/differential-abundance",
                 json=request,
                 timeout=STATS_WORKER_TIMEOUT,
+                trust_env=False,
             )
             response.raise_for_status()
             payload = response.json()

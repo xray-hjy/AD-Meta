@@ -12,6 +12,14 @@ export function constrainCamera(camera, world, plot, navigationAxis = 'both') {
     y: navigationAxis === 'x' ? plot.top : axis(camera.y, world.height * camera.k, plot.height, plot.top) };
 }
 
+export function resizeCamera(camera, previousPlot, plot, world, navigationAxis = 'both') {
+  const centerX = (previousPlot.left + previousPlot.width / 2 - camera.x) / camera.k;
+  const centerY = (previousPlot.top + previousPlot.height / 2 - camera.y) / camera.k;
+  return constrainCamera({ k: camera.k,
+    x: plot.left + plot.width / 2 - centerX * camera.k,
+    y: plot.top + plot.height / 2 - centerY * camera.k }, world, plot, navigationAxis);
+}
+
 export function zoomCamera(camera, k, world, plot, anchor = { x: plot.left + plot.width / 2, y: plot.top + plot.height / 2 }, navigationAxis = 'both') {
   return constrainCamera({ k, x: anchor.x - (anchor.x - camera.x) * k / camera.k,
     y: anchor.y - (anchor.y - camera.y) * k / camera.k }, world, plot, navigationAxis);

@@ -9,7 +9,7 @@ const DIRECTIONS = [
 ];
 const STICK_DEAD_ZONE = 3;
 
-export default function ChartPanJoystick({ onPan, panMode, onTogglePan, canPan, world, visible, viewport }) {
+export default function ChartPanJoystick({ onPan, panMode, onTogglePan, canPan, world, visible, viewport, enabled = true, embedded = false }) {
   const onPanRef = useRef(onPan), frameRef = useRef(null), motionRef = useRef(null), dragRef = useRef(null);
   const speeds = chartPanSpeed(world, visible, viewport);
   const speedsRef = useRef(speeds);
@@ -24,6 +24,7 @@ export default function ChartPanJoystick({ onPan, panMode, onTogglePan, canPan, 
   const stop = useCallback(() => {
     cancelMotion(); setThumb({ x: 0, y: 0 }); setActive(null);
   }, [cancelMotion]);
+  useEffect(() => { if (!enabled) stop(); }, [enabled, stop]);
   useEffect(() => {
     const onVisibility = () => { if (document.hidden) stop(); };
     window.addEventListener('blur', stop);
@@ -68,21 +69,21 @@ export default function ChartPanJoystick({ onPan, panMode, onTogglePan, canPan, 
     <div className={`chart-pan-joystick__pad${panMode ? ' is-active' : ''}`}>
       {DIRECTIONS.map(direction => <button key={direction.key} type="button"
         className={`chart-pan-joystick__direction is-${direction.key}${active === direction.key ? ' is-held' : ''}`}
-        aria-label={direction.label} title={`${direction.label}：点按移动，长按连续移动`} disabled={!canPan[direction.key]}
+        aria-label={direction.label} title={`${direction.label}：点按移动，长按连续移动`} disabled={!enabled || !canPan[direction.key]}
         onPointerDown={event => {
-          if (event.button !== 0) return;
+          if (!enabled || event.button !== 0) return;
           event.preventDefault(); event.currentTarget.focus(); event.currentTarget.setPointerCapture?.(event.pointerId);
           setActive(direction.key);
           onPanRef.current(direction.x * speedsRef.current.x.tap, direction.y * speedsRef.current.y.tap);
           begin(direction.x, direction.y, 'direction', direction.key);
         }} onPointerUp={stop} onPointerCancel={stop} onLostPointerCapture={stop}
-        onClick={event => { if (event.detail === 0) onPanRef.current(direction.x * speedsRef.current.x.tap, direction.y * speedsRef.current.y.tap); }}>
+        onClick={event => { if (enabled && event.detail === 0) onPanRef.current(direction.x * speedsRef.current.x.tap, direction.y * speedsRef.current.y.tap); }}>
         <svg viewBox="0 0 16 16" aria-hidden="true" style={{ transform: `rotate(${direction.angle}deg)` }}><path d="m4 10 4-4 4 4" /></svg>
       </button>)}
-      <button type="button" className="chart-pan-joystick__thumb" aria-label="图内拖动模式" aria-pressed={panMode}
+      <button type="button" className="chart-pan-joystick__thumb" aria-label="图内拖动模式" aria-pressed={panMode} disabled={!enabled}
         title="拖动中心杆控制方向和速度；点击切换图内拖动模式" style={{ transform: `translate(${thumb.x}px, ${thumb.y}px)` }}
         onPointerDown={event => {
-          if (event.button !== 0) return;
+          if (!enabled || event.button !== 0) return;
           event.preventDefault(); event.currentTarget.focus(); event.currentTarget.setPointerCapture?.(event.pointerId);
           dragRef.current = { x: event.clientX, y: event.clientY, moved: false };
         }} onPointerMove={event => {
@@ -98,10 +99,10 @@ export default function ChartPanJoystick({ onPan, panMode, onTogglePan, canPan, 
           const clicked = dragRef.current && !dragRef.current.moved;
           stop(); if (clicked) onTogglePan();
         }} onPointerCancel={stop} onLostPointerCapture={stop}
-        onClick={event => { if (event.detail === 0) onTogglePan(); }}>
+        onClick={event => { if (enabled && event.detail === 0) onTogglePan(); }}>
         <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12M8 6l2-2 2 2M8 14l2 2 2-2M6 8l-2 2 2 2M14 8l2 2-2 2" /></svg>
       </button>
     </div>
-    <span className="chart-pan-joystick__hint">Alt + 滚轮缩放<br />Alt + 拖动平移</span>
+    {!embedded && <span className="chart-pan-joystick__hint">Alt + 滚轮缩放<br />Alt + 拖动平移</span>}
   </div>;
 }

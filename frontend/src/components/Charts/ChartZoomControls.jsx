@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import SegmentedControl from '../ui/SegmentedControl';
 import * as Slider from '@radix-ui/react-slider';
 
 const percent = scale => Number((scale * 100).toFixed(1)).toString();
@@ -25,7 +26,7 @@ export default function ChartZoomControls({ scale, minScale, maxScale, fitMode, 
     cancelled.current = false; setDraft(null);
   };
   return <div className="chart-zoom-toolbar" role="toolbar" aria-label="图形缩放与导航">
-    <div className="chart-zoom-toolbar__fit" role="group" aria-label="图形适配方式">
+    <SegmentedControl className="chart-zoom-toolbar__fit" role="group" aria-label="图形适配方式">
       <button type="button" aria-label="适应视口" title="完整图形适应视口" aria-pressed={fitMode === 'fit'} onClick={onFit}>
         <ZoomIcon kind="fit" /><span>全图</span>
       </button>
@@ -35,7 +36,7 @@ export default function ChartZoomControls({ scale, minScale, maxScale, fitMode, 
       <button type="button" aria-label="原始大小" title="100% · 原始格子尺寸" aria-pressed={fitMode === 'native'} onClick={() => onZoom(1)}>
         <span className="chart-zoom-toolbar__native">1:1</span>
       </button>
-    </div>
+    </SegmentedControl>
     <span className="chart-zoom-toolbar__divider" aria-hidden="true" />
     <div className="chart-zoom-toolbar__scale">
       <button type="button" className="chart-zoom-toolbar__step" aria-label="缩小图形" title="缩小" disabled={scale <= minScale * 1.001} onClick={() => onZoom(scale / 1.15)}><ZoomIcon kind="minus" /></button>

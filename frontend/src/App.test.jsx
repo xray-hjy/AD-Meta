@@ -10,8 +10,8 @@ vi.mock('swiper/css', () => ({}));
 vi.mock('swiper/css/effect-coverflow', () => ({}));
 vi.mock('swiper/css/free-mode', () => ({}));
 
-vi.mock('./api/client', () => ({
-  fetchJson: vi.fn(),
+vi.mock('./api/client', async importOriginal => ({
+  ...await importOriginal(), fetchJson: vi.fn(),
 }));
 
 vi.mock('./components/Charts/BarChart', () => ({
@@ -130,6 +130,59 @@ beforeEach(() => {
 afterEach(() => {
   fetchJson.mockReset();
   queryClient.clear();
+});
+
+test('bootstrap failure is not an empty dataset and retry restores both catalogs', async () => {
+  const normal = fetchJson.getMockImplementation();
+  let unavailable = true;
+  fetchJson.mockImplementation((url, options) => {
+    if (unavailable && ['/api/datasets', '/api/analysis-runs'].includes(url)) return Promise.reject(new Error('无法连接后端服务，请检查后端进程及 API 代理配置后重试。'));
+    return normal(url, options);
+  });
+  render(<App />);
+  expect(await screen.findByText('分析数据加载失败', {}, { timeout: 10000 })).toBeVisible();
+  expect(screen.queryByText('暂无已发布分析数据')).not.toBeInTheDocument();
+  unavailable = false;
+  fireEvent.click(screen.getByRole('button', { name: '重试', exact: true }));
+  expect(await screen.findByTestId('bar-chart')).toBeVisible();
+  expect(screen.queryByText('分析数据加载失败')).not.toBeInTheDocument();
+}, 15000);
+
+test('dataset failure is displayed even while the analysis run request is pending', async () => {
+  const normal = fetchJson.getMockImplementation();
+  fetchJson.mockImplementation((url, options) => {
+    if (url === '/api/datasets') return Promise.reject(new Error('数据集目录请求失败'));
+    if (url === '/api/analysis-runs') return new Promise(() => {});
+    return normal(url, options);
+  });
+  render(<App />);
+  expect(await screen.findByText('数据集目录请求失败')).toBeVisible();
+  expect(screen.queryByText('暂无已发布分析数据')).not.toBeInTheDocument();
+});
+
+test('run catalog failure is not hidden by a successfully empty dataset catalog', async () => {
+  datasets = [];
+  const normal = fetchJson.getMockImplementation();
+  fetchJson.mockImplementation((url, options) => url === '/api/analysis-runs' ? Promise.reject(new Error('分析运行目录请求失败')) : normal(url, options));
+  render(<App />);
+  expect(await screen.findByText('分析运行目录请求失败')).toBeVisible();
+  expect(screen.queryByText('暂无已发布分析数据')).not.toBeInTheDocument();
+});
+
+test('empty state requires successful dataset and run catalog responses', async () => {
+  datasets = []; analysisRuns = [];
+  render(<App />);
+  expect(await screen.findByText('暂无已发布分析数据')).toBeVisible();
+  expect(screen.queryByText('分析数据加载失败')).not.toBeInTheDocument();
+});
+
+test.each(['/api/datasets', '/api/analysis-runs'])('invalid %s payload is not treated as an empty catalog', async endpoint => {
+  datasets = []; analysisRuns = [];
+  const normal = fetchJson.getMockImplementation();
+  fetchJson.mockImplementation((url, options) => url === endpoint ? Promise.resolve(null) : normal(url, options));
+  render(<App />);
+  expect(await screen.findByText(/目录响应格式无效/)).toBeVisible();
+  expect(screen.queryByText('暂无已发布分析数据')).not.toBeInTheDocument();
 });
 
 test('shows the four supported chart tabs for KO datasets', async () => {
@@ -350,6 +403,8 @@ test('separates the desktop sidebar and main content into independent scroll reg
 test('switches MAG inside the analysis workspace and synchronizes its navigation', async () => {
   render(<App />);
 
+  // Wait for bootstrap selection and its URL normalization before navigating.
+  await screen.findByTestId('bar-chart');
   await waitFor(() => {
     expect(screen.getByRole('button', { name: /群落功能/ })).toBeTruthy();
   });

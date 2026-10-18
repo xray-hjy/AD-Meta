@@ -1,10 +1,25 @@
 # GMrepo 参考数据接入
 
+当前完整迭代见[交付与验收记录](../development/2026-10-17-gmrepo-complete-evidence-implementation.md)。登记 18 项、126 份依据全部校验一致；补查 16 个相关项目样本表。全库分页实际读取 188,061 条 Run×表型记录，去重 184,045 Run 与源端一致；项目描述及编号联合 1,243 / 1,349 项，仍缺 106 项，不宣称全库覆盖。固定包仍为 13 项、1,269 Run、800 完整 profile、322 属，5 个分布队列、2 个可检验队列；主队列新增完整 966 属派生及主外对照，不变更 185 样本。
+
 GMrepo 是独立外部参考模块，提供样本、队列、菌属和质量记录。经校验的处理包由后端只读加载，不并入主分析数据集，不改写原快照或已有物种/KO/MAG 表。
+
+2026-10-14 起前端升级为“外部证据评估”：保留全部参考可视化，增加无侧栏对象详情、接入登记和主物种/MAG 对象贯通。[首版实施记录](../development/2026-10-14-gmrepo-evaluation-implementation.md)包含真实来源清点、接口、案例与待补事项。
+
+2026-10-15 增加[研究台账与统一资格](../development/2026-10-15-gmrepo-research-ledger-implementation.md)：`resources` / `evidence-summary` 返回 `researchLedger` 及逐项目 `researchRecord`，审计对象增量返回 `capabilities`、结构化 `blockers` 与登记/比较集合指纹。默认 13 项已接入，另 1 项仅发现；来源清点 partial 与科研复核 pending 分开。补充登记位于 `backend/metadata/gmrepo_research_registry.json`，不授予新的检验资格；有效撤销/暂缓会使依赖缓存失效。检查命令为 `node scripts/backend-python.mjs -m app.cli.validate_gmrepo_ledger`，不执行下载或人工审查。
+
+同日[迭代二](../development/2026-10-15-gmrepo-iteration-two-implementation.md)补入三项来源样板、14 项初筛去向和 schema 2 的原件/字段/有效复核更正链。`evidence-summary` 返回 `claims`、`evaluationId` 和 `snapshotStatus`；`GET /api/references/gmrepo/evaluation-package?evaluationId=...` 导出固定包，`report` 可携带相同 ID，缺包/校验失败不回退当前重算。旧无 ID 报告保留兼容行为。该阶段保证固定读回；当前版本已另有包含主种→属派生和主外完整统计的独立复算 ZIP，仍不重跑 FASTQ 或代替科研批准。
 
 ## 页面和接口
 
 - 页面 `/reference/gmrepo`：首页及分析工作区顶栏有入口。
+- 页面 `/reference/gmrepo/comparison`：完整主外候选目录、主物种集合归属、效应矩阵、固定多候选评估及报告/JSON/主外独立复算包；未对应与歧义不代入其他属。
+- `GET comparison-catalog`、`POST candidate-comparison`、`GET candidate-report`（均位于 `/api/references/gmrepo/`）提供完整检验后查询、明确集合冻结及固定报告；搜索不改变 FDR。
+- 页面 `/reference/gmrepo/evidence`：接收固定主物种/MAG 对象和版本；无对象时要求明确选择。`/reference/gmrepo/evidence/:genusId` 可直接查看参考属，旧 `view=genus` 链接兼容跳转。
+- `GET /api/references/gmrepo/resources`：接入协议、研究登记、官方发现清单、来源文件可用性；检索未完成部分明确标为 partial。
+- `GET /api/references/gmrepo/resolve-subject`：`subjectType`、`subjectId`、`sourceRevision` 和可选 `datasetSlug/runKey/artifactKey`；解析固定对象，失败不默认代入菌属。
+- `GET /api/references/gmrepo/evidence-summary`：`genus`、参考 `revision` 和可选主物种 `sourceRevision/datasetSlug`；跨队列逐行汇总，不合并统计或重复计票。
+- `GET /api/references/gmrepo/report`：上述版本与对象、来源范围生成 Markdown 报告；主对象必须与报告属可靠对应。
 - `GET /api/references/gmrepo/catalog`：版本、来源、队列及筛选目录。
 - `GET /api/references/gmrepo/overview`：队列数量、互不重叠的纳入状态、年龄/性别可用性、分类待解析比例。
 - `GET /api/references/gmrepo/genera?query=Raoultella`：当前细菌/古菌属目录，可按当前名、来源旧名及 TaxID 搜索。
@@ -103,7 +118,7 @@ python backend/app/cli/install_gmrepo.py --destination "ADMetaData/reference/gmr
 - 未调整：原相对百分比的双侧 Mann–Whitney U，渐近法、并列秩/连续性校正；任一组至少 10 人。它检验分布差异，不能无条件称为中位数差异。报告 AD 方向的秩二列相关；所选属另给固定种子、独立组内 2,000 次 bootstrap 的 95% 百分位区间。
 - 调整：只用完整年龄/性别记录，响应为该子集中的平均并列秩换算至 0–100 百分位位置；`响应 ~ 截距 + AD指示 + 中心化年龄/10 + 性别类别`。用 statsmodels OLS / HC3、残差自由度的 t 推断与 95% CI，检查设计矩阵秩、条件数、杠杆值和自由度。效应单位为百分位秩点差，不是原丰度百分点。常量属无效应区间；不能估计的模型不编造 p/q。
 - 多重性：每个队列、每种模型固定对完整 322 个目标属做 BH 校正，包括常量和未检出属；检索、分页和所选菌属不能重算缩小后的 q。无法估计的模型以 1 进入校正但不显示虚构的 p/q。“调整前后同向且均通过 FDR”要求两者 q<0.05 且效应同号，只是探索性标记。
-- 主矩阵对照：读取 MySQL 当前发布的 `ad-nc-species` revision，按域一致的精确属名及已核对旧名查物种覆盖，保留源 SHA-256 和 revision。内部 `taxon_id` 不是 NCBI TaxID，名称匹配不等于完整跨平台注释统一。主矩阵单位与标准化仍 unknown；身份/协变量与平台口径也待核查，数值复现暂缓。物种列存在、来源 marker 或单队列显著结果均不能称为跨队列复现。
+- 主矩阵对照：读取指定发布 revision（未指定时为当前版本），按域一致的精确属名及已核对旧名查物种覆盖，保留源 SHA-256 和 revision。内部 `taxon_id` 不是 NCBI TaxID，名称匹配不等于完整跨平台注释统一。当前 MetaPhlAn 4 源表为百分数，导入除以 100 保存为比例，不二次闭合；接口按版本读取真实单位，历史版本仍保留自己的语义。185 个样本的分组及年龄/性别已有补充材料依据；原研究人数支持一人一份样本的解释，但公开受试者 ID 缺失，逐人重复采样和主外重叠未经确认。当前已派生完整 966 属及主队列效应、调整模型和区间，主外在各自完整检验族内校正并列展示；歧义不合并、未知分类不丢弃。该探索性结果仍不是独立复现认证，不能从物种列存在、来源 marker 或单队列显著结果推定。
 
 相对丰度的组成约束、未测药物/饮食/BMI、年龄非线性及属级信息不足样本的排除可能影响结果；HC3 不解决这些问题。没有原始计数，不能把本次分析称为 DESeq2、ANCOM-BC 或已复现作者的原统计模型。
 
@@ -121,6 +136,8 @@ cd backend
 输出包含 5 队列 audit、完整菌属统计 JSON、两个合格队列的 322 行 TSV、示例 Bacteroides 分布/证据、方法/软件版本、哈希清单及结果说明。主数据库不可用时保留参考队列结果，明确标记主数据证据不可读取。
 
 ## 验证
+
+2026-10-16 增量见 [v1.3 实施记录](../development/2026-10-16-gmrepo-release-implementation.md)：保留现有 GMrepo 包和资格，另有作者直接来源 PRJNA798058 的 WGS 临床前阶段参考（164 人，49/115；不是 GMrepo WGS 或临床 AD/NC），21 对关系范围和参考统计离线复算包。产品仍是一套页面，不设置内外版本或人员待审工作台；来源、分布、结果、比较范围与适用限制均在同一研究流程中查看。新增本地 WGS 包并未随原 GMrepo 运行 ZIP 分发，部署及再分发限制见实施记录。
 
 `backend/tests/test_gmrepo*.py` 用独立的小型数据包验证哈希、分区、缺失分母、共用 BioSample、零/空值、旧名搜索和版本约束；另验证年龄混杂导致方向反转、HC3 的矩阵计算、重复/缺失编号关闭推断、原性别类别、完整协变量子集、奇异模型、完整目录 FDR 不随检索变化，以及主数据分类匹配的域/revision 边界。前端测试验证固定 AD/NC 分母、暂缓状态不展示推断数值、分页重置、质量信息和两种图表尺度。OpenAPI 和前端类型随接口更新。
 

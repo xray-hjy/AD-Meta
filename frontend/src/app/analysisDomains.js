@@ -27,7 +27,7 @@ export const ANALYSIS_DOMAINS = [
     key: 'function',
     label: '群落功能',
     eyebrow: 'COMMUNITY FUNCTION',
-    description: '基于 Sample × KO 矩阵比较功能组成、检出情况与组间效应方向。',
+    description: '结合 KO 功能基因与 DiTing 通路指标，比较群落功能丰度、检出情况与组间效应。',
     featureKinds: ['ko'],
     analysisData: {
       label: 'KO 功能丰度矩阵',
@@ -38,11 +38,11 @@ export const ANALYSIS_DOMAINS = [
       { label: '功能概览', status: 'available' },
       { label: '检出与差异', status: 'available' },
       { label: '样本结构', status: 'planned' },
-      { label: '通路解释', status: 'planned' },
+      { label: 'DiTing 通路', status: 'available' },
     ],
     navigationSections: [
-      { key: 'composition', label: '功能概览', charts: ['species', 'koContribution'] },
-      { key: 'difference', label: '检出与差异', charts: ['detection', 'differential_ko'] },
+      { key: 'ko', label: 'KO 功能', charts: ['species', 'koContribution', 'detection', 'differential_ko'] },
+      { key: 'pathways', label: 'DiTing 通路', charts: ['ditingOverview', 'ditingEffects', 'ditingDistribution'] },
     ],
   },
   {

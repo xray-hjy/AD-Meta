@@ -174,7 +174,7 @@ def main():
     selected_files = [r for r in files if r["included_in_current_delivery"] == "true"]
     official_ad_nc = {r["run_accession"] for r in joined if r["stage"] in {"AD", "NC"}}
     matrix_checks = {}
-    ko_path = args.project_root / "backend/storage/raw/ad-nc-ko-abundance/raw.csv"
+    ko_path = args.project_root / "backend/storage/raw/ad-nc-ko-abundance/PRJCA022804/raw.csv"
     if ko_path.exists():
         ko = index(csv_rows(ko_path), "sample_id")
         storage_manifest = json.loads((args.project_root / "backend/storage_manifest.json").read_text(encoding="utf-8"))
@@ -188,7 +188,7 @@ def main():
     if mag_path.exists():
         mag = index(csv_rows(mag_path), "sample_id")
         matrix_checks["mag_metadata_exactly_matches"] = mag == cohort
-    species_path = args.project_root / "backend/storage/raw/ad-nc-species/raw.xlsx"
+    species_path = args.project_root / "backend/storage/raw/ad-nc-species/PRJCA022804/raw.xlsx"
     if species_path.exists():
         book = openpyxl.load_workbook(species_path, read_only=True, data_only=True)
         # Reading only the identity columns avoids loading thousands of abundance columns.

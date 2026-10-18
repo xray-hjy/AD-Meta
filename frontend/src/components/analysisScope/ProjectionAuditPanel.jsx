@@ -1,4 +1,5 @@
 import { useEffect, useId, useMemo, useState } from 'react';
+import SlidingTabs from '../ui/SlidingTabs';
 import useProjectionAudit from '../../hooks/useProjectionAudit';
 import useProjectionAuditOptions from '../../hooks/useProjectionAuditOptions';
 import AuditFilterSelect from './AuditFilterSelect';
@@ -318,7 +319,7 @@ export default function ProjectionAuditPanel({
             sampleCount={scopeView.count}
             prominent={sampleListProminent}
           />
-          <div className="projection-audit__tabs" role="tablist" aria-label="审计明细类型">
+          <SlidingTabs className="projection-audit__tabs" aria-label="审计明细类型">
             {sections.map(key => (
               <button
                 key={key}
@@ -331,7 +332,7 @@ export default function ProjectionAuditPanel({
                 {state.data?.sections?.find(section => section.key === key)?.title || sectionLabel(key, featureLabel)}
               </button>
             ))}
-          </div>
+          </SlidingTabs>
           {state.data ? (
             <dl className="projection-audit__summary">
               <div><dt>样本</dt><dd>{formatNumber(summary.sampleCount)}</dd></div>

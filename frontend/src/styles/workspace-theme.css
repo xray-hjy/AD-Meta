@@ -5,6 +5,9 @@
   --workspace-ink: #17233b;
   --workspace-surface: #ffffff;
   --workspace-surface-muted: #f5f8fc;
+  --workspace-panel-border: #dce5ef;
+  --workspace-panel-radius: 16px;
+  --workspace-panel-shadow: 0 8px 26px rgba(31, 55, 85, 0.055);
   --workspace-header-background: color-mix(in srgb, var(--workspace-accent) 7%, #f8fafc);
   --topbar-start: #293f60;
   --topbar-middle: #2b5b7c;
@@ -29,13 +32,17 @@
   --topbar-end: #985d6d;
 }
 
-.app {
-  background:
+.app,
+.gmrepo-page {
+  --workspace-page-background:
     radial-gradient(circle at 84% 0%, color-mix(in srgb, var(--workspace-accent) 7%, transparent), transparent 31rem),
     #f3f6fa;
+  --workspace-panel-heading-background: linear-gradient(135deg, color-mix(in srgb, var(--workspace-accent) 6%, white), white 62%);
+  background: var(--workspace-page-background);
 }
 
-.app-topbar {
+.app-topbar,
+.gmrepo-page .app-topbar {
   position: relative;
   color: #f8fbff;
   border-bottom: 0;
@@ -236,9 +243,9 @@
 
 .chart-frame {
   overflow: hidden;
-  border-color: #dce5ef;
-  border-radius: 16px;
-  box-shadow: 0 8px 26px rgba(31, 55, 85, 0.055);
+  border-color: var(--workspace-panel-border);
+  border-radius: var(--workspace-panel-radius);
+  box-shadow: var(--workspace-panel-shadow);
 }
 
 .chart-frame:hover,
@@ -251,7 +258,7 @@
   min-height: 74px;
   padding: 16px 20px 14px 22px;
   background:
-    linear-gradient(135deg, color-mix(in srgb, var(--workspace-accent) 6%, white), white 62%),
+    var(--workspace-panel-heading-background),
     #ffffff;
 }
 
@@ -321,7 +328,8 @@
   accent-color: var(--workspace-accent);
 }
 
-.data-table-viewport {
+.data-table-viewport,
+.gmrepo-page .gmrepo-table-scroll {
   --data-table-header-background: var(--workspace-header-background);
   border-color: #dfe7f0;
   border-radius: 11px;
@@ -352,11 +360,13 @@
   background: color-mix(in srgb, var(--workspace-accent) 65%, transparent);
 }
 
-.data-table thead th {
+.data-table thead th,
+.gmrepo-page table thead th {
   background: var(--data-table-header-background);
 }
 
-.data-table tbody tr:hover > * {
+.data-table tbody tr:hover > *,
+.gmrepo-page table tbody tr:hover > * {
   background: color-mix(in srgb, var(--workspace-accent) 5%, white);
 }
 

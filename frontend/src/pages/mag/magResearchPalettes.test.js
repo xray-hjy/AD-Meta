@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { researchPaletteOptions, resolveResearchPalette } from './magResearchPalettes';
+import { researchPaletteOptions, resolveResearchPalette } from '../../components/Charts/researchPalettes';
 import { decorateResearchOption, researchFields } from './magResearchStyle';
 
 const scatter = { xAxis: {}, yAxis: {}, tooltip: {}, series: [

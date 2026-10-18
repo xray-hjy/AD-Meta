@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import SegmentedControl from '../../components/ui/SegmentedControl';
+import ChoiceGrid from '../../components/ui/ChoiceGrid';
 
 // Embedded in the heatmap's settings form: confirming the count only edits its
 // draft. The surrounding Apply Settings button submits all analysis settings.
@@ -22,16 +24,16 @@ export default function MagHeatmapCountSettings({ value, sourceCount, matchedCou
       {known ? <>当前条件匹配 <strong>{matchedCount.toLocaleString()} 个 MAG</strong></>
         : pendingFilters ? '筛选条件待应用，匹配数将在应用后更新。' : loading ? '正在更新匹配数量…' : '匹配数将在应用设置后显示。'}
     </p>
-    <div className="mag-top-n-settings__modes" aria-label="热图显示范围">
+    <SegmentedControl className="mag-top-n-settings__modes" role="group" aria-label="热图显示范围">
       <button type="button" className="analysis-button" aria-pressed={!all} onClick={() => setAll(false)}>指定数量</button>
       <button type="button" className="analysis-button" aria-pressed={all} onClick={() => setAll(true)}>全部匹配</button>
-    </div>
+    </SegmentedControl>
     <fieldset disabled={all}>
       <legend>常用数量</legend>
-      <div className="mag-top-n-settings__presets">
+      <ChoiceGrid className="mag-top-n-settings__presets" role="group" aria-label="常用数量">
         {[10, 20, 50, 100, 200, 500].filter(n => n <= max).map(n => <button key={n} type="button" className="analysis-button"
-          aria-pressed={!all && count === n} onClick={() => choose(n)}>{n}</button>)}
-      </div>
+          aria-pressed={!all && valid && count === n} onClick={() => choose(n)}>{n}</button>)}
+      </ChoiceGrid>
       <label className="mag-top-n-settings__number">自定义数量
         <input aria-label="自定义热图 MAG 数量" type="text" inputMode="numeric" autoComplete="off" value={draft}
           aria-invalid={!all && !valid} onChange={event => setDraft(event.target.value)}

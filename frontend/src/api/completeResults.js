@@ -11,7 +11,8 @@ function resultPath(runKey, artifactKey, params) {
  * @param {FetchJsonOptions} [options]
  * @returns {Promise<import('./generated').components['schemas']['CompleteResultPageResponse']>} */
 export function getCompleteResults(runKey, artifactKey, params, options) {
-  return fetchJson(resultPath(runKey, artifactKey, params), options);
+  // The full artifact query counts and sorts stored rows, unlike a reduced chart.
+  return fetchJson(resultPath(runKey, artifactKey, params), { timeoutMs: 60_000, ...options });
 }
 
 /** @param {string} runKey @param {string} artifactKey @param {Record<string, string | number>} params */

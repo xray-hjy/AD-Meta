@@ -57,7 +57,7 @@ def export(output: Path) -> dict:
         report.append(f"| {row['projectId']} | {row['groupCounts'].get('AD', 0)}/{row['groupCounts'].get('NC', 0)} | {row['unadjustedStatus']} | {row['adjustedCount']} | {summary['unadjustedFdrCount'] if row['unadjustedStatus'] == 'eligible' else '未执行'} | {summary['adjustedFdrCount'] if row['adjustedStatus'] == 'eligible' else '未执行'} | {summary['concordantFdrCount'] if row['adjustedStatus'] == 'eligible' else '未执行'} |")
     report.extend(["", "blocked 队列只提供描述性分布，不输出 p/q。具体理由见 cohort_audit.json。",
                    "", analysis.METHODS["unadjusted"], "", analysis.METHODS["adjusted"], "", analysis.METHODS["fdr"], "",
-                   "主物种矩阵只做分类覆盖对照；单位、标准化、身份/协变量及平台口径尚待核查，不能宣称属级差异复现。", ""])
+                   "此命令导出外部参考统计；主属级派生及主外同版本完整结果请使用评估页的离线复算包。主外并列参考不认证跨平台或参与者独立复现。", ""])
     report.extend(f"- {limit}" for limit in analysis.METHODS["limits"])
     report.extend(["", "来源：", ""])
     report.extend(f"- [{row['projectId']} 原研究]({row['sourceUrl']})；身份与分组文件见 cohort_audit.json。" for row in audit["items"] if row["sourceUrl"])

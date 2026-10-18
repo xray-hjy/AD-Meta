@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import SegmentedControl from '../ui/SegmentedControl';
 import BoxScatterChart from './BoxScatterChart';
 import ChartViewport from './ChartViewport';
+import ChartEvidencePicker from '../evidence/ChartEvidencePicker';
 
 const FALLBACK_SERIES = [
   { key: 'AD', label: 'AD', color: '#e74c3c' },
@@ -67,9 +69,9 @@ function normalizeBoxplot(data) {
   return {
     series: FALLBACK_SERIES,
     items,
-    transforms: DEFAULT_TRANSFORMS,
-    defaultTransform: 'log',
-    transformNote: '数值变换仅用于箱线图展示，不改变物种选择。',
+    transforms: data?.valueTransforms || DEFAULT_TRANSFORMS,
+    defaultTransform: data?.defaultValueTransform || 'log',
+    transformNote: data?.valueTransformNote || '数值变换仅用于箱线图展示，不改变物种选择。',
   };
 }
 
@@ -132,22 +134,26 @@ function BoxPlot({ data, featureLabel = '物种', featureSelectionConfig = {} })
           {undetectedCount ? (
             <span className="boxplot-chart__scope-note">其中 {undetectedCount} 个在当前范围未检出</span>
           ) : null}
-          {normalized.transforms.map(transform => (
-            <button
-              type="button"
-              key={transform.key}
-              className={`chart-chip ${activeTransform.key === transform.key ? 'chart-chip--active' : ''}`}
-              onClick={() => setTransformKey(transform.key)}
-              title={transform.formula || transform.label}
-            >
-              {transform.label}
-            </button>
-          ))}
+          <SegmentedControl className="boxplot-chart__transforms" role="group" aria-label="数值变换">
+            {normalized.transforms.map(transform => (
+              <button
+                type="button"
+                key={transform.key}
+                className={`chart-chip ${activeTransform.key === transform.key ? 'chart-chip--active' : ''}`}
+                aria-pressed={activeTransform.key === transform.key}
+                onClick={() => setTransformKey(transform.key)}
+                title={transform.formula || transform.label}
+              >
+                {transform.label}
+              </button>
+            ))}
+          </SegmentedControl>
           {normalized.transformNote ? (
             <span className="boxplot-chart__transform-note">{normalized.transformNote}</span>
           ) : null}
         </div>
       </div>
+      <ChartEvidencePicker items={available} />
       {available.length && normalized.series.length ? (
         <ChartViewport variant="data" minHeight={500} preferredHeight={550}>
           <BoxScatterChart

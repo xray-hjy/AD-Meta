@@ -1,6 +1,7 @@
 import StyledSelect from '../../components/ui/StyledSelect';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { ApiError } from '../../api/client';
 import {
   getMagDistribution,
   getMagFeatures,
@@ -338,13 +339,23 @@ function WorkspaceResults({ overview, scope, view, setView, selectedMag, setSele
   </ChartFrame>;
 }
 
+function readEvidenceReturn() {
+  try { return JSON.parse(sessionStorage.getItem('admeta:evidence:mag-return') || 'null') || {}; } catch { return {}; }
+}
+
 export default function MagWorkspacePage({ datasets = [], onDatasetChange, onDomainChange }) {
-  const [scope, setScope] = useState(DEFAULT_SCOPE);
-  const [selectedMag, setSelectedMag] = useState('');
-  const [detailMag, setDetailMag] = useState('');
-  const [heatmapCandidate, setHeatmapCandidate] = useState('');
-  const [view, setView] = useState('features');
-  const overview = useQuery({ queryKey: ['mag', 'overview', scope], queryFn: ({ signal }) => getMagOverview(scope, { signal }), retry: false });
+  const [restored] = useState(readEvidenceReturn);
+  const [scope, setScope] = useState(restored.scope || DEFAULT_SCOPE);
+  const [selectedMag, setSelectedMag] = useState(restored.selectedMag || '');
+  const [detailMag, setDetailMag] = useState(restored.detailMag || '');
+  const [heatmapCandidate, setHeatmapCandidate] = useState(restored.heatmapCandidate || '');
+  const [view, setView] = useState(restored.view || 'features');
+  useEffect(() => { try { sessionStorage.removeItem('admeta:evidence:mag-return'); } catch { /* Optional browser storage. */ } }, []);
+  const overview = useQuery({
+    queryKey: ['mag', 'overview', scope],
+    queryFn: ({ signal }) => getMagOverview(scope, { signal }),
+    retry: (failureCount, error) => failureCount < 1 && error instanceof ApiError && ['timeout', 'network'].includes(error.kind),
+  });
   const audit = overview.data?.provenance;
   const views = viewsForCapabilities(overview.data?.capabilities);
   const readyLabels = [
@@ -407,7 +418,7 @@ export default function MagWorkspacePage({ datasets = [], onDatasetChange, onDom
   </aside>;
   return <AppShell tone="mag" topbar={topbar} sidebar={sidebar} main={<MainWorkspace chartKey="mag">
     <div className="analysis-workspace-stack mag-workspace">
-      {overview.isPending ? <LoadingState message="正在校验 MAG 数据包与样本范围..." /> : overview.error ? <ErrorState message={overview.error.message} onRetry={overview.refetch} /> : <>
+      {overview.isPending ? <LoadingState message="正在准备 MAG 数据与样本范围，首次加载可能需要一些时间..." /> : overview.error ? <ErrorState message={overview.error.message} onRetry={overview.refetch} /> : <>
         <MagDatasetDescription provenance={audit} capabilities={overview.data.capabilities} />
         <MagProcessingFlow provenance={audit} capabilities={overview.data.capabilities} onNavigate={setView} />
         {SAMPLE_SCOPED_VIEWS.has(view) ? <section className="mag-filter-panel"><ScopeForm value={scope} options={overview.data.options} onApply={setScope} />
@@ -417,6 +428,8 @@ export default function MagWorkspacePage({ datasets = [], onDatasetChange, onDom
         <WorkspaceResults key={JSON.stringify([scope, audit.dataFingerprint])} overview={overview.data} scope={scope} view={view} setView={setView} selectedMag={selectedMag} setSelectedMag={setSelectedMag}
           onDetail={setDetailMag} heatmapCandidate={heatmapCandidate} onHeatmapCandidate={setHeatmapCandidate} />
         {detailMag && <MagDetailDrawer key={detailMag} magId={detailMag} overview={overview.data} scope={scope} onClose={() => setDetailMag('')}
+          initialTab={restored.detailMag === detailMag ? restored.detailTab : 'abundance'}
+          onEvidenceOpen={detailTab => { try { sessionStorage.setItem('admeta:evidence:mag-return', JSON.stringify({ scope, selectedMag, detailMag, heatmapCandidate, view, detailTab })); } catch { /* Navigation still works. */ } }}
           onNavigate={(next, id) => { setSelectedMag(id); if (next === 'heatmap') setHeatmapCandidate(id); setView(next); setDetailMag(''); }} />}
       </>}
     </div>

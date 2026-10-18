@@ -1,4 +1,6 @@
 import sqlite3
+import hashlib
+import json
 from contextlib import contextmanager
 
 import pytest
@@ -73,3 +75,30 @@ def test_unavailable_primary_data_does_not_break_reference_results(monkeypatch):
     result = service.primary_evidence({"name": "Bacteroides", "sourceNames": ["Bacteroides"], "domain": "Bacteria"})
     assert result["status"] == "unavailable"
     assert result["sourceSha256"] is None
+
+
+def test_reported_people_do_not_create_subject_ids_and_changed_source_fails_closed(tmp_path, monkeypatch):
+    backend = tmp_path / "backend"
+    backend.mkdir()
+    mapping = tmp_path / "sample-map.tsv"
+    mapping.write_text("run_accession\tstage\thost_subject_id_raw\nCRR1\tAD\t\nCRR2\tNC\t\n")
+    context = tmp_path / "context.json"
+    context.write_text(json.dumps({"sampleCount": 2, "sampleSetSha256": hashlib.sha256(b"CRR1\nCRR2").hexdigest(),
+                                   "groupCounts": {"AD": 1, "NC": 1}, "participantStatus": "study_reported_person_counts_no_rowwise_subject_verification",
+                                   "sources": [{"sourceId": "primary-sample-map", "path": "sample-map.tsv", "bytes": mapping.stat().st_size,
+                                                "sha256": hashlib.sha256(mapping.read_bytes()).hexdigest()}]}))
+    monkeypatch.setattr(service, "BACKEND_ROOT", backend)
+    monkeypatch.setattr(service, "CONTEXT_PATH", context)
+    actual = service.cohort_context()
+    assert actual["status"] == "source_bound"
+    assert actual["participantIdsAvailable"] == 0 and actual["rowwiseParticipantVerification"] is False
+    mapping.write_text(mapping.read_text().replace("CRR2", "CRR1"))
+    assert service.cohort_context()["status"] == "unavailable_or_changed"
+
+
+def test_known_scale_does_not_inherit_the_old_unknown_unit_warning(primary_db):
+    with sqlite3.connect(primary_db) as conn:
+        conn.execute("UPDATE dataset_revisions SET abundance_scale='relative_abundance_fraction', normalization='metaphlan_percent_divided_by_100' WHERE id=5")
+    result = service.primary_evidence({"name": "Klebsiella", "sourceNames": ["Klebsiella"], "domain": "Bacteria"})
+    assert not any("unknown" in r for r in result["reasons"])
+    assert result["quantitativeStatus"] == "blocked"

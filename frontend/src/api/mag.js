@@ -15,7 +15,8 @@ export function magParams(params = {}) {
 /** @param {MagParams} params @param {FetchJsonOptions} [options]
  * @returns {Promise<import('./generated').components['schemas']['MagOverviewResponse']>} */
 export function getMagOverview(params, options) {
-  return fetchJson(`/api/mag/overview?${magParams(params)}`, options);
+  // First access validates and loads the complete snapshot; later requests reuse it.
+  return fetchJson(`/api/mag/overview?${magParams(params)}`, { timeoutMs: 60_000, ...options });
 }
 
 /** @param {MagParams} params @param {FetchJsonOptions} [options]

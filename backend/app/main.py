@@ -17,6 +17,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 
 from app.api.analysis_runs import router as analysis_runs_router
 from app.api.datasets import router as datasets_router
+from app.api.diting import router as diting_router
 from app.api.gmrepo import router as gmrepo_router
 from app.api.mag import router as mag_router
 from app.core.config import (
@@ -317,4 +318,5 @@ async def gmrepo_data_error_response(request: Request, exc: GmrepoDataError):
 app.include_router(gmrepo_router)
 app.include_router(mag_router)
 app.include_router(datasets_router)
+app.include_router(diting_router)
 app.include_router(analysis_runs_router)

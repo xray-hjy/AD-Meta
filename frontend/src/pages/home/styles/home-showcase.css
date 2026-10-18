@@ -39,7 +39,7 @@
   min-height: max(760px, 96vh);
   padding: 100px 0;
   border-bottom: 1px solid var(--line);
-  scroll-margin-top: 138px;
+  scroll-margin-top: var(--home-anchor-offset);
 }
 
 .admeta-home .chapter-content {
@@ -224,7 +224,7 @@
 
 .admeta-home .story-layout {
   padding-bottom: 160px;
-  scroll-margin-top: 138px;
+  scroll-margin-top: var(--home-anchor-offset);
 }
 
 .admeta-home .chapter-list {
