@@ -2558,8 +2558,15 @@
             "type": "number"
           },
           "age": {
-            "title": "Age",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Age"
           },
           "batch": {
             "title": "Batch",
@@ -2574,12 +2581,19 @@
             "type": "string"
           },
           "gender": {
-            "enum": [
-              "F",
-              "M"
+            "anyOf": [
+              {
+                "enum": [
+                  "F",
+                  "M"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ],
-            "title": "Gender",
-            "type": "string"
+            "title": "Gender"
           },
           "mappedPercent": {
             "title": "Mappedpercent",
@@ -3326,12 +3340,10 @@
             "type": "integer"
           },
           "clusterMethod": {
-            "const": "average",
             "title": "Clustermethod",
             "type": "string"
           },
           "comparisonAlgorithm": {
-            "const": "fastANI",
             "title": "Comparisonalgorithm",
             "type": "string"
           },
@@ -3360,10 +3372,6 @@
             "type": "string"
           },
           "memberGroup": {
-            "enum": [
-              "CHN",
-              "CHN2"
-            ],
             "title": "Membergroup",
             "type": "string"
           },
@@ -3416,10 +3424,6 @@
             "type": "string"
           },
           "representativeGroup": {
-            "enum": [
-              "CHN",
-              "CHN2"
-            ],
             "title": "Representativegroup",
             "type": "string"
           },
@@ -3638,8 +3642,18 @@
             "title": "Analysisversion",
             "type": "string"
           },
+          "communityResults": {
+            "additionalProperties": true,
+            "title": "Communityresults",
+            "type": "object"
+          },
           "dataFingerprint": {
             "title": "Datafingerprint",
+            "type": "string"
+          },
+          "datasetKey": {
+            "default": "",
+            "title": "Datasetkey",
             "type": "string"
           },
           "excludedSampleCount": {
@@ -3676,9 +3690,24 @@
             "title": "Maxmappingerrorpercentpoints",
             "type": "number"
           },
+          "modules": {
+            "additionalProperties": true,
+            "title": "Modules",
+            "type": "object"
+          },
+          "processing": {
+            "additionalProperties": true,
+            "title": "Processing",
+            "type": "object"
+          },
           "provenanceScope": {
             "const": "runtime-input-and-downstream-analysis",
             "title": "Provenancescope",
+            "type": "string"
+          },
+          "release": {
+            "default": "",
+            "title": "Release",
             "type": "string"
           },
           "requestFingerprint": {
@@ -3704,10 +3733,7 @@
             "type": "array"
           },
           "storageBackend": {
-            "enum": [
-              "package",
-              "database"
-            ],
+            "const": "database",
             "title": "Storagebackend",
             "type": "string"
           },
@@ -3945,8 +3971,15 @@
       "MagSample": {
         "properties": {
           "age": {
-            "title": "Age",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Age"
           },
           "batch": {
             "title": "Batch",
@@ -3961,12 +3994,19 @@
             "type": "string"
           },
           "gender": {
-            "enum": [
-              "F",
-              "M"
+            "anyOf": [
+              {
+                "enum": [
+                  "F",
+                  "M"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ],
-            "title": "Gender",
-            "type": "string"
+            "title": "Gender"
           },
           "mappedPercent": {
             "title": "Mappedpercent",
@@ -4331,8 +4371,15 @@
             "type": "integer"
           },
           "age": {
-            "title": "Age",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Age"
           },
           "batch": {
             "title": "Batch",
@@ -4347,12 +4394,19 @@
             "type": "string"
           },
           "gender": {
-            "enum": [
-              "F",
-              "M"
+            "anyOf": [
+              {
+                "enum": [
+                  "F",
+                  "M"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ],
-            "title": "Gender",
-            "type": "string"
+            "title": "Gender"
           },
           "mappedPercent": {
             "title": "Mappedpercent",
@@ -8718,6 +8772,28 @@
               "title": "Revision",
               "type": "string"
             }
+          },
+          {
+            "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -8825,6 +8901,28 @@
           },
           {
             "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "disease",
             "required": false,
             "schema": {
@@ -8859,14 +8957,7 @@
             "required": false,
             "schema": {
               "default": "",
-              "enum": [
-                "",
-                "1",
-                "2",
-                "3",
-                "4",
-                "5"
-              ],
+              "maxLength": 128,
               "title": "Batch",
               "type": "string"
             }
@@ -8953,6 +9044,85 @@
           }
         },
         "summary": "Crosswalk",
+        "tags": [
+          "mag"
+        ]
+      }
+    },
+    "/api/mag/datasets": {
+      "get": {
+        "operationId": "datasets_api_mag_datasets_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Datasets",
+        "tags": [
+          "mag"
+        ]
+      }
+    },
+    "/api/mag/datasets/{dataset_key}/releases": {
+      "get": {
+        "operationId": "releases_api_mag_datasets__dataset_key__releases_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "dataset_key",
+            "required": true,
+            "schema": {
+              "title": "Dataset Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Releases",
         "tags": [
           "mag"
         ]
@@ -9137,6 +9307,28 @@
           },
           {
             "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "disease",
             "required": false,
             "schema": {
@@ -9171,14 +9363,7 @@
             "required": false,
             "schema": {
               "default": "",
-              "enum": [
-                "",
-                "1",
-                "2",
-                "3",
-                "4",
-                "5"
-              ],
+              "maxLength": 128,
               "title": "Batch",
               "type": "string"
             }
@@ -9542,6 +9727,28 @@
           },
           {
             "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "disease",
             "required": false,
             "schema": {
@@ -9576,14 +9783,7 @@
             "required": false,
             "schema": {
               "default": "",
-              "enum": [
-                "",
-                "1",
-                "2",
-                "3",
-                "4",
-                "5"
-              ],
+              "maxLength": 128,
               "title": "Batch",
               "type": "string"
             }
@@ -9701,6 +9901,28 @@
           },
           {
             "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "disease",
             "required": false,
             "schema": {
@@ -9735,14 +9957,7 @@
             "required": false,
             "schema": {
               "default": "",
-              "enum": [
-                "",
-                "1",
-                "2",
-                "3",
-                "4",
-                "5"
-              ],
+              "maxLength": 128,
               "title": "Batch",
               "type": "string"
             }
@@ -9863,6 +10078,28 @@
           },
           {
             "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "disease",
             "required": false,
             "schema": {
@@ -9897,14 +10134,7 @@
             "required": false,
             "schema": {
               "default": "",
-              "enum": [
-                "",
-                "1",
-                "2",
-                "3",
-                "4",
-                "5"
-              ],
+              "maxLength": 128,
               "title": "Batch",
               "type": "string"
             }
@@ -10298,6 +10528,28 @@
           },
           {
             "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "disease",
             "required": false,
             "schema": {
@@ -10332,14 +10584,7 @@
             "required": false,
             "schema": {
               "default": "",
-              "enum": [
-                "",
-                "1",
-                "2",
-                "3",
-                "4",
-                "5"
-              ],
+              "maxLength": 128,
               "title": "Batch",
               "type": "string"
             }
@@ -10476,11 +10721,7 @@
             "required": false,
             "schema": {
               "default": "",
-              "enum": [
-                "",
-                "CHN",
-                "CHN2"
-              ],
+              "maxLength": 128,
               "title": "Sourcegroup",
               "type": "string"
             }
@@ -10561,6 +10802,28 @@
           },
           {
             "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "disease",
             "required": false,
             "schema": {
@@ -10595,14 +10858,7 @@
             "required": false,
             "schema": {
               "default": "",
-              "enum": [
-                "",
-                "1",
-                "2",
-                "3",
-                "4",
-                "5"
-              ],
+              "maxLength": 128,
               "title": "Batch",
               "type": "string"
             }
@@ -10720,6 +10976,28 @@
           },
           {
             "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "disease",
             "required": false,
             "schema": {
@@ -10754,14 +11032,7 @@
             "required": false,
             "schema": {
               "default": "",
-              "enum": [
-                "",
-                "1",
-                "2",
-                "3",
-                "4",
-                "5"
-              ],
+              "maxLength": 128,
               "title": "Batch",
               "type": "string"
             }
@@ -10853,6 +11124,154 @@
         ]
       }
     },
+    "/api/mag/modules/{module}/records": {
+      "get": {
+        "operationId": "module_records_api_mag_modules__module__records_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "module",
+            "required": true,
+            "schema": {
+              "title": "Module",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "title": "Kind",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "magId",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 160,
+              "title": "Magid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 160,
+              "title": "Query",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "rankBy",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 32,
+              "title": "Rankby",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Module Records",
+        "tags": [
+          "mag"
+        ]
+      }
+    },
     "/api/mag/overview": {
       "get": {
         "operationId": "overview_api_mag_overview_get",
@@ -10865,6 +11284,28 @@
               "default": "",
               "maxLength": 64,
               "title": "Revision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
               "type": "string"
             }
           },
@@ -10904,14 +11345,7 @@
             "required": false,
             "schema": {
               "default": "",
-              "enum": [
-                "",
-                "1",
-                "2",
-                "3",
-                "4",
-                "5"
-              ],
+              "maxLength": 128,
               "title": "Batch",
               "type": "string"
             }
@@ -11020,6 +11454,28 @@
           },
           {
             "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "disease",
             "required": false,
             "schema": {
@@ -11054,14 +11510,7 @@
             "required": false,
             "schema": {
               "default": "",
-              "enum": [
-                "",
-                "1",
-                "2",
-                "3",
-                "4",
-                "5"
-              ],
+              "maxLength": 128,
               "title": "Batch",
               "type": "string"
             }
@@ -11170,6 +11619,28 @@
           },
           {
             "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "disease",
             "required": false,
             "schema": {
@@ -11204,14 +11675,7 @@
             "required": false,
             "schema": {
               "default": "",
-              "enum": [
-                "",
-                "1",
-                "2",
-                "3",
-                "4",
-                "5"
-              ],
+              "maxLength": 128,
               "title": "Batch",
               "type": "string"
             }
@@ -11303,6 +11767,172 @@
         ]
       }
     },
+    "/api/mag/sources": {
+      "get": {
+        "operationId": "sources_api_mag_sources_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Sources",
+        "tags": [
+          "mag"
+        ]
+      }
+    },
+    "/api/mag/sources/{module}/{index}": {
+      "get": {
+        "operationId": "source_download_api_mag_sources__module___index__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "module",
+            "required": true,
+            "schema": {
+              "title": "Module",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "index",
+            "required": true,
+            "schema": {
+              "title": "Index",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Source Download",
+        "tags": [
+          "mag"
+        ]
+      }
+    },
     "/api/mag/suggestions": {
       "get": {
         "operationId": "suggestions_api_mag_suggestions_get",
@@ -11352,6 +11982,28 @@
               "default": "",
               "maxLength": 64,
               "title": "Revision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
               "type": "string"
             }
           }
@@ -11442,6 +12094,28 @@
           },
           {
             "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "disease",
             "required": false,
             "schema": {
@@ -11476,14 +12150,7 @@
             "required": false,
             "schema": {
               "default": "",
-              "enum": [
-                "",
-                "1",
-                "2",
-                "3",
-                "4",
-                "5"
-              ],
+              "maxLength": 128,
               "title": "Batch",
               "type": "string"
             }

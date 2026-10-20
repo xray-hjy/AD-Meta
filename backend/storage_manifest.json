@@ -82,5 +82,133 @@
         "inferenceNote": "9537 standard KO plus 11 additional functional gene identifiers in original source; 95 paired DiTing pathway/functional indices. Labels joined by verified CRR sample IDs. Source values retained without closure; exact installed DiTing release remains unspecified."
       }
     }
+  ],
+  "cohorts": [
+    {
+      "key": "prjca022804-ad-nc",
+      "name": "PRJCA022804 AD/NC 队列",
+      "projectAccession": "PRJCA022804",
+      "studyAccession": "CRA014435",
+      "communityDatasets": {
+        "species": "ad-nc-species",
+        "ko": "ad-nc-ko-abundance"
+      },
+      "modules": {
+        "samples": {
+          "parser": "samples",
+          "required": true,
+          "files": {
+            "labels": "storage/raw/ad-nc-species/PRJCA022804/samples.tsv",
+            "metadata": "storage/raw/source-metadata/PRJCA022804/metadata_NC_AD.csv"
+          }
+        },
+        "abundance": {
+          "parser": "coverm",
+          "files": {
+            "matrix": "storage/raw/ad-nc-mag/PRJCA022804/CoverM/sample_mag_relative_abundance.tsv",
+            "manifest": "storage/raw/ad-nc-mag/PRJCA022804/CoverM/sample_manifest.tsv",
+            "lengths": "storage/raw/ad-nc-mag/PRJCA022804/CoverM/mag_length.tsv",
+            "mapping": "storage/raw/ad-nc-mag/PRJCA022804/CoverM/sample_coverm_mapping_summary.tsv",
+            "parameters": "storage/raw/ad-nc-mag/PRJCA022804/CoverM/CoverM_run_parameters.txt"
+          },
+          "required": true,
+          "mappedColumn": "Mapped_to_872_MAGs_percent",
+          "unmappedColumn": "Unmapped_relative_abundance_percent",
+          "tool": {
+            "name": "CoverM",
+            "version": "0.8.0"
+          }
+        },
+        "quality": {
+          "parser": "checkm2",
+          "files": {
+            "report": "storage/raw/ad-nc-mag/PRJCA022804/CheckM2/quality_report.tsv",
+            "log": "storage/raw/ad-nc-mag/PRJCA022804/CheckM2/checkm2.log"
+          },
+          "tool": {
+            "name": "CheckM2"
+          }
+        },
+        "taxonomy": {
+          "parser": "gtdbtk",
+          "files": {
+            "bacteria": "storage/raw/ad-nc-mag/PRJCA022804/GTDBTk/GTDBTk_results/classify/AD_dRep.bac120.summary.tsv",
+            "archaea": "storage/raw/ad-nc-mag/PRJCA022804/GTDBTk/GTDBTk_results/classify/AD_dRep.ar53.summary.tsv",
+            "run": "storage/raw/ad-nc-mag/PRJCA022804/GTDBTk/GTDBTk_results/gtdbtk.json"
+          },
+          "tool": {
+            "name": "GTDB-Tk"
+          }
+        },
+        "lineage": {
+          "parser": "drep",
+          "files": {
+            "clusters": "storage/raw/ad-nc-mag/PRJCA022804/dRep/dRep_results/data_tables/Cdb.csv",
+            "winners": "storage/raw/ad-nc-mag/PRJCA022804/dRep/dRep_results/data_tables/Wdb.csv",
+            "winner_info": "storage/raw/ad-nc-mag/PRJCA022804/dRep/dRep_results/data_tables/Widb.csv",
+            "comparisons": "storage/raw/ad-nc-mag/PRJCA022804/dRep/dRep_results/data_tables/Ndb.csv",
+            "parameters": "storage/raw/ad-nc-mag/PRJCA022804/dRep/dRep_results/log/cluster_arguments.json"
+          },
+          "tool": {
+            "name": "dRep"
+          }
+        },
+        "arg": {
+          "parser": "dramma",
+          "files": {
+            "manifest": "storage/raw/ad-nc-mag/PRJCA022804/DRAMMA/summary/dramma_run_manifest.tsv",
+            "counts": "storage/raw/ad-nc-mag/PRJCA022804/DRAMMA/summary/mag_arg_counts.tsv",
+            "known": "storage/raw/ad-nc-mag/PRJCA022804/DRAMMA/summary/dramma_known_arg_hits.tsv",
+            "novel075": "storage/raw/ad-nc-mag/PRJCA022804/DRAMMA/summary/dramma_novel_candidates_p075.tsv",
+            "novel095": "storage/raw/ad-nc-mag/PRJCA022804/DRAMMA/summary/dramma_novel_candidates_p095.tsv"
+          },
+          "tool": {
+            "name": "DRAMMA"
+          }
+        },
+        "bgc": {
+          "parser": "antismash",
+          "files": {},
+          "globRoot": "storage/raw/ad-nc-mag/PRJCA022804/antiSMASH/results_selected",
+          "patterns": [
+            "*/*/regions.js",
+            "*/*/*.region*.gbk"
+          ],
+          "tool": {
+            "name": "antiSMASH"
+          }
+        },
+        "phylogeny": {
+          "parser": "iqtree",
+          "files": {
+            "bacteria": "storage/raw/ad-nc-mag/PRJCA022804/IQ_TREE/IQ_TREE_results/bacteria/AD_dRep.bac120.treefile",
+            "archaea": "storage/raw/ad-nc-mag/PRJCA022804/IQ_TREE/IQ_TREE_results/archaea/AD_dRep.ar53.treefile"
+          },
+          "tool": {
+            "name": "IQ-TREE"
+          }
+        },
+        "coverage": {
+          "parser": "coverm_metrics",
+          "tool": {
+            "name": "CoverM",
+            "version": "0.8.0"
+          },
+          "files": {
+            "meanCoverage": "storage/raw/ad-nc-mag/PRJCA022804/CoverM/sample_mag_mean_coverage.tsv",
+            "coveredFraction": "storage/raw/ad-nc-mag/PRJCA022804/CoverM/sample_mag_covered_fraction.tsv",
+            "readCount": "storage/raw/ad-nc-mag/PRJCA022804/CoverM/sample_mag_read_count.tsv",
+            "variance": "storage/raw/ad-nc-mag/PRJCA022804/CoverM/sample_mag_variance.tsv",
+            "readsPerBase": "storage/raw/ad-nc-mag/PRJCA022804/CoverM/sample_mag_reads_per_base.tsv"
+          }
+        },
+        "archive": {
+          "parser": "archive_inventory",
+          "files": {
+            "inventory": "storage/raw/ad-nc-mag/PRJCA022804/files.tsv"
+          }
+        }
+      }
+    }
   ]
 }

@@ -12,6 +12,7 @@ import MagWorkspacePage from './MagWorkspacePage';
 vi.setConfig({ testTimeout: 15_000 });
 
 vi.mock('../../api/mag', async importOriginal => ({ ...await importOriginal(),
+  getMagDatasets: vi.fn(), getMagReleases: vi.fn(),
   getMagOverview: vi.fn(), getMagFeatures: vi.fn(), getMagDistribution: vi.fn(), getMagHeatmap: vi.fn(), getMagSamples: vi.fn(),
   getMagTaxonomy: vi.fn(), getMagQuality: vi.fn(), getMagLineageClusters: vi.fn(), getMagLineageCluster: vi.fn(),
   getMagLineage: vi.fn(), getMagCrosswalk: vi.fn(), getMagCatalog: vi.fn(),
@@ -21,7 +22,7 @@ vi.mock('./MagCharts', () => ({ default: ({ view, data, onSelect }) => <div data
 </div> }));
 vi.mock('./MagResearchChart', () => ({ default: () => <div data-testid="lineage-scatter" /> }));
 
-const audit = { version: 'mag_v3', analysisVersion: 'v3', dataFingerprint: 'sha123', requestFingerprint: 'scope123', sampleCount: 185,
+const audit = { version: 'test-cohort', analysisVersion: 'test-source-statistics', dataFingerprint: 'sha123', requestFingerprint: 'scope123', sampleCount: 185,
   groupCounts: { AD: 122, NC: 63 }, magCount: 872, testedFeatureCount: 872, filters: { abundanceThresholdPercent: 0 }, sampleIds: ['CRR1'], sources: [], warnings: [] };
 const item = { magId: 'MAG_A', lengthBp: 1000, adMeanPercent: 2, ncMeanPercent: 1, qValue: 0.1 };
 const clusterSummary = { clusterId: '100_1', representativeMag: 'MAG_A', memberCount: 2, sourceSampleCount: 2,
@@ -43,6 +44,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   sessionStorage.clear();
   localStorage.clear();
+  api.getMagDatasets.mockResolvedValue({ items: [{ key: 'test-cohort', name: 'Test cohort', release: 'sha123', communityResults: { species: { datasetSlug: 'ad-nc-species' }, ko: { datasetSlug: 'ad-nc-ko-abundance' } } }] });
+  api.getMagReleases.mockResolvedValue({ items: [{ key: 'sha123', createdAt: '2026-10-20' }] });
   api.getMagOverview.mockImplementation(async scope => ({ provenance: { ...audit, sampleCount: scope.ageMin === '120' ? 0 : 185 },
     batches: [], capabilities: { taxonomy: true, quality: true, lineage: true, crosswalk: true }, options: { genders: ['F', 'M'], batches: ['1', '2'], ageMin: 60, ageMax: 89 } }));
   api.getMagFeatures.mockImplementation(async params => ({ provenance: audit, total: params.query ? 1 : 872, items: [{ ...item, magId: params.offset ? 'MAG_B' : 'MAG_A' }] }));
@@ -148,7 +151,7 @@ test('uses button-based module switching and keeps the MAG analysis navigation i
   expect(within(summary).getByText('NC 组')).toBeTruthy();
 
   expect(document.querySelector('.app-subtitle')).toHaveTextContent('MAG 解析');
-  expect(screen.getByRole('combobox', { name: '选择分析运行' })).toHaveTextContent('当前 MAG 分析结果（mag_v3）');
+  expect(screen.getByRole('combobox', { name: '选择分析运行' })).toHaveTextContent('Test cohort');
   expect(screen.getByText('结果已就绪')).toHaveClass('topbar-status');
   expect(screen.getByText('运行 185 样本 · 当前结果覆盖 185')).toHaveClass('topbar-context__scope');
   expect(screen.getByRole('checkbox', { name: '色盲友好' }).closest('label')).toHaveClass('colorblind-toggle');
@@ -165,13 +168,13 @@ test('uses button-based module switching and keeps the MAG analysis navigation i
   expect(within(navigation).getByRole('button', { name: /来源与去冗余/ })).not.toBeDisabled();
   expect(within(navigation).getByRole('button', { name: /丰度与候选列表/ })).toHaveClass('nav-item--active');
   expect(within(navigation).getByRole('button', { name: /映射与丰度阈值/ })).not.toBeDisabled();
-  expect(navigation.querySelectorAll('.nav-item')).toHaveLength(8);
+  expect(navigation.querySelectorAll('.nav-item')).toHaveLength(9);
   expect(screen.getByText('已接入：丰度分析、MAG分类、MAG质量、来源与去冗余、技术质控')).toBeTruthy();
   expect(screen.getByText('待核验：独立外部队列验证')).toBeTruthy();
-  expect(screen.getByText('待完成：MAG功能注释')).toBeTruthy();
+  expect(screen.getByText('待完成：MAG 层面的 KO / CAZyme 等结果')).toBeTruthy();
 
   fireEvent.click(screen.getByRole('button', { name: /群落功能/ }));
-  expect(onDatasetChange).toHaveBeenCalledWith('ad-nc-ko-abundance');
+  expect(onDatasetChange).toHaveBeenCalledWith('ad-nc-ko-abundance', expect.objectContaining({ datasetSlug: 'ad-nc-ko-abundance' }));
 });
 
 test('loads real-contract entry, pins revision, paginates and opens selected distribution', async () => {
@@ -229,7 +232,7 @@ test('pins the chosen MAG across list pagination, search and sample scope change
   fireEvent.click(screen.getByRole('button', { name: '应用筛选' }));
   await waitFor(() => expect(api.getMagDistribution).toHaveBeenLastCalledWith('MAG_A', expect.objectContaining({ batch: '2' }), expect.anything()));
   await screen.findByTestId('chart-distribution');
-  expect(screen.getByRole('region', { name: '所选 MAG 证据摘要' })).toHaveTextContent('MAG 功能注释：待完成');
+  expect(screen.getByRole('region', { name: '所选 MAG 证据摘要' })).toHaveTextContent('BH-FDR');
   fireEvent.click(screen.getByRole('button', { name: '查看该 MAG 来源与去冗余' }));
   await waitFor(() => expect(api.getMagLineage).toHaveBeenCalledWith('MAG_A', expect.objectContaining({ revision: 'sha123' }), expect.anything()));
   expect(await screen.findByLabelText('聚类 / 代表 MAG / GTDB 物种')).toHaveValue('MAG_A');
@@ -462,9 +465,9 @@ test('renders paginated lineage, evidence chain and explicit crosswalk states', 
 
   expect(await screen.findByText('8,548')).toBeTruthy();
   expect(screen.getByText('24')).toBeTruthy();
-  expect(screen.getByText(/Group 仅为 CHN\/CHN2 来源组/)).toBeTruthy();
-  expect(screen.getByRole('link', { name: '下载原始 lineage TSV' }).getAttribute('href')).toContain('revision=sha123');
-  expect(screen.getByRole('link', { name: '下载原始 crosswalk TSV' }).getAttribute('href')).toContain('revision=sha123');
+  expect(screen.getByText(/Group 是元数据中的来源组/)).toBeTruthy();
+  expect(screen.getByRole('link', { name: '下载去冗余关系 CSV' }).getAttribute('href')).toContain('revision=sha123');
+  expect(screen.getByRole('link', { name: '下载分类对应 CSV' }).getAttribute('href')).toContain('revision=sha123');
   expect(await screen.findByRole('button', { name: 'MEMBER_A' })).toBeTruthy();
   fireEvent.click(screen.getByRole('button', { name: 'MEMBER_A' }));
   expect(await screen.findByRole('region', { name: '单 MAG 证据链' })).toHaveTextContent('实际 ANI 0.949');

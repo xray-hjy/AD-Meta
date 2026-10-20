@@ -9,7 +9,7 @@ vi.mock('../../api/mag', async original => ({ ...await original(), getMagHeatmap
 vi.mock('./MagCharts', () => ({ default: ({ data, onSelect }) => <div data-testid="heatmap" data-total-rows={data.magIds.length}>
   <button onClick={() => onSelect(data.magIds[0])}>查看热图 MAG</button>
 </div> }));
-const provenance = { version: 'mag_v3', dataFingerprint: 'fixture', groupCounts: { AD: 2, NC: 2 }, magCount: 872, testedFeatureCount: 872 };
+const provenance = { version: 'prjca022804-ad-nc', dataFingerprint: 'fixture', groupCounts: { AD: 2, NC: 2 }, magCount: 872, testedFeatureCount: 872 };
 const overview = { provenance, capabilities: { quality: true } };
 const base = { provenance, magIds: ['MAG_A'], features: [{ magId: 'MAG_A', meanPercent: 1, qValue: 0.3 }],
   samples: [{ sampleId: 'S1', disease: 'AD', batch: '1' }], values: [[1]], settings: {}, methods: {}, selection: '丰度概览',

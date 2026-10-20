@@ -113,8 +113,8 @@ export function qualityOption(data) {
     tooltip: { ...tooltip, formatter: tooltipFormatter },
     legend: { top: 0 },
     grid: { left: 70, right: 35, top: 58, bottom: 58 },
-    xAxis: { type: 'value', min: 50, max: 100, name: '完整度（%，横轴从 50% 起）', nameLocation: 'middle', nameGap: 34 },
-    yAxis: { type: 'value', min: 0, max: 10, name: '污染率（%）' },
+    xAxis: { type: 'value', min: 0, max: Math.max(100, ...data.items.map(item => item.completenessPercent)), name: '完整度（%）', nameLocation: 'middle', nameGap: 34 },
+    yAxis: { type: 'value', min: 0, max: Math.max(10, ...data.items.map(item => item.contaminationPercent)), name: '污染率（%）' },
     series: [
       {
         name: '完整度≥90% 且污染率≤5%',

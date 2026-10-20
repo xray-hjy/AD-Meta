@@ -6,6 +6,15 @@ AD-Meta 是一个面向阿尔茨海默病（Alzheimer's Disease, AD）脑肠轴�
 
 本仓库不包含原始测序数据处理和 MAG 分析脚本。项目背景、数据来源及与生物信息分析流程的边界见 [项目说明](docs/project-overview.md)。
 
+## 20261020更新
+
+- **MAG 队列化接入**：以 `prjca022804-ad-nc` 统一管理共享样本、MAG 原始结果、独立模块修订和分析发布记录；原始大文件通过硬盘分发，不提交 Git。
+- **分析模块扩展**：导入 CoverM 丰度和覆盖指标、CheckM2 质量、GTDB-Tk 分类、dRep 来源关系、DRAMMA ARG、antiSMASH BGC 与 IQ-TREE 树结果；各模块按原文件和来源分别校验。
+- **管理方式调整**：移除旧版 `mag_vN` 加载、导入代码及本机旧表；迁移增加新队列表并清除旧 MAG 表。物种、群落 KO 数据保持独立修订，并可在队列结果中关联。
+- **未完成范围**：DRAM2 功能注释仍在运行，MAG→KO / CAZyme 注释和 crosswalk 均未作为已完成结果展示。
+
+详细范围、数据量、校验口径和回归结果见 [20261020 更新日志](docs/development/20261020-update.md)及 [MAG 原文件导入说明](docs/guides/mag-source-import.md)。
+
 ## 20261018更新
 
 - **GMrepo 外部证据**：完善来源登记与固定快照，新增主队列菌属派生、主外同属比较、候选评估、报告导出和独立复算；对证据不足的队列保留描述或暂缓状态。
@@ -99,7 +108,7 @@ npm run dev:frontend
 `backend/storage_manifest.json` 中的分析运行、样本范围与产物关系同步到数据库。
 只执行数据库迁移不会创建这些登记记录。多副本部署应先单独运行
 `npm run prepare:runtime`：全新数据库从受管原始文件完成 storage bootstrap，
-已有已发布数据集时只同步分析运行；成功后再启动各 Uvicorn 进程，避免副本重复导入数据。
+已有已发布数据集时同步分析运行；MAG 的必需 raw 文件齐备且未导入时创建首个队列分析记录。成功后再启动各 Uvicorn 进程，避免副本重复导入数据。
 
 - 前端：`http://127.0.0.1:3000`
 - 后端：`http://127.0.0.1:8000`
@@ -131,14 +140,10 @@ npm run verify:gmrepo
 
 ## MAG 数据接入
 
-将外部交付的 `ADMetaData` 文件夹放在项目根目录即可使用默认配置，也可在
-`.env` 中设置 `AD_META_MAG_DATA_ROOT` 为其他数据包目录。相对路径始终基于项目根目录解析。
-默认应用只读 `development_input/mag_v2`，不改写数据、不在业务请求中访问 `source_data`、不导入既有物种/KO 表。
-数据包已排除在 Git 之外，运行时始终从配置路径只读访问。
-
-若交付包只有 `mag_v1`，先运行一次 `npm run prepare:mag:v2`，由只读源结果生成经 872-MAG ID 核验的分类、质量与来源清单；该命令不覆盖已有版本。再运行 `npm run validate:mag`，验证通过后按上述方式启动服务，打开
-`http://127.0.0.1:3000/analysis/mag`。无需重新 bootstrap 原有数据。
-完整说明和 API 参数见 [MAG 丰度、分类与质量接入](docs/guides/mag-data.md)。
+MAG 原始结果保存在 `backend/storage/raw/ad-nc-mag/PRJCA022804/`，由队列导入器解析并写入数据库。
+首次接收文件后运行 `npm run import:cohort -- --dataset prjca022804-ad-nc`；已发布结果可通过
+`npm run validate:mag -- --dataset prjca022804-ad-nc` 核对。应用入口为
+`http://127.0.0.1:3000/analysis/mag`。完整说明见 [MAG 原文件导入](docs/guides/mag-source-import.md)。
 
 Windows 下同样使用三个终端启动统计 worker、后端与前端，具体命令见
 [运行手册](docs/guides/runbook.md)。
@@ -156,3 +161,16 @@ Windows 下同样使用三个终端启动统计 worker、后端与前端，具�
 
 E2E 固定使用后端 `18000` 和前端 `14173`，并在隔离的 SQLite/临时缓存中
 重建数据；不会复用 `8000/4173` 上已经运行的开发或真实服务。
+
+## MAG 原文件与队列分析记录
+
+MAG 结果通过硬盘复制到 `backend/storage/raw/ad-nc-mag/PRJCA022804/`；大数据文件不提交 Git。
+物种、群落 KO、共用样本小文件和 MAG 文件清单继续提交 Git。
+新导入直接解析原表并写入数据库，不需要历史 MAG 数据包。
+
+```bash
+npm run import:cohort -- --dataset prjca022804-ad-nc
+npm run validate:mag -- --dataset prjca022804-ad-nc
+```
+
+详细说明：[MAG 原文件导入与拓展](docs/guides/mag-source-import.md)。

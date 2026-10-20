@@ -139,7 +139,7 @@ Clean Reads -> Assembly -> 基因预测与功能注释 -> Reads 定量 -> Sample
 backend/storage/raw/crr-mag-quantification/
 ```
 
-本机当前运行版本 `mag_v3` 已将 Sample × MAG 丰度、GTDB-Tk 分类、CheckM2 质量和去冗余关系通过同一组 872 个代表 MAG ID 关联，含 8,548 个成员关系；已导入本次独立配置的 MySQL。运行版本由 MAG manifest 和本机环境配置决定，原始交付包另外保留。
+当前 MAG 使用 `prjca022804-ad-nc` 队列记录，按原文件导入 Sample × MAG 丰度、GTDB-Tk 分类、CheckM2 质量及 dRep 去冗余关系；共 185 个样本、872 个代表 MAG 和 8,548 个成员关系。运行结果从 MySQL 的 `cohort_*` 表读取；原始结果保存在 `backend/storage/raw/ad-nc-mag/PRJCA022804/`，见 [MAG 原文件导入](../guides/mag-source-import.md)。
 
 MAG 功能注释（MAG × KO、ARG、CAZyme、BGC 等）整体尚未做完，按用户 2026-10-01 确认标为待完成，具体子步骤以实际记录为准；完成后交付结果及运行证据。现有群落 Sample × KO 已交付，其生成链路和单位仍待说明。独立 IQ-TREE 结果未交付，完成状态待确认。最新服务器转交已补齐 CoverM 0.8.0、strobealign 0.17.0、SAMtools 1.24 的成功链路，CheckM2 1.1.0、GTDB-Tk 2.7.2/R232 成功记录，与现有 MAG 数据关联验证通过。另收到含当前 869 个细菌 MAG 的 GTDB backbone 分类定位树，但不能作为独立 IQ-TREE 产物。dRep 3.7.1 仍为用户报告版本，精确执行日志待补，详见[最新服务器核对](../guides/server-transfer-audit.md)。跨队列复现需真实独立队列，不得展示模拟结果。
 

@@ -14,7 +14,7 @@
 - [生信脚本归档与版本证据核对](guides/bioinformatics-script-provenance.md)：历史脚本、用户提供的软件版本、已交付产物之间的对应，以及待补的成功运行记录。
 - [服务器转交文件整理与剩余缺项](guides/server-transfer-audit.md)：本次从服务器取得的新脚本、成功日志、MAG 来源对应、物种矩阵差异与更新后的缺项清单。
 - [本地运行与数据导入](guides/runbook.md)：环境安装、服务启动、数据导入、缓存重建和部署。
-- [MAG 丰度、分类与质量接入](guides/mag-data.md)：外部数据配置、MySQL 导入、版本校验、MAG 工作区、统计边界和下载 API。
+- [MAG 原文件导入](guides/mag-source-import.md)：raw 文件、队列导入、来源核对和分析语义。
 
 ## 技术参考
 
@@ -30,6 +30,7 @@
 
 ## 开发记录
 
+- [20261020更新](development/20261020-update.md)：MAG 由版本化数据包切换到队列与模块修订管理；记录原文件归档、解析模块、数据库迁移、功能边界和回归结果。
 - [DiTing KO 与通路接入](development/2026-10-16-diting-functional-integration.md)：新版 9,537 个 KO、95 项通路、同批版本绑定，以及主分析风格的气泡图、森林图、雨云图与热图。
 - [DiTing 十图型与 MAG 工具适配](development/2026-10-17-diting-pathway-gallery.md)：三个入口内切换十种图型，复用缩放、预览、摇杆、框选、科研样式和导出；支持完整 95 项选择、分面分页和热图转置。
 

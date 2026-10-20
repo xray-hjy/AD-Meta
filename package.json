@@ -13,8 +13,6 @@
     "setup:gmrepo": "cd backend && node ../scripts/backend-python.mjs -m app.cli.install_gmrepo",
     "verify:gmrepo": "npm run setup:gmrepo -- --check",
     "validate:mag": "cd backend && node ../scripts/backend-python.mjs -m app.cli.validate_mag",
-    "import:mag:database": "cd backend && node ../scripts/backend-python.mjs -m app.cli.import_mag_database",
-    "prepare:mag:v2": "cd backend && node ../scripts/backend-python.mjs -m app.cli.prepare_mag_v2",
     "prepare:runtime": "cd backend && node ../scripts/backend-python.mjs -m app.cli.prepare_runtime",
     "sync:analysis": "cd backend && node ../scripts/backend-python.mjs -m app.cli.sync_analysis_manifest",
     "migrate": "cd backend && node ../scripts/backend-python.mjs -m alembic upgrade head",
@@ -33,6 +31,7 @@
     "lint": "cd backend && node ../scripts/backend-python.mjs -m ruff check app tests && npm --prefix ../frontend run lint",
     "typecheck": "cd backend && node ../scripts/backend-python.mjs -m mypy app && npm --prefix ../frontend run typecheck",
     "verify": "npm run lint && npm run typecheck && npm run test:backend && npm run test:frontend && npm run build",
-    "verify:full": "npm run verify && npm run test:coverage && npm run check:openapi && npm run audit && npm run test:e2e"
+    "verify:full": "npm run verify && npm run test:coverage && npm run check:openapi && npm run audit && npm run test:e2e",
+    "import:cohort": "cd backend && node ../scripts/backend-python.mjs -m app.cli.import_cohort"
   }
 }

@@ -69,4 +69,4 @@ species_taxonomy_crosswalk 的 Reads 观察标签来自本批服务器 Bracken �
 
 原 `metric_definitions.tsv` 未含 Tab 分隔符，保持原样；另在整理目录 `derived/metric_definitions_normalized.tsv` 生成按原文本定义拆分的三列表。数值矩阵未修改。
 
-本次复制计划、完整 SHA-256、文件别名关系、对比结果均保留。整理脚本为 [audit-server-transfer.py](../../scripts/audit-server-transfer.py)，它不执行交付的生信代码。复制结果以新目录内 `copy_verification.json` 为准。
+本次复制计划、完整 SHA-256、文件别名关系、对比结果均保留。旧版对照脚本随版本包退役；复制结果以新目录内 `copy_verification.json` 为准。当前 MAG 原文件由 [归档核验脚本](../../scripts/verify-mag-archive.py)检查。

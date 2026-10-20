@@ -129,10 +129,10 @@ def resolve_subject(data: reference.ReferenceDataset, subject_type: str, subject
                           mappingMethod="固定主物种版本内读取分类；域一致的精确属名及核对旧名对应。内部 taxon_id 不是 NCBI TaxID。")
             return _mapping(result, data, row["genus"], row["kingdom"])
         if subject_type == "mag":
-            from app.services import mag_data_service as mag
+            from app.services import mag_analysis_service as mag
 
             try:
-                source = mag.load_mag_dataset()
+                source = mag.load_mag_dataset(revision=revision)
             except mag.MagDataError:
                 return {**result, "status": "source_unavailable", "reasons": ["MAG 数据当前不可读取。"]}
             if source.fingerprint != revision:

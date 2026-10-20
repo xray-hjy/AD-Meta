@@ -463,6 +463,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/mag/datasets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Datasets */
+        get: operations["datasets_api_mag_datasets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mag/datasets/{dataset_key}/releases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Releases */
+        get: operations["releases_api_mag_datasets__dataset_key__releases_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/mag/downloads/{kind}": {
         parameters: {
             query?: never;
@@ -582,6 +616,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/mag/modules/{module}/records": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Module Records */
+        get: operations["module_records_api_mag_modules__module__records_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/mag/overview": {
         parameters: {
             query?: never;
@@ -625,6 +676,40 @@ export interface paths {
         };
         /** Samples */
         get: operations["samples_api_mag_samples_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mag/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sources */
+        get: operations["sources_api_mag_sources_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mag/sources/{module}/{index}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Source Download */
+        get: operations["source_download_api_mag_sources__module___index__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2000,7 +2085,7 @@ export interface components {
             /** Abundancepercent */
             abundancePercent: number;
             /** Age */
-            age: number;
+            age: number | null;
             /** Batch */
             batch: string;
             /**
@@ -2008,11 +2093,8 @@ export interface components {
              * @enum {string}
              */
             disease: "AD" | "NC";
-            /**
-             * Gender
-             * @enum {string}
-             */
-            gender: "F" | "M";
+            /** Gender */
+            gender: ("F" | "M") | null;
             /** Mappedpercent */
             mappedPercent: number;
             /** Sampleid */
@@ -2246,16 +2328,10 @@ export interface components {
             clusterId: string;
             /** Clustermembercount */
             clusterMemberCount: number;
-            /**
-             * Clustermethod
-             * @constant
-             */
-            clusterMethod: "average";
-            /**
-             * Comparisonalgorithm
-             * @constant
-             */
-            comparisonAlgorithm: "fastANI";
+            /** Clustermethod */
+            clusterMethod: string;
+            /** Comparisonalgorithm */
+            comparisonAlgorithm: string;
             /** Equivalentanithreshold */
             equivalentAniThreshold: number;
             /** Isrepresentative */
@@ -2269,11 +2345,8 @@ export interface components {
              * @enum {string}
              */
             memberDisease: "AD" | "NC";
-            /**
-             * Membergroup
-             * @enum {string}
-             */
-            memberGroup: "CHN" | "CHN2";
+            /** Membergroup */
+            memberGroup: string;
             /** Memberhpcbatch */
             memberHpcBatch: string;
             /** Membermag */
@@ -2299,11 +2372,8 @@ export interface components {
              * @enum {string}
              */
             representativeDisease: "AD" | "NC";
-            /**
-             * Representativegroup
-             * @enum {string}
-             */
-            representativeGroup: "CHN" | "CHN2";
+            /** Representativegroup */
+            representativeGroup: string;
             /** Representativehpcbatch */
             representativeHpcBatch: string;
             /** Representativemag */
@@ -2364,8 +2434,17 @@ export interface components {
         MagProvenance: {
             /** Analysisversion */
             analysisVersion: string;
+            /** Communityresults */
+            communityResults?: {
+                [key: string]: unknown;
+            };
             /** Datafingerprint */
             dataFingerprint: string;
+            /**
+             * Datasetkey
+             * @default
+             */
+            datasetKey: string;
             /** Excludedsamplecount */
             excludedSampleCount: number;
             filters: components["schemas"]["MagScopeResponse"];
@@ -2385,11 +2464,24 @@ export interface components {
             mappingTolerancePercentPoints: number;
             /** Maxmappingerrorpercentpoints */
             maxMappingErrorPercentPoints: number;
+            /** Modules */
+            modules?: {
+                [key: string]: unknown;
+            };
+            /** Processing */
+            processing?: {
+                [key: string]: unknown;
+            };
             /**
              * Provenancescope
              * @constant
              */
             provenanceScope: "runtime-input-and-downstream-analysis";
+            /**
+             * Release
+             * @default
+             */
+            release: string;
             /** Requestfingerprint */
             requestFingerprint: string;
             /** Samplecount */
@@ -2400,9 +2492,9 @@ export interface components {
             sources: components["schemas"]["MagSource"][];
             /**
              * Storagebackend
-             * @enum {string}
+             * @constant
              */
-            storageBackend: "package" | "database";
+            storageBackend: "database";
             /** Testedfeaturecount */
             testedFeatureCount: number;
             /**
@@ -2482,7 +2574,7 @@ export interface components {
         /** MagSample */
         MagSample: {
             /** Age */
-            age: number;
+            age: number | null;
             /** Batch */
             batch: string;
             /**
@@ -2490,11 +2582,8 @@ export interface components {
              * @enum {string}
              */
             disease: "AD" | "NC";
-            /**
-             * Gender
-             * @enum {string}
-             */
-            gender: "F" | "M";
+            /** Gender */
+            gender: ("F" | "M") | null;
             /** Mappedpercent */
             mappedPercent: number;
             /** Sampleid */
@@ -2618,7 +2707,7 @@ export interface components {
             /** Abovethresholdmagcount */
             aboveThresholdMagCount: number;
             /** Age */
-            age: number;
+            age: number | null;
             /** Batch */
             batch: string;
             /**
@@ -2626,11 +2715,8 @@ export interface components {
              * @enum {string}
              */
             disease: "AD" | "NC";
-            /**
-             * Gender
-             * @enum {string}
-             */
-            gender: "F" | "M";
+            /** Gender */
+            gender: ("F" | "M") | null;
             /** Mappedpercent */
             mappedPercent: number;
             /** Sampleid */
@@ -4564,6 +4650,8 @@ export interface operations {
         parameters: {
             query?: {
                 revision?: string;
+                dataset?: string;
+                release?: string;
             };
             header?: never;
             path?: never;
@@ -4608,9 +4696,11 @@ export interface operations {
                 limit?: number;
                 offset?: number;
                 revision?: string;
+                dataset?: string;
+                release?: string;
                 disease?: "" | "AD" | "NC";
                 gender?: "" | "F" | "M";
-                batch?: "" | "1" | "2" | "3" | "4" | "5";
+                batch?: string;
                 ageMin?: number | null;
                 ageMax?: number | null;
                 abundanceThresholdPercent?: number;
@@ -4650,6 +4740,75 @@ export interface operations {
             };
         };
     };
+    datasets_api_mag_datasets_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    releases_api_mag_datasets__dataset_key__releases_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
     download_api_mag_downloads__kind__get: {
         parameters: {
             query?: {
@@ -4664,9 +4823,11 @@ export interface operations {
                 limit?: number;
                 offset?: number;
                 revision?: string;
+                dataset?: string;
+                release?: string;
                 disease?: "" | "AD" | "NC";
                 gender?: "" | "F" | "M";
-                batch?: "" | "1" | "2" | "3" | "4" | "5";
+                batch?: string;
                 ageMin?: number | null;
                 ageMax?: number | null;
                 abundanceThresholdPercent?: number;
@@ -4733,9 +4894,11 @@ export interface operations {
                 limit?: number;
                 offset?: number;
                 revision?: string;
+                dataset?: string;
+                release?: string;
                 disease?: "" | "AD" | "NC";
                 gender?: "" | "F" | "M";
-                batch?: "" | "1" | "2" | "3" | "4" | "5";
+                batch?: string;
                 ageMin?: number | null;
                 ageMax?: number | null;
                 abundanceThresholdPercent?: number;
@@ -4779,9 +4942,11 @@ export interface operations {
         parameters: {
             query?: {
                 revision?: string;
+                dataset?: string;
+                release?: string;
                 disease?: "" | "AD" | "NC";
                 gender?: "" | "F" | "M";
-                batch?: "" | "1" | "2" | "3" | "4" | "5";
+                batch?: string;
                 ageMin?: number | null;
                 ageMax?: number | null;
                 abundanceThresholdPercent?: number;
@@ -4828,9 +4993,11 @@ export interface operations {
             query?: {
                 topN?: number;
                 revision?: string;
+                dataset?: string;
+                release?: string;
                 disease?: "" | "AD" | "NC";
                 gender?: "" | "F" | "M";
-                batch?: "" | "1" | "2" | "3" | "4" | "5";
+                batch?: string;
                 ageMin?: number | null;
                 ageMax?: number | null;
                 abundanceThresholdPercent?: number;
@@ -4895,9 +5062,11 @@ export interface operations {
                 limit?: number;
                 offset?: number;
                 revision?: string;
+                dataset?: string;
+                release?: string;
                 disease?: "" | "AD" | "NC";
                 gender?: "" | "F" | "M";
-                batch?: "" | "1" | "2" | "3" | "4" | "5";
+                batch?: string;
                 ageMin?: number | null;
                 ageMax?: number | null;
                 abundanceThresholdPercent?: number;
@@ -4942,16 +5111,18 @@ export interface operations {
             query?: {
                 query?: string;
                 memberDisease?: "" | "AD" | "NC";
-                sourceGroup?: "" | "CHN" | "CHN2";
+                sourceGroup?: string;
                 lowAniOnly?: boolean;
                 sortBy?: "memberMag" | "memberSourceSampleId" | "memberToRepAni" | "memberToRepAlignmentCoverage";
                 direction?: "asc" | "desc";
                 limit?: number;
                 offset?: number;
                 revision?: string;
+                dataset?: string;
+                release?: string;
                 disease?: "" | "AD" | "NC";
                 gender?: "" | "F" | "M";
-                batch?: "" | "1" | "2" | "3" | "4" | "5";
+                batch?: string;
                 ageMin?: number | null;
                 ageMax?: number | null;
                 abundanceThresholdPercent?: number;
@@ -4997,9 +5168,11 @@ export interface operations {
         parameters: {
             query?: {
                 revision?: string;
+                dataset?: string;
+                release?: string;
                 disease?: "" | "AD" | "NC";
                 gender?: "" | "F" | "M";
-                batch?: "" | "1" | "2" | "3" | "4" | "5";
+                batch?: string;
                 ageMin?: number | null;
                 ageMax?: number | null;
                 abundanceThresholdPercent?: number;
@@ -5041,13 +5214,65 @@ export interface operations {
             };
         };
     };
+    module_records_api_mag_modules__module__records_get: {
+        parameters: {
+            query: {
+                kind: string;
+                magId?: string;
+                query?: string;
+                limit?: number;
+                offset?: number;
+                rankBy?: string;
+                revision?: string;
+                dataset?: string;
+                release?: string;
+            };
+            header?: never;
+            path: {
+                module: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
     overview_api_mag_overview_get: {
         parameters: {
             query?: {
                 revision?: string;
+                dataset?: string;
+                release?: string;
                 disease?: "" | "AD" | "NC";
                 gender?: "" | "F" | "M";
-                batch?: "" | "1" | "2" | "3" | "4" | "5";
+                batch?: string;
                 ageMin?: number | null;
                 ageMax?: number | null;
                 abundanceThresholdPercent?: number;
@@ -5091,9 +5316,11 @@ export interface operations {
         parameters: {
             query?: {
                 revision?: string;
+                dataset?: string;
+                release?: string;
                 disease?: "" | "AD" | "NC";
                 gender?: "" | "F" | "M";
-                batch?: "" | "1" | "2" | "3" | "4" | "5";
+                batch?: string;
                 ageMin?: number | null;
                 ageMax?: number | null;
                 abundanceThresholdPercent?: number;
@@ -5137,9 +5364,11 @@ export interface operations {
         parameters: {
             query?: {
                 revision?: string;
+                dataset?: string;
+                release?: string;
                 disease?: "" | "AD" | "NC";
                 gender?: "" | "F" | "M";
-                batch?: "" | "1" | "2" | "3" | "4" | "5";
+                batch?: string;
                 ageMin?: number | null;
                 ageMax?: number | null;
                 abundanceThresholdPercent?: number;
@@ -5179,6 +5408,93 @@ export interface operations {
             };
         };
     };
+    sources_api_mag_sources_get: {
+        parameters: {
+            query?: {
+                revision?: string;
+                dataset?: string;
+                release?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    source_download_api_mag_sources__module___index__get: {
+        parameters: {
+            query?: {
+                revision?: string;
+                dataset?: string;
+                release?: string;
+            };
+            header?: never;
+            path: {
+                module: string;
+                index: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
     suggestions_api_mag_suggestions_get: {
         parameters: {
             query?: {
@@ -5186,6 +5502,8 @@ export interface operations {
                 query?: string;
                 limit?: number;
                 revision?: string;
+                dataset?: string;
+                release?: string;
             };
             header?: never;
             path?: never;
@@ -5228,9 +5546,11 @@ export interface operations {
                 rank?: "domain" | "phylum" | "class" | "order" | "family" | "genus" | "species";
                 topN?: number;
                 revision?: string;
+                dataset?: string;
+                release?: string;
                 disease?: "" | "AD" | "NC";
                 gender?: "" | "F" | "M";
-                batch?: "" | "1" | "2" | "3" | "4" | "5";
+                batch?: string;
                 ageMin?: number | null;
                 ageMax?: number | null;
                 abundanceThresholdPercent?: number;

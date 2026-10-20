@@ -94,7 +94,7 @@ test('axis swapping remaps source hover/click and minimap dimensions while retai
 test('tile animation completes or cancels on navigation, rapid reversal and reduced motion', () => {
   const onSelect = vi.fn();
   const frames = new Map(); let id = 0;
-  vi.stubGlobal('matchMedia', () => ({ matches: true }));
+  vi.stubGlobal('matchMedia', () => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() }));
   vi.spyOn(performance, 'now').mockReturnValue(0);
   vi.stubGlobal('requestAnimationFrame', callback => { frames.set(++id, callback); return id; });
   vi.stubGlobal('cancelAnimationFrame', key => frames.delete(key));
@@ -118,9 +118,9 @@ test('tile animation completes or cancels on navigation, rapid reversal and redu
   fireEvent.keyDown(screen.getByRole('group', { name: /MAG 热图视口/ }), { key: 'ArrowDown' });
   expect(overlay.hidden).toBe(true); expect(frames.size).toBe(0);
   swap(true); swap(false); expect(frames.size).toBe(1);
-  vi.stubGlobal('matchMedia', () => ({ matches: false }));
+  vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() }));
   swap(true); expect(overlay.hidden).toBe(true); expect(frames.size).toBe(0);
-  vi.stubGlobal('matchMedia', () => ({ matches: true }));
+  vi.stubGlobal('matchMedia', () => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() }));
   swap(false); expect(frames.size).toBe(1);
   unmount(); expect(frames.size).toBe(0);
 });
@@ -195,7 +195,7 @@ test('row labels use available space, remain next to the matrix during transitio
     values: Array.from({ length: 50 }, () => data.values[0]),
     features: data.magIds.map(magId => ({ magId, taxonomyName: 'Very_long_taxonomy_species_and_strain_name_with_reference_information' })) };
   const frames = new Map(); let id = 0;
-  vi.stubGlobal('matchMedia', () => ({ matches: true }));
+  vi.stubGlobal('matchMedia', () => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() }));
   vi.spyOn(performance, 'now').mockReturnValue(0);
   vi.stubGlobal('requestAnimationFrame', callback => { frames.set(++id, callback); return id; });
   vi.stubGlobal('cancelAnimationFrame', key => frames.delete(key));

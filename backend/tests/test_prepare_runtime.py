@@ -10,7 +10,7 @@ from app.cli.prepare_runtime import prepare_runtime
 
 def _connection_with_dataset_count(value: int):
     connection = MagicMock()
-    connection.execute.return_value.fetchone.return_value = {"value": value}
+    connection.execute.return_value.fetchone.return_value = {"value": value, "current_release": "published"}
     context = MagicMock()
     context.__enter__.return_value = connection
     return context
@@ -37,7 +37,7 @@ import sys
 from unittest.mock import MagicMock, patch
 from app.cli.prepare_runtime import prepare_runtime
 connection = MagicMock()
-connection.execute.return_value.fetchone.return_value = {"value": 2}
+connection.execute.return_value.fetchone.return_value = {"value": 2, "current_release": "published"}
 context = MagicMock()
 context.__enter__.return_value = connection
 with patch("app.cli.prepare_runtime.upgrade_database"), patch("app.cli.prepare_runtime.connect", return_value=context), patch("app.cli.prepare_runtime.sync_analysis_runs_from_manifest"):
@@ -76,6 +76,7 @@ def test_prepare_runtime_only_syncs_runs_when_datasets_exist() -> None:
 def test_prepare_runtime_is_safe_to_repeat_after_bootstrap() -> None:
     with (
         patch("app.cli.prepare_runtime.upgrade_database") as upgrade,
+        patch("app.cli.prepare_runtime.prepare_cohort_results"),
         patch(
             "app.cli.prepare_runtime.connect",
             side_effect=[_connection_with_dataset_count(0), _connection_with_dataset_count(2)],

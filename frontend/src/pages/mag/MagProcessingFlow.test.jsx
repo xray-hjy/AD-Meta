@@ -3,30 +3,33 @@ import { vi } from 'vitest';
 import MagProcessingFlow from './MagProcessingFlow';
 
 const provenance = {
-  version: 'mag_v3', magCount: 872, sampleCount: 185, excludedSampleCount: 0,
+  version: 'test-cohort', magCount: 872, sampleCount: 185, excludedSampleCount: 0,
   dataFingerprint: 'revision-a',
-  manifest: { file: 'development_input/mag_v3/provenance/mag_v3_manifest.json',
+  manifest: { file: 'backend/storage/raw/ad-nc-mag/PRJCA022804/files.tsv',
     sha256: 'aa55cf86a44642b8602aafeb33e6c06c4c85fd1d7678a3b8dd3891728bc6c5f6' },
+  processing: { assessedBins: 9133, qualifiedBins: 8548, representativeMags: 872, sampleCount: 185, referenceBandCount: 666 },
+  modules: { samples: { groupCounts: { AD: 122, NC: 63 } }, quality: { tool: { version: '1.1.0' } },
+    taxonomy: { tool: { databaseRelease: 'R232' } }, lineage: { parameters: { completeness: 50, contamination: 10, P_ani: 0.9, S_ani: 0.95 } } },
 };
 const capabilities = { quality: true, lineage: true };
 
-test('binds upstream counts to the verified package and keeps them independent of sample filters', () => {
+test('uses imported processing statistics independent of sample filters and package hashes', () => {
   const { rerender } = render(<MagProcessingFlow provenance={provenance} capabilities={capabilities} />);
   expect(screen.getByRole('button', { name: /整合后的 bins/ })).toHaveTextContent('9,133');
   expect(screen.getByRole('button', { name: /通过质量筛选/ })).toHaveTextContent('8,548');
   expect(screen.getByRole('button', { name: /代表 MAG/ })).toHaveTextContent('872');
   rerender(<MagProcessingFlow provenance={{ ...provenance, sampleCount: 12, excludedSampleCount: 173 }} capabilities={capabilities} />);
-  expect(screen.getByText('mag_v3 · 185 个样本')).toBeVisible();
+  expect(screen.getByText('test-cohort · 185 个样本')).toBeVisible();
   expect(screen.getByRole('button', { name: /通过质量筛选/ })).toHaveTextContent('8,548');
   fireEvent.click(screen.getByRole('button', { name: /代表 MAG/ }));
   expect(screen.getByText('丰度矩阵 185 × 872')).toBeVisible();
 });
 
 test.each([
-  { ...provenance, manifest: { ...provenance.manifest, sha256: 'another-package' } },
-  { ...provenance, version: 'mag_v2' },
+  { ...provenance, processing: null },
+  { ...provenance, modules: null },
   { ...provenance, magCount: 50 },
-])('does not assign historical upstream counts to a different package', audit => {
+])('does not invent processing counts for missing or inconsistent metadata', audit => {
   render(<MagProcessingFlow provenance={audit} capabilities={capabilities} />);
   expect(screen.getByRole('button', { name: /整合后的 bins/ })).toHaveTextContent('待记录');
   expect(screen.getByRole('button', { name: /通过质量筛选/ })).toHaveTextContent('待记录');

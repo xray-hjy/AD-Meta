@@ -1,7 +1,7 @@
--- AD-Meta complete MySQL schema (structure only, no scientific or business rows).
--- Includes Species, KO, MAG, dataset revisions, analysis identity, projection audit, and reference evidence.
--- Generated from the validated local MySQL schema on 2026-09-18.
--- For a fresh database. Existing databases must be upgraded with Alembic migrations.
+-- AD-Meta base MySQL schema snapshot (structure only, no scientific or business rows).
+-- Includes Species, KO, dataset revisions, analysis identity, projection audit, and reference evidence.
+-- Generated from the validated local MySQL schema on 2026-09-18; retired MAG package tables removed.
+-- Run Alembic migrations after this snapshot to create current cohort artifact tables.
 
 CREATE DATABASE IF NOT EXISTS `ad_meta`
   CHARACTER SET utf8mb4
@@ -207,200 +207,6 @@ CREATE TABLE IF NOT EXISTS `ko_anno` (
   PRIMARY KEY (`ko_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS `mag_abundances` (
-  `dataset_version_id` bigint unsigned NOT NULL,
-  `sample_id` bigint unsigned NOT NULL,
-  `representative_id` bigint unsigned NOT NULL,
-  `abundance_percent` double NOT NULL,
-  PRIMARY KEY (`sample_id`,`representative_id`),
-  KEY `idx_mag_abundances_version_rep` (`dataset_version_id`,`representative_id`),
-  KEY `fk_mag_abundances_rep` (`representative_id`),
-  CONSTRAINT `fk_mag_abundances_rep` FOREIGN KEY (`representative_id`) REFERENCES `mag_representatives` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_mag_abundances_sample` FOREIGN KEY (`sample_id`) REFERENCES `mag_samples` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_mag_abundances_version` FOREIGN KEY (`dataset_version_id`) REFERENCES `mag_dataset_versions` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-CREATE TABLE IF NOT EXISTS `mag_cluster_members` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `dataset_version_id` bigint unsigned NOT NULL,
-  `cluster_id` bigint unsigned NOT NULL,
-  `member_mag_code` varchar(255) NOT NULL,
-  `source_sample_id` bigint unsigned NOT NULL,
-  `is_representative` tinyint(1) NOT NULL,
-  `member_to_rep_ani` double NOT NULL,
-  `member_to_rep_alignment_coverage` double NOT NULL,
-  `ani_direction` varchar(64) NOT NULL,
-  `completeness_percent` double NOT NULL,
-  `contamination_percent` double NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_mag_members_version_code` (`dataset_version_id`,`member_mag_code`),
-  KEY `idx_mag_members_cluster_ani` (`cluster_id`,`member_to_rep_ani`),
-  KEY `idx_mag_members_source_sample` (`source_sample_id`),
-  CONSTRAINT `fk_mag_members_cluster` FOREIGN KEY (`cluster_id`) REFERENCES `mag_clusters` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_mag_members_sample` FOREIGN KEY (`source_sample_id`) REFERENCES `mag_samples` (`id`),
-  CONSTRAINT `fk_mag_members_version` FOREIGN KEY (`dataset_version_id`) REFERENCES `mag_dataset_versions` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-CREATE TABLE IF NOT EXISTS `mag_clusters` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `dataset_version_id` bigint unsigned NOT NULL,
-  `cluster_code` varchar(191) NOT NULL,
-  `representative_id` bigint unsigned NOT NULL,
-  `representative_source_sample_id` bigint unsigned NOT NULL,
-  `member_count` int unsigned NOT NULL,
-  `representative_completeness_percent` double NOT NULL,
-  `representative_contamination_percent` double NOT NULL,
-  `representative_score` double NOT NULL,
-  `secondary_cluster_distance_threshold` double NOT NULL,
-  `equivalent_ani_threshold` double NOT NULL,
-  `cluster_method` varchar(64) NOT NULL,
-  `comparison_algorithm` varchar(64) NOT NULL,
-  `primary_cluster` varchar(191) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_mag_clusters_version_code` (`dataset_version_id`,`cluster_code`),
-  UNIQUE KEY `uk_mag_clusters_version_rep` (`dataset_version_id`,`representative_id`),
-  KEY `fk_mag_clusters_rep` (`representative_id`),
-  KEY `fk_mag_clusters_sample` (`representative_source_sample_id`),
-  CONSTRAINT `fk_mag_clusters_rep` FOREIGN KEY (`representative_id`) REFERENCES `mag_representatives` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_mag_clusters_sample` FOREIGN KEY (`representative_source_sample_id`) REFERENCES `mag_samples` (`id`),
-  CONSTRAINT `fk_mag_clusters_version` FOREIGN KEY (`dataset_version_id`) REFERENCES `mag_dataset_versions` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-CREATE TABLE IF NOT EXISTS `mag_dataset_versions` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `version_key` varchar(32) NOT NULL,
-  `parent_version_key` varchar(32) NOT NULL DEFAULT '',
-  `status` varchar(32) NOT NULL DEFAULT 'importing',
-  `source_root` varchar(1024) NOT NULL,
-  `data_fingerprint` char(64) NOT NULL,
-  `manifest_sha256` char(64) NOT NULL DEFAULT '',
-  `manifest_json` json DEFAULT NULL,
-  `sample_count` int unsigned NOT NULL,
-  `representative_mag_count` int unsigned NOT NULL,
-  `member_mag_count` int unsigned NOT NULL DEFAULT '0',
-  `cluster_count` int unsigned NOT NULL DEFAULT '0',
-  `unit` varchar(16) NOT NULL DEFAULT '%',
-  `group_field` varchar(32) NOT NULL DEFAULT 'disease',
-  `max_mapping_error` double NOT NULL DEFAULT '0',
-  `validation_json` json DEFAULT NULL,
-  `imported_at` datetime(6) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_mag_versions_key` (`version_key`),
-  UNIQUE KEY `uk_mag_versions_fingerprint` (`data_fingerprint`),
-  KEY `idx_mag_versions_status` (`status`,`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-CREATE TABLE IF NOT EXISTS `mag_package_files` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `dataset_version_id` bigint unsigned NOT NULL,
-  `relative_path` varchar(512) NOT NULL,
-  `sha256` char(64) NOT NULL,
-  `size_bytes` bigint unsigned NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_mag_files_version_path` (`dataset_version_id`,`relative_path`),
-  CONSTRAINT `fk_mag_files_version` FOREIGN KEY (`dataset_version_id`) REFERENCES `mag_dataset_versions` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-CREATE TABLE IF NOT EXISTS `mag_quality` (
-  `representative_id` bigint unsigned NOT NULL,
-  `completeness_percent` double NOT NULL,
-  `contamination_percent` double NOT NULL,
-  `completeness_model` varchar(128) NOT NULL,
-  `coding_density` double NOT NULL,
-  `contig_n50_bp` bigint unsigned NOT NULL,
-  `genome_size_bp` bigint unsigned NOT NULL,
-  `gc_content` double NOT NULL,
-  `total_coding_sequences` bigint unsigned NOT NULL,
-  `total_contigs` bigint unsigned NOT NULL,
-  `max_contig_length_bp` bigint unsigned NOT NULL,
-  PRIMARY KEY (`representative_id`),
-  KEY `idx_mag_quality_reference` (`completeness_percent`,`contamination_percent`),
-  CONSTRAINT `fk_mag_quality_rep` FOREIGN KEY (`representative_id`) REFERENCES `mag_representatives` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-CREATE TABLE IF NOT EXISTS `mag_representatives` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `dataset_version_id` bigint unsigned NOT NULL,
-  `position` int unsigned NOT NULL,
-  `mag_code` varchar(255) NOT NULL,
-  `length_bp` bigint unsigned NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_mag_reps_version_code` (`dataset_version_id`,`mag_code`),
-  UNIQUE KEY `uk_mag_reps_version_position` (`dataset_version_id`,`position`),
-  CONSTRAINT `fk_mag_reps_version` FOREIGN KEY (`dataset_version_id`) REFERENCES `mag_dataset_versions` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-CREATE TABLE IF NOT EXISTS `mag_samples` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `dataset_version_id` bigint unsigned NOT NULL,
-  `position` int unsigned NOT NULL,
-  `sample_code` varchar(191) NOT NULL,
-  `sample_name` varchar(255) NOT NULL DEFAULT '',
-  `accession` varchar(191) NOT NULL DEFAULT '',
-  `disease` varchar(16) NOT NULL,
-  `source_group` varchar(64) NOT NULL DEFAULT '',
-  `hpc_batch` varchar(64) NOT NULL,
-  `age` double NOT NULL,
-  `gender` varchar(16) NOT NULL,
-  `mapped_percent` double NOT NULL,
-  `unmapped_percent` double NOT NULL,
-  `r1_uri` text NOT NULL,
-  `r2_uri` text NOT NULL,
-  `coverm_label` varchar(255) NOT NULL DEFAULT '',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_mag_samples_version_code` (`dataset_version_id`,`sample_code`),
-  UNIQUE KEY `uk_mag_samples_version_position` (`dataset_version_id`,`position`),
-  KEY `idx_mag_samples_version_disease` (`dataset_version_id`,`disease`),
-  CONSTRAINT `fk_mag_samples_version` FOREIGN KEY (`dataset_version_id`) REFERENCES `mag_dataset_versions` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-CREATE TABLE IF NOT EXISTS `mag_species_crosswalk` (
-  `representative_id` bigint unsigned NOT NULL,
-  `dataset_version_id` bigint unsigned NOT NULL,
-  `gtdb_species` varchar(255) DEFAULT NULL,
-  `gtdb_classification` text,
-  `gtdb_reference_accession` varchar(191) DEFAULT NULL,
-  `gtdb_reference_source_field` varchar(128) DEFAULT NULL,
-  `gtdb_reference_ani` double DEFAULT NULL,
-  `gtdb_reference_af` double DEFAULT NULL,
-  `gtdb_classification_method` varchar(512) DEFAULT NULL,
-  `reference_ncbi_taxid` varchar(64) DEFAULT NULL,
-  `ncbi_species_taxid` varchar(64) DEFAULT NULL,
-  `ncbi_organism_name` varchar(512) DEFAULT NULL,
-  `ncbi_taxonomy` text,
-  `kraken_species_id` varchar(64) DEFAULT NULL,
-  `kraken_species_name` varchar(512) DEFAULT NULL,
-  `kraken_mpa_species_label` varchar(512) DEFAULT NULL,
-  `mapping_method` varchar(128) DEFAULT NULL,
-  `mapping_level` varchar(128) DEFAULT NULL,
-  `mapping_confidence` varchar(128) DEFAULT NULL,
-  `mapping_status` varchar(64) NOT NULL,
-  PRIMARY KEY (`representative_id`),
-  KEY `idx_mag_crosswalk_version_status` (`dataset_version_id`,`mapping_status`),
-  KEY `idx_mag_crosswalk_ncbi_taxid` (`ncbi_species_taxid`),
-  CONSTRAINT `fk_mag_crosswalk_rep` FOREIGN KEY (`representative_id`) REFERENCES `mag_representatives` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_mag_crosswalk_version` FOREIGN KEY (`dataset_version_id`) REFERENCES `mag_dataset_versions` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-CREATE TABLE IF NOT EXISTS `mag_taxonomy` (
-  `representative_id` bigint unsigned NOT NULL,
-  `domain` varchar(128) NOT NULL DEFAULT '',
-  `phylum` varchar(128) NOT NULL DEFAULT '',
-  `class` varchar(128) NOT NULL DEFAULT '',
-  `tax_order` varchar(128) NOT NULL DEFAULT '',
-  `family` varchar(128) NOT NULL DEFAULT '',
-  `genus` varchar(191) NOT NULL DEFAULT '',
-  `species` varchar(255) NOT NULL DEFAULT '',
-  `classification_method` varchar(512) NOT NULL DEFAULT '',
-  `closest_reference` varchar(191) DEFAULT NULL,
-  `closest_ani` double DEFAULT NULL,
-  `closest_af` double DEFAULT NULL,
-  `msa_percent` double DEFAULT NULL,
-  PRIMARY KEY (`representative_id`),
-  KEY `idx_mag_taxonomy_species` (`species`),
-  CONSTRAINT `fk_mag_taxonomy_rep` FOREIGN KEY (`representative_id`) REFERENCES `mag_representatives` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
 CREATE TABLE IF NOT EXISTS `projection_audit_artifacts` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `analysis_run_id` bigint unsigned NOT NULL,
@@ -579,8 +385,8 @@ CREATE TABLE IF NOT EXISTS `taxon_anno` (
 
 SET FOREIGN_KEY_CHECKS = @AD_META_OLD_FOREIGN_KEY_CHECKS;
 
--- This schema matches Alembic revision 20260912_01.
--- Initialize the revision only when the table is empty (fresh schema).
+-- Stamp the retired package revision as a bridge; its table creation is now a no-op.
+-- Apply Alembic upgrades to create the current cohort tables and reach the current head.
 INSERT INTO `alembic_version` (`version_num`)
 SELECT '20260912_01'
 WHERE NOT EXISTS (SELECT 1 FROM `alembic_version`);

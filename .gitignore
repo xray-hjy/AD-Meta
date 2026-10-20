@@ -60,3 +60,10 @@ yarn-error.log*
 # Python
 __pycache__/
 *.py[cod]
+
+# MAG source data travel on disk; small routing/provenance docs stay in Git.
+/backend/storage/raw/ad-nc-mag/**
+!/backend/storage/raw/ad-nc-mag/
+!/backend/storage/raw/ad-nc-mag/*/
+!/backend/storage/raw/ad-nc-mag/*/README.md
+!/backend/storage/raw/ad-nc-mag/*/files.tsv

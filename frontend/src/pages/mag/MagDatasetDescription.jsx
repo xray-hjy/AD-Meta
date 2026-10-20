@@ -13,7 +13,7 @@ export default function MagDatasetDescription({ provenance, capabilities = {} })
   return <DatasetDescriptionCard subtitle="代表基因组目录、丰度尺度与数据版本来源">
     <section className="dataset-description" aria-label="MAG 数据集信息">
       <div className="dataset-description__heading"><div>
-        <span className="dataset-description__eyebrow">已接入 MAG 数据包</span>
+        <span className="dataset-description__eyebrow">已接入原文件分析结果</span>
         <h3>MAG 数据集信息</h3>
         <p className="dataset-description__name">{provenance.version} · 目录数量不受下方样本筛选影响</p>
       </div></div>
@@ -36,9 +36,9 @@ export default function MagDatasetDescription({ provenance, capabilities = {} })
           {profile ? <Fact label="已核验流程版本">CheckM2 {profile.qualityToolVersion} · GTDB {profile.taxonomyRelease} · 质量筛选后 {count(profile.qualifiedBins)} 个成员 → {count(profile.representativeMags)} 个代表</Fact> : null}
         </dl>
       </section>
-      <details className="dataset-description__version"><summary>数据版本与输入来源</summary>
+      <details className="dataset-description__version"><summary>分析记录与输入来源</summary>
         <dl>
-          <Fact label="数据版本">{provenance.version}</Fact>
+          <Fact label="来源数据集">{provenance.version}</Fact>
           <Fact label="分析版本">{provenance.analysisVersion}</Fact>
           {provenance.manifest?.file ? <Fact label="数据清单">{provenance.manifest.file}</Fact> : null}
           <Fact label="数据指纹">{provenance.dataFingerprint}</Fact>

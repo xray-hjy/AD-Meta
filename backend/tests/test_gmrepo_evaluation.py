@@ -87,14 +87,14 @@ def test_species_mapping_requires_fixed_revision_and_domain(evidence_cohort, sou
 
 
 def test_mag_missing_rank_path_does_not_guess_from_gtdb_name(evidence_cohort, monkeypatch):
-    from app.services import mag_data_service as mag
+    from app.services import mag_analysis_service as mag
 
     data, _ = evidence_cohort
     source = SimpleNamespace(fingerprint="mag-fixed", mag_ids=("MAG1",), lineage=(), crosswalk=({
         "magId": "MAG1", "mappingStatus": "matched_exact_ncbi_species_taxid",
         "ncbiTaxonomy": "Bacteria;something;Klebsiella", "gtdbSpecies": "s__Klebsiella_A unknown",
     },))
-    monkeypatch.setattr(mag, "load_mag_dataset", lambda: source)
+    monkeypatch.setattr(mag, "load_mag_dataset", lambda **_kwargs: source)
     result = evaluation.resolve_subject(data, "mag", "MAG1", "mag-fixed")
     assert result["status"] == "unresolved"
     assert result["genus"] is None

@@ -475,7 +475,7 @@ Returns precomputed PCoA coordinates and PERMANOVA.
 
 ## MAG 只读接口
 
-MAG 使用独立的版本化外部数据契约，不写入既有 taxonomy/KO revision。完整参数和科学口径见 [MAG 丰度、分类与质量接入](../guides/mag-data.md)。主要 GET 接口：
+MAG 使用同一队列下的 raw 原文件导入结果，不写入既有 taxonomy/KO revision。完整参数和科学口径见 [MAG 原文件导入](../guides/mag-source-import.md)。主要 GET 接口：
 
 | 路径 | 结果 |
 | --- | --- |

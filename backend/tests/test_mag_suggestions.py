@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 
 from app.api import mag
 from app.main import app
-from app.services import mag_data_service as service
+from app.services import mag_analysis_service as service
 from app.services.mag_suggestions import suggestions
 
 

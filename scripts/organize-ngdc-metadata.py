@@ -184,7 +184,7 @@ def main():
         matrix_checks["ko_sample_set_matches"] = set(ko) == set(cohort)
         matrix_checks["ko_group_mismatches"] = sorted(k for k in set(ko) & set(cohort)
                                                      if label_map.get(ko[k]["label"], ko[k]["label"]) != cohort[k]["disease"])
-    mag_path = args.project_root / "ADMetaData/development_input/mag_v3/metadata/metadata_NC_AD.csv"
+    mag_path = args.project_root / "backend/storage/raw/source-metadata/PRJCA022804/metadata_NC_AD.csv"
     if mag_path.exists():
         mag = index(csv_rows(mag_path), "sample_id")
         matrix_checks["mag_metadata_exactly_matches"] = mag == cohort

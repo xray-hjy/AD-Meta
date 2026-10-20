@@ -39,9 +39,14 @@ class MagManifestReference(BaseModel):
 
 
 class MagProvenance(BaseModel):
+    datasetKey: str = ''
+    release: str = ''
+    modules: dict[str, Any] = Field(default_factory=dict)
+    processing: dict[str, Any] = Field(default_factory=dict)
+    communityResults: dict[str, Any] = Field(default_factory=dict)
     version: str
     analysisVersion: str
-    storageBackend: Literal["package", "database"]
+    storageBackend: Literal["database"]
     dataFingerprint: str
     requestFingerprint: str
     unit: Literal["%"]
@@ -104,8 +109,8 @@ class MagFeaturePageResponse(BaseModel):
 class MagSample(BaseModel):
     sampleId: str
     disease: Literal["AD", "NC"]
-    age: float
-    gender: Literal["F", "M"]
+    age: float | None
+    gender: Literal["F", "M"] | None
     batch: str
     mappedPercent: float
     unmappedPercent: float
@@ -310,13 +315,13 @@ class MagLineageMember(BaseModel):
     representativeSampleName: str
     representativeSampleAccession: str
     representativeDisease: Literal["AD", "NC"]
-    representativeGroup: Literal["CHN", "CHN2"]
+    representativeGroup: str
     representativeHpcBatch: str
     memberSourceSampleId: str
     memberSampleName: str
     memberSampleAccession: str
     memberDisease: Literal["AD", "NC"]
-    memberGroup: Literal["CHN", "CHN2"]
+    memberGroup: str
     memberHpcBatch: str
     memberToRepAni: float
     memberToRepAlignmentCoverage: float
@@ -328,8 +333,8 @@ class MagLineageMember(BaseModel):
     representativeScore: float
     secondaryClusterDistanceThreshold: float
     equivalentAniThreshold: float
-    clusterMethod: Literal["average"]
-    comparisonAlgorithm: Literal["fastANI"]
+    clusterMethod: str
+    comparisonAlgorithm: str
     primaryCluster: str
 
 

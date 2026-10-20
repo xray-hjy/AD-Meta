@@ -29,9 +29,9 @@ from app.core.config import (
 )
 from app.core.database import connect, dispose_engine
 from app.core.migrations import HEAD_REVISION, upgrade_database
+from app.domain.mag import MagDataError
 from app.services.dataset_service import cache_metrics
 from app.services.gmrepo_service import GmrepoDataError
-from app.services.mag_data_service import MagDataError
 from app.services.projection_audit_repository import cleanup_expired_audit_artifacts
 from app.services.statistics_worker import worker_metrics
 

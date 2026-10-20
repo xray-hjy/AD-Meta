@@ -23,23 +23,33 @@ from app.api.mag_models import (
     MagSuggestionsResponse,
     MagTaxonomyResponse,
 )
-from app.services import mag_data_service as service
+from app.core.config import BACKEND_ROOT, RAW_ROOT, SETTINGS
+from app.services import cohort_repository as repository
+from app.services import mag_analysis_service as service
 from app.services.mag_suggestions import suggestions as search_suggestions
 
 router = APIRouter(prefix="/api/mag", tags=["mag"], responses={503: {"model": MagErrorResponse}})
 
 
-def dataset(revision: str = Query(default="", max_length=64)) -> service.MagDataset:
-    data = service.load_mag_dataset()
-    if revision and revision != data.fingerprint:
-        raise HTTPException(409, "MAG 数据版本已变化，请刷新工作区后重试；不会混用旧图表与新数据。")
-    return data
+def dataset(revision: str = Query(default="", max_length=64), dataset: str = Query(default="", max_length=128),
+            release: str = Query(default="", max_length=64)) -> service.MagDataset:
+    if revision and release and revision != release:
+        raise HTTPException(409, '请求中的结果修订不一致。')
+    try:
+        data = service.load_mag_dataset(dataset, revision or release)
+        if (revision or release) and data.fingerprint != (revision or release):
+            raise HTTPException(409, '请求中的分析记录与数据快照不一致。')
+        return data
+    except service.MagDataError as exc:
+        if revision or release:
+            raise HTTPException(409, '指定数据集或分析记录不可用；不会切换到其他记录。') from exc
+        raise
 
 
 def selection(
     disease: Literal["", "AD", "NC"] = "",
     gender: Literal["", "F", "M"] = "",
-    batch: Literal["", "1", "2", "3", "4", "5"] = "",
+    batch: str = Query(default="", max_length=128),
     age_min: float | None = Query(default=None, alias="ageMin", ge=0, le=120, allow_inf_nan=False),
     age_max: float | None = Query(default=None, alias="ageMax", ge=0, le=120, allow_inf_nan=False),
     abundance_threshold_percent: float = Query(default=0, alias="abundanceThresholdPercent", ge=0, le=100, allow_inf_nan=False),
@@ -59,6 +69,70 @@ MappingStatus = Literal[
     "ncbi_species_taxid_not_observed_in_reads",
     "no_gtdb_reference",
 ]
+
+
+@router.get('/datasets')
+def datasets():
+    return {'items': repository.list_cohorts(), 'defaultDataset': SETTINGS.mag_dataset}
+
+
+@router.get('/datasets/{dataset_key}/releases')
+def releases(dataset_key: str):
+    return {'items': repository.list_releases(dataset_key)}
+
+
+@router.get('/sources')
+def sources(data: Data):
+    entry = repository.release_record(release=data.fingerprint)
+    bindings = repository.decode(entry['artifacts_json'])
+    return {'dataset': data.version, 'release': data.fingerprint,
+            'modules': {name: {'status': info['status'], 'report': info['report'], 'files': info['sources']}
+                        for name, revision in bindings.items()
+                        for info in [repository.artifact_info(revision)]}}
+
+
+MODULE_KINDS = {'arg': {'arg_summary', 'arg_hits'}, 'bgc': {'bgc_status', 'bgc_regions'}, 'phylogeny': {'trees'},
+                'coverage': {'coverage_metrics'}, 'archive': {'archived_files'}}
+
+
+@router.get('/modules/{module}/records')
+def module_records(module: str, data: Data, kind: str, mag_id: str = Query(default='', alias='magId', max_length=160),
+                   query: str = Query(default='', max_length=160), limit: int = Query(default=25, ge=1, le=1000),
+                   offset: int = Query(default=0, ge=0), rank_by: str = Query(default='', alias='rankBy', max_length=32)):
+    if kind not in MODULE_KINDS.get(module, set()):
+        raise HTTPException(400, '不支持的结果类型。')
+    state = data.modules.get(module, {})
+    if state.get('status') not in {'ready', 'partial'}:
+        return {'dataset': data.version, 'release': data.fingerprint, 'status': state.get('status', 'not_provided'),
+                'items': [], 'total': 0, 'limit': limit, 'offset': offset, 'report': state}
+    if rank_by:
+        allowed = {'arg_summary': {'knownHits', 'novel075', 'novel095'}, 'bgc_status': {'regionCount'}}
+        if rank_by not in allowed.get(kind, set()):
+            raise HTTPException(400, '不支持的汇总排序指标。')
+        items, total = repository.records(state['revision'], kind, mag_id=mag_id, query=query)
+        items = sorted(items, key=lambda row: (row[rank_by] is None, -(row[rank_by] or 0), row['magId']))[offset:offset+limit]
+    else:
+        items, total = repository.records(state['revision'], kind, limit, offset, mag_id, query)
+    return {'dataset': data.version, 'release': data.fingerprint, 'status': state['status'],
+            'items': items, 'total': total, 'limit': limit, 'offset': offset, 'report': state}
+
+
+@router.get('/sources/{module}/{index}')
+def source_download(module: str, index: int, data: Data):
+    state = data.modules.get(module, {})
+    if 'revision' not in state:
+        raise HTTPException(404, '没有对应来源。')
+    files = repository.artifact_info(state['revision'])['sources']
+    if index < 0 or index >= len(files):
+        raise HTTPException(404, '没有对应来源。')
+    entry = files[index]
+    path = (BACKEND_ROOT / entry['file']).resolve()
+    if not path.is_relative_to(RAW_ROOT.resolve()) or not path.is_file():
+        raise HTTPException(404, '原文件当前未挂载；已导入的结果仍可查询。')
+    from app.services.cohort_import import sha256
+    if path.stat().st_size != entry['bytes'] or sha256(path) != entry['sha256']:
+        raise HTTPException(409, '原文件与该分析记录的来源校验值不一致。')
+    return FileResponse(path, filename=path.name, headers={'X-Content-SHA256': entry['sha256']})
 
 
 def heatmap_settings(
@@ -186,7 +260,7 @@ def lineage_cluster(
     scope: Scope,
     query: str = Query(default="", max_length=200),
     member_disease: Literal["", "AD", "NC"] = Query(default="", alias="memberDisease"),
-    source_group: Literal["", "CHN", "CHN2"] = Query(default="", alias="sourceGroup"),
+    source_group: str = Query(default="", alias="sourceGroup", max_length=128),
     low_ani_only: bool = Query(default=False, alias="lowAniOnly"),
     sort_by: Annotated[
         Literal["memberMag", "memberSourceSampleId", "memberToRepAni", "memberToRepAlignmentCoverage"],
@@ -246,13 +320,11 @@ def download(
     audit = service.provenance(data, scope)
     token = f"{data.version}-{kind}-{audit['requestFingerprint'][:12]}"
     if kind in {"lineage", "crosswalk"}:
-        manifest_sha = audit["manifest"]["sha256"] or ""
-        return FileResponse(
-            service.raw_download_path(data, kind),
-            media_type="text/tab-separated-values; charset=utf-8",
-            filename=f"{token}.tsv",
-            headers={"X-Data-Fingerprint": data.fingerprint, "X-MAG-Manifest-SHA256": manifest_sha},
-        )
+        rows = list(data.lineage if kind == 'lineage' else data.crosswalk)
+        columns = list(rows[0]) if rows else ['magId']
+        return StreamingResponse(service.stream_csv(rows, columns), media_type='text/csv; charset=utf-8',
+                                 headers={'Content-Disposition': f'attachment; filename="{token}.csv"',
+                                          'X-Data-Fingerprint': data.fingerprint})
     if kind == "provenance":
         display: dict = {"view": view, "featureQuery": query, "sortBy": sort_by, "direction": direction,
                          "pageLimit": limit, "pageOffset": offset, "topN": top_n, "selectedMagId": mag_id,

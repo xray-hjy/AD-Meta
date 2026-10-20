@@ -26,7 +26,7 @@ def test_projection_cache_entry_limit_cannot_exceed_total_limit() -> None:
         )
 
 
-def test_mag_storage_backend_is_validated() -> None:
-    assert Settings(_env_file=None, mag_storage_backend="DATABASE").mag_storage_backend == "database"
-    with pytest.raises(ValidationError, match="MAG_STORAGE_BACKEND"):
-        Settings(_env_file=None, mag_storage_backend="object-store")
+def test_stable_mag_dataset_key_is_validated() -> None:
+    assert Settings(_env_file=None, mag_dataset='project-a-ad-nc').mag_dataset == 'project-a-ad-nc'
+    with pytest.raises(ValidationError, match='MAG_DATASET'):
+        Settings(_env_file=None, mag_dataset='../delivery')

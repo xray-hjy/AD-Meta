@@ -20,7 +20,7 @@ test('complete downloads preserve filters but never page limits or offsets', () 
 
 test('MAG overview waits for a cold snapshot beyond the general 15-second deadline', async () => {
   vi.useFakeTimers();
-  const response = { provenance: { version: 'mag_v3' } };
+  const response = { provenance: { version: 'prjca022804-ad-nc' } };
   vi.stubGlobal('fetch', vi.fn((_url, { signal }) => new Promise((resolve, reject) => {
     const timer = setTimeout(() => resolve({ ok: true, json: async () => response }), 20_000);
     signal.addEventListener('abort', () => { clearTimeout(timer); reject(new DOMException('aborted', 'AbortError')); });

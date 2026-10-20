@@ -5,7 +5,7 @@ from collections import defaultdict
 from difflib import SequenceMatcher
 from typing import Any
 
-from app.services.mag_data_service import MagDataset
+from app.domain.mag import MagDataset
 
 
 def suggestions(data: MagDataset, *, context: str, query: str, limit: int) -> dict[str, Any]:

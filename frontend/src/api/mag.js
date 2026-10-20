@@ -1,5 +1,20 @@
 import { fetchJson } from './client';
 
+/** @param {FetchJsonOptions} [options] */
+export function getMagDatasets(options) {
+  return fetchJson('/api/mag/datasets', options);
+}
+
+/** @param {string} dataset @param {FetchJsonOptions} [options] */
+export function getMagReleases(dataset, options) {
+  return fetchJson(`/api/mag/datasets/${encodeURIComponent(dataset)}/releases`, options);
+}
+
+/** @param {string} module @param {MagParams} params @param {FetchJsonOptions} [options] */
+export function getMagRecords(module, params, options) {
+  return fetchJson(`/api/mag/modules/${encodeURIComponent(module)}/records?${magParams(params)}`, options);
+}
+
 /** @typedef {import('./client').FetchJsonOptions} FetchJsonOptions */
 /** @typedef {Record<string, string | number | null | undefined>} MagParams */
 

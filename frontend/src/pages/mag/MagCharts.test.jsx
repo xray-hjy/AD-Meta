@@ -14,7 +14,7 @@ vi.mock('./MagZoomableHeatmap', () => ({ default: ({ data, exportConfig, onSelec
 
 test.each(['features', 'distribution', 'heatmap', 'taxonomy', 'quality', 'mapping'])('%s renders SVG even when downloading PNG', view => {
   const data = {
-    provenance: { version: 'mag_v3', requestFingerprint: 'test-scope', groupCounts: { AD: 1, NC: 0 }, magCount: 872 },
+    provenance: { version: 'prjca022804-ad-nc', requestFingerprint: 'test-scope', groupCounts: { AD: 1, NC: 0 }, magCount: 872 },
     feature: { magId: 'MAG_A' },
     items: [{ magId: 'MAG_A', adMeanPercent: 1, ncMeanPercent: null, label: 'Bacillota', count: 1, percent: 100,
       completenessPercent: 95, contaminationPercent: 2, inReferenceBand: true,
@@ -66,7 +66,7 @@ test('heatmap color transform does not change reported raw abundance', () => {
 test('continuous heatmap and export include the whole selected collection', () => {
   const magIds = Array.from({ length: 100 }, (_, i) => `MAG_${i}`);
   const onSelect = vi.fn();
-  const data = { provenance: { version: 'mag_v3', requestFingerprint: 'scope' }, projectionFingerprint: 'heatmap-settings',
+  const data = { provenance: { version: 'prjca022804-ad-nc', requestFingerprint: 'scope' }, projectionFingerprint: 'heatmap-settings',
     magIds, samples: [{ sampleId: 'S1', disease: 'AD', batch: '1' }], values: [magIds.map(() => 1)], settings: { colorMode: 'abundance' } };
   render(<MagChart view="heatmap" data={data} format="svg" size="standard" onSelect={onSelect} />);
   const chart = screen.getByTestId('chart');
@@ -101,6 +101,6 @@ test('quality uses all MAGs at one grain with explicit reference lines and no bu
   expect(option.series[0].symbolSize).toBe(7);
   expect(option.series[1].symbolSize).toBe(7);
   expect(option.series[0].markLine.data).toEqual(expect.arrayContaining([expect.objectContaining({ xAxis: 90 }), expect.objectContaining({ yAxis: 5 })]));
-  expect(option.xAxis).toMatchObject({ min: 50, max: 100 });
+  expect(option.xAxis).toMatchObject({ min: 0, max: 100 });
   expect(option.yAxis).toMatchObject({ min: 0, max: 10 });
 });

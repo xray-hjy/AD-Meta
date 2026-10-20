@@ -611,7 +611,7 @@ MAG、物种/KO 共享条形图、自动补全、主题下拉、Top N、聚类�
 - 主题下拉与数量：`2026-10-08-themed-selects.md`，同目录。
 - 树状图与最近导出修复：`2026-10-08-mag-dendrogram.md`，同目录。
 - 稳定运行入口：`docs/guides/runbook.md`。
-- MAG 数据契约：`docs/guides/mag-data.md`，注意第 16 节列出的陈旧段落。
+- 当前 MAG 数据契约：`docs/guides/mag-source-import.md`。本交接记录中的旧版本包路径仅作历史记录。
 - 来源事实与缺项：`docs/guides/server-transfer-audit.md`。
 
 新聊天不需要一次读完所有历史日志。先读本文和本次任务相关代码，再按问题查对应记录，通常更容易保持上下文清楚。

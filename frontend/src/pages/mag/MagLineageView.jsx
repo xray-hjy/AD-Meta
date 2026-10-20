@@ -32,6 +32,7 @@ const percent = value => value == null ? '—' : `${number(Number(value) * 100)}
 function StatusBadge({ status }) {
   const tone = status === 'matched_exact_ncbi_species_taxid' ? 'exact'
     : status === 'ncbi_species_taxid_not_observed_in_reads' ? 'not-observed' : 'unresolved';
+  if (!status) return <span className="mag-status-badge">未提供对应</span>;
   return <span className={`mag-status-badge mag-status-badge--${tone}`} title={status}>{statusLabel(status)}</span>;
 }
 
@@ -41,10 +42,10 @@ function EvidenceChain({ evidence }) {
   const steps = [
     ['来源样本', member.memberSourceSampleId, `disease=${member.memberDisease} · Group=${member.memberGroup}（来源组）`],
     ['成员 MAG', member.memberMag, `完整度 ${number(member.memberCompletenessPercent)}% · 污染率 ${number(member.memberContaminationPercent)}%`],
-    ['dRep 聚类', member.clusterId, `average linkage · fastANI · 实际 ANI ${number(member.memberToRepAni)}`],
+    ['dRep 聚类', member.clusterId, `${member.clusterMethod} · ${member.comparisonAlgorithm} · 实际 ANI ${number(member.memberToRepAni)}`],
     ['代表 MAG', member.representativeMag, `reference；成员为 query · 基因组比对比例 ${percent(member.memberToRepAlignmentCoverage)}`],
-    ['GTDB R232', crosswalk?.gtdbSpecies || '未解析', crosswalk?.gtdbReferenceAccession || '无 GTDB 参考 accession'],
-    ['NCBI / Bracken', crosswalk ? statusLabel(crosswalk.mappingStatus) : '未解析', crosswalk?.krakenSpeciesName || crosswalk?.ncbiOrganismName || '无物种名称'],
+    ['GTDB 分类', evidence.cluster.gtdbSpecies || '未解析', crosswalk?.gtdbReferenceAccession || '参考信息见 MAG 分类详情'],
+    ...(crosswalk ? [['NCBI / Bracken', statusLabel(crosswalk.mappingStatus), crosswalk.krakenSpeciesName || crosswalk.ncbiOrganismName || '无物种名称']] : []),
   ];
   return <section className="mag-evidence" aria-label="单 MAG 证据链">
     <div className="mag-evidence__header">
@@ -121,24 +122,24 @@ export default function MagLineageView({ overview, initialMagId = '', onDetail }
   const evidenceMag = selectedMag || cluster.data?.items[0]?.memberMag || '';
   const evidence = useQuery({ queryKey: ['mag', 'lineage-evidence', evidenceMag, revision], queryFn: ({ signal }) => getMagLineage(evidenceMag, { revision }, { signal }), enabled: Boolean(evidenceMag) });
   const crosswalkParams = { revision, query: crosswalkQuery, mappingStatus: crosswalkStatus, limit: PAGE_SIZE, offset: (crosswalkPage - 1) * PAGE_SIZE };
-  const crosswalk = useQuery({ queryKey: ['mag', 'crosswalk', crosswalkParams], queryFn: ({ signal }) => getMagCrosswalk(crosswalkParams, { signal }), placeholderData: previous => previous });
+  const crosswalk = useQuery({ queryKey: ['mag', 'crosswalk', crosswalkParams], queryFn: ({ signal }) => getMagCrosswalk(crosswalkParams, { signal }), placeholderData: previous => previous, enabled: Boolean(overview.capabilities.crosswalk) });
 
   useEffect(() => { setMemberPage(1); }, [clusterId]);
 
   const activeError = clusters.error || cluster.error || evidence.error || crosswalk.error;
   const retry = () => { clusters.refetch(); cluster.refetch(); evidence.refetch(); crosswalk.refetch(); };
   const controls = <div className="analysis-downloads">
-    <a className="analysis-button" href={magDownloadUrl('lineage', { revision })} download>下载原始 lineage TSV</a>
-    <a className="analysis-button" href={magDownloadUrl('crosswalk', { revision })} download>下载原始 crosswalk TSV</a>
+    <a className="analysis-button" href={magDownloadUrl('lineage', { revision })} download>下载去冗余关系 CSV</a>
+    {overview.capabilities.crosswalk && <a className="analysis-button" href={magDownloadUrl('crosswalk', { revision })} download>下载分类对应 CSV</a>}
   </div>;
 
-  return <ChartFrame title="来源与去冗余" subtitle="查看来源样本、成员—代表关系、实际 ANI、质量与 GTDB—NCBI/Bracken 分类标识符对应。" layout="document" controls={controls}>
+  return <ChartFrame title="来源与去冗余" subtitle="查看来源样本、成员—代表关系、实际 ANI 与质量。跨分类体系对应作为独立可选结果。" layout="document" controls={controls}>
     <div className="mag-lineage-stack">
-      <p className="mag-inline-notice">disease 是 AD/NC 疾病分组；Group 仅为 CHN/CHN2 来源组。这里展示跨样本去冗余，不是独立外部队列验证。</p>
+      <p className="mag-inline-notice">disease 是 AD/NC 疾病分组；Group 是元数据中的来源组。这里展示跨样本去冗余，不是独立外部队列验证。</p>
       <form className="analysis-filter-form" aria-label="筛选 dRep 聚类" onSubmit={event => { event.preventDefault(); setClusterQuery(clusterDraft.trim()); setClusterPage(1); setSelectedCluster(''); }}>
         <label>聚类 / 代表 MAG / GTDB 物种<MagSearchInput revision={revision} context="lineage" label="聚类 / 代表 MAG / GTDB 物种" value={clusterDraft} onChange={setClusterDraft}
           onSelect={value => { setClusterQuery(value); setClusterPage(1); setSelectedCluster(''); }} /></label>
-        <label>物种映射状态<StyledSelect value={mappingStatus} onChange={event => { setMappingStatus(event.target.value); setClusterPage(1); }}>{STATUS_OPTIONS.map(([key, label]) => <option value={key} key={key}>{label}</option>)}</StyledSelect></label>
+        {overview.capabilities.crosswalk && <label>物种映射状态<StyledSelect value={mappingStatus} onChange={event => { setMappingStatus(event.target.value); setClusterPage(1); }}>{STATUS_OPTIONS.map(([key, label]) => <option value={key} key={key}>{label}</option>)}</StyledSelect></label>}
         <label className="mag-check"><input type="checkbox" checked={lowAniOnly} onChange={event => { setLowAniOnly(event.target.checked); setClusterPage(1); }} />仅看含 ANI＜0.95 记录的聚类</label>
         <button className="analysis-button analysis-button--primary" type="submit">搜索聚类</button>
       </form>
@@ -156,7 +157,7 @@ export default function MagLineageView({ overview, initialMagId = '', onDetail }
 
       {cluster.isPending && clusterId ? <LoadingState message="正在读取当前聚类成员..." /> : cluster.data ? <section className="mag-detail-section">
         <div className="mag-section-heading"><div><span className="mag-kicker">局部关系</span><h3>{cluster.data.cluster.clusterId} · {cluster.data.cluster.representativeMag}</h3></div><span>{cluster.data.total} 个成员</span></div>
-        <p className="mag-muted">仅呈现当前聚类，不绘制 8,548 节点全局网络。ANI 方向固定为代表 MAG 作 reference、成员 MAG 作 query。</p>
+        <p className="mag-muted">仅呈现当前聚类，不绘制全部成员的全局网络。ANI 方向固定为代表 MAG 作 reference、成员 MAG 作 query。</p>
         <CollapsibleResultSection title="成员与代表的比对证据" storageKey="admeta:mag:lineage-scatter:fold"
           summary={`当前页 ${cluster.data.items.length} / ${cluster.data.total} 成员 · 菱形为代表自身`}
           actions={<button type="button" className="analysis-button" onClick={() => onDetail?.(cluster.data.cluster.representativeMag)}>查看代表 MAG 详情</button>}>
@@ -173,7 +174,7 @@ export default function MagLineageView({ overview, initialMagId = '', onDetail }
 
       {evidence.isPending && evidenceMag ? <LoadingState message="正在构建单 MAG 证据链..." /> : <EvidenceChain evidence={evidence.data} />}
 
-      <section className="mag-detail-section">
+      {overview.capabilities.crosswalk && <section className="mag-detail-section">
         <div className="mag-section-heading"><div><span className="mag-kicker">分类标识符对应</span><h3>代表 MAG 物种 crosswalk</h3></div></div>
         <form className="analysis-filter-form" aria-label="筛选 MAG 物种映射" onSubmit={event => { event.preventDefault(); setCrosswalkQuery(crosswalkDraft.trim()); setCrosswalkPage(1); }}>
           <label>MAG / GTDB / NCBI / Bracken 搜索<MagSearchInput revision={revision} context="crosswalk" label="MAG / GTDB / NCBI / Bracken 搜索" value={crosswalkDraft} onChange={setCrosswalkDraft}
@@ -188,7 +189,7 @@ export default function MagLineageView({ overview, initialMagId = '', onDetail }
           <CrosswalkTable data={crosswalk.data} onSelect={onDetail} page={crosswalkPage} pagination={<PaginationControls page={crosswalkPage} pageCount={Math.ceil(crosswalk.data.total / PAGE_SIZE)} onPageChange={setCrosswalkPage} disabled={crosswalk.isFetching} ariaLabel="MAG 物种映射分页" />} />
         </> : null}
         <p className="mag-muted">未解析状态不会通过名称相似度自动升级为确定映射；只有“精确匹配”表示本批 Bracken 集合中存在精确 NCBI species TaxID 对应。</p>
-      </section>
+      </section>}
     </div>
   </ChartFrame>;
 }

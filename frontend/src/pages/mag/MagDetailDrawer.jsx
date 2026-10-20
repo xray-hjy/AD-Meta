@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import SlidingTabs from '../../components/ui/SlidingTabs';
 import { useQuery } from '@tanstack/react-query';
-import { getMagCatalog, getMagDistribution, getMagLineage } from '../../api/mag';
+import { getMagCatalog, getMagDistribution, getMagLineage, getMagRecords } from '../../api/mag';
 import LoadingState from '../../components/ui/LoadingState';
 import ErrorState from '../../components/ui/ErrorState';
 import { MagPlanCard, MAG_RESEARCH_PLANS } from './MagResearchPlans';
@@ -32,6 +32,12 @@ export default function MagDetailDrawer({ magId, overview, scope, onClose, onNav
   const member = evidence.data?.member;
   const canNavigate = !overview.capabilities.lineage || evidence.isSuccess;
   const crosswalk = evidence.data?.crosswalk;
+  const arg = useQuery({ queryKey: ['mag', 'arg-detail', revision, representative],
+    queryFn: ({ signal }) => getMagRecords('arg', { revision, kind: 'arg_summary', magId: representative, limit: 1 }, { signal }),
+    enabled: tab === 'function' && Boolean(overview.capabilities.arg) });
+  const bgc = useQuery({ queryKey: ['mag', 'bgc-detail', revision, representative],
+    queryFn: ({ signal }) => getMagRecords('bgc', { revision, kind: 'bgc_status', magId: representative, limit: 1 }, { signal }),
+    enabled: tab === 'function' && Boolean(overview.capabilities.bgc) });
   useEffect(() => {
     const previous = document.activeElement;
     const element = dialog.current;
@@ -71,7 +77,7 @@ export default function MagDetailDrawer({ magId, overview, scope, onClose, onNav
           {crosswalk && <><h3>分类标识符对应</h3><EvidenceList items={[
             ['GTDB 参考 accession', crosswalk.gtdbReferenceAccession], ['NCBI species TaxID', crosswalk.ncbiSpeciesTaxid], ['NCBI 名称', crosswalk.ncbiOrganismName],
             ['Kraken / Bracken 物种', crosswalk.krakenSpeciesName], ['匹配状态', crosswalk.mappingStatus === 'matched_exact_ncbi_species_taxid' ? '精确 TaxID 对应' : crosswalk.mappingStatus === 'ncbi_species_taxid_not_observed_in_reads' ? 'TaxID 有效，Kraken/Bracken 来源批次未观察到' : '未解析'],
-          ]} /><p className="mag-muted">对应表随 MAG 数据包提供，观察状态来自其 Kraken/Bracken 结果，不代表当前 MetaPhlAn 物种矩阵的检出状态。</p></>}<p className="mag-muted">分类标识符对应不证明 reads 直接比对到具体 MAG；未解析结果不按名称相似度补成确定匹配。</p></>}
+          ]} /><p className="mag-muted">对应表来自原始分析结果，观察状态来自其 Kraken/Bracken 结果，不代表当前 MetaPhlAn 物种矩阵的检出状态。</p></>}<p className="mag-muted">分类标识符对应不证明 reads 直接比对到具体 MAG；未解析结果不按名称相似度补成确定匹配。</p></>}
         {tab === 'quality' && <><h3>{isMember ? '成员质量与代表组装信息' : '质量与组装'}</h3>
           {isMember && member && <EvidenceList items={[
             ['成员完整度', `${number(member.memberCompletenessPercent)}%`], ['成员污染率', `${number(member.memberContaminationPercent)}%`],
@@ -90,7 +96,18 @@ export default function MagDetailDrawer({ magId, overview, scope, onClose, onNav
         ]} /> : <p>来源与去冗余证据尚未接入。</p>}
           {member?.memberToRepAni < 0.95 && <p className="mag-inline-notice">实际 ANI 低于 95%，保留原值；average linkage 不保证每位成员都达到名义阈值。</p>}
           <p className="mag-muted">来源成员数不等于样本丰度或检出率；CHN / CHN2 是来源组，非已完成的外部验证。完整 dRep 版本、命令和代表选择权重待补。</p></>}
-        {tab === 'function' && <MagPlanCard plan={MAG_RESEARCH_PLANS[0]} />}
+        {tab === 'function' && ((overview.capabilities.arg || overview.capabilities.bgc) ? <>
+          <h3>代表 MAG 的功能潜力</h3>
+          {(arg.isFetching || bgc.isFetching) && <LoadingState />}
+          {(arg.error || bgc.error) && <ErrorState message={(arg.error || bgc.error).message} onRetry={() => { arg.refetch(); bgc.refetch(); }} />}
+          <EvidenceList items={[
+            ['ARG HMM 命中', arg.data?.items[0]?.knownHits], ['新候选 passed_0.75', arg.data?.items[0]?.novel075],
+            ['新候选 passed_0.95', arg.data?.items[0]?.novel095], ['BGC 区域', bgc.data?.items[0]?.regionCount],
+            ['BGC 分析状态', bgc.data?.items[0]?.status],
+          ]} />
+          <p className="mag-muted">这些结果属于代表 MAG，不自动转赋给所有聚类成员；候选和合成潜力不等同于表达或已验证功能。</p>
+          <button type="button" className="analysis-button" onClick={() => onNavigate('function', representative)}>查看功能明细</button>
+        </> : <MagPlanCard plan={MAG_RESEARCH_PLANS[0]} />)}
       </section>
       <footer><button type="button" disabled={!canNavigate} className="analysis-button analysis-button--primary" onClick={() => onNavigate('distribution', representative)}>查看分布图</button>
         <button type="button" disabled={!canNavigate} className="analysis-button" onClick={() => onNavigate('heatmap', representative)}>加入热图候选</button>

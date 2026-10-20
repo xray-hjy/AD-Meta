@@ -80,6 +80,11 @@ beforeEach(() => {
   }];
 
   fetchJson.mockImplementation(async url => {
+    if (url === '/api/mag/datasets') {
+      return { items: [{ key: 'test-cohort', name: 'Test cohort', communityResults: {
+        ko: { datasetSlug: 'ad-nc-ko-abundance', runKey: 'ad-nc-baseline' },
+      } }] };
+    }
     if (url === '/api/analysis-runs') {
       return analysisRuns;
     }

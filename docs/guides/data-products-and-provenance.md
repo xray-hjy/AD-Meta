@@ -129,6 +129,6 @@ MAG 功能注释优先保留 `MAG ID → Gene ID → 功能编号` 明细，并�
 - 用户指定的流程文档：`G:/project/docs/AD宏基因组生物信息分析流程.md`。
 - 本机数据与启动配置：[LOCAL_SETUP.md](../../LOCAL_SETUP.md)。
 - 实际导入配置：[storage_manifest.json](../../backend/storage_manifest.json)。
-- MAG 版本与来源：[mag_v3_manifest.json](../../ADMetaData/development_input/mag_v3/provenance/mag_v3_manifest.json)。
+- MAG 当前来源与归档清单：[MAG 原文件导入](mag-source-import.md)。旧版本包已退役。
 - [科学元数据待补充事项](../development/scientific-metadata-follow-up.md)。
 - [分析结果交付契约草案](../reference/analysis-run-artifact-manifest.md)：该文档部分实现状态已落后于当前代码；实际已有 analysis run、revision 和 MAG 版本持久化能力，不能按草案中的旧状态判断完成度。

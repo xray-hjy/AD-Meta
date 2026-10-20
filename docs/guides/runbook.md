@@ -118,24 +118,22 @@ This reads `backend/storage_manifest.json`, imports each file under
 JSON under `backend/storage/cache/`. Run it again after pulling changes that
 update `COMPUTE_VERSION` or chart precomputation logic.
 
-Import each validated MAG package after the Alembic migration, then select the
-database backend in `.env`:
+MAG results now use the same source-cohort registry as the community results.
+Copy the offline MAG raw delivery into `backend/storage/raw/ad-nc-mag/PRJCA022804/`,
+preserve the original tree, and import its explicitly declared modules:
 
 ```bash
-npm run import:mag:database -- --version mag_v2
-npm run import:mag:database -- --version mag_v3
+npm run import:cohort -- --dataset prjca022804-ad-nc
+npm run validate:mag -- --dataset prjca022804-ad-nc
 ```
 
-```dotenv
-AD_META_MAG_DATA_ROOT=ADMetaData
-AD_META_MAG_DATA_VERSION=mag_v2
-AD_META_MAG_STORAGE_BACKEND=database
-```
-
-The importer validates the package and manifest before opening the write
-transaction. Re-running an identical version is a no-op; reusing a version name
-with a different fingerprint is rejected. Keep the package directory because it
-remains the provenance source and supplies unchanged raw lineage/crosswalk downloads.
+Set `AD_META_MAG_DATASET=prjca022804-ad-nc` for the default dataset.
+The importer creates immutable source-artifact revisions and an atomic release;
+repeated identical inputs reuse the same revisions. The web runtime reads the
+database, and does not require a legacy MAG delivery package. Raw downloads still
+require the corresponding original file to be mounted.
+See [source import and offline delivery](mag-source-import.md) for checksum
+verification, failure handling, metadata joins and extension points.
 
 Raw duplicate headers fail validation by default. A dataset may set
 `duplicateFeaturePolicy` to `coalesce_equal_selected` only for a documented

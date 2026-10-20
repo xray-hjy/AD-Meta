@@ -20,12 +20,13 @@ export default function AnalysisWorkspacePage() {
     });
   }, [setSearchParams]);
 
-  const changeDataset = useCallback(slug => {
+  const changeDataset = useCallback((slug, context) => {
     setSearchParams(current => {
       const next = new URLSearchParams(current);
       next.delete('domain');
       next.set('dataset', slug);
       next.set('chart', 'species');
+      if (context?.runKey) next.set('run', context.runKey);
       ['scope', 'group', 'samples', 'topN', 'q', 'log2fc', 'prevalence', 'detection', 'pcoaFilter']
         .forEach(key => next.delete(key));
       return next;
