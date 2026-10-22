@@ -27,7 +27,7 @@ test('home page opens the analysis workspace and passes the accessibility gate',
   await expect(page.getByRole('heading', { name: /物种、KO、MAG，\s*在一个工作区里查看。/, level: 1 })).toBeVisible();
   await expectNoBlockingAccessibilityViolations(page);
 
-  await page.getByRole('link', { name: /进入分析/ }).click();
+  await page.getByRole('link', { name: /进入工作区/ }).click();
   await expect(page).toHaveURL(/\/analysis\/abundance/);
   await expect(page.getByRole('heading', { name: /Top N (物种|KO)丰度对比/, level: 2 })).toBeVisible();
   await expectNoBlockingAccessibilityViolations(page);
@@ -71,9 +71,9 @@ test('home sections settle at reading stops without interrupting gallery browsin
   const before = await page.locator('.slide-count').textContent();
   await page.mouse.move(700, 450); await page.mouse.wheel(0, 120);
   await expect(page.locator('.slide-count')).not.toHaveText(before);
-  await page.getByRole('link', { name: '数据基础', exact: true }).click();
+  await page.getByRole('link', { name: '数据与方法', exact: true }).click();
   await expect(page.locator('[data-home-section="foundation"]')).toHaveAttribute('data-home-active', 'true');
-  await expect(page.getByRole('link', { name: '打开分析工作区' })).toBeVisible();
+  await expect(page.getByRole('link', { name: '查看 MAG 结果' })).toBeVisible();
 });
 
 test('deep links restore all taxonomy modes and dataset switching', async ({ page }) => {

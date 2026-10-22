@@ -46,11 +46,11 @@ def catalog(data: reference.ReferenceDataset, revision="", dataset_slug="ad-nc-s
     for row in derived["statistics"]["items"]:
         f = row["genus"]
         ids = names.get((f["domain"], normalized(f["sourceGenus"])), set())
-        genus = data.genera[next(iter(ids))] if len(ids) == 1 else None
-        status = "mapped" if genus and len(matches[genus["featureId"]]) == 1 else "ambiguous" if ids else "unmapped"
-        if status == "mapped":
-            used.add(genus["featureId"])
-        items.append(comparison_row(f["featureId"], f["name"], row, genus if status == "mapped" else None, status))
+        matched_genus = data.genera[next(iter(ids))] if len(ids) == 1 else None
+        status = "mapped" if matched_genus and len(matches[matched_genus["featureId"]]) == 1 else "ambiguous" if ids else "unmapped"
+        if status == "mapped" and matched_genus is not None:
+            used.add(matched_genus["featureId"])
+        items.append(comparison_row(f["featureId"], f["name"], row, matched_genus if status == "mapped" else None, status))
     for genus in data.genera.values():
         if genus["featureId"] not in used:
             items.append(comparison_row(genus["featureId"], genus["name"], None, genus, "reference_only"))

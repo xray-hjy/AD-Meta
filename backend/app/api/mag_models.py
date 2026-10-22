@@ -39,6 +39,7 @@ class MagManifestReference(BaseModel):
 
 
 class MagProvenance(BaseModel):
+    cohort: dict[str, str] = Field(default_factory=dict)
     datasetKey: str = ''
     release: str = ''
     modules: dict[str, Any] = Field(default_factory=dict)

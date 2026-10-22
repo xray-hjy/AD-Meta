@@ -1,14 +1,11 @@
 import { useEffect, useRef } from 'react';
-import { HOME_CHAPTERS } from '../homeContent';
+import { HOME_HERO_BACKDROP } from '../homeContent';
 import { HOME_MOTION } from '../motion/motionConfig';
 import { createHeroBackdropController } from '../motion/createHeroBackdropController';
 
-// Reuse the existing local chart assets; this layer never renders live charts
-// or fetches analysis data. Portrait settings screenshots belong in the gallery.
-const screenshots = HOME_CHAPTERS.filter(chapter => chapter.entry)
-  .flatMap(chapter => chapter.slides.filter(slide => slide.width > slide.height));
+// Content owns the screenshot playlist; motion owns its repeated column layout.
 const columns = Array.from({ length: HOME_MOTION.heroBackdrop.columns }, (_, column) =>
-  Array.from({ length: 6 }, (_, row) => screenshots[(column * 3 + row) % screenshots.length]));
+  Array.from({ length: 6 }, (_, row) => HOME_HERO_BACKDROP[(column * 3 + row) % HOME_HERO_BACKDROP.length]));
 
 export default function HomeHeroBackdrop({ heroRef, reducedMotion }) {
   const backdropRef = useRef(null);

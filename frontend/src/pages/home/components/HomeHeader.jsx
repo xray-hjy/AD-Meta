@@ -1,15 +1,16 @@
 import { Link } from 'react-router-dom';
 import BrandMark from '../../../components/brand/BrandMark';
+import { HOME_COPY } from '../homeContent';
 
 export default function HomeHeader({ onChapter, onSection }) {
   return <header className="site-header">
-      <Link className="brand" to="/" aria-label="微脑智库首页"><BrandMark size="home" /><span>微脑智库</span></Link>
-      <nav className="header-nav" aria-label="首页导航">
-        <a href="#home-showcase" onClick={event => { event.preventDefault(); onChapter('species'); }}>可视化展示</a>
-        <a href="#home-evidence" onClick={event => { event.preventDefault(); onSection('foundation'); }}>数据基础</a>
-        <a href="#home-customization" onClick={event => { event.preventDefault(); onChapter('custom'); }}>自定义能力</a>
-        <Link className="header-reference" to="/reference/gmrepo">外部证据评估</Link>
-        <Link className="header-cta" to="/analysis/abundance">进入分析 ↗</Link>
+      <Link className="brand" to="/" aria-label={HOME_COPY.brand.homeLabel}><BrandMark size="home" /><span>{HOME_COPY.brand.name}</span></Link>
+      <nav className="header-nav" aria-label={HOME_COPY.header.navigationLabel}>
+        <a href="#home-showcase" onClick={event => { event.preventDefault(); onChapter('species'); }}>{HOME_COPY.header.showcase}</a>
+        <a href="#home-evidence" onClick={event => { event.preventDefault(); onSection('foundation'); }}>{HOME_COPY.header.foundation}</a>
+        <a href="#home-customization" onClick={event => { event.preventDefault(); onChapter('custom'); }}>{HOME_COPY.header.customization}</a>
+        <Link className="header-reference" to="/reference/gmrepo">{HOME_COPY.header.reference}</Link>
+        <Link className="header-cta" to="/analysis/abundance">{HOME_COPY.header.analysis} <span aria-hidden="true">{HOME_COPY.symbols.external}</span></Link>
       </nav>
     </header>;
 }

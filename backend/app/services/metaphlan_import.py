@@ -6,6 +6,7 @@ import csv
 import hashlib
 import re
 from pathlib import Path
+from typing import NoReturn
 
 import numpy as np
 import pandas as pd
@@ -15,7 +16,7 @@ from app.compute.table import InputValidationError
 
 def normalize_metaphlan(source: Path, metadata_path: Path) -> tuple[pd.DataFrame, dict]:
     """Keep species rows, join groups by CRR, and convert percent to fractions."""
-    def fail(message: str) -> None:
+    def fail(message: str) -> NoReturn:
         raise InputValidationError("invalid_metaphlan_profile", message)
 
     with source.open(encoding="utf-8-sig", newline="") as handle:

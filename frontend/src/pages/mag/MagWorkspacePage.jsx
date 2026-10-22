@@ -1,5 +1,5 @@
 import StyledSelect from '../../components/ui/StyledSelect';
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ApiError } from '../../api/client';
 import {
@@ -209,7 +209,7 @@ function WorkspaceResults({ overview, scope, view, setView, selectedMag, setSele
   const audit = data?.provenance || overview.provenance;
   const selectionError = view === 'distribution' && !magId ? features.error : null;
   const sampleScoped = SAMPLE_SCOPED_VIEWS.has(view);
-  const empty = (sampleScoped && audit.sampleCount === 0)
+  const empty = (sampleScoped && (overview.provenance.sampleCount === 0 || audit.sampleCount === 0))
     || (view === 'features' && data?.items.length === 0)
     || (view === 'distribution' && !magId && !features.isPending)
     || (view === 'taxonomy' && data?.items.length === 0)
@@ -349,6 +349,7 @@ function readEvidenceReturn() {
 }
 
 export default function MagWorkspacePage({ datasets = [], onDatasetChange, onDomainChange }) {
+  const resultsStart = useRef(null);
   const [restored] = useState(readEvidenceReturn);
   const [scope, setScope] = useState(restored.scope || DEFAULT_SCOPE);
   const [selectedMag, setSelectedMag] = useState(restored.selectedMag || '');
@@ -356,11 +357,10 @@ export default function MagWorkspacePage({ datasets = [], onDatasetChange, onDom
   const [heatmapCandidate, setHeatmapCandidate] = useState(restored.heatmapCandidate || '');
   const [view, setView] = useState(restored.view || 'features');
   useEffect(() => { try { sessionStorage.removeItem('admeta:evidence:mag-return'); } catch { /* Optional browser storage. */ } }, []);
-  const [datasetKey, setDatasetKey] = useState(restored.datasetKey || '');
   const [release, setRelease] = useState(restored.release || '');
   const cohorts = useQuery({ queryKey: ['mag', 'datasets'], queryFn: ({ signal }) => getMagDatasets({ signal }) });
   const defaultDataset = cohorts.data?.items?.find(item => item.key === cohorts.data?.defaultDataset)?.key || cohorts.data?.items?.[0]?.key || '';
-  const activeDataset = datasetKey || defaultDataset;
+  const activeDataset = restored.datasetKey || defaultDataset;
   const cohortEntry = cohorts.data?.items?.find(item => item.key === activeDataset);
   const releases = useQuery({ queryKey: ['mag', 'releases', activeDataset], enabled: Boolean(activeDataset),
     queryFn: ({ signal }) => getMagReleases(activeDataset, { signal }) });
@@ -369,6 +369,10 @@ export default function MagWorkspacePage({ datasets = [], onDatasetChange, onDom
     queryKey: ['mag', 'overview', overviewParams],
     queryFn: ({ signal }) => getMagOverview(overviewParams, { signal }),
     enabled: Boolean(activeDataset),
+    placeholderData: (previous, previousQuery) => {
+      const prior = previousQuery?.queryKey?.[2];
+      return prior?.dataset === activeDataset && prior?.release === release ? previous : undefined;
+    },
     retry: (failureCount, error) => failureCount < 1 && error instanceof ApiError && ['timeout', 'network'].includes(error.kind),
   });
   const audit = overview.data?.provenance;
@@ -417,9 +421,6 @@ export default function MagWorkspacePage({ datasets = [], onDatasetChange, onDom
   />;
   const sidebar = <aside className="sidebar" data-scroll-region="sidebar">
     <section className="sidebar-section"><div className="sidebar-section__header"><h3 className="sidebar-heading">数据概览</h3><span className="sidebar-section__status">当前队列</span></div>
-      <label>来源数据集<StyledSelect value={activeDataset} aria-label="选择 MAG 数据集" onChange={event => {
-        setDatasetKey(event.target.value); setRelease(''); setDetailMag(''); setSelectedMag(''); setScope(DEFAULT_SCOPE); setView('features');
-      }}>{(cohorts.data?.items || []).map(item => <option key={item.key} value={item.key}>{item.name}</option>)}</StyledSelect></label>
       {cohorts.error && <p role="alert">{cohorts.error.message}</p>}
       <DatasetSummary summary={summary} />
     </section>
@@ -444,8 +445,11 @@ export default function MagWorkspacePage({ datasets = [], onDatasetChange, onDom
   return <AppShell tone="mag" topbar={topbar} sidebar={sidebar} main={<MainWorkspace chartKey="mag">
     <div className="analysis-workspace-stack mag-workspace">
       {cohorts.error || (cohorts.isSuccess && !activeDataset) ? <ErrorState message={cohorts.error?.message || '尚未导入 MAG 原文件。请复制 raw 数据并执行队列导入。'} onRetry={cohorts.refetch} /> : overview.isPending ? <LoadingState message="正在准备 MAG 数据与样本范围，首次加载可能需要一些时间..." /> : overview.error ? <ErrorState message={overview.error.message} onRetry={overview.refetch} /> : <>
-        <MagDatasetDescription provenance={audit} capabilities={overview.data.capabilities} />
-        <MagProcessingFlow provenance={audit} capabilities={overview.data.capabilities} onNavigate={setView} />
+        <MagDatasetDescription key={`data-${audit.dataFingerprint}`} provenance={audit} capabilities={overview.data.capabilities} cohort={cohortEntry} pending={overview.isPlaceholderData} />
+        <MagProcessingFlow key={`flow-${audit.dataFingerprint}`} provenance={audit} capabilities={overview.data.capabilities}
+          onNavigate={target => { setView(target); requestAnimationFrame(() => resultsStart.current?.scrollIntoView?.({ block: 'start', behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' })); }}
+          onCommunityNavigate={onDatasetChange ? link => onDatasetChange(link.datasetSlug, link) : undefined} />
+        <div ref={resultsStart} className="mag-results-anchor" />
         {SAMPLE_SCOPED_VIEWS.has(view) ? <section className="mag-filter-panel"><ScopeForm value={scope} options={overview.data.options} onApply={setScope} />
           <p className="mag-muted">丰度阈值只用于“超过阈值”的比例和数量统计，不定义生物学检出；原始丰度和组间检验保持不变。年龄、性别、批次均在同一筛选范围内比较。</p>
         </section> : ['lineage', 'roadmap', 'function', 'phylogeny'].includes(view) ? null : <section className="mag-filter-panel"><p className="mag-muted">当前为 MAG 级注释视图，覆盖全部 {audit.magCount} 个代表 MAG，不使用 disease、年龄、性别、批次或丰度阈值筛选。</p></section>}

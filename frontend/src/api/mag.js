@@ -10,6 +10,16 @@ export function getMagReleases(dataset, options) {
   return fetchJson(`/api/mag/datasets/${encodeURIComponent(dataset)}/releases`, options);
 }
 
+/** @param {string} revision @param {FetchJsonOptions} [options] */
+export function getMagSources(revision, options) {
+  return fetchJson(`/api/mag/sources?${magParams({ revision })}`, options);
+}
+
+/** @param {string} module @param {number} index @param {string} revision */
+export function magSourceDownloadUrl(module, index, revision) {
+  return `${import.meta.env.VITE_API_BASE_URL || ''}/api/mag/sources/${encodeURIComponent(module)}/${index}?${magParams({ revision })}`;
+}
+
 /** @param {string} module @param {MagParams} params @param {FetchJsonOptions} [options] */
 export function getMagRecords(module, params, options) {
   return fetchJson(`/api/mag/modules/${encodeURIComponent(module)}/records?${magParams(params)}`, options);

@@ -60,6 +60,7 @@ def provenance(data: MagDataset, scope: MagScope) -> dict[str, Any]:
         warnings.append('至少一组少于 2 个样本，不计算 p/q 和秩效应量。')
     return {
         'version': data.version, 'datasetKey': data.version, 'release': data.fingerprint,
+        'cohort': data.cohort_info,
         'analysisVersion': ANALYSIS_VERSION, 'storageBackend': 'database',
         'dataFingerprint': data.fingerprint, 'requestFingerprint': hashlib.sha256(request.encode()).hexdigest(),
         'unit': '%', 'groupField': 'disease', 'filters': scope.as_dict(),

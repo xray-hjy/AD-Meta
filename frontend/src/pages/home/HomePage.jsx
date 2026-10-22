@@ -13,7 +13,7 @@ import HomeSection from './components/HomeSection';
 import { HomeSectionContext } from './components/HomeSectionContext';
 import { createSectionRegistry } from './motion/createSectionRegistry';
 import { heroSectionMotion, showcaseSectionMotion, revealSectionMotion } from './motion/sectionMotionPresets';
-import { HOME_CHAPTERS } from './homeContent';
+import { HOME_CHAPTERS, HOME_COPY } from './homeContent';
 import './styles/index.css';
 
 const showcaseAnchor = element => element.querySelector('.story-layout');
@@ -51,11 +51,11 @@ export default function HomePage() {
       <HomeSection id="showcase" snap="managed" adapter={showcaseAdapter} anchor={showcaseAnchor} motion={showcaseSectionMotion}>
         <HomeShowcase pageRef={pageRef} apiRef={showcaseApi} pinned={pinned} onOpen={setSlide} dialogOpen={Boolean(slide)} onChapter={onChapter} />
       </HomeSection>
-      <HomeSection id="foundation" size="viewport" motion={revealSectionMotion}>
+      <HomeSection id="foundation" motion={revealSectionMotion}>
         <HomeFoundation />
       </HomeSection>
     </main>
-    <footer className="site-footer"><strong>AD-Meta · 微脑智库</strong><span>面向 AD 脑肠轴研究的肠道宏基因组研发辅助工具</span></footer>
+    <footer className="site-footer"><strong>{HOME_COPY.brand.footerName}</strong><span>{HOME_COPY.brand.tagline}</span></footer>
     <GalleryDialog slide={slide} onClose={onClose} />
   </div></HomeSectionContext.Provider>;
 }

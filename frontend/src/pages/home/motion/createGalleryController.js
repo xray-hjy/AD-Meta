@@ -3,6 +3,7 @@ import { EffectCoverflow, FreeMode, Mousewheel } from 'swiper/modules';
 import { fitScreenshot, galleryPosition } from './galleryGeometry';
 import { HOME_MOTION, clamp } from './motionConfig';
 import { createPanelTransition } from './panelTransition';
+import { HOME_COPY } from '../homeContent';
 
 // This controller owns only the empty gallery host's descendants. React owns
 // all copy, controls, chapters and routes outside that host.
@@ -29,7 +30,8 @@ export function createGalleryController(host, chapters, { onSelection, onMove, o
       sheet.style.opacity = String(1 - Math.min(1, distance) * .22);
       pane.inert = distance > 1.05;
       pane.setAttribute('aria-hidden', String(pane.inert));
-      sheet.setAttribute('aria-label', `${index === nearest ? '放大查看' : '切换到'}${scene.chapter.slides[index].title}`);
+      const title = scene.chapter.slides[index].title;
+      sheet.setAttribute('aria-label', index === nearest ? HOME_COPY.gallery.open(title) : HOME_COPY.gallery.switchTo(title));
     });
     if (Math.abs(position - nearest) < .00001 && scene.index !== nearest) {
       scene.index = nearest;
@@ -49,7 +51,7 @@ export function createGalleryController(host, chapters, { onSelection, onMove, o
   function build(chapter, initialIndex) {
     const element = document.createElement('div');
     element.className = 'stage-carousel swiper';
-    element.setAttribute('aria-label', chapter.label + '图集');
+    element.setAttribute('aria-label', HOME_COPY.gallery.label(chapter.label));
     element.innerHTML = '<div class="stage-gallery swiper-wrapper"></div>';
     const wrapper = element.firstElementChild;
     host.append(element);
@@ -59,7 +61,7 @@ export function createGalleryController(host, chapters, { onSelection, onMove, o
       const sheet = document.createElement('button'); sheet.type = 'button'; sheet.className = 'stage-slide__sheet';
       const image = document.createElement('img'); image.className = 'stage-image';
       image.src = slide.image; image.width = slide.width; image.height = slide.height;
-      image.alt = slide.title + '分析界面'; image.decoding = 'async';
+      image.alt = slide.alt; image.decoding = 'async';
       sheet.append(image); pane.append(sheet); wrapper.append(pane);
       sheet.addEventListener('click', () => {
         if (scene !== current) return;

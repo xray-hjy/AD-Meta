@@ -88,7 +88,7 @@ def statistics(inputs: dict) -> dict:
     complete = [i for i, s in enumerate(records) if s["age"] is not None and s["sex"] is not None]
     adjusted_counts = Counter(records[i]["group"] for i in complete)
     design = None
-    design_info = {"status": "insufficient_complete_cases"}
+    design_info: dict[str, object] = {"status": "insufficient_complete_cases"}
     if min(adjusted_counts.get("AD", 0), adjusted_counts.get("NC", 0)) >= analysis.MIN_GROUP_SIZE:
         design_samples = [{"age_years": records[i]["age"], "sex": records[i]["sex"], "research_group": records[i]["group"]} for i in complete]
         candidate, names = analysis._design(design_samples, {})
@@ -211,7 +211,9 @@ def snapshot(revision: str = "", dataset_slug: str = "ad-nc-species") -> dict:
 
 
 def selected(result: dict, genus: dict) -> dict:
-    normalize = lambda value: " ".join(value.replace("_", " ").split()).casefold()
+    def normalize(value: str) -> str:
+        return " ".join(value.replace("_", " ").split()).casefold()
+
     names = {normalize(genus["name"]), *(normalize(n) for n in genus["sourceNames"])}
     matches = [r for r in result["statistics"]["items"] if r["genus"]["domain"] == genus["domain"] and normalize(r["genus"]["sourceGenus"]) in names]
     if len(matches) != 1:

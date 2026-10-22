@@ -124,9 +124,9 @@ def list_releases(cohort):
 def release_record(cohort='', release=''):
     with connect() as conn:
         if release:
-            row = conn.execute('SELECT r.*,c.name FROM cohort_releases r JOIN cohorts c ON c.cohort_key=r.cohort_key WHERE r.release_key = ?', (release,)).fetchone()
+            row = conn.execute('SELECT r.*,c.name,c.project_accession,c.study_accession FROM cohort_releases r JOIN cohorts c ON c.cohort_key=r.cohort_key WHERE r.release_key = ?', (release,)).fetchone()
         else:
-            row = conn.execute('SELECT r.*,c.name FROM cohorts c JOIN cohort_releases r ON r.release_key=c.current_release WHERE c.cohort_key = ?', (cohort,)).fetchone()
+            row = conn.execute('SELECT r.*,c.name,c.project_accession,c.study_accession FROM cohorts c JOIN cohort_releases r ON r.release_key=c.current_release WHERE c.cohort_key = ?', (cohort,)).fetchone()
     if not row or (cohort and row['cohort_key'] != cohort):
         raise MagDataError('cohort release', 'published matching dataset and release', {'cohort': cohort, 'release': release})
     return dict(row)
@@ -159,6 +159,14 @@ def artifact_info(revision):
     if row is None:
         raise MagDataError('artifact', 'existing immutable artifact', revision)
     return {**dict(row), 'sources': decode(row['sources_json']), 'report': decode(row['report_json'])}
+
+
+def release_sources(release):
+    """Resolve inventories from pinned artifact revisions, never from current raw files."""
+    entry = release_record(release=release)
+    return {name: {'status': info['status'], 'report': info['report'], 'files': info['sources']}
+            for name, revision in decode(entry['artifacts_json']).items()
+            for info in [artifact_info(revision)]}
 
 
 @lru_cache(maxsize=4)
@@ -201,6 +209,8 @@ def load_release(release):
                       taxonomy=get('taxonomy', 'taxonomy'), quality=quality, lineage=get('lineage', 'lineage'),
                       annotation_manifest=annotation, modules=report,
                       community_results=decode(entry['community_json']),
+                      cohort_info={'name': entry['name'], 'projectAccession': entry['project_accession'],
+                                   'studyAccession': entry['study_accession']},
                       processing={'assessedBins': report.get('quality', {}).get('assessedBins'),
                                   'qualifiedBins': report.get('lineage', {}).get('qualifiedBins'),
                                   'representativeMags': len(mag_ids), 'sampleCount': len(samples),

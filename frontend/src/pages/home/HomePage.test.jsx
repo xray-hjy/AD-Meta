@@ -29,8 +29,8 @@ function home() {
 
 test('renders the accepted copy and routes each real analysis entry to its dataset', () => {
   home();
-  expect(screen.getByRole('link', { name: '外部证据评估' })).toHaveAttribute('href', '/reference/gmrepo');
-  expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(HOME_COPY.title.join(''));
+  expect(screen.getByRole('link', { name: HOME_COPY.header.reference })).toHaveAttribute('href', '/reference/gmrepo');
+  expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(HOME_COPY.hero.title.join(''));
   for (const chapter of HOME_CHAPTERS) {
     expect(screen.getByRole('link', { name: chapter.action })).toHaveAttribute('href', chapter.route);
     expect(document.getElementById(chapter.id)).toBeTruthy();
@@ -61,8 +61,10 @@ test('mobile galleries cycle independently and use a controlled preview dialog',
   // jsdom does not evaluate responsive media queries; these controls are
   // rendered in flow mode and visually checked at a narrow browser viewport.
   fireEvent.click(gallery.getByRole('button', { name: '下一张' + chapter.label + '图', hidden: true }));
+  expect(gallery.getByRole('img', { name: chapter.slides[1].alt, hidden: true })).toHaveAttribute('src', chapter.slides[1].image);
   fireEvent.click(gallery.getByRole('button', { name: '放大查看' + chapter.slides[1].title, hidden: true }));
   expect(screen.getByRole('dialog')).toHaveTextContent(chapter.slides[1].title);
+  expect(within(screen.getByRole('dialog')).getByRole('img', { name: chapter.slides[1].alt })).toHaveAttribute('src', chapter.slides[1].image);
   fireEvent.click(screen.getByRole('button', { name: '关闭 ✕' }));
   expect(document.querySelector('dialog').open).toBe(false);
   expect(document.getElementById(HOME_CHAPTERS[1].id).querySelector('.mobile-gallery__count')).toHaveTextContent('1 / 4');

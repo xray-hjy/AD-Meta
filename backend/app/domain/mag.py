@@ -51,3 +51,4 @@ class MagDataset:
     modules: dict[str, Any] = field(default_factory=dict)
     processing: dict[str, Any] = field(default_factory=dict)
     community_results: dict[str, Any] = field(default_factory=dict)
+    cohort_info: dict[str, str] = field(default_factory=dict)

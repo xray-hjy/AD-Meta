@@ -110,7 +110,7 @@ test('keeps a collapsible data description card above the MAG processing flow', 
   api.getMagOverview.mockResolvedValue({ provenance: { ...audit, sampleCount: 1, excludedSampleCount: 184, groupCounts: { AD: 1, NC: 0 } },
     batches: [], capabilities: { taxonomy: true, quality: true, lineage: true }, options: { genders: [], batches: [] } });
   const { container } = mount();
-  const toggle = await screen.findByRole('button', { name: '数据说明' });
+  const toggle = await screen.findByRole('button', { name: '数据与分析口径' });
   expect(container.querySelector('.sidebar')).not.toContainElement(toggle);
   expect(container.querySelector('.dataset-description-card').nextElementSibling).toHaveClass('mag-processing');
   expect(toggle).toHaveAttribute('aria-expanded', 'false');
@@ -118,8 +118,8 @@ test('keeps a collapsible data description card above the MAG processing flow', 
   fireEvent.click(toggle);
   const info = screen.getByRole('region', { name: 'MAG 数据集信息' });
   expect(within(info).getByText('全量样本数').nextElementSibling).toHaveTextContent('185');
-  expect(within(info).getByText('当前筛选范围').nextElementSibling).toHaveTextContent('1 个样本 · AD 1 / NC 0');
-  expect(within(info).getByText('全量分组构成').nextElementSibling).toHaveTextContent('未提供全量分组记录');
+  expect(within(info).getByText('当前筛选范围').nextElementSibling).toHaveTextContent('1 个样本AD 1 / NC 0');
+  expect(within(info).getByText('全量样本数').nextElementSibling).toHaveTextContent('以样本来源记录为准');
   fireEvent.click(toggle);
   expect(toggle).toHaveAttribute('aria-expanded', 'false');
   expect(screen.queryByRole('region', { name: 'MAG 数据集信息' })).toBeNull();
@@ -135,6 +135,33 @@ test('all MAG selection loads the complete ranked collection independently of th
   await waitFor(() => expect(screen.getByTestId('chart-features').dataset.magIds.split(',')).toHaveLength(872));
   expect(api.getMagFeatures).toHaveBeenCalledWith(expect.objectContaining({ limit: 300, offset: 600, sortBy: 'meanPercent' }), expect.anything());
   expect(screen.getByLabelText('图表显示 MAG 数')).toHaveTextContent('全部 MAG');
+});
+
+test('preserves overview expansion and selected workflow step while sample scope refreshes', async () => {
+  const complete = { ...audit, excludedSampleCount: 0,
+    processing: { sampleCount: 185, assessedBins: 9133, qualifiedBins: 8548, representativeMags: 872 },
+    modules: { samples: { groupCounts: { AD: 122, NC: 63 } }, lineage: { parameters: { completeness: 50, contamination: 10 } } } };
+  let finish;
+  api.getMagOverview.mockImplementation(scope => scope.batch === '2' ? new Promise(resolve => { finish = resolve; }) : Promise.resolve({
+    provenance: complete, batches: [], capabilities: { quality: true, lineage: true }, options: { genders: [], batches: ['1', '2'] },
+  }));
+  mount();
+  await screen.findByTestId('chart-features');
+  fireEvent.click(screen.getByRole('button', { name: '数据与分析口径' }));
+  const graph = screen.getByRole('group', { name: 'MAG 完整上下游流程' });
+  fireEvent.click(within(graph).getByRole('button', { name: /质量评估与筛选/ }));
+  selectOption(screen.getByLabelText('HPC_Batch'), '2');
+  fireEvent.click(screen.getByRole('button', { name: '应用筛选' }));
+  await waitFor(() => expect(finish).toBeTypeOf('function'));
+  expect(screen.getByRole('region', { name: '数据与分析口径' })).toHaveAttribute('aria-busy', 'true');
+  expect(within(graph).getByRole('button', { name: /质量评估与筛选/ })).toHaveAttribute('aria-expanded', 'true');
+  finish({ provenance: { ...complete, sampleCount: 12, excludedSampleCount: 173, groupCounts: { AD: 7, NC: 5 } },
+    batches: [], capabilities: { quality: true, lineage: true }, options: { genders: [], batches: ['1', '2'] } });
+  await waitFor(() => expect(screen.getByRole('region', { name: '数据与分析口径' })).toHaveAttribute('aria-busy', 'false'));
+  expect(screen.getByRole('button', { name: '数据与分析口径' })).toHaveAttribute('aria-expanded', 'true');
+  expect(within(graph).getByRole('button', { name: /质量评估与筛选/ })).toHaveAttribute('aria-expanded', 'true');
+  expect(within(graph).getByRole('button', { name: /分箱与整合/ })).toHaveTextContent('9,133');
+  expect(screen.getByText('当前筛选范围').nextElementSibling).toHaveTextContent('12 个样本AD 7 / NC 5');
 });
 
 test('uses button-based module switching and keeps the MAG analysis navigation in sync', async () => {
@@ -173,7 +200,7 @@ test('uses button-based module switching and keeps the MAG analysis navigation i
   expect(screen.getByText('待核验：独立外部队列验证')).toBeTruthy();
   expect(screen.getByText('待完成：MAG 层面的 KO / CAZyme 等结果')).toBeTruthy();
 
-  fireEvent.click(screen.getByRole('button', { name: /群落功能/ }));
+  fireEvent.click(within(document.querySelector('.sidebar')).getByRole('button', { name: /群落功能/ }));
   expect(onDatasetChange).toHaveBeenCalledWith('ad-nc-ko-abundance', expect.objectContaining({ datasetSlug: 'ad-nc-ko-abundance' }));
 });
 

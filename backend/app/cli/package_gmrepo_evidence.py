@@ -68,8 +68,10 @@ def package(output: Path):
         raise ValueError("Do not overwrite an existing delivery")
     data = reference.load_reference_dataset()
     record, status, _ = ledger.registry(data)
+    if record is None or status != "bound":
+        raise ValueError("Source registry is not fully verified")
     checks = ledger.source_checks(data, record)
-    if status != "bound" or any(c["availability"] != "verified" for c in checks):
+    if any(c["availability"] != "verified" for c in checks):
         raise ValueError("Source registry is not fully verified")
     core = read_descriptor()
     verify_directory(data.root, core)

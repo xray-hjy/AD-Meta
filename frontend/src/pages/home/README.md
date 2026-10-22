@@ -6,12 +6,14 @@ AD-Meta 的 `/` 路由直接渲染 `HomePage.jsx`。本目录是正式首页的�
 
 | 要改什么 | 文件 | 注意事项 |
 | --- | --- | --- |
-| 标题、正文、功能列表、图集顺序、分析链接 | `homeContent.js` | `HOME_CHAPTERS` 对应物种、KO、MAG、自定义四组；`HOME_COPY` 对应首屏、数据来源和底部入口 |
-| 截图 | `assets/` + `homeContent.js` | 使用本地 import；同时填写图片真实的 `width`、`height`，让横图和竖图保持各自比例 |
+| 所有首页文字，包括导航、提示、弹窗和辅助标签 | `homeContent.js` | `HOME_COPY` 按页面区域组织；`HOME_CHAPTERS` 管理四个章节及图集标题、说明，不在组件或控制器中另写文案 |
+| 所有展示截图、尺寸和图片说明 | `homeContent.js` 的 `HOME_SCREENSHOTS` | PNG 放在 `assets/`，使用本地 import；真实宽高和 alt 只定义一次，供所有展示位置复用 |
+| 首屏滚动截图的选择与顺序 | `homeContent.js` 的 `HOME_HERO_BACKDROP` | 独立配置截图序列，引用 `HOME_SCREENSHOTS`；由背景组件按列错位重复，建议使用横版截图 |
+| 四组图集的截图选择、顺序和分析链接 | `homeContent.js` 的 `HOME_CHAPTERS` | 每张图用 `...HOME_SCREENSHOTS.xxx` 引用素材；同时控制桌面、移动端及放大预览 |
 | 页框、颜色变量、通用按钮 | `styles/home-base.css` | 所有首页选择器以 `.admeta-home` 开头；不要修改全局 `body`、`html` 或分析工作区样式来调整首页 |
 | 通栏固定顶部导航 | `styles/home-header.css` | 对应 `HomeHeader`；高度与正文、锚点偏移共享变量 |
 | 首屏排版、领域 tabs | `styles/home-hero.css` | 对应 `HomeHero`；开场和跨区块运动分别由 intro、sections 样式负责 |
-| 首屏截图背景 | `components/HomeHeroBackdrop.jsx`、`styles/home-hero-backdrop.css` | 复用本地横版截图；倾斜、列数、透视、周期、速度倍率和视差幅度在 `motionConfig.js` 的 `heroBackdrop` 调整 |
+| 首屏截图背景的布局与动画 | `components/HomeHeroBackdrop.jsx`、`styles/home-hero-backdrop.css` | 素材序列读取 `homeContent.js`；倾斜、列数、透视、周期、速度倍率和视差幅度在 `motionConfig.js` 的 `heroBackdrop` 调整 |
 | 数据来源与底部入口 | `styles/home-foundation.css` | 对应 `HomeFoundation` |
 | 图片预览弹窗 | `styles/home-dialog.css` | 对应 `GalleryDialog` |
 | 展示区正文、上下文和间距 | `styles/home-showcase.css` | 对应 `HomeShowcase` / `ChapterCopy` |
@@ -27,7 +29,7 @@ AD-Meta 的 `/` 路由直接渲染 `HomePage.jsx`。本目录是正式首页的�
 ```text
 home/
 ├── HomePage.jsx                    页面组合、弹窗状态与首页跳转
-├── homeContent.js                  展示内容与真实分析入口
+├── homeContent.js                  全部文案、截图目录、首屏播放序列、章节与分析入口
 ├── components/
 │   ├── HomeHeader.jsx              通栏固定顶部导航
 │   ├── HomeSection.jsx             普通文档流区块与生命周期注册
@@ -59,6 +61,29 @@ home/
 ├── styles/                        首页局部样式，index.css 为总入口
 └── assets/                        Vite 打包的截图及来源说明
 ```
+
+## 文案与截图的统一管理
+
+所有首页文字和展示截图均从 `homeContent.js` 读取：
+
+- `HOME_COPY`：品牌、导航、首屏、图集通用提示、数据基础、底部入口及辅助标签。需要拼接标题或章节名的标签由其中的函数生成。
+- `HOME_SCREENSHOTS`：独立截图的文件、真实像素宽高及 `alt`。复用截图时直接引用，不再复制尺寸或图片说明。
+- `HOME_HERO_BACKDROP`：首屏背景的截图序列，独立于章节入口及图集顺序；删除某个图集页面不会自动改变背景。
+- `HOME_CHAPTERS`：四组展示章节；每张 slide 用 `...HOME_SCREENSHOTS.xxx` 取得素材，再指定当前展示位置的标题与图注。
+
+换图时在截图目录中修改文件引用、真实宽高和 `alt`，所有复用位置随之更新。只想改变背景或某组图集的选图、顺序时，修改相应列表。放大预览直接接收被点击的 slide，无须再维护一份素材。
+
+例如，在某组 `slides` 中增加 `{ ...HOME_SCREENSHOTS.magHeatmapGrouped, title: '样本丰度热图', description: '查看样本分布与聚类' }` 即可复用截图。截图内部已经印在 PNG 上的文字需更新图片文件，无法通过页面文案配置改写。Logo 继续由品牌素材组件管理。
+
+文案集中管理不包含路由逻辑、DOM 标识符或动画参数。调整入口目标仍需确认对应路由；更新描述时以当前真实能力为依据，不将流程收集进度作为首页宣传文案。
+
+### 数据与方法
+
+`HOME_COPY.foundation` 管理队列来源、完整队列统计、分析路径、三条分支的输入/方法/产物以及 GMrepo 参考入口。`snapshot` 保存核对日期、群落分析运行和 MAG 队列标识；该日期是首页数字的核对日期，不是工具运行日期。更新数据范围时，应同步核对 `backend/storage_manifest.json` 及其绑定的原始结果，再更新快照和展示数字。首页不请求分析接口。
+
+当前快照为同一队列 185 个样本（AD 122 / NC 63）、1,828 个种级物种特征、9,537 个标准 KO、95 项通路与功能指标和 872 个代表 MAG。物种和代表 MAG 使用各自的统计口径。三条分支的主题色、工作区链接与底部三个分析入口复用 `HOME_CHAPTERS`，不另复制路由。
+
+分支卡片为原生按钮，支持 Enter/Space 展开，左右方向键及 Home/End 移动焦点，Escape 收起并将焦点返回当前按钮。详情使用 CSS Grid 从 0fr 到 1fr 展开，收起时立即设置 `inert` 与 `aria-hidden`，让隐藏链接退出键盘和辅助技术访问；减少动态效果时即时切换。区块按内容高度布局，继续使用已有区块注册与滚动协调器。
 
 ## 组件与动画的边界
 

@@ -212,7 +212,7 @@ def verify(root: Path) -> dict:
         reports.append({"projectId": cohort["projectId"], "groupCounts": counts, "computedFeatures": len(rows), "status": "recomputed" if rows else "descriptive_only_no_test"})
     record = fixed["payload"]["evaluation"]
     bound = record.get("primaryDerivative") or record.get("primary", {}).get("genusComparison", {})
-    primary_status = {"status": "not_included"}
+    primary_status: dict[str, object] = {"status": "not_included"}
     if bound.get("fingerprint"):
         if not {"primary-inputs.json", "primary-expected.json"} <= set(manifest["files"]):
             raise ValueError("Missing declared primary inputs")

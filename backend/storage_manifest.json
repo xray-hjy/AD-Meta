@@ -147,7 +147,11 @@
             "winners": "storage/raw/ad-nc-mag/PRJCA022804/dRep/dRep_results/data_tables/Wdb.csv",
             "winner_info": "storage/raw/ad-nc-mag/PRJCA022804/dRep/dRep_results/data_tables/Widb.csv",
             "comparisons": "storage/raw/ad-nc-mag/PRJCA022804/dRep/dRep_results/data_tables/Ndb.csv",
-            "parameters": "storage/raw/ad-nc-mag/PRJCA022804/dRep/dRep_results/log/cluster_arguments.json"
+            "parameters": "storage/raw/ad-nc-mag/PRJCA022804/dRep/dRep_results/log/cluster_arguments.json",
+            "input_quality": "storage/raw/ad-nc-mag/PRJCA022804/dRep/dRep_input/drep_genomeInfo.csv",
+            "script_quality": "storage/raw/ad-nc-mag/PRJCA022804/dRep/dRep_input/genomeInfo.csv",
+            "input_list": "storage/raw/ad-nc-mag/PRJCA022804/dRep/dRep_input/quality_filtered_MAGs.list",
+            "input_filtered": "storage/raw/ad-nc-mag/PRJCA022804/dRep/dRep_input/quality_filtered_MAGs.tsv"
           },
           "tool": {
             "name": "dRep"
@@ -206,6 +210,26 @@
           "parser": "archive_inventory",
           "files": {
             "inventory": "storage/raw/ad-nc-mag/PRJCA022804/files.tsv"
+          }
+        },
+        "methodology": {
+          "parser": "script_methods",
+          "files": {
+            "abundance": "storage/raw/ad-nc-mag/PRJCA022804/workflow/scripts/10_CoverM/run_coverm_mag_abundance.sh",
+            "arg_summary": "storage/raw/ad-nc-mag/PRJCA022804/workflow/scripts/12_DRAMMA/summarize_dramma_results.py",
+            "assembly": "storage/raw/ad-nc-mag/PRJCA022804/workflow/scripts/02.1_assembly/assembly.snakefile",
+            "bgc": "storage/raw/ad-nc-mag/PRJCA022804/workflow/scripts/11_antiSMASH/run_antismash_MAGs.sh",
+            "binning": "storage/raw/ad-nc-mag/PRJCA022804/workflow/scripts/04_binning/run_three_binners.sh",
+            "dereplication": "storage/raw/ad-nc-mag/PRJCA022804/workflow/scripts/07_dRep/run_drep_dereplication.sh",
+            "ko": "storage/raw/ad-nc-mag/PRJCA022804/workflow/scripts/02.2_diting/diting.snakefile",
+            "mapping": "storage/raw/ad-nc-mag/PRJCA022804/workflow/scripts/03_bowtie2/run_bowtie2_mapping.sh",
+            "mapping_index": "storage/raw/ad-nc-mag/PRJCA022804/workflow/scripts/03_bowtie2/build_bowtie2_index.sh",
+            "phylogeny": "storage/raw/ad-nc-mag/PRJCA022804/workflow/scripts/09_IQ-TREE/run_iqtree.sh",
+            "preprocessing": "storage/raw/ad-nc-mag/PRJCA022804/workflow/scripts/01.1_preprocessing/preprocessing.snakefile",
+            "quality": "storage/raw/ad-nc-mag/PRJCA022804/workflow/scripts/06_checkM2/run_checkm2_refined_bins.sh",
+            "refinement": "storage/raw/ad-nc-mag/PRJCA022804/workflow/scripts/05_MAGScoT/run_magscot_refinement.sh",
+            "species": "storage/raw/ad-nc-mag/PRJCA022804/workflow/scripts/01.2_taxon_classification/metaphlan4.snakefile",
+            "taxonomy": "storage/raw/ad-nc-mag/PRJCA022804/workflow/scripts/08_GTDB-Tk/run_gtdbtk_classify.sh"
           }
         }
       }

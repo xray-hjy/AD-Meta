@@ -3642,6 +3642,13 @@
             "title": "Analysisversion",
             "type": "string"
           },
+          "cohort": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Cohort",
+            "type": "object"
+          },
           "communityResults": {
             "additionalProperties": true,
             "title": "Communityresults",

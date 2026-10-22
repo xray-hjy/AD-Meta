@@ -83,12 +83,8 @@ def releases(dataset_key: str):
 
 @router.get('/sources')
 def sources(data: Data):
-    entry = repository.release_record(release=data.fingerprint)
-    bindings = repository.decode(entry['artifacts_json'])
     return {'dataset': data.version, 'release': data.fingerprint,
-            'modules': {name: {'status': info['status'], 'report': info['report'], 'files': info['sources']}
-                        for name, revision in bindings.items()
-                        for info in [repository.artifact_info(revision)]}}
+            'modules': repository.release_sources(data.fingerprint)}
 
 
 MODULE_KINDS = {'arg': {'arg_summary', 'arg_hits'}, 'bgc': {'bgc_status', 'bgc_regions'}, 'phylogeny': {'trees'},
@@ -355,7 +351,8 @@ def download(
         if not audit["sampleCount"]:
             display["displayedMagIds"] = []
         display_hash = hashlib.sha256((audit["requestFingerprint"] + json.dumps(display, sort_keys=True)).encode()).hexdigest()
-        return JSONResponse({**audit, "display": display, "projectionFingerprint": display_hash},
+        return JSONResponse({**audit, "display": display, "projectionFingerprint": display_hash,
+                             "sourceInventory": repository.release_sources(data.fingerprint)},
                             headers={"Content-Disposition": f'attachment; filename="{token}.json"'})
     if kind == "heatmap":
         heatmap_data = heatmap_result(data, scope, top_n, heatmap_options)

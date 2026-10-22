@@ -30,6 +30,7 @@
 
 ## 开发记录
 
+- [20261022更新](development/20261022-update.md)：首页内容与截图集中管理、数据与方法区域、MAG 上下游流程和来源清单核对。
 - [20261020更新](development/20261020-update.md)：MAG 由版本化数据包切换到队列与模块修订管理；记录原文件归档、解析模块、数据库迁移、功能边界和回归结果。
 - [DiTing KO 与通路接入](development/2026-10-16-diting-functional-integration.md)：新版 9,537 个 KO、95 项通路、同批版本绑定，以及主分析风格的气泡图、森林图、雨云图与热图。
 - [DiTing 十图型与 MAG 工具适配](development/2026-10-17-diting-pathway-gallery.md)：三个入口内切换十种图型，复用缩放、预览、摇杆、框选、科研样式和导出；支持完整 95 项选择、分面分页和热图转置。

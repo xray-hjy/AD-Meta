@@ -2434,6 +2434,10 @@ export interface components {
         MagProvenance: {
             /** Analysisversion */
             analysisVersion: string;
+            /** Cohort */
+            cohort?: {
+                [key: string]: string;
+            };
             /** Communityresults */
             communityResults?: {
                 [key: string]: unknown;

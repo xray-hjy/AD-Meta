@@ -1,7 +1,8 @@
 # PRJCA022804 / CRA014435 MAG 分析原文件
 
-2026-10-20 从用户整理目录 `G:/project/server_transfer/未整理入档的文件/1020/MAG` 复制归档。
+2026-10-20 从用户整理目录 `G:/project/server_transfer/未整理入档的文件/1020/MAG` 首批复制归档；2026-10-21 补充归档 `dRep/dRep_input/`。
 原目录保留。`files.tsv` 记录原路径、归档相对路径、字节数和 SHA-256；复制时逐文件比较原件与副本。
+2026-10-21 同时从 `G:/project/scripts` 归档 15 份方法脚本到 `workflow/scripts/`，逐份校验 SHA-256。antiSMASH 的空行备份按同一份脚本处理，仅保留正式命名的副本。
 归档日期不代表各工具的运行日期，工具运行时间应读取对应日志或结果文件。
 
 ## 管理及导入
@@ -19,6 +20,8 @@ CheckM2、dRep、GTDBTk、CoverM 为质量、成员关系、分类和样本丰�
 DRAMMA 的 summary 表优先用于 ARG 导入；候选 FAA、对应表和带 MAG ID 的 pickle 保留作为详细来源附件。
 antiSMASH 仅归档 `regions.js` 和区域 GenBank，已提供的记录用于核对区域数量；缺少记录不会自动视为零 BGC。
 IQ_TREE 的最终树用于系统发育拓扑展示；iTOL 是另外保存的衍生展示资料。
+`workflow/scripts/` 供方法说明与来源下载；脚本副本不单独证明某次运行执行过它。实际数量、工具版本与参数由当前修订绑定的结果文件和运行记录提供。DRAMMA 的脚本角色为已有结果的汇总。
+`dRep/dRep_input/` 保留运行参数指向的质量输入表、同内容的另一命名质量表、筛选表和路径清单；导入时按 MAG ID 校验成员集合与 CheckM2 质量值，不依赖行序或 CSV 换行格式。
 
 本次没有搬入最终 MAG 全序列、dRep Mdb、大型工具数据库及 DRAM2 正在运行的结果。
 这些不是本次可视化结果导入的必需输入，后续可按实际产出独立补充。

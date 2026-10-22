@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import csv
 import gzip
+import hashlib
 import json
 import math
 import re
@@ -229,8 +230,35 @@ def parse_drep(files, dependencies, spec):
             result.append(row)
     index(result, 'memberMag', 'dRep')
     parameters = json.loads(files['parameters'].read_text(encoding='utf-8')) if 'parameters' in files else {}
+    input_verification = {}
+    expected_members = {mag_id(name) for name in assignments}
+    for role in ('input_quality', 'script_quality'):
+        if role not in files:
+            continue
+        source_rows = index(rows(files[role]), 'genome', files[role])
+        require({mag_id(name) for name in source_rows} == expected_members, role, 'input MAG IDs equal Cdb members')
+        for name, raw in source_rows.items():
+            q = quality[mag_id(name)]
+            require(abs(float(raw['completeness']) - q['completenessPercent']) < 1e-8
+                    and abs(float(raw['contamination']) - q['contaminationPercent']) < 1e-8,
+                    name, 'input quality values equal CheckM2 report')
+        input_verification[role] = len(source_rows)
+    if 'input_list' in files:
+        listed = [mag_id(line.strip().rsplit('/', 1)[-1]) for line in files['input_list'].read_text().splitlines() if line.strip()]
+        require(len(listed) == len(set(listed)) and set(listed) == expected_members, 'input_list', 'unique Cdb member set')
+        input_verification['input_list'] = len(listed)
+    if 'input_filtered' in files:
+        filtered = index(rows(files['input_filtered']), 'Name', files['input_filtered'])
+        require({mag_id(name) for name in filtered} == expected_members, 'input_filtered', 'filtered MAG IDs equal Cdb members')
+        for name, raw in filtered.items():
+            q = quality[mag_id(name)]
+            require(abs(float(raw['Completeness']) - q['completenessPercent']) < 1e-8
+                    and abs(float(raw['Contamination']) - q['contaminationPercent']) < 1e-8,
+                    name, 'filtered quality values equal CheckM2 report')
+        input_verification['input_filtered'] = len(filtered)
     return {'lineage': result}, {'qualifiedBins': len(result), 'representativeMags': len(reps),
                                 'clusterCount': len(members), 'below095AniCount': sum(r['memberToRepAni'] < .95 for r in result),
+                                'inputVerification': input_verification,
                                 'parameters': {key: parameters.get(key) for key in ('completeness','contamination','P_ani','S_ani','clusterAlg','S_algorithm')}}
 
 
@@ -398,3 +426,13 @@ ADAPTERS = {'samples': (parse_samples, ()), 'coverm': (parse_coverm, ('samples',
             'drep': (parse_drep, ('samples', 'abundance', 'quality')), 'dramma': (parse_arg, ('abundance',)),
             'antismash': (parse_bgc, ('abundance',)), 'iqtree': (parse_trees, ('abundance',))}
 ADAPTERS['archive_inventory'] = (parse_inventory, ())
+
+
+def parse_script_methods(files, dependencies, spec):
+    """Archive method descriptions; collected scripts are not execution receipts."""
+    scripts = {key: {'file': spec['files'][key], 'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+                     'bytes': path.stat().st_size} for key, path in files.items()}
+    return {}, {'scope': 'collected-script-methods', 'scripts': scripts, 'scriptCount': len(scripts)}
+
+
+ADAPTERS['script_methods'] = (parse_script_methods, ())
