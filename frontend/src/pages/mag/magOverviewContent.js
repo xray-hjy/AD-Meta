@@ -59,9 +59,9 @@ export const MAG_FLOW_STAGES = [
   { id: 'bgc', label: '基因簇解析', short: 'antiSMASH', tools: ['antiSMASH'], modules: ['bgc'], scripts: ['bgc'],
     input: '代表 MAG FASTA。', method: 'antiSMASH 注释生物合成基因簇，保留区域坐标、产物类型和 GenBank 证据。',
     output: '按 MAG 组织的 BGC 区域与基因簇合成潜力，不能直接解释为代谢物表达或实际产量。', target: 'function', capability: 'bgc', action: '查看 BGC 功能结果', next: [] },
-  { id: 'metabolism', label: '代谢功能', short: '基因与代谢信息', tools: [], modules: [], scripts: [],
-    input: '代表 MAG 与其编码基因。', method: '围绕基因组组织基因功能与代谢信息。',
-    output: '以 MAG 为单位关联基因与代谢功能信息。', next: [] },
+  { id: 'metabolism', label: '代谢功能', short: 'DRAM2', tools: ['DRAM2'], modules: ['metabolism'], scripts: [],
+    input: '代表 MAG 与其编码基因。', method: '整合 KOfam、dbCAN、MEROPS 与 DRAM HMM 的基因注释，按稳定 MAG ID 建立功能计数和基因证据。',
+    output: 'MAG × 功能谱、基因坐标及研究基因集合。注释表示编码潜力，distill 差异独立核对，不直接判为通路完整度。', target: 'function', capability: 'metabolism', action: '查看代谢功能与基因证据', next: [] },
   { id: 'species', label: '群落物种', short: 'MetaPhlAn', tools: ['MetaPhlAn'], modules: [], scripts: ['species'], community: 'species',
     input: '与 MAG 分析共享样本身份的 Clean Reads。', method: 'MetaPhlAn 提供群落层面的物种组成；通过 CRR 样本身份与其他分析结果关联。',
     output: '样本 × 群落物种丰度。特征体系与 GTDB 的 MAG 分类分别管理。', action: '查看群落物种结果', next: [] },
@@ -73,4 +73,4 @@ export const MAG_FLOW_STAGES = [
 export const MAG_MAIN_STAGES = ['source', 'clean', 'assembly', 'binning', 'quality', 'drep'];
 export const MAG_BRANCH_STAGES = ['abundance', 'taxonomy', 'phylogeny', 'arg', 'bgc', 'metabolism'];
 export const MAG_MODULE_LABELS = { samples: '样本元数据', abundance: 'CoverM 丰度', coverage: '覆盖与映射指标', quality: 'CheckM2 质量',
-  lineage: 'dRep 来源与去冗余', taxonomy: 'GTDB 分类', phylogeny: '系统发育树', arg: 'ARG 结果', bgc: 'BGC 区域', archive: '归档清单', methodology: '方法脚本' };
+  lineage: 'dRep 来源与去冗余', taxonomy: 'GTDB 分类', phylogeny: '系统发育树', metabolism: 'DRAM2 功能注释', arg: 'ARG 结果', bgc: 'BGC 区域', archive: '归档清单', methodology: '方法脚本' };

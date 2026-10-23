@@ -13,6 +13,7 @@ from pathlib import Path
 import numpy as np
 
 from app.domain.mag import MagDataError
+from app.services.mag_function_store import parse_dram
 
 PARSER_VERSION = 'source-artifacts-2026-10-20.1'
 RANKS = ('domain', 'phylum', 'class', 'order', 'family', 'genus', 'species')
@@ -426,6 +427,7 @@ ADAPTERS = {'samples': (parse_samples, ()), 'coverm': (parse_coverm, ('samples',
             'drep': (parse_drep, ('samples', 'abundance', 'quality')), 'dramma': (parse_arg, ('abundance',)),
             'antismash': (parse_bgc, ('abundance',)), 'iqtree': (parse_trees, ('abundance',))}
 ADAPTERS['archive_inventory'] = (parse_inventory, ())
+ADAPTERS['dram_summary'] = (parse_dram, ('abundance', 'quality', 'taxonomy'))
 
 
 def parse_script_methods(files, dependencies, spec):

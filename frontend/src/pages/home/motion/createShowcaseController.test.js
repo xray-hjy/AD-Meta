@@ -110,7 +110,7 @@ test('native scrolling selects chapters, preserves the short boundary gap, and r
 test('releases native scrolling outside the section, ignores browser zoom, and removes every cached scene on exit', () => {
   expect(wheel(120, { ctrlKey: true }).defaultPrevented).toBe(false);
   controller.goto('custom');
-  wheel(480); finishSlide();
+  wheel(120 * HOME_CHAPTERS.find(chapter => chapter.key === 'custom').slides.length); finishSlide();
   expect(wheel(120).defaultPrevented).toBe(false);
   const instances = [...page.querySelectorAll('.stage-carousel')].map(element => element.swiper);
   controller.dispose(); controller = null;

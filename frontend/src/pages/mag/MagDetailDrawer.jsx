@@ -6,15 +6,16 @@ import LoadingState from '../../components/ui/LoadingState';
 import ErrorState from '../../components/ui/ErrorState';
 import { MagPlanCard, MAG_RESEARCH_PLANS } from './MagResearchPlans';
 import EvidenceLink from '../../components/evidence/EvidenceLink';
+import MagFunctionDetail, { MagCoverageEvidence } from './MagFunctionDetail';
 
-const TABS = [['abundance', '丰度与差异'], ['taxonomy', '分类证据'], ['quality', '质量与组装'], ['lineage', '来源与去冗余'], ['function', '功能潜力']];
+const TABS = [['abundance', '丰度与差异'], ['taxonomy', '分类证据'], ['quality', '质量与组装'], ['lineage', '来源与去冗余'], ['function', '功能潜力'], ['coverage', '覆盖证据']];
 const RANKS = [['domain', '域'], ['phylum', '门'], ['class', '纲'], ['order', '目'], ['family', '科'], ['genus', '属'], ['species', '种']];
 const number = value => value == null ? '—' : Number(value).toLocaleString('en-US', { maximumSignificantDigits: 5 });
 const integer = value => value == null ? '—' : Number(value).toLocaleString('en-US', { maximumFractionDigits: 0 });
 const percent = value => value == null ? '—' : `${number(value * 100)}%`;
 function EvidenceList({ items }) { return <dl className="mag-detail-facts">{items.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value ?? '未提供'}</dd></div>)}</dl>; }
 
-export default function MagDetailDrawer({ magId, overview, scope, onClose, onNavigate, onEvidenceOpen, initialTab = 'abundance' }) {
+export default function MagDetailDrawer({ magId, overview, scope, onClose, onNavigate, onEvidenceOpen, initialTab = 'abundance', initialFeatureId = '', initialNamespace = 'kofam_ko' }) {
   const dialog = useRef(null);
   const closeButton = useRef(null);
   const [tab, setTab] = useState(TABS.some(([key]) => key === initialTab) ? initialTab : 'abundance');
@@ -96,6 +97,8 @@ export default function MagDetailDrawer({ magId, overview, scope, onClose, onNav
         ]} /> : <p>来源与去冗余证据尚未接入。</p>}
           {member?.memberToRepAni < 0.95 && <p className="mag-inline-notice">实际 ANI 低于 95%，保留原值；average linkage 不保证每位成员都达到名义阈值。</p>}
           <p className="mag-muted">来源成员数不等于样本丰度或检出率；CHN / CHN2 是来源组，非已完成的外部验证。完整 dRep 版本、命令和代表选择权重待补。</p></>}
+        {tab === 'coverage' && (overview.capabilities.coverage ? <MagCoverageEvidence revision={revision} magId={representative} scope={scope} /> : <p>当前发布没有覆盖证据。</p>)}
+        {tab === 'function' && overview.capabilities.metabolism && <MagFunctionDetail key={`${representative}:${initialFeatureId}`} revision={revision} magId={representative} initialFeatureId={initialFeatureId} initialNamespace={initialNamespace} />}
         {tab === 'function' && ((overview.capabilities.arg || overview.capabilities.bgc) ? <>
           <h3>代表 MAG 的功能潜力</h3>
           {(arg.isFetching || bgc.isFetching) && <LoadingState />}
@@ -107,7 +110,7 @@ export default function MagDetailDrawer({ magId, overview, scope, onClose, onNav
           ]} />
           <p className="mag-muted">这些结果属于代表 MAG，不自动转赋给所有聚类成员；候选和合成潜力不等同于表达或已验证功能。</p>
           <button type="button" className="analysis-button" onClick={() => onNavigate('function', representative)}>查看功能明细</button>
-        </> : <MagPlanCard plan={MAG_RESEARCH_PLANS[0]} />)}
+        </> : !overview.capabilities.metabolism ? <MagPlanCard plan={MAG_RESEARCH_PLANS[0]} /> : null)}
       </section>
       <footer><button type="button" disabled={!canNavigate} className="analysis-button analysis-button--primary" onClick={() => onNavigate('distribution', representative)}>查看分布图</button>
         <button type="button" disabled={!canNavigate} className="analysis-button" onClick={() => onNavigate('heatmap', representative)}>加入热图候选</button>

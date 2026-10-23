@@ -387,7 +387,7 @@ export const HOME_COPY = {
           { title: '分箱与整合', tools: ['MetaBAT2', 'SemiBin2', 'MetaDecoder', 'MAGScoT'], description: '结合多种分箱结果与标记基因证据，形成整合后的 bins。' },
           { title: '质量评估与去冗余', tools: ['CheckM2', 'dRep'], description: '评估完整度和污染度，经质量筛选与去冗余形成代表 MAG 目录。' },
           { title: '丰度、分类与系统发育', tools: ['CoverM', 'GTDB-Tk', 'IQ-TREE'], description: '定量样本丰度，关联分类注释和系统发育树，补充基因组关系。' },
-          { title: '功能解析与来源关联', tools: ['DRAMMA', 'antiSMASH'], description: '组织 ARG 与生物合成基因簇结果，并关联代表 MAG 的成员关系和来源记录。' },
+          { title: '功能解析与来源关联', tools: ['DRAM2', 'DRAMMA', 'antiSMASH'], description: '查询 KO、CAZyme、MEROPS、ARG 与基因簇潜力，联查基因证据、样本覆盖及代表 MAG 来源。' },
         ],
         output: '样本丰度、分类、质量、系统发育、ARG / BGC 及来源关系，通过 MAG ID 关联查询。',
       },

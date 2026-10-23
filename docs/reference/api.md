@@ -493,3 +493,30 @@ MAG 使用同一队列下的 raw 原文件导入结果，不写入既有 taxonom
 | `/api/mag/downloads/{kind}` | `features`、`matrix`、`samples`、`taxonomy`、`quality`、`provenance`、`lineage` 或 `crosswalk` 下载 |
 
 `revision` 可绑定 overview 返回的数据指纹；运行中输入变化时返回 409，避免混用不同数据版本。`provenance.storageBackend` 明确返回当前读取的是 `package` 还是 `database`，两种模式保持相同的数据指纹和响应契约。分类、质量、lineage 和 crosswalk 覆盖全部代表 MAG，不受样本筛选影响。lineage/crosswalk 列表单次最多返回 100 行，原始 TSV 下载保留交付文件内容并附带数据指纹与 manifest SHA-256 响应头。
+
+### MAG 功能与证据接口
+
+新增 GET 路径均以 `/api/mag/functions` 为前缀，沿用 `dataset`、`revision`/`release` 固定分析记录。返回 `release`、`annotationRevision`、`projectionFingerprint`、`analysisVersion`，具体参数上限与类型以仓库 OpenAPI 为准。
+
+| 后缀 | 结果 |
+| --- | --- |
+| `/overview` | 全代表 MAG 注释摘要、命名空间、研究集合和导入核对报告 |
+| `/features` | 按 namespace/query/ids/magId 查询功能；limit/offset 分页 |
+| `/matrix` | MAG×功能的原始基因计数、稳定 ID、质量及真实聚类 linkage；上限 20,000 格 |
+| `/carriers` | 单功能携带 MAG、基因计数及当前样本范围的既有 MAG 统计 |
+| `/genes` | MAG 功能基因、全部 contig、原始坐标与命中字段；支持功能、contig、重叠区间和分页 |
+| `/themes/{theme_id}` | 版本化研究基因集合矩阵；不返回通路完整度 |
+| `/sources/{arg|bgc}/matrix` | 独立工具的类型计数；不可评价为 null，成功未命中为 0 |
+| `/sources/{arg|bgc}/details` | 蛋白/区域及来源标记分页；不做跨工具基因对应 |
+| `/coverage` | 单 MAG 覆盖指标与当前样本丰度 |
+| `/compare` | 固定 MAG 清单的质量、功能摘要及样本统计 |
+| `/distributions` | 固定清单的后端箱线统计与全样本散点；默认每页 6 项 |
+| `/community` | 按 KO ID 查询当前发布关联的群落 KO 修订及原始单位 |
+| `/signals` | B/W 丰度加权代理量、样本值及全命名空间检验族上的 BH-FDR |
+| `/download/{kind}` | features/matrix/carriers/genes/arg/bgc/signals/distributions 的完整匹配 CSV，或 provenance JSON |
+
+矩阵参数包括 `namespace/query/magQuery/featureIds/magIds/magLimit/featureLimit/minCompleteness/maxContamination/rowOrder/columnOrder/valueKind`。`presence` 只改变展示/聚类语义，`values` 和矩阵 CSV 始终保留原始计数；`count` 颜色在前端取 log1p。`rowOrder=cluster`、`columnOrder=cluster` 使用 average linkage，存在模式 Jaccard，计数模式 log1p 后欧氏距离，全零向量置后。
+
+目录与基因是静态 MAG 注释，独立于样本筛选。携带者、覆盖、比较、分布及代理量沿用现有样本范围，筛选不等于协变量校正。矩阵下载默认复现展示集合及排列，`allMatches=true` 导出完整匹配集合；分页不截断完整 CSV。基因下载保留指定功能/contig 的全部匹配基因，图形局部区间由 `/genes` 查询评价。
+
+8 个 namespace：`kofam_ko`、`kofam_ec`、`dbcan_family`、`dbcan_subfamily`、`dbcan_substrate`、`merops_family`、`merops_id`、`dram_db`。代理量仅支持 KO、dbCAN family/substrate、MEROPS family，B 为携带者丰度和，W 为丰度×基因计数；不等于 DiTing KO 丰度、表达量或通量。数据与部署边界见 [实施记录](../development/2026-10-23-mag-functional-implementation.md)。

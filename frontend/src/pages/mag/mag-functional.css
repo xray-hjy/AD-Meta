@@ -1,0 +1,33 @@
+.mag-functional-tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px; padding: 4px; background: var(--workspace-accent-soft); border-radius: 7px; }
+.mag-functional-tabs > button { border: 0; border-radius: 5px; background: transparent; color: var(--color-text-muted); font: inherit; font-size: 12px; padding: 9px 13px; cursor: pointer; }
+.mag-functional-tabs > button[aria-selected=true] { color: var(--workspace-accent); }
+.mag-functional-context { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 18px; padding: 10px 12px; color: var(--color-text-muted); font-size: 11px; }
+.mag-functional-context strong { color: var(--workspace-accent); font-weight: 500; }
+.mag-functional-settings { padding: 14px 0; margin-bottom: 14px; border-bottom: 1px solid var(--color-border-soft); }
+.mag-functional-settings textarea { min-width: 240px; max-width: 100%; }
+.mag-functional-settings .mag-heatmap-settings__main > label:has(input) { flex: 1 1 190px; }
+.mag-functional-settings .mag-heatmap-settings__main > label input { width: 100%; box-sizing: border-box; }
+.mag-functional-settings .mag-heatmap-settings__footer { align-items: center; }
+.mag-functional-chart { width: 100%; min-width: 0; }
+.mag-functional-chart > .chart-style-toolbar { width: fit-content; margin-left: auto; }
+.mag-functional-link { border: 0; padding: 0; background: none; color: var(--workspace-accent); font: inherit; text-align: left; cursor: pointer; overflow-wrap: anywhere; }
+.mag-functional-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.mag-functional-link:focus-visible { outline: 2px solid var(--workspace-accent); outline-offset: 3px; }
+.mag-functional-themes { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 0; }
+.mag-functional-themes .analysis-button[aria-pressed=true] { background: var(--workspace-accent-soft); color: var(--workspace-accent); border-color: var(--workspace-accent); }
+.mag-functional-empty { text-align: center; padding: 40px 14px; color: var(--color-text-muted); }
+.mag-functional-gene-fields { border-top: 1px solid var(--color-border-soft); padding: 16px 0; }
+.mag-functional-gene-fields h4 { overflow-wrap: anywhere; margin: 0 0 12px; font-size: 13px; }
+.mag-functional-gene-fields dd { overflow-wrap: anywhere; }
+.mag-gene-evidence { min-width: 0; }
+.mag-gene-evidence .analysis-filter-form { padding-block: 12px; }
+.mag-gene-evidence .analysis-filter-form label { flex: 1 1 140px; min-width: 0; }
+.mag-gene-evidence select { max-width: 100%; }
+.mag-gene-evidence .mag-functional-chart { overflow: hidden; }
+.mag-functional-source-controls { margin-block: 12px; }
+.mag-functional-sample-scope { padding: 12px 0; margin-bottom: 12px; border-bottom: 1px solid var(--color-border-soft); }
+.mag-functional-sample-scope > summary { color: var(--workspace-accent); font-size: 12px; cursor: pointer; }
+.mag-functional-sample-scope form { margin-top: 12px; }
+.mag-functional-threshold { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding-block: 12px; color: var(--color-text-muted); font-size: 12px; }
+.mag-functional-threshold input { flex: 1; min-width: 120px; accent-color: var(--workspace-accent); }
+@media(max-width:760px) { .mag-functional-settings .mag-heatmap-settings__main > label { flex: 1 1 150px; } .mag-functional-settings textarea { min-width: 180px; } .mag-functional-tabs > button { padding: 9px 10px; } }

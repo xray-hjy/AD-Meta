@@ -74,3 +74,9 @@ frontend/src/
 6. 同步增加后端回归测试、前端组件测试和跨尺寸视觉验证。
 
 新增 MAG 分析板块时，应建立独立领域模块和数据库契约，与当前物种/KO 丰度模块并列，不应把 MAG 字段塞入现有 taxonomy payload。
+
+## MAG 功能查询库
+
+DRAM2 的百万级基因证据使用 `mag_function_store.py` 导入为规范化、不可变 SQLite 派生库，MySQL 的 `metabolism` 模块修订报告固定文件路径、SHA-256 和字节数。库位于 `storage/derived/mag-functions/`，包含 MAG、功能、稀疏计数、基因、功能命中及原始 distill 记录；页面请求只查询索引库，不重读 raw。部署必须同时恢复 MySQL 发布记录与其引用的派生文件；旧发布的文件不得随意清除。
+
+`mag_function_service.py` 提供功能矩阵、真实聚类树、携带者、基因区间、专题、覆盖及样本代理量。统计与聚类在后端执行，前端 `magFunctionOptions.js` 只映射 ECharts option。新增图形复用现有 ChartFrame、结果区、科研样式、导出与共享视口，科学边界和当前检查范围见 [实施记录](development/2026-10-23-mag-functional-implementation.md)。

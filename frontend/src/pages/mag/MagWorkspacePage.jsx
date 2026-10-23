@@ -85,7 +85,7 @@ const TAXONOMY_RANKS = [
 ];
 
 function viewsForCapabilities(capabilities) {
-  return MAG_VIEWS.map(item => item.capability && !(item.capability === 'function' ? capabilities?.arg || capabilities?.bgc : capabilities?.[item.capability])
+  return MAG_VIEWS.map(item => item.capability && !(item.capability === 'function' ? capabilities?.metabolism || capabilities?.arg || capabilities?.bgc : capabilities?.[item.capability])
     ? { ...item, status: 'planned' }
     : item);
 }
@@ -159,7 +159,7 @@ function DistributionSummary({ data }) {
   </section>;
 }
 
-function WorkspaceResults({ overview, scope, view, setView, selectedMag, setSelectedMag, onDetail, heatmapCandidate, onHeatmapCandidate }) {
+function WorkspaceResults({ overview, scope, view, setView, selectedMag, setSelectedMag, onDetail, heatmapCandidate, onHeatmapCandidate, onScopeChange }) {
   const [page, setPage] = useState(1);
   const [query, setQuery] = useState('');
   const [draftQuery, setDraftQuery] = useState('');
@@ -202,8 +202,8 @@ function WorkspaceResults({ overview, scope, view, setView, selectedMag, setSele
   const quality = useQuery({ queryKey: ['mag', 'quality', staticParams.revision], queryFn: ({ signal }) => getMagQuality(staticParams, { signal }), enabled: view === 'quality' });
   if (view === 'heatmap') return <MagHeatmapWorkspace key={heatmapCandidate || 'saved'} params={params} overview={overview} initialMagId={heatmapCandidate} onSelect={onDetail} />;
   if (view === 'lineage') return <Suspense fallback={<LoadingState message="正在加载来源与去冗余视图..." />}><MagLineageView overview={overview} initialMagId={selectedMag} onDetail={onDetail} /></Suspense>;
-  if (view === 'phylogeny' || (view === 'function' && (overview.capabilities.arg || overview.capabilities.bgc))) return <Suspense fallback={<LoadingState />}><MagSourceResults overview={overview} view={view} initialMagId={selectedMag} /></Suspense>;
-  if (view === 'roadmap' || view === 'function') return <MagResearchPlans />;
+  if (view === 'phylogeny' || (view === 'function' && (overview.capabilities.metabolism || overview.capabilities.arg || overview.capabilities.bgc))) return <Suspense fallback={<LoadingState />}><MagSourceResults overview={overview} scope={scope} view={view} initialMagId={selectedMag} onDetail={onDetail} onNavigate={(next, id) => { setSelectedMag(id); setView(next); }} scopeControls={<ScopeForm value={scope} options={overview.options} onApply={onScopeChange} />} /></Suspense>;
+  if (view === 'roadmap' || view === 'function') return <MagResearchPlans capabilities={overview.capabilities} />;
   const active = { features: comparison, distribution, taxonomy, quality, mapping }[view];
   const data = active.data;
   const audit = data?.provenance || overview.provenance;
@@ -345,6 +345,12 @@ function WorkspaceResults({ overview, scope, view, setView, selectedMag, setSele
 }
 
 function readEvidenceReturn() {
+  try {
+    const shared = JSON.parse(new URLSearchParams(window.location.search).get('magFn') || 'null');
+    if (/^[a-f0-9]{64}$/.test(shared?.release || '') && typeof shared.datasetKey === 'string') {
+      return { datasetKey: shared.datasetKey, release: shared.release, scope: { ...DEFAULT_SCOPE, ...shared.scope }, view: 'function', selectedMag: shared.state?.focusedMag || '' };
+    }
+  } catch { /* Ignore malformed shared links. */ }
   try { return JSON.parse(sessionStorage.getItem('admeta:evidence:mag-return') || 'null') || {}; } catch { return {}; }
 }
 
@@ -354,6 +360,7 @@ export default function MagWorkspacePage({ datasets = [], onDatasetChange, onDom
   const [scope, setScope] = useState(restored.scope || DEFAULT_SCOPE);
   const [selectedMag, setSelectedMag] = useState(restored.selectedMag || '');
   const [detailMag, setDetailMag] = useState(restored.detailMag || '');
+  const [detailContext, setDetailContext] = useState({});
   const [heatmapCandidate, setHeatmapCandidate] = useState(restored.heatmapCandidate || '');
   const [view, setView] = useState(restored.view || 'features');
   useEffect(() => { try { sessionStorage.removeItem('admeta:evidence:mag-return'); } catch { /* Optional browser storage. */ } }, []);
@@ -385,6 +392,7 @@ export default function MagWorkspacePage({ datasets = [], onDatasetChange, onDom
     overview.data?.capabilities?.quality ? 'MAG质量' : null,
     overview.data?.capabilities?.lineage ? '来源与去冗余' : null,
     overview.data?.capabilities?.arg ? 'ARG' : null,
+    overview.data?.capabilities?.metabolism ? 'KO / CAZyme / MEROPS' : null,
     overview.data?.capabilities?.bgc ? 'BGC' : null,
     overview.data?.capabilities?.phylogeny ? '系统发育树' : null,
     '技术质控',
@@ -439,7 +447,7 @@ export default function MagWorkspacePage({ datasets = [], onDatasetChange, onDom
       <strong>数据就绪度</strong>
       <span><i className="mag-readiness__dot mag-readiness__dot--ready" aria-hidden="true" />已接入：{readyLabels}</span>
       <span><i className="mag-readiness__dot" aria-hidden="true" />待核验：{pendingLabels}</span>
-      <span><i className="mag-readiness__dot" aria-hidden="true" />待完成：MAG 层面的 KO / CAZyme 等结果</span>
+      {overview.data && !overview.data.capabilities?.metabolism && <span><i className="mag-readiness__dot" aria-hidden="true" />待接入：MAG 层面的 KO / CAZyme 等结果</span>}
     </div>
   </aside>;
   return <AppShell tone="mag" topbar={topbar} sidebar={sidebar} main={<MainWorkspace chartKey="mag">
@@ -455,9 +463,10 @@ export default function MagWorkspacePage({ datasets = [], onDatasetChange, onDom
         </section> : ['lineage', 'roadmap', 'function', 'phylogeny'].includes(view) ? null : <section className="mag-filter-panel"><p className="mag-muted">当前为 MAG 级注释视图，覆盖全部 {audit.magCount} 个代表 MAG，不使用 disease、年龄、性别、批次或丰度阈值筛选。</p></section>}
         {SAMPLE_SCOPED_VIEWS.has(view) && audit.warnings.filter(w => w.includes('全部为 100%') || w.includes('少于 2')).map(w => <p className="mag-inline-notice" key={w}>{w}</p>)}
         <WorkspaceResults key={JSON.stringify([scope, audit.dataFingerprint])} overview={overview.data} scope={scope} view={view} setView={setView} selectedMag={selectedMag} setSelectedMag={setSelectedMag}
-          onDetail={setDetailMag} heatmapCandidate={heatmapCandidate} onHeatmapCandidate={setHeatmapCandidate} />
+          onDetail={(id, context = {}) => { setDetailContext(context); setDetailMag(id); }} heatmapCandidate={heatmapCandidate} onHeatmapCandidate={setHeatmapCandidate} onScopeChange={setScope} />
         {detailMag && <MagDetailDrawer key={`${audit.dataFingerprint}:${detailMag}`} magId={detailMag} overview={overview.data} scope={scope} onClose={() => setDetailMag('')}
-          initialTab={restored.detailMag === detailMag ? restored.detailTab : 'abundance'}
+          initialTab={detailContext.tab || (restored.detailMag === detailMag ? restored.detailTab : 'abundance')}
+          initialFeatureId={detailContext.featureId || ''} initialNamespace={detailContext.namespace || 'kofam_ko'}
           onEvidenceOpen={detailTab => { try { sessionStorage.setItem('admeta:evidence:mag-return', JSON.stringify({ datasetKey: activeDataset, release: audit.dataFingerprint, scope, selectedMag, detailMag, heatmapCandidate, view, detailTab })); } catch { /* Navigation still works. */ } }}
           onNavigate={(next, id) => { setSelectedMag(id); if (next === 'heatmap') setHeatmapCandidate(id); setView(next); setDetailMag(''); }} />}
       </>}

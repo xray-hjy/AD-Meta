@@ -8,7 +8,7 @@ import MagHeatmapCountSettings from './MagHeatmapCountSettings';
 import { MAG_COLUMNS, MAG_COLUMN_PRESETS } from './MagFeatureTable';
 import './mag-toolbar.css';
 
-function ToolbarPopover({ label, title, children, disabled = false, exportButton = false, className = '', ariaLabel, fitViewport = false }) {
+export function ToolbarPopover({ label, title, children, disabled = false, exportButton = false, className = '', ariaLabel, fitViewport = false }) {
   const [open, setOpen] = useState(false);
   const id = useId();
   const rootRef = useRef(null);

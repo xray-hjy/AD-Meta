@@ -54,7 +54,7 @@ test('pins click selection, switches the shared detail and restores focus when c
   expect(drep).toHaveFocus();
 });
 
-test('navigates only available results and leaves metabolism as a neutral method slot', () => {
+test('navigates available results and exposes DRAM2 source files without a result shortcut', () => {
   const onNavigate = vi.fn(), onCommunityNavigate = vi.fn();
   render(<MagProcessingFlow provenance={provenance} capabilities={capabilities} onNavigate={onNavigate} onCommunityNavigate={onCommunityNavigate} />);
   fireEvent.click(node(/dRep 去冗余/));
@@ -65,8 +65,9 @@ test('navigates only available results and leaves metabolism as a neutral method
   expect(onCommunityNavigate).toHaveBeenCalledWith(provenance.communityResults.species);
   fireEvent.click(node(/代谢功能/));
   const detail = screen.getByRole('region', { name: '流程步骤详情' });
-  expect(within(detail).getByText('以 MAG 为单位关联基因与代谢功能信息。')).toBeVisible();
-  expect(within(detail).queryByRole('button', { name: /查看对应结果|来源文件与脚本/ })).toBeNull();
+  expect(within(detail).getByText(/整合 KOfam、dbCAN、MEROPS 与 DRAM HMM 的基因注释/)).toBeVisible();
+  expect(within(detail).queryByRole('button', { name: /查看对应结果/ })).toBeNull();
+  expect(within(detail).getByRole('button', { name: '来源文件与脚本' })).toBeVisible();
   expect(within(detail).queryByLabelText('关键参数与统计')).toBeNull();
 });
 

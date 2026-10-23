@@ -157,6 +157,20 @@
             "name": "dRep"
           }
         },
+        "metabolism": {
+          "parser": "dram_summary",
+          "required": true,
+          "files": {
+            "run": "storage/raw/ad-nc-mag/PRJCA022804/DRAM2/summary/runs/20261022_233830_828587_1595139/run_summary.json",
+            "manifest": "storage/raw/ad-nc-mag/PRJCA022804/DRAM2/summary/runs/20261022_233830_828587_1595139/output_manifest.tsv",
+            "summary": "storage/raw/ad-nc-mag/PRJCA022804/DRAM2/summary/runs/20261022_233830_828587_1595139/mag_dram_annotation_summary.tsv",
+            "genes": "storage/raw/ad-nc-mag/PRJCA022804/DRAM2/summary/runs/20261022_233830_828587_1595139/dram_all_genes.tsv.gz",
+            "distill": "storage/raw/ad-nc-mag/PRJCA022804/DRAM2/summary/runs/20261022_233830_828587_1595139/mag_distill_summary.tsv"
+          },
+          "globRoot": "storage/raw/ad-nc-mag/PRJCA022804/DRAM2/summary/runs/20261022_233830_828587_1595139",
+          "patterns": ["*"],
+          "tool": {"name": "DRAM2"}
+        },
         "arg": {
           "parser": "dramma",
           "files": {

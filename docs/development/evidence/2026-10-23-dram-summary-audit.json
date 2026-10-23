@@ -1,0 +1,214 @@
+{
+  "summary_path": "backend/storage/raw/ad-nc-mag/PRJCA022804/DRAM2/summary/runs/20261022_233830_828587_1595139",
+  "audit_kind": "read-only, independent local recount",
+  "upstream_run": "20261021_123954_3922617",
+  "summary_run": "20261022_233830_828587_1595139",
+  "files": {
+    "count": 26,
+    "bytes": 254239398
+  },
+  "internal_manifest_verified_files": 24,
+  "archive_manifest_verified_files": 26,
+  "mag_count": 872,
+  "domain_counts": {
+    "Bacteria": 869,
+    "Archaea": 3
+  },
+  "existing_source_cross_checks": {
+    "mag_set_matches_drep_coverm_gtdb": true,
+    "checkm2_all_fields_match_for_representatives": true,
+    "gtdb_classification_matches": true,
+    "coverm_lengths_match": true,
+    "dramma_predicted_protein_totals_match": true,
+    "note": "Protein totals do not establish one-to-one gene identity across tools."
+  },
+  "matrices": {
+    "kofam_ko": {
+      "mags": 872,
+      "features": 6787,
+      "nonzero_cells": 839037,
+      "feature_assignments": 1051687,
+      "presence_consistent": true
+    },
+    "kofam_ec": {
+      "mags": 872,
+      "features": 2466,
+      "nonzero_cells": 432644,
+      "feature_assignments": 608319,
+      "presence_consistent": true
+    },
+    "dbcan_family": {
+      "mags": 872,
+      "features": 529,
+      "nonzero_cells": 36692,
+      "feature_assignments": 72812,
+      "presence_consistent": true
+    },
+    "dbcan_subfamily": {
+      "mags": 872,
+      "features": 5115,
+      "nonzero_cells": 52944,
+      "feature_assignments": 70801,
+      "presence_consistent": true
+    },
+    "dbcan_substrate": {
+      "mags": 872,
+      "features": 41,
+      "nonzero_cells": 9921,
+      "feature_assignments": 40109,
+      "presence_consistent": true
+    },
+    "merops_id": {
+      "mags": 872,
+      "features": 35133,
+      "nonzero_cells": 102008,
+      "feature_assignments": 108940,
+      "presence_consistent": true
+    },
+    "merops_family": {
+      "mags": 872,
+      "features": 240,
+      "nonzero_cells": 47570,
+      "feature_assignments": 108940,
+      "presence_consistent": true
+    },
+    "dram_db": {
+      "mags": 872,
+      "features": 9,
+      "nonzero_cells": 1784,
+      "feature_assignments": 2352,
+      "presence_consistent": true
+    }
+  },
+  "genes": {
+    "rows": 2113311,
+    "ranks": {
+      "E": 2004810,
+      "D": 108501
+    },
+    "per_mag_gene_totals_match": true,
+    "best_hit_ko_matrix_mismatched_cells": 0,
+    "witnesses": {
+      "K00929": [
+        {
+          "query_id": "CRR1012336__CRR1012336_cleanbin_000029_k141_226847_2",
+          "input_fasta": "CRR1012336__CRR1012336_cleanbin_000029",
+          "scaffold": "k141_226847",
+          "gene_number": "2",
+          "kofam_id": "K00929"
+        },
+        {
+          "query_id": "CRR1012336__CRR1012336_cleanbin_000030_k141_232292_7",
+          "input_fasta": "CRR1012336__CRR1012336_cleanbin_000030",
+          "scaffold": "k141_232292",
+          "gene_number": "7",
+          "kofam_id": "K00929"
+        }
+      ],
+      "K00634": [
+        {
+          "query_id": "CRR1012336__CRR1012336_cleanbin_000030_k141_232292_8",
+          "input_fasta": "CRR1012336__CRR1012336_cleanbin_000030",
+          "scaffold": "k141_232292",
+          "gene_number": "8",
+          "kofam_id": "K00634"
+        },
+        {
+          "query_id": "CRR1012349__CRR1012349_cleanbin_000023_k141_56801_7",
+          "input_fasta": "CRR1012349__CRR1012349_cleanbin_000023",
+          "scaffold": "k141_56801",
+          "gene_number": "7",
+          "kofam_id": "K00634"
+        }
+      ],
+      "K01580": [
+        {
+          "query_id": "CRR1012380__CRR1012380_cleanbin_000001_k141_215567_37",
+          "input_fasta": "CRR1012380__CRR1012380_cleanbin_000001",
+          "scaffold": "k141_215567",
+          "gene_number": "37",
+          "kofam_id": "K01580"
+        },
+        {
+          "query_id": "CRR1012732__CRR1012732_cleanbin_000018_k141_24285_2",
+          "input_fasta": "CRR1012732__CRR1012732_cleanbin_000018",
+          "scaffold": "k141_24285",
+          "gene_number": "2",
+          "kofam_id": "K01580"
+        }
+      ],
+      "K01442": [
+        {
+          "query_id": "CRR1012336__CRR1012336_cleanbin_000029_k141_125433_69",
+          "input_fasta": "CRR1012336__CRR1012336_cleanbin_000029",
+          "scaffold": "k141_125433",
+          "gene_number": "69",
+          "kofam_id": "K01442"
+        },
+        {
+          "query_id": "CRR1012336__CRR1012336_cleanbin_000030_k141_218254_28",
+          "input_fasta": "CRR1012336__CRR1012336_cleanbin_000030",
+          "scaffold": "k141_218254",
+          "gene_number": "28",
+          "kofam_id": "K01442"
+        }
+      ]
+    }
+  },
+  "distill": {
+    "logical_rows": 6831,
+    "unique_gene_id": 6760,
+    "unique_metadata_tuples": 6831,
+    "workbooks": {
+      "assimilation_and_cofactor_metabolism_summary": 2013,
+      "cellular_machinery_summary": 356,
+      "energy_acquisition_bioenergetics_summary": 3657,
+      "environmental_interaction_and_adaptation_summary": 805
+    },
+    "single_ko_rows_present_in_ko_matrix": 1624,
+    "single_ko_rows_with_different_values": 1049,
+    "single_ko_mismatched_cells": 187108,
+    "examples": [
+      {
+        "ko": "K00634",
+        "description": "phosphate butyryltransferase [EC:2.3.1.19]",
+        "ko_carrier_mags": 47,
+        "ko_gene_count": 51,
+        "distill_value_sum": 0,
+        "mismatched_mags": 47
+      },
+      {
+        "ko": "K00929",
+        "description": "butyrate kinase [EC:2.7.2.7]",
+        "ko_carrier_mags": 229,
+        "ko_gene_count": 297,
+        "distill_value_sum": 0,
+        "mismatched_mags": 229
+      },
+      {
+        "ko": "K01442",
+        "description": "cbh; choloylglycine hydrolase [EC:3.5.1.24]",
+        "ko_carrier_mags": 252,
+        "ko_gene_count": 270,
+        "distill_value_sum": 0,
+        "mismatched_mags": 252
+      },
+      {
+        "ko": "K01580",
+        "description": "E4.1.1.15, gadB, gadA, GAD; glutamate decarboxylase [EC:4.1.1.15]",
+        "ko_carrier_mags": 28,
+        "ko_gene_count": 29,
+        "distill_value_sum": 0,
+        "mismatched_mags": 28
+      }
+    ],
+    "interpretation": "Discrepancy established; root cause and intended summary rules not established."
+  },
+  "community_ko_identity_overlap": {
+    "community_standard_ko": 9537,
+    "mag_ko": 6787,
+    "shared_ids": 6631,
+    "mag_only_ids": 156,
+    "note": "Identifier overlap only; abundance units and detection procedures differ."
+  }
+}

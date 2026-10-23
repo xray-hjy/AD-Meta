@@ -548,6 +548,244 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/mag/functions/carriers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Functional Carriers */
+        get: operations["functional_carriers_api_mag_functions_carriers_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mag/functions/community": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Functional Community */
+        get: operations["functional_community_api_mag_functions_community_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mag/functions/compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Functional Compare */
+        get: operations["functional_compare_api_mag_functions_compare_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mag/functions/coverage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Functional Coverage */
+        get: operations["functional_coverage_api_mag_functions_coverage_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mag/functions/distributions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Functional Distributions */
+        get: operations["functional_distributions_api_mag_functions_distributions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mag/functions/download/{kind}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Functional Download */
+        get: operations["functional_download_api_mag_functions_download__kind__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mag/functions/features": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Functional Features */
+        get: operations["functional_features_api_mag_functions_features_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mag/functions/genes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Functional Genes */
+        get: operations["functional_genes_api_mag_functions_genes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mag/functions/matrix": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Functional Matrix */
+        get: operations["functional_matrix_api_mag_functions_matrix_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mag/functions/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Functional Overview */
+        get: operations["functional_overview_api_mag_functions_overview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mag/functions/signals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Functional Signals */
+        get: operations["functional_signals_api_mag_functions_signals_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mag/functions/sources/{module}/details": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Functional Source Details */
+        get: operations["functional_source_details_api_mag_functions_sources__module__details_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mag/functions/sources/{module}/matrix": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Functional Source Matrix */
+        get: operations["functional_source_matrix_api_mag_functions_sources__module__matrix_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mag/functions/themes/{theme_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Functional Theme */
+        get: operations["functional_theme_api_mag_functions_themes__theme_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/mag/heatmap": {
         parameters: {
             query?: never;
@@ -1673,6 +1911,272 @@ export interface components {
              * @constant
              */
             ranking: "mean_abundance";
+        };
+        /** FunctionalCommunity */
+        FunctionalCommunity: {
+            /** Analysisversion */
+            analysisVersion: string;
+            /** Annotationrevision */
+            annotationRevision?: string | null;
+            /** Available */
+            available: boolean;
+            /** Communityrevision */
+            communityRevision?: string | null;
+            /** Featureid */
+            featureId?: string | null;
+            /** Items */
+            items: {
+                [key: string]: unknown;
+            }[];
+            /** Link */
+            link?: {
+                [key: string]: unknown;
+            };
+            /** Meaning */
+            meaning?: string | null;
+            /** Projectionfingerprint */
+            projectionFingerprint: string;
+            /** Release */
+            release: string;
+            /** Unit */
+            unit?: string | null;
+        };
+        /** FunctionalEvidence */
+        FunctionalEvidence: {
+            /** Analysisversion */
+            analysisVersion: string;
+            /** Annotationrevision */
+            annotationRevision?: string | null;
+            /** Items */
+            items: {
+                [key: string]: unknown;
+            }[];
+            /** Magid */
+            magId?: string | null;
+            /** Projectionfingerprint */
+            projectionFingerprint: string;
+            /** Release */
+            release: string;
+            /** Samplescope */
+            sampleScope?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Scopekind
+             * @default catalog
+             */
+            scopeKind: string;
+        };
+        /** FunctionalGenePage */
+        FunctionalGenePage: {
+            /** Analysisversion */
+            analysisVersion: string;
+            /** Annotationrevision */
+            annotationRevision?: string | null;
+            /** Contigs */
+            contigs: {
+                [key: string]: unknown;
+            }[];
+            /** Coordinateconvention */
+            coordinateConvention: string;
+            /** Featureid */
+            featureId?: string | null;
+            /** Filteredevidence */
+            filteredEvidence: boolean;
+            /** Hassequence */
+            hasSequence: boolean;
+            /** Items */
+            items: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Limit
+             * @default 25
+             */
+            limit: number;
+            /** Namespace */
+            namespace?: string | null;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            /** Projectionfingerprint */
+            projectionFingerprint: string;
+            /** Release */
+            release: string;
+            /** Samplescope */
+            sampleScope?: {
+                [key: string]: unknown;
+            } | null;
+            /** Scopekind */
+            scopeKind: string;
+            /** Testfamily */
+            testFamily?: number | null;
+            /** Total */
+            total: number;
+        };
+        /** FunctionalMatrix */
+        FunctionalMatrix: {
+            /** Analysisversion */
+            analysisVersion: string;
+            /** Annotationrevision */
+            annotationRevision?: string | null;
+            /** Dendrograms */
+            dendrograms?: {
+                [key: string]: unknown;
+            };
+            /** Features */
+            features: {
+                [key: string]: unknown;
+            }[];
+            /** Mags */
+            mags: {
+                [key: string]: unknown;
+            }[];
+            /** Methods */
+            methods: {
+                [key: string]: unknown;
+            };
+            /** Namespace */
+            namespace: string;
+            /** Projectionfingerprint */
+            projectionFingerprint: string;
+            /** Release */
+            release: string;
+            /** Scopekind */
+            scopeKind: string;
+            /** Selection */
+            selection: {
+                [key: string]: number;
+            };
+            /** Theme */
+            theme?: {
+                [key: string]: unknown;
+            } | null;
+            /** Unit */
+            unit?: string | null;
+            /** Valuekind */
+            valueKind: string;
+            /** Values */
+            values: (number | null)[][];
+        };
+        /** FunctionalOverview */
+        FunctionalOverview: {
+            /** Analysisversion */
+            analysisVersion: string;
+            /** Annotationrevision */
+            annotationRevision?: string | null;
+            /** Items */
+            items: {
+                [key: string]: unknown;
+            }[];
+            /** Namespaces */
+            namespaces: {
+                [key: string]: string;
+            }[];
+            /** Projectionfingerprint */
+            projectionFingerprint: string;
+            /** Release */
+            release: string;
+            /** Report */
+            report: {
+                [key: string]: unknown;
+            };
+            /** Scopekind */
+            scopeKind: string;
+            /** Themes */
+            themes: {
+                [key: string]: unknown;
+            }[];
+        };
+        /** FunctionalPage */
+        FunctionalPage: {
+            /** Analysisversion */
+            analysisVersion: string;
+            /** Annotationrevision */
+            annotationRevision?: string | null;
+            /** Featureid */
+            featureId?: string | null;
+            /** Items */
+            items: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Limit
+             * @default 25
+             */
+            limit: number;
+            /** Namespace */
+            namespace?: string | null;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            /** Projectionfingerprint */
+            projectionFingerprint: string;
+            /** Release */
+            release: string;
+            /** Samplescope */
+            sampleScope?: {
+                [key: string]: unknown;
+            } | null;
+            /** Scopekind */
+            scopeKind: string;
+            /** Testfamily */
+            testFamily?: number | null;
+            /** Total */
+            total: number;
+        };
+        /** FunctionalSignals */
+        FunctionalSignals: {
+            /** Analysisversion */
+            analysisVersion: string;
+            /** Annotationrevision */
+            annotationRevision?: string | null;
+            /** Featureid */
+            featureId?: string | null;
+            /** Items */
+            items: {
+                [key: string]: unknown;
+            }[];
+            /** Kind */
+            kind: string;
+            /**
+             * Limit
+             * @default 25
+             */
+            limit: number;
+            /** Meaning */
+            meaning: string;
+            /** Namespace */
+            namespace?: string | null;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            /** Projectionfingerprint */
+            projectionFingerprint: string;
+            /** Release */
+            release: string;
+            /** Samplescope */
+            sampleScope?: {
+                [key: string]: unknown;
+            } | null;
+            /** Samples */
+            samples: {
+                [key: string]: unknown;
+            }[];
+            /** Scopekind */
+            scopeKind: string;
+            /** Testfamily */
+            testFamily?: number | null;
+            /** Total */
+            total: number;
+            /** Unit */
+            unit: string;
         };
         /** GmrepoAuditResponse */
         GmrepoAuditResponse: {
@@ -4970,6 +5474,710 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MagDistributionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    functional_carriers_api_mag_functions_carriers_get: {
+        parameters: {
+            query: {
+                namespace?: string;
+                featureId: string;
+                sortBy?: string;
+                limit?: number;
+                offset?: number;
+                revision?: string;
+                dataset?: string;
+                release?: string;
+                disease?: "" | "AD" | "NC";
+                gender?: "" | "F" | "M";
+                batch?: string;
+                ageMin?: number | null;
+                ageMax?: number | null;
+                abundanceThresholdPercent?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FunctionalPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    functional_community_api_mag_functions_community_get: {
+        parameters: {
+            query: {
+                featureId: string;
+                revision?: string;
+                dataset?: string;
+                release?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FunctionalCommunity"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    functional_compare_api_mag_functions_compare_get: {
+        parameters: {
+            query: {
+                magIds: string;
+                revision?: string;
+                dataset?: string;
+                release?: string;
+                disease?: "" | "AD" | "NC";
+                gender?: "" | "F" | "M";
+                batch?: string;
+                ageMin?: number | null;
+                ageMax?: number | null;
+                abundanceThresholdPercent?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FunctionalEvidence"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    functional_coverage_api_mag_functions_coverage_get: {
+        parameters: {
+            query: {
+                magId: string;
+                revision?: string;
+                dataset?: string;
+                release?: string;
+                disease?: "" | "AD" | "NC";
+                gender?: "" | "F" | "M";
+                batch?: string;
+                ageMin?: number | null;
+                ageMax?: number | null;
+                abundanceThresholdPercent?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FunctionalEvidence"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    functional_distributions_api_mag_functions_distributions_get: {
+        parameters: {
+            query: {
+                magIds: string;
+                limit?: number;
+                offset?: number;
+                revision?: string;
+                dataset?: string;
+                release?: string;
+                disease?: "" | "AD" | "NC";
+                gender?: "" | "F" | "M";
+                batch?: string;
+                ageMin?: number | null;
+                ageMax?: number | null;
+                abundanceThresholdPercent?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FunctionalPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    functional_download_api_mag_functions_download__kind__get: {
+        parameters: {
+            query?: {
+                magId?: string;
+                featureId?: string;
+                allMatches?: boolean;
+                category?: string;
+                signalKind?: string;
+                contig?: string;
+                revision?: string;
+                dataset?: string;
+                release?: string;
+                disease?: "" | "AD" | "NC";
+                gender?: "" | "F" | "M";
+                batch?: string;
+                ageMin?: number | null;
+                ageMax?: number | null;
+                abundanceThresholdPercent?: number;
+                namespace?: string;
+                query?: string;
+                magQuery?: string;
+                featureIds?: string;
+                magIds?: string;
+                magLimit?: number;
+                featureLimit?: number;
+                minCompleteness?: number | null;
+                maxContamination?: number | null;
+                rowOrder?: "taxonomy" | "cluster";
+                columnOrder?: "rank" | "id" | "cluster";
+                valueKind?: "presence" | "count";
+            };
+            header?: never;
+            path: {
+                kind: "features" | "matrix" | "carriers" | "genes" | "arg" | "bgc" | "signals" | "provenance" | "distributions";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    functional_features_api_mag_functions_features_get: {
+        parameters: {
+            query?: {
+                namespace?: string;
+                query?: string;
+                magId?: string;
+                ids?: string;
+                limit?: number;
+                offset?: number;
+                revision?: string;
+                dataset?: string;
+                release?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FunctionalPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    functional_genes_api_mag_functions_genes_get: {
+        parameters: {
+            query: {
+                magId: string;
+                namespace?: string;
+                featureId?: string;
+                contig?: string;
+                start?: number | null;
+                stop?: number | null;
+                query?: string;
+                limit?: number;
+                offset?: number;
+                revision?: string;
+                dataset?: string;
+                release?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FunctionalGenePage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    functional_matrix_api_mag_functions_matrix_get: {
+        parameters: {
+            query?: {
+                revision?: string;
+                dataset?: string;
+                release?: string;
+                namespace?: string;
+                query?: string;
+                magQuery?: string;
+                featureIds?: string;
+                magIds?: string;
+                magLimit?: number;
+                featureLimit?: number;
+                minCompleteness?: number | null;
+                maxContamination?: number | null;
+                rowOrder?: "taxonomy" | "cluster";
+                columnOrder?: "rank" | "id" | "cluster";
+                valueKind?: "presence" | "count";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FunctionalMatrix"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    functional_overview_api_mag_functions_overview_get: {
+        parameters: {
+            query?: {
+                revision?: string;
+                dataset?: string;
+                release?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FunctionalOverview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    functional_signals_api_mag_functions_signals_get: {
+        parameters: {
+            query?: {
+                namespace?: string;
+                kind?: string;
+                featureId?: string;
+                query?: string;
+                limit?: number;
+                offset?: number;
+                revision?: string;
+                dataset?: string;
+                release?: string;
+                disease?: "" | "AD" | "NC";
+                gender?: "" | "F" | "M";
+                batch?: string;
+                ageMin?: number | null;
+                ageMax?: number | null;
+                abundanceThresholdPercent?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FunctionalSignals"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    functional_source_details_api_mag_functions_sources__module__details_get: {
+        parameters: {
+            query?: {
+                magId?: string;
+                query?: string;
+                category?: string;
+                limit?: number;
+                offset?: number;
+                revision?: string;
+                dataset?: string;
+                release?: string;
+            };
+            header?: never;
+            path: {
+                module: "arg" | "bgc";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FunctionalPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    functional_source_matrix_api_mag_functions_sources__module__matrix_get: {
+        parameters: {
+            query?: {
+                category?: string;
+                magLimit?: number;
+                featureLimit?: number;
+                revision?: string;
+                dataset?: string;
+                release?: string;
+            };
+            header?: never;
+            path: {
+                module: "arg" | "bgc";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FunctionalMatrix"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    functional_theme_api_mag_functions_themes__theme_id__get: {
+        parameters: {
+            query?: {
+                magIds?: string;
+                magLimit?: number;
+                revision?: string;
+                dataset?: string;
+                release?: string;
+            };
+            header?: never;
+            path: {
+                theme_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FunctionalMatrix"];
                 };
             };
             /** @description Validation Error */

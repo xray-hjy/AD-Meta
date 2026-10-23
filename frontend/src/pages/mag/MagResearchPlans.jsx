@@ -9,7 +9,8 @@ export function MagPlanCard({ plan }) {
   return <article className="mag-plan-card"><header><span className="mag-plan-status">已规划，待完成</span><span>{plan.priority}</span></header><h3>{plan.title}</h3><p>{plan.question}</p>
     <dl><dt>已有基础</dt><dd>{plan.available}</dd><dt>待补输入 / 分析</dt><dd>{plan.missing}</dd><dt>预期呈现</dt><dd>{plan.output}</dd></dl></article>;
 }
-export default function MagResearchPlans() {
+export default function MagResearchPlans({ capabilities = {} }) {
+  const plans = MAG_RESEARCH_PLANS.filter(plan => !({ function: capabilities.metabolism, detection: capabilities.coverage, phylogeny: capabilities.phylogeny }[plan.key]));
   return <section className="mag-research-plans" aria-label="MAG 研究拓展"><header><span className="mag-kicker">研究拓展</span><h2>后续证据补充</h2><p>以下板块为待完成的研究模板；结果接入后再展示真实图表与方法记录。</p></header>
-    <div className="mag-plan-grid">{MAG_RESEARCH_PLANS.map(plan => <MagPlanCard key={plan.key} plan={plan} />)}</div></section>;
+    <div className="mag-plan-grid">{plans.map(plan => <MagPlanCard key={plan.key} plan={plan} />)}</div></section>;
 }

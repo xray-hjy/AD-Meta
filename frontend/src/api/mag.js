@@ -44,6 +44,16 @@ export function getMagOverview(params, options) {
   return fetchJson(`/api/mag/overview?${magParams(params)}`, { timeoutMs: 60_000, ...options });
 }
 
+/** @param {string} resource @param {MagParams} params @param {FetchJsonOptions} [options] @returns {Promise<any>} */
+export function getMagFunctions(resource, params, options) {
+  return fetchJson(`/api/mag/functions/${resource}?${magParams(params)}`, { timeoutMs: 60_000, ...options });
+}
+
+/** @param {string} kind @param {MagParams} params */
+export function magFunctionDownloadUrl(kind, params) {
+  return `${import.meta.env.VITE_API_BASE_URL || ''}/api/mag/functions/download/${kind}?${magParams(params)}`;
+}
+
 /** @param {MagParams} params @param {FetchJsonOptions} [options]
  * @returns {Promise<import('./generated').components['schemas']['MagFeaturePageResponse']>} */
 export function getMagFeatures(params, options) {

@@ -56,6 +56,9 @@ export function getMagOverviewModel(provenance, capabilities = {}) {
     phylogeny: ['细菌与古菌分别建树', '支持度设置按各自运行记录解释'],
     arg: ready('arg') ? [`HMM 命中 ${magCount(modules.arg.knownHits)}`, `模型候选 p0.75 ${magCount(modules.arg.novel075)}`, `模型候选 p0.95 ${magCount(modules.arg.novel095)}`] : [],
     bgc: ready('bgc') && modules.bgc.regionCount != null ? [`区域 ${magCount(modules.bgc.regionCount)}`] : [],
+    metabolism: ready('metabolism') ? [`预测基因 ${magCount(modules.metabolism.geneCount)}`,
+      `KO ${magCount(modules.metabolism.namespaces?.kofam_ko?.featureCount)}`,
+      `CAZyme 家族 ${magCount(modules.metabolism.namespaces?.dbcan_family?.featureCount)}`] : [],
   };
   return { total, groups, groupLabel, profile, stages: MAG_FLOW_STAGES.map(stage => {
     const capable = stage.target === 'features' || capabilities[stage.capability || stage.target];

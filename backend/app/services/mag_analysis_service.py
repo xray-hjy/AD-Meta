@@ -85,6 +85,7 @@ def overview(data: MagDataset, scope: MagScope) -> dict[str, Any]:
     ages = [s['age'] for s in data.samples if s['age'] is not None]
     return {'provenance': provenance(data, scope), 'batches': batches,
             'capabilities': {'taxonomy': bool(data.taxonomy), 'quality': bool(data.quality),
+                             'metabolism': data.modules.get('metabolism', {}).get('status') == 'ready',
                              'lineage': bool(data.lineage), 'crosswalk': bool(data.crosswalk),
                              **{name: data.modules.get(name,{}).get('status') in {'ready','partial'} for name in ('arg','bgc','phylogeny','coverage')}},
             'options': {'genders': sorted({s['gender'] for s in data.samples if s['gender']}),

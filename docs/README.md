@@ -30,6 +30,10 @@
 
 ## 开发记录
 
+- [MAG 功能与研究证据可视化实施](development/2026-10-23-mag-functional-implementation.md)：ECharts 功能矩阵、基因证据、专题、ARG/BGC、系统发育轨道及样本代理量；8 类基因计数核对与不可变查询库，必要检查已通过，完整验证后续进行。
+
+- [MAG 功能可视化完善方案 v1.1](development/2026-10-23-mag-functional-visualization-plan.md)：核对 872 个 MAG 的 DRAM2 汇总与 distill 差异；明确匹配现有 MAG 风格的 ECharts 图型、页面布局、组件复用、交互、导出及分期验收。
+
 - [20261022更新](development/20261022-update.md)：首页内容与截图集中管理、数据与方法区域、MAG 上下游流程和来源清单核对。
 - [20261020更新](development/20261020-update.md)：MAG 由版本化数据包切换到队列与模块修订管理；记录原文件归档、解析模块、数据库迁移、功能边界和回归结果。
 - [DiTing KO 与通路接入](development/2026-10-16-diting-functional-integration.md)：新版 9,537 个 KO、95 项通路、同批版本绑定，以及主分析风格的气泡图、森林图、雨云图与热图。

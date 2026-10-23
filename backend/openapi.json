@@ -1284,6 +1284,747 @@
         "title": "FeatureSelection",
         "type": "object"
       },
+      "FunctionalCommunity": {
+        "properties": {
+          "analysisVersion": {
+            "title": "Analysisversion",
+            "type": "string"
+          },
+          "annotationRevision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annotationrevision"
+          },
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "communityRevision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Communityrevision"
+          },
+          "featureId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Featureid"
+          },
+          "items": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "link": {
+            "additionalProperties": true,
+            "title": "Link",
+            "type": "object"
+          },
+          "meaning": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meaning"
+          },
+          "projectionFingerprint": {
+            "title": "Projectionfingerprint",
+            "type": "string"
+          },
+          "release": {
+            "title": "Release",
+            "type": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          }
+        },
+        "required": [
+          "release",
+          "projectionFingerprint",
+          "analysisVersion",
+          "available",
+          "items"
+        ],
+        "title": "FunctionalCommunity",
+        "type": "object"
+      },
+      "FunctionalEvidence": {
+        "properties": {
+          "analysisVersion": {
+            "title": "Analysisversion",
+            "type": "string"
+          },
+          "annotationRevision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annotationrevision"
+          },
+          "items": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "magId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Magid"
+          },
+          "projectionFingerprint": {
+            "title": "Projectionfingerprint",
+            "type": "string"
+          },
+          "release": {
+            "title": "Release",
+            "type": "string"
+          },
+          "sampleScope": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Samplescope"
+          },
+          "scopeKind": {
+            "default": "catalog",
+            "title": "Scopekind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "release",
+          "projectionFingerprint",
+          "analysisVersion",
+          "items"
+        ],
+        "title": "FunctionalEvidence",
+        "type": "object"
+      },
+      "FunctionalGenePage": {
+        "properties": {
+          "analysisVersion": {
+            "title": "Analysisversion",
+            "type": "string"
+          },
+          "annotationRevision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annotationrevision"
+          },
+          "contigs": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Contigs",
+            "type": "array"
+          },
+          "coordinateConvention": {
+            "title": "Coordinateconvention",
+            "type": "string"
+          },
+          "featureId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Featureid"
+          },
+          "filteredEvidence": {
+            "title": "Filteredevidence",
+            "type": "boolean"
+          },
+          "hasSequence": {
+            "title": "Hassequence",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "default": 25,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "namespace": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Namespace"
+          },
+          "offset": {
+            "default": 0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "projectionFingerprint": {
+            "title": "Projectionfingerprint",
+            "type": "string"
+          },
+          "release": {
+            "title": "Release",
+            "type": "string"
+          },
+          "sampleScope": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Samplescope"
+          },
+          "scopeKind": {
+            "title": "Scopekind",
+            "type": "string"
+          },
+          "testFamily": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Testfamily"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "release",
+          "projectionFingerprint",
+          "analysisVersion",
+          "scopeKind",
+          "items",
+          "total",
+          "contigs",
+          "coordinateConvention",
+          "filteredEvidence",
+          "hasSequence"
+        ],
+        "title": "FunctionalGenePage",
+        "type": "object"
+      },
+      "FunctionalMatrix": {
+        "properties": {
+          "analysisVersion": {
+            "title": "Analysisversion",
+            "type": "string"
+          },
+          "annotationRevision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annotationrevision"
+          },
+          "dendrograms": {
+            "additionalProperties": true,
+            "title": "Dendrograms",
+            "type": "object"
+          },
+          "features": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Features",
+            "type": "array"
+          },
+          "mags": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Mags",
+            "type": "array"
+          },
+          "methods": {
+            "additionalProperties": true,
+            "title": "Methods",
+            "type": "object"
+          },
+          "namespace": {
+            "title": "Namespace",
+            "type": "string"
+          },
+          "projectionFingerprint": {
+            "title": "Projectionfingerprint",
+            "type": "string"
+          },
+          "release": {
+            "title": "Release",
+            "type": "string"
+          },
+          "scopeKind": {
+            "title": "Scopekind",
+            "type": "string"
+          },
+          "selection": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Selection",
+            "type": "object"
+          },
+          "theme": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Theme"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "valueKind": {
+            "title": "Valuekind",
+            "type": "string"
+          },
+          "values": {
+            "items": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            "title": "Values",
+            "type": "array"
+          }
+        },
+        "required": [
+          "release",
+          "projectionFingerprint",
+          "analysisVersion",
+          "scopeKind",
+          "namespace",
+          "valueKind",
+          "mags",
+          "features",
+          "values",
+          "selection",
+          "methods"
+        ],
+        "title": "FunctionalMatrix",
+        "type": "object"
+      },
+      "FunctionalOverview": {
+        "properties": {
+          "analysisVersion": {
+            "title": "Analysisversion",
+            "type": "string"
+          },
+          "annotationRevision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annotationrevision"
+          },
+          "items": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "namespaces": {
+            "items": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "title": "Namespaces",
+            "type": "array"
+          },
+          "projectionFingerprint": {
+            "title": "Projectionfingerprint",
+            "type": "string"
+          },
+          "release": {
+            "title": "Release",
+            "type": "string"
+          },
+          "report": {
+            "additionalProperties": true,
+            "title": "Report",
+            "type": "object"
+          },
+          "scopeKind": {
+            "title": "Scopekind",
+            "type": "string"
+          },
+          "themes": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Themes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "release",
+          "projectionFingerprint",
+          "analysisVersion",
+          "scopeKind",
+          "items",
+          "report",
+          "namespaces",
+          "themes"
+        ],
+        "title": "FunctionalOverview",
+        "type": "object"
+      },
+      "FunctionalPage": {
+        "properties": {
+          "analysisVersion": {
+            "title": "Analysisversion",
+            "type": "string"
+          },
+          "annotationRevision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annotationrevision"
+          },
+          "featureId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Featureid"
+          },
+          "items": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "default": 25,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "namespace": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Namespace"
+          },
+          "offset": {
+            "default": 0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "projectionFingerprint": {
+            "title": "Projectionfingerprint",
+            "type": "string"
+          },
+          "release": {
+            "title": "Release",
+            "type": "string"
+          },
+          "sampleScope": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Samplescope"
+          },
+          "scopeKind": {
+            "title": "Scopekind",
+            "type": "string"
+          },
+          "testFamily": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Testfamily"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "release",
+          "projectionFingerprint",
+          "analysisVersion",
+          "scopeKind",
+          "items",
+          "total"
+        ],
+        "title": "FunctionalPage",
+        "type": "object"
+      },
+      "FunctionalSignals": {
+        "properties": {
+          "analysisVersion": {
+            "title": "Analysisversion",
+            "type": "string"
+          },
+          "annotationRevision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annotationrevision"
+          },
+          "featureId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Featureid"
+          },
+          "items": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "limit": {
+            "default": 25,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "meaning": {
+            "title": "Meaning",
+            "type": "string"
+          },
+          "namespace": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Namespace"
+          },
+          "offset": {
+            "default": 0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "projectionFingerprint": {
+            "title": "Projectionfingerprint",
+            "type": "string"
+          },
+          "release": {
+            "title": "Release",
+            "type": "string"
+          },
+          "sampleScope": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Samplescope"
+          },
+          "samples": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Samples",
+            "type": "array"
+          },
+          "scopeKind": {
+            "title": "Scopekind",
+            "type": "string"
+          },
+          "testFamily": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Testfamily"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "release",
+          "projectionFingerprint",
+          "analysisVersion",
+          "scopeKind",
+          "items",
+          "total",
+          "samples",
+          "unit",
+          "kind",
+          "meaning"
+        ],
+        "title": "FunctionalSignals",
+        "type": "object"
+      },
       "GmrepoAuditResponse": {
         "properties": {
           "items": {
@@ -10051,6 +10792,2503 @@
           }
         },
         "summary": "Distribution",
+        "tags": [
+          "mag"
+        ]
+      }
+    },
+    "/api/mag/functions/carriers": {
+      "get": {
+        "operationId": "functional_carriers_api_mag_functions_carriers_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "namespace",
+            "required": false,
+            "schema": {
+              "default": "kofam_ko",
+              "title": "Namespace",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "featureId",
+            "required": true,
+            "schema": {
+              "maxLength": 300,
+              "title": "Featureid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sortBy",
+            "required": false,
+            "schema": {
+              "default": "geneCount",
+              "title": "Sortby",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "disease",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "AD",
+                "NC"
+              ],
+              "title": "Disease",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "gender",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "F",
+                "M"
+              ],
+              "title": "Gender",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "batch",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Batch",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ageMin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 120,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Agemin"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ageMax",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 120,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Agemax"
+            }
+          },
+          {
+            "in": "query",
+            "name": "abundanceThresholdPercent",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100,
+              "minimum": 0,
+              "title": "Abundancethresholdpercent",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FunctionalPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Functional Carriers",
+        "tags": [
+          "mag"
+        ]
+      }
+    },
+    "/api/mag/functions/community": {
+      "get": {
+        "operationId": "functional_community_api_mag_functions_community_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "featureId",
+            "required": true,
+            "schema": {
+              "maxLength": 16,
+              "title": "Featureid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FunctionalCommunity"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Functional Community",
+        "tags": [
+          "mag"
+        ]
+      }
+    },
+    "/api/mag/functions/compare": {
+      "get": {
+        "operationId": "functional_compare_api_mag_functions_compare_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "magIds",
+            "required": true,
+            "schema": {
+              "maxLength": 150000,
+              "title": "Magids",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "disease",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "AD",
+                "NC"
+              ],
+              "title": "Disease",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "gender",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "F",
+                "M"
+              ],
+              "title": "Gender",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "batch",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Batch",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ageMin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 120,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Agemin"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ageMax",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 120,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Agemax"
+            }
+          },
+          {
+            "in": "query",
+            "name": "abundanceThresholdPercent",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100,
+              "minimum": 0,
+              "title": "Abundancethresholdpercent",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FunctionalEvidence"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Functional Compare",
+        "tags": [
+          "mag"
+        ]
+      }
+    },
+    "/api/mag/functions/coverage": {
+      "get": {
+        "operationId": "functional_coverage_api_mag_functions_coverage_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "magId",
+            "required": true,
+            "schema": {
+              "maxLength": 160,
+              "title": "Magid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "disease",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "AD",
+                "NC"
+              ],
+              "title": "Disease",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "gender",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "F",
+                "M"
+              ],
+              "title": "Gender",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "batch",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Batch",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ageMin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 120,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Agemin"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ageMax",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 120,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Agemax"
+            }
+          },
+          {
+            "in": "query",
+            "name": "abundanceThresholdPercent",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100,
+              "minimum": 0,
+              "title": "Abundancethresholdpercent",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FunctionalEvidence"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Functional Coverage",
+        "tags": [
+          "mag"
+        ]
+      }
+    },
+    "/api/mag/functions/distributions": {
+      "get": {
+        "operationId": "functional_distributions_api_mag_functions_distributions_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "magIds",
+            "required": true,
+            "schema": {
+              "maxLength": 150000,
+              "title": "Magids",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 6,
+              "maximum": 12,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "disease",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "AD",
+                "NC"
+              ],
+              "title": "Disease",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "gender",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "F",
+                "M"
+              ],
+              "title": "Gender",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "batch",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Batch",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ageMin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 120,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Agemin"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ageMax",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 120,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Agemax"
+            }
+          },
+          {
+            "in": "query",
+            "name": "abundanceThresholdPercent",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100,
+              "minimum": 0,
+              "title": "Abundancethresholdpercent",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FunctionalPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Functional Distributions",
+        "tags": [
+          "mag"
+        ]
+      }
+    },
+    "/api/mag/functions/download/{kind}": {
+      "get": {
+        "operationId": "functional_download_api_mag_functions_download__kind__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "enum": [
+                "features",
+                "matrix",
+                "carriers",
+                "genes",
+                "arg",
+                "bgc",
+                "signals",
+                "provenance",
+                "distributions"
+              ],
+              "title": "Kind",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "magId",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 160,
+              "title": "Magid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "featureId",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 300,
+              "title": "Featureid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "allMatches",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Allmatches",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Category",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "signalKind",
+            "required": false,
+            "schema": {
+              "default": "carriers",
+              "title": "Signalkind",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contig",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 300,
+              "title": "Contig",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "disease",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "AD",
+                "NC"
+              ],
+              "title": "Disease",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "gender",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "F",
+                "M"
+              ],
+              "title": "Gender",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "batch",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Batch",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ageMin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 120,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Agemin"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ageMax",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 120,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Agemax"
+            }
+          },
+          {
+            "in": "query",
+            "name": "abundanceThresholdPercent",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100,
+              "minimum": 0,
+              "title": "Abundancethresholdpercent",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "namespace",
+            "required": false,
+            "schema": {
+              "default": "kofam_ko",
+              "title": "Namespace",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 200,
+              "title": "Query",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "magQuery",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 200,
+              "title": "Magquery",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "featureIds",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 20000,
+              "title": "Featureids",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "magIds",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 150000,
+              "title": "Magids",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "magLimit",
+            "required": false,
+            "schema": {
+              "default": 40,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Maglimit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "featureLimit",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Featurelimit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "minCompleteness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 100,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Mincompleteness"
+            }
+          },
+          {
+            "in": "query",
+            "name": "maxContamination",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 100,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Maxcontamination"
+            }
+          },
+          {
+            "in": "query",
+            "name": "rowOrder",
+            "required": false,
+            "schema": {
+              "default": "taxonomy",
+              "enum": [
+                "taxonomy",
+                "cluster"
+              ],
+              "title": "Roworder",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "columnOrder",
+            "required": false,
+            "schema": {
+              "default": "rank",
+              "enum": [
+                "rank",
+                "id",
+                "cluster"
+              ],
+              "title": "Columnorder",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "valueKind",
+            "required": false,
+            "schema": {
+              "default": "presence",
+              "enum": [
+                "presence",
+                "count"
+              ],
+              "title": "Valuekind",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Functional Download",
+        "tags": [
+          "mag"
+        ]
+      }
+    },
+    "/api/mag/functions/features": {
+      "get": {
+        "operationId": "functional_features_api_mag_functions_features_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "namespace",
+            "required": false,
+            "schema": {
+              "default": "kofam_ko",
+              "title": "Namespace",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 200,
+              "title": "Query",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "magId",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 160,
+              "title": "Magid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ids",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 20000,
+              "title": "Ids",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FunctionalPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Functional Features",
+        "tags": [
+          "mag"
+        ]
+      }
+    },
+    "/api/mag/functions/genes": {
+      "get": {
+        "operationId": "functional_genes_api_mag_functions_genes_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "magId",
+            "required": true,
+            "schema": {
+              "maxLength": 160,
+              "title": "Magid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "namespace",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Namespace",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "featureId",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 300,
+              "title": "Featureid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contig",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 300,
+              "title": "Contig",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "in": "query",
+            "name": "stop",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Stop"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 200,
+              "title": "Query",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 2000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FunctionalGenePage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Functional Genes",
+        "tags": [
+          "mag"
+        ]
+      }
+    },
+    "/api/mag/functions/matrix": {
+      "get": {
+        "operationId": "functional_matrix_api_mag_functions_matrix_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "namespace",
+            "required": false,
+            "schema": {
+              "default": "kofam_ko",
+              "title": "Namespace",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 200,
+              "title": "Query",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "magQuery",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 200,
+              "title": "Magquery",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "featureIds",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 20000,
+              "title": "Featureids",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "magIds",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 150000,
+              "title": "Magids",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "magLimit",
+            "required": false,
+            "schema": {
+              "default": 40,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Maglimit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "featureLimit",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Featurelimit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "minCompleteness",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 100,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Mincompleteness"
+            }
+          },
+          {
+            "in": "query",
+            "name": "maxContamination",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 100,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Maxcontamination"
+            }
+          },
+          {
+            "in": "query",
+            "name": "rowOrder",
+            "required": false,
+            "schema": {
+              "default": "taxonomy",
+              "enum": [
+                "taxonomy",
+                "cluster"
+              ],
+              "title": "Roworder",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "columnOrder",
+            "required": false,
+            "schema": {
+              "default": "rank",
+              "enum": [
+                "rank",
+                "id",
+                "cluster"
+              ],
+              "title": "Columnorder",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "valueKind",
+            "required": false,
+            "schema": {
+              "default": "presence",
+              "enum": [
+                "presence",
+                "count"
+              ],
+              "title": "Valuekind",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FunctionalMatrix"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Functional Matrix",
+        "tags": [
+          "mag"
+        ]
+      }
+    },
+    "/api/mag/functions/overview": {
+      "get": {
+        "operationId": "functional_overview_api_mag_functions_overview_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FunctionalOverview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Functional Overview",
+        "tags": [
+          "mag"
+        ]
+      }
+    },
+    "/api/mag/functions/signals": {
+      "get": {
+        "operationId": "functional_signals_api_mag_functions_signals_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "namespace",
+            "required": false,
+            "schema": {
+              "default": "kofam_ko",
+              "title": "Namespace",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "default": "carriers",
+              "title": "Kind",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "featureId",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 300,
+              "title": "Featureid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 200,
+              "title": "Query",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "disease",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "AD",
+                "NC"
+              ],
+              "title": "Disease",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "gender",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "F",
+                "M"
+              ],
+              "title": "Gender",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "batch",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Batch",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ageMin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 120,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Agemin"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ageMax",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 120,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Agemax"
+            }
+          },
+          {
+            "in": "query",
+            "name": "abundanceThresholdPercent",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100,
+              "minimum": 0,
+              "title": "Abundancethresholdpercent",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FunctionalSignals"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Functional Signals",
+        "tags": [
+          "mag"
+        ]
+      }
+    },
+    "/api/mag/functions/sources/{module}/details": {
+      "get": {
+        "operationId": "functional_source_details_api_mag_functions_sources__module__details_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "module",
+            "required": true,
+            "schema": {
+              "enum": [
+                "arg",
+                "bgc"
+              ],
+              "title": "Module",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "magId",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 160,
+              "title": "Magid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 200,
+              "title": "Query",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Category",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 2000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FunctionalPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Functional Source Details",
+        "tags": [
+          "mag"
+        ]
+      }
+    },
+    "/api/mag/functions/sources/{module}/matrix": {
+      "get": {
+        "operationId": "functional_source_matrix_api_mag_functions_sources__module__matrix_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "module",
+            "required": true,
+            "schema": {
+              "enum": [
+                "arg",
+                "bgc"
+              ],
+              "title": "Module",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "default": "known_hmm_hit",
+              "title": "Category",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "magLimit",
+            "required": false,
+            "schema": {
+              "default": 40,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Maglimit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "featureLimit",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Featurelimit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FunctionalMatrix"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Functional Source Matrix",
+        "tags": [
+          "mag"
+        ]
+      }
+    },
+    "/api/mag/functions/themes/{theme_id}": {
+      "get": {
+        "operationId": "functional_theme_api_mag_functions_themes__theme_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "theme_id",
+            "required": true,
+            "schema": {
+              "title": "Theme Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "magIds",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 150000,
+              "title": "Magids",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "magLimit",
+            "required": false,
+            "schema": {
+              "default": 40,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Maglimit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FunctionalMatrix"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Functional Theme",
         "tags": [
           "mag"
         ]

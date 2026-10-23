@@ -7,6 +7,15 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
+from app.api.mag_function_models import (
+    FunctionalCommunity,
+    FunctionalEvidence,
+    FunctionalGenePage,
+    FunctionalMatrix,
+    FunctionalOverview,
+    FunctionalPage,
+    FunctionalSignals,
+)
 from app.api.mag_models import (
     MagCatalogResponse,
     MagCrosswalkPageResponse,
@@ -26,6 +35,7 @@ from app.api.mag_models import (
 from app.core.config import BACKEND_ROOT, RAW_ROOT, SETTINGS
 from app.services import cohort_repository as repository
 from app.services import mag_analysis_service as service
+from app.services import mag_function_service as functions
 from app.services.mag_suggestions import suggestions as search_suggestions
 
 router = APIRouter(prefix="/api/mag", tags=["mag"], responses={503: {"model": MagErrorResponse}})
@@ -89,6 +99,183 @@ def sources(data: Data):
 
 MODULE_KINDS = {'arg': {'arg_summary', 'arg_hits'}, 'bgc': {'bgc_status', 'bgc_regions'}, 'phylogeny': {'trees'},
                 'coverage': {'coverage_metrics'}, 'archive': {'archived_files'}}
+
+
+def functional_call(call, *args, **kwargs):
+    try:
+        return call(*args, **kwargs)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
+@router.get('/functions/overview', response_model=FunctionalOverview)
+def functional_overview(data: Data):
+    return functional_call(functions.overview, data)
+
+
+@router.get('/functions/features', response_model=FunctionalPage)
+def functional_features(data: Data, namespace: str = 'kofam_ko', query: str = Query('', max_length=200),
+                        mag_id: str = Query('', alias='magId', max_length=160), ids: str = Query('', max_length=20000),
+                        limit: int = Query(25, ge=1, le=1000), offset: int = Query(0, ge=0)):
+    return functional_call(functions.feature_page, data, namespace, query, mag_id, ids, limit, offset)
+
+
+def functional_settings(namespace: str = 'kofam_ko', query: str = Query('', max_length=200),
+                        mag_query: str = Query('', alias='magQuery', max_length=200),
+                        feature_ids: str = Query('', alias='featureIds', max_length=20000),
+                        mag_ids: str = Query('', alias='magIds', max_length=150000),
+                        mag_limit: int = Query(40, alias='magLimit', ge=1, le=1000),
+                        feature_limit: int = Query(30, alias='featureLimit', ge=1, le=1000),
+                        completeness: float | None = Query(None, alias='minCompleteness', ge=0, le=100, allow_inf_nan=False),
+                        contamination: float | None = Query(None, alias='maxContamination', ge=0, le=100, allow_inf_nan=False),
+                        row_order: Literal['taxonomy', 'cluster'] = Query('taxonomy', alias='rowOrder'),
+                        column_order: Literal['rank', 'id', 'cluster'] = Query('rank', alias='columnOrder'),
+                        value_kind: Literal['presence', 'count'] = Query('presence', alias='valueKind')):
+    return dict(namespace=namespace, query=query, mag_query=mag_query, feature_ids=feature_ids, mag_ids=mag_ids,
+                mag_limit=mag_limit, feature_limit=feature_limit, completeness=completeness, contamination=contamination,
+                row_order=row_order, column_order=column_order, value_kind=value_kind)
+
+
+@router.get('/functions/matrix', response_model=FunctionalMatrix)
+def functional_matrix(data: Data, settings: Annotated[dict, Depends(functional_settings)]):
+    return functional_call(functions.matrix, data, **settings)
+
+
+@router.get('/functions/carriers', response_model=FunctionalPage)
+def functional_carriers(data: Data, scope: Scope, namespace: str = 'kofam_ko',
+                        feature_id: str = Query(..., alias='featureId', max_length=300),
+                        sort_by: str = Query('geneCount', alias='sortBy'), limit: int = Query(25, ge=1, le=1000), offset: int = Query(0, ge=0)):
+    return functional_call(functions.carriers, data, scope, namespace, feature_id, limit, offset, sort_by)
+
+
+@router.get('/functions/genes', response_model=FunctionalGenePage)
+def functional_genes(data: Data, mag_id: str = Query(..., alias='magId', max_length=160), namespace: str = '',
+                     feature_id: str = Query('', alias='featureId', max_length=300), contig: str = Query('', max_length=300),
+                     start: int | None = Query(None, ge=0), stop: int | None = Query(None, ge=0),
+                     query: str = Query('', max_length=200), limit: int = Query(25, ge=1, le=2000), offset: int = Query(0, ge=0)):
+    return functional_call(functions.genes, data, mag_id, namespace, feature_id, contig, start, stop, query, limit, offset)
+
+
+@router.get('/functions/themes/{theme_id}', response_model=FunctionalMatrix)
+def functional_theme(theme_id: str, data: Data, mag_ids: str = Query('', alias='magIds', max_length=150000),
+                     mag_limit: int = Query(40, alias='magLimit', ge=1, le=1000)):
+    return functional_call(functions.theme, data, theme_id, mag_ids, mag_limit)
+
+
+@router.get('/functions/sources/{module}/matrix', response_model=FunctionalMatrix)
+def functional_source_matrix(module: Literal['arg', 'bgc'], data: Data, category: str = 'known_hmm_hit',
+                              mag_limit: int = Query(40, alias='magLimit', ge=1, le=200),
+                              feature_limit: int = Query(30, alias='featureLimit', ge=1, le=100)):
+    return functional_call(functions.source_matrix, data, module, category, mag_limit, feature_limit)
+
+
+@router.get('/functions/sources/{module}/details', response_model=FunctionalPage)
+def functional_source_details(module: Literal['arg', 'bgc'], data: Data,
+                               mag_id: str = Query('', alias='magId', max_length=160), query: str = Query('', max_length=200),
+                               category: str = '', limit: int = Query(25, ge=1, le=2000), offset: int = Query(0, ge=0)):
+    return functional_call(functions.source_details, data, module, mag_id, query, category, limit, offset)
+
+
+@router.get('/functions/coverage', response_model=FunctionalEvidence)
+def functional_coverage(data: Data, scope: Scope, mag_id: str = Query(..., alias='magId', max_length=160)):
+    return functional_call(functions.coverage, data, scope, mag_id)
+
+
+@router.get('/functions/compare', response_model=FunctionalEvidence)
+def functional_compare(data: Data, scope: Scope, mag_ids: str = Query(..., alias='magIds', max_length=150000)):
+    return functional_call(functions.compare, data, scope, mag_ids)
+
+
+@router.get('/functions/community', response_model=FunctionalCommunity)
+def functional_community(data: Data, feature_id: str = Query(..., alias='featureId', max_length=16)):
+    return functional_call(functions.community, data, feature_id)
+
+
+@router.get('/functions/distributions', response_model=FunctionalPage)
+def functional_distributions(data: Data, scope: Scope, mag_ids: str = Query(..., alias='magIds', max_length=150000),
+                              limit: int = Query(6, ge=1, le=12), offset: int = Query(0, ge=0)):
+    return functional_call(functions.distributions, data, scope, mag_ids, limit, offset)
+
+
+@router.get('/functions/signals', response_model=FunctionalSignals)
+def functional_signals(data: Data, scope: Scope, namespace: str = 'kofam_ko', kind: str = 'carriers',
+                        feature_id: str = Query('', alias='featureId', max_length=300), query: str = Query('', max_length=200),
+                        limit: int = Query(25, ge=1, le=1000), offset: int = Query(0, ge=0)):
+    return functional_call(functions.signals, data, scope, namespace, kind, feature_id, query, limit, offset)
+
+
+@router.get('/functions/download/{kind}')
+def functional_download(kind: Literal['features', 'matrix', 'carriers', 'genes', 'arg', 'bgc', 'signals', 'provenance', 'distributions'],
+                        data: Data, scope: Scope, settings: Annotated[dict, Depends(functional_settings)],
+                        mag_id: str = Query('', alias='magId', max_length=160), feature_id: str = Query('', alias='featureId', max_length=300),
+                        all_matches: bool = Query(False, alias='allMatches'), category: str = '',
+                        signal_kind: str = Query('carriers', alias='signalKind'), contig: str = Query('', max_length=300)):
+    import io
+
+    from app.services.csv_export import SpreadsheetSafeDictWriter
+    from app.services.mag_function_store import open_store
+
+    if kind == 'provenance':
+        return JSONResponse({'provenance': service.provenance(data, scope), 'functional': data.modules.get('metabolism'),
+                             'settings': settings, 'featureId': feature_id, 'magId': mag_id},
+                            headers={'Content-Disposition': 'attachment; filename="MAG-functional-provenance.json"'})
+    if kind == 'distributions':
+        selected_mags = functional_call(functions._mags, data, ids=settings['mag_ids']) if settings['mag_ids'] else []
+        headers = ['magId', 'sampleId', 'disease', 'gender', 'batch', 'age', 'abundancePercent']
+
+        def distribution_rows():
+            for row in selected_mags:
+                for sample in service.feature_distribution(data, scope, row['magId'])['samples']:
+                    yield {'magId': row['magId'], **sample}
+        items = distribution_rows()
+    elif kind == 'matrix':
+        mags = functional_call(functions._mags, data, settings['mag_query'], settings['mag_ids'], settings['completeness'], settings['contamination'])
+        fields = functional_call(functions.feature_rows, data, settings['namespace'], settings['query'], ids=settings['feature_ids'])
+        if not all_matches:
+            projected = functional_call(functions.matrix, data, **settings)
+            mags, fields = projected['mags'], projected['features']
+        headers = ['MAG', *[r['featureId'] for r in fields]]
+
+        def matrix_rows():
+            with open_store(data) as conn:
+                for row in mags:
+                    values = {r['feature_id']: r['gene_count'] for r in conn.execute('''SELECT f.feature_id,c.gene_count FROM counts c
+                      JOIN features f USING(feature_key) JOIN mags m USING(mag_key) WHERE m.mag_id=? AND namespace=?''',
+                      (row['magId'], settings['namespace']))}
+                    yield {'MAG': row['magId'], **{r['featureId']: values.get(r['featureId'], 0) for r in fields}}
+        items = matrix_rows()
+    else:
+        def page(offset):
+            if kind == 'features':
+                return functions.feature_page(data, settings['namespace'], settings['query'], mag_id, settings['feature_ids'], 1000, offset)
+            if kind == 'carriers':
+                return functions.carriers(data, scope, settings['namespace'], feature_id, 1000, offset)
+            if kind == 'genes':
+                return functions.genes(data, mag_id, settings['namespace'], feature_id, contig=contig, limit=1000, offset=offset)
+            if kind == 'signals':
+                return functions.signals(data, scope, settings['namespace'], signal_kind, query=settings['query'], limit=1000, offset=offset)
+            return functions.source_details(data, kind, mag_id, settings['query'], category, 1000, offset)
+        first = functional_call(page, 0)
+        headers = list(first['items'][0]) if first['items'] else ['id']
+
+        def paged_rows():
+            yield from first['items']
+            for offset in range(1000, first['total'], 1000):
+                yield from page(offset)['items']
+        items = paged_rows()
+
+    def stream():
+        buffer = io.StringIO()
+        writer = SpreadsheetSafeDictWriter(buffer, headers)
+        writer.writeheader()
+        yield '\ufeff' + buffer.getvalue()
+        for row in items:
+            buffer.seek(0)
+            buffer.truncate(0)
+            writer.writerow({key: json.dumps(value, ensure_ascii=False) if isinstance(value, (dict, list)) else value for key, value in row.items()})
+            yield buffer.getvalue()
+    return StreamingResponse(stream(), media_type='text/csv; charset=utf-8',
+                             headers={'Content-Disposition': f'attachment; filename="MAG-{kind}-{data.fingerprint[:12]}.csv"'})
 
 
 @router.get('/modules/{module}/records')

@@ -358,5 +358,7 @@ origin. Production mode rejects a blank MySQL password or the root account.
 
 ## Public Data Contract
 
+MAG 功能证据部署还需备份并挂载 `backend/storage/derived/mag-functions/` 中被 MySQL 分析记录引用的不可变 SQLite 文件。仅恢复 MySQL 会导致功能接口拒绝缺失文件；不要在服务启动时自动替换历史修订。raw 完整环境可通过现有 `import:cohort` 生成新的正式发布，详情见 [MAG 导入](mag-source-import.md) 和 [本次实施](../development/2026-10-23-mag-functional-implementation.md)。
+
 Keep `docs/reference/api.md` updated whenever an API response changes. Frontend mock data,
 backend responses, and chart components should all follow that document.

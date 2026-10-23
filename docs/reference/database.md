@@ -44,6 +44,8 @@ mappings, not evidence that reads were directly aligned to a particular MAG.
 
 ## Application Support Tables
 
+MAG DRAM2 功能证据使用不可变 SQLite 派生查询库，MySQL 的 cohort 模块修订报告存储其路径、内容 SHA-256 与字节数。派生库表为 `mags`、`features`、`counts`、`genes`、`hits`、`distill`、`info`；功能与基因按命名空间及稳定 ID 关联，运行时只读。部署必须保留发布引用的派生文件，与 MySQL 一起恢复；其构建和校验不涉及新增 MySQL 迁移。见 [MAG 功能实施记录](../development/2026-10-23-mag-functional-implementation.md)。
+
 | Table | Purpose |
 |---|---|
 | `datasets` | Stable slug plus `current_revision_id`, status, feature type, counts and current provenance. |

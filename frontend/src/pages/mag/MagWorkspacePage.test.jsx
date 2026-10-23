@@ -1,5 +1,5 @@
 import { selectOption } from '../../test/selectOption';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { configure, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { vi } from 'vitest';
@@ -10,6 +10,8 @@ import MagWorkspacePage from './MagWorkspacePage';
 // These workspace integration cases perform several renders and user actions.
 // CI coverage on shared runners can exceed the default 5-second case limit.
 vi.setConfig({ testTimeout: 15_000 });
+// Lazy chart imports can exceed Testing Library's one-second default on Windows.
+configure({ asyncUtilTimeout: 5_000 });
 
 vi.mock('../../api/mag', async importOriginal => ({ ...await importOriginal(),
   getMagDatasets: vi.fn(), getMagReleases: vi.fn(),
@@ -198,7 +200,7 @@ test('uses button-based module switching and keeps the MAG analysis navigation i
   expect(navigation.querySelectorAll('.nav-item')).toHaveLength(9);
   expect(screen.getByText('已接入：丰度分析、MAG分类、MAG质量、来源与去冗余、技术质控')).toBeTruthy();
   expect(screen.getByText('待核验：独立外部队列验证')).toBeTruthy();
-  expect(screen.getByText('待完成：MAG 层面的 KO / CAZyme 等结果')).toBeTruthy();
+  expect(screen.getByText('待接入：MAG 层面的 KO / CAZyme 等结果')).toBeTruthy();
 
   fireEvent.click(within(document.querySelector('.sidebar')).getByRole('button', { name: /群落功能/ }));
   expect(onDatasetChange).toHaveBeenCalledWith('ad-nc-ko-abundance', expect.objectContaining({ datasetSlug: 'ad-nc-ko-abundance' }));

@@ -57,12 +57,13 @@ npm run validate:mag -- --dataset prjca022804-ad-nc
 | arg | DRAMMA 运行清单、命中/候选明细及汇总交叉核对；保留 Label、prob、passed 标记的各自含义 |
 | bgc | 解析 regions.js 的 JSON 数据，不执行 JavaScript；与区域 GBK 数量核对，保存原 contig 的 0 起点半开区间 |
 | phylogeny | IQ-TREE 最终 Newick；校验叶节点唯一并属于代表 MAG，不将丰度热图聚类树当作系统发育树 |
+| metabolism | DRAM2 汇总 manifest、MAG 摘要、8 类 counts/presence、全基因表及 distill；逐类回算基因计数，与丰度/质量/分类核对后构建不可变功能索引库 |
 | archive | 保存完整复制清单。pickle、FAA、iTOL、日志等附件保持归档，不伪装成全部已结构化解析 |
 
 数字来自原文件，185、872、8548 等仅是本次审计结果，不是全局加载约束。
 阈值参数取自运行记录；CoverM 百分比不重新闭合；HMM 命中和模型新候选分开统计。
 BGC 成功且零命中、未提供、区域缺失分别记录；缺文件不补成零。
-MAG 全序列不是当前已产出结果可视化的必需输入。DRAM2 完成后单独接入，不用重新制作整套包。
+MAG 全序列不是当前已产出结果可视化的必需输入。DRAM2 已通过独立的 metabolism 模块接入，不用重新制作整套包。现有 distill 单 KO 行有差异，原表保留，研究专题查询已核对的基因计数，不报告完整通路。
 
 ## 发布、缓存与失败
 
@@ -77,6 +78,8 @@ MAG 全序列不是当前已产出结果可视化的必需输入。DRAM2 完成�
 API 的 `dataset` 指定队列，`release` 或现有图表参数 `revision` 指定正式分析记录；冲突返回 409。
 图表请求和前端缓存固定结果指纹，统计缓存同时包含计算方法和样本范围。
 发布后的数据库查询不访问 raw。原件下载则从该分析记录的来源清单解析路径，并再次核对校验值。
+
+DRAM 功能查询额外依赖 `storage/derived/mag-functions/<sha256>.sqlite`。MySQL 模块报告固定该文件的哈希和大小；API 使用只读连接并核对文件，不在运行中自动重建。部署、备份与恢复必须同时包含 MySQL 和被引用的派生库，多进程/多实例需可读挂载该目录。raw 完整时可运行同一导入命令建立新发布；历史发布需要原来固定的文件，不要直接替换路径或删除仍被引用的文件。详见 [本次实施记录](../development/2026-10-23-mag-functional-implementation.md)。
 
 ## 扩展入口
 
