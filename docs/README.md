@@ -15,6 +15,7 @@
 - [服务器转交文件整理与剩余缺项](guides/server-transfer-audit.md)：本次从服务器取得的新脚本、成功日志、MAG 来源对应、物种矩阵差异与更新后的缺项清单。
 - [本地运行与数据导入](guides/runbook.md)：环境安装、服务启动、数据导入、缓存重建和部署。
 - [MAG 原文件导入](guides/mag-source-import.md)：raw 文件、队列导入、来源核对和分析语义。
+- [DRAM2 summary 包接收与入档](guides/dram2-summary-package.md)：组员间仅分发本次 summary 包时的路径、核验、导入和依赖说明。
 
 ## 技术参考
 
@@ -30,7 +31,7 @@
 
 ## 开发记录
 
-- [MAG 功能与研究证据可视化实施](development/2026-10-23-mag-functional-implementation.md)：ECharts 功能矩阵、基因证据、专题、ARG/BGC、系统发育轨道及样本代理量；8 类基因计数核对与不可变查询库，必要检查已通过，完整验证后续进行。
+- [MAG 功能与研究证据可视化实施](development/2026-10-23-mag-functional-implementation.md)：ECharts 功能矩阵、基因证据、专题、ARG/BGC、系统发育轨道及样本代理量；8 类基因计数核对与不可变查询库，前后端测试及 Chromium E2E 已通过。
 
 - [MAG 功能可视化完善方案 v1.1](development/2026-10-23-mag-functional-visualization-plan.md)：核对 872 个 MAG 的 DRAM2 汇总与 distill 差异；明确匹配现有 MAG 风格的 ECharts 图型、页面布局、组件复用、交互、导出及分期验收。
 
