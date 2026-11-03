@@ -20,6 +20,7 @@ from app.services import mag_analysis_service as mag
 from app.services.mag_function_store import NAMESPACES, open_store
 
 VERSION = 'functional-projection-2026-10-23.1'
+MAX_MATRIX_CELLS = 100_000
 _SIGNAL_LOCK = Lock()
 THEMES: list[dict[str, Any]] = [
     {'id': 'butyrate', 'label': '丁酸相关酶', 'namespace': 'kofam_ko', 'ids': ['K00634', 'K00929'],
@@ -139,8 +140,8 @@ def matrix(data, namespace='kofam_ko', query='', mag_query='', feature_ids='', m
     selected_features = feature_rows(data, namespace, query, ids=feature_ids)
     mags = selected_mags[:mag_limit]
     fields = selected_features[:feature_limit]
-    if len(mags) * len(fields) > 20000:
-        raise ValueError('图形展示集合超过 20,000 个单元格；请缩小集合，完整数据仍可下载。')
+    if len(mags) * len(fields) > MAX_MATRIX_CELLS:
+        raise ValueError('图形展示集合超过 100,000 个单元格；请减少 MAG 或功能数量，完整数据仍可下载。')
     mi = {row['magId']: i for i, row in enumerate(mags)}
     fi = {row['featureId']: i for i, row in enumerate(fields)}
     values = np.zeros((len(mags), len(fields)), dtype=int)
@@ -225,7 +226,7 @@ def genes(data, mag_id, namespace='', feature_id='', contig='', start=None, stop
             'filteredEvidence': bool(namespace and feature_id), 'hasSequence': False}
 
 
-def theme(data, theme_id, mag_ids='', mag_limit=40):
+def theme(data, theme_id, mag_ids='', mag_limit=40, mag_query='', completeness=None, contamination=None):
     definition = next((r for r in THEMES if r['id'] == theme_id), None)
     if definition is None:
         raise ValueError('未知研究基因集合。')
@@ -240,7 +241,8 @@ def theme(data, theme_id, mag_ids='', mag_limit=40):
     filtered_ids = [key for key in feature_ids if key in available]
     empty = bool(definition.get('ids') or definition.get('module')) and not filtered_ids
     result = matrix(data, definition['namespace'], query=definition.get('search', ''), feature_ids=','.join(filtered_ids),
-                    mag_ids=mag_ids, mag_limit=mag_limit, feature_limit=0 if empty else min(60, 20000 // max(mag_limit, 1)))
+                    mag_ids=mag_ids, mag_limit=mag_limit, mag_query=mag_query, completeness=completeness,
+                    contamination=contamination, feature_limit=0 if empty else min(60, MAX_MATRIX_CELLS // max(mag_limit, 1)))
     if empty:
         result['selection']['matchedFeatures'] = 0
     result['theme'] = {**definition, 'definitionVersion': VERSION, 'evidenceKind': 'research_gene_set',
@@ -254,7 +256,8 @@ def _source_rows(revision, kind):
     return tuple(repository.records(revision, kind)[0])
 
 
-def source_matrix(data, module, category='known_hmm_hit', mag_limit=40, feature_limit=30):
+def source_matrix(data, module, category='known_hmm_hit', mag_limit=40, feature_limit=30,
+                  mag_ids='', mag_query='', completeness=None, contamination=None):
     state = data.modules.get(module, {})
     if module not in {'arg', 'bgc'} or state.get('status') not in {'ready', 'partial'}:
         raise ValueError('当前发布没有对应 ARG/BGC 结果。')
@@ -276,14 +279,19 @@ def source_matrix(data, module, category='known_hmm_hit', mag_limit=40, feature_
             counts[row['magId'], name] += 1
             labels[name] += 1
     selected = [name for name, _ in sorted(labels.items(), key=lambda kv: (-kv[1], kv[0]))[:feature_limit]]
-    mags = _mags(data)
-    mags.sort(key=lambda r: (-sum(counts[r['magId'], name] for name in selected), r['magId']))
+    mags = _mags(data, mag_query, mag_ids, completeness, contamination)
+    matched_mags = len(mags)
+    if not mag_ids:
+        mags.sort(key=lambda r: (-sum(counts[r['magId'], name] for name in selected), r['magId']))
     mags = mags[:mag_limit]
+    if len(mags) * len(selected) > MAX_MATRIX_CELLS:
+        raise ValueError('图形展示集合超过 100,000 个单元格；请减少 MAG 或类型数量。')
     values = [[counts[r['magId'], name] if counts[r['magId'], name] or statuses.get(r['magId'], {}).get('status') == 'success' else None for name in selected] for r in mags]
-    return {**identity(data, sourceModule=module, category=category, magLimit=mag_limit, featureLimit=feature_limit),
+    return {**identity(data, sourceModule=module, category=category, magLimit=mag_limit, featureLimit=feature_limit,
+                       magIds=mag_ids, magQuery=mag_query, completeness=completeness, contamination=contamination),
             'mags': mags, 'features': [{'featureId': name, 'description': '', 'geneCount': labels[name]} for name in selected],
             'values': values, 'valueKind': 'count', 'namespace': module, 'scopeKind': 'catalog',
-            'selection': {'matchedMags': len(data.mag_ids), 'shownMags': len(mags), 'matchedFeatures': len(labels), 'shownFeatures': len(selected)},
+            'selection': {'catalogMags': len(data.mag_ids), 'matchedMags': matched_mags, 'shownMags': len(mags), 'matchedFeatures': len(labels), 'shownFeatures': len(selected)},
             'methods': {'meaning': 'ARG 蛋白命中或唯一 BGC 区域标签计数；多产品标签之和不是唯一区域数。'}}
 
 

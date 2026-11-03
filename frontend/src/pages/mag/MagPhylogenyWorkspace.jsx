@@ -9,6 +9,7 @@ import LoadingState from '../../components/ui/LoadingState';
 import MagFunctionalChart from './MagFunctionalChart';
 import { phylogenyTrackOption } from './magFunctionOptions';
 import './mag-functional.css';
+import { phylogenyHeight } from './magFunctionalGeometry';
 
 export default function MagPhylogenyWorkspace({ overview, onDetail }) {
   const revision = overview.provenance.dataFingerprint;
@@ -36,7 +37,7 @@ export default function MagPhylogenyWorkspace({ overview, onDetail }) {
       </form>
       {matrix.error && view === 'tracks' && <ErrorState message={matrix.error.message} onRetry={matrix.refetch} />}
       {view === 'tracks' && matrix.isPending ? <LoadingState /> : <CollapsibleResultSection title="系统发育与研究证据" summary={`${current.leafIds.length} 个叶节点`} storageKey="admeta:mag:phylogeny-tracks:fold">
-        <MagFunctionalChart kind={`phylogeny-${view}`} data={data} buildOption={build} height={760} label="MAG 系统发育及功能轨道"
+        <MagFunctionalChart kind={`phylogeny-${view}`} data={data} buildOption={build} height={phylogenyHeight(current.leafIds.length)} label="MAG 系统发育及功能轨道"
           onSelect={r => { const id = r?.magId || (current.leafIds.includes(r?.name) ? r.name : ''); if (id) onDetail?.(id, { tab: r.featureId ? 'function' : 'taxonomy', featureId: r.featureId, namespace: 'kofam_ko' }); }} />
         <p className="mag-muted">{view === 'tracks' ? '树与轨道共用叶坐标和缩放；浅色为本次未命中，深色为命中，灰色为不可评价。Alt + 滚轮缩放叶范围。' : '点击内部节点展开，拖动或滚轮调整拓扑视图；水平距离不表示分支长度。'}{mode === 'length' && view === 'tracks' ? ' 横向距离按原文件分支长度累计。' : ''} 内部标签不自动解释为时间或统一类型支持度。</p>
       </CollapsibleResultSection>}

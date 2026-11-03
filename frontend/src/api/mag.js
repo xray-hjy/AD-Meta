@@ -46,7 +46,23 @@ export function getMagOverview(params, options) {
 
 /** @param {string} resource @param {MagParams} params @param {FetchJsonOptions} [options] @returns {Promise<any>} */
 export function getMagFunctions(resource, params, options) {
-  return fetchJson(`/api/mag/functions/${resource}?${magParams(params)}`, { timeoutMs: 60_000, ...options });
+  const request = magFunctionalRequest(resource, params);
+  return fetchJson(request.path, { timeoutMs: 60_000, ...request.options, ...options });
+}
+
+/** @param {string} resource @param {MagParams} params */
+export function magFunctionalRequest(resource, params = {}) {
+  const query = { ...params };
+  /** @type {Record<string, string>} */
+  const ids = {};
+  if (magParams(query).length > 1800) {
+    for (const key of ['magIds', 'featureIds']) {
+      if (query[key] != null && query[key] !== '') { ids[key] = String(query[key]); delete query[key]; }
+    }
+  }
+  const post = Object.keys(ids).length > 0;
+  return { path: `/api/mag/functions/${post ? 'query/' : ''}${resource}?${magParams(query)}`,
+    options: post ? { method: 'POST', body: ids } : {}, post };
 }
 
 /** @param {string} kind @param {MagParams} params */
@@ -81,7 +97,7 @@ export function getMagSamples(params, options) {
 /** @param {MagParams} params @param {FetchJsonOptions} [options]
  * @returns {Promise<import('./generated').components['schemas']['MagTaxonomyResponse']>} */
 export function getMagTaxonomy(params, options) {
-  return fetchJson(`/api/mag/taxonomy?${magParams(params)}`, options);
+  return fetchJson(`/api/mag/taxonomy?${magParams(params)}`, { timeoutMs: 60_000, ...options });
 }
 
 /** @param {MagParams} params @param {FetchJsonOptions} [options]

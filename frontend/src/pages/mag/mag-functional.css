@@ -9,6 +9,7 @@
 .mag-functional-settings .mag-heatmap-settings__main > label input { width: 100%; box-sizing: border-box; }
 .mag-functional-settings .mag-heatmap-settings__footer { align-items: center; }
 .mag-functional-chart { width: 100%; min-width: 0; }
+.mag-functional-viewport-note { margin: 4px 8px 10px; color: var(--color-text-muted); font-size: 11px; line-height: 1.7; }
 .mag-functional-chart > .chart-style-toolbar { width: fit-content; margin-left: auto; }
 .mag-functional-link { border: 0; padding: 0; background: none; color: var(--workspace-accent); font: inherit; text-align: left; cursor: pointer; overflow-wrap: anywhere; }
 .mag-functional-link:hover { text-decoration: underline; text-underline-offset: 3px; }

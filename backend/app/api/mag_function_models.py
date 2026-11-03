@@ -11,6 +11,13 @@ class FunctionalIdentity(BaseModel):
     analysisVersion: str
 
 
+class FunctionalIds(BaseModel):
+    """Long explicit selections travel in a JSON body; identity stays in the URL."""
+    model_config = {'extra': 'forbid', 'populate_by_name': True}
+    mag_ids: str | None = Field(None, alias='magIds', max_length=150000)
+    feature_ids: str | None = Field(None, alias='featureIds', max_length=20000)
+
+
 class FunctionalOverview(FunctionalIdentity):
     scopeKind: str
     items: list[dict[str, Any]]

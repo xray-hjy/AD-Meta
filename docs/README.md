@@ -16,10 +16,12 @@
 - [本地运行与数据导入](guides/runbook.md)：环境安装、服务启动、数据导入、缓存重建和部署。
 - [MAG 原文件导入](guides/mag-source-import.md)：raw 文件、队列导入、来源核对和分析语义。
 - [DRAM2 summary 包接收与入档](guides/dram2-summary-package.md)：组员间仅分发本次 summary 包时的路径、核验、导入和依赖说明。
+- [腾讯云轻量服务器部署](guides/tencent-lighthouse-deployment.md)：首次迁移的环境准备、独立数据包与数据库恢复步骤；配套脚本见 `deploy/tencent-cloud/`，已有环境的日常更新应保留配置和已发布数据。
 
 ## 技术参考
 
 - [GMrepo 完整迭代与验收](development/2026-10-17-gmrepo-complete-evidence-implementation.md)：126 份来源、全库 Run 粒度核对、185 样本/966 属派生、主外森林图与多候选、固定独立复算和本地部署支持包。
+- [GMrepo 多候选对照来源恢复](development/2026-10-20-gmrepo-comparison-recovery.md)：缺失归档的明确诊断、本地矩阵逐值核验、新来源登记及完整统计/导出复算验证。
 
 - [API 契约](reference/api.md)：公开只读接口与图表 payload。
 - [GMrepo 参考数据接入](reference/gmrepo.md)：版本化处理包、队列质量、菌属箱线图/散点、身份审查、探索性检验和证据对照接口。
@@ -31,12 +33,20 @@
 
 ## 开发记录
 
+- [20261103 本地项目发布整理](development/updates.md#20261103-本地项目发布整理)：MAG 可视化、群落与 GMrepo 恢复、部署工具、发布边界及验证记录。
+
+- [20261024 DRAM2 summary 本机接入](development/20261024-dram2-summary-ingest.md)：26 文件接收、基因 / 矩阵核对、后端发布与页面验证、旧数据库保留及 dRep 缺项。
+
+- [20261024 本地同步](development/20261024-local-sync.md)：上游四个提交、本地修复整合、科研数据保持、备份与新版 MAG 外部数据依赖。
+
 - [MAG 功能与研究证据可视化实施](development/2026-10-23-mag-functional-implementation.md)：ECharts 功能矩阵、基因证据、专题、ARG/BGC、系统发育轨道及样本代理量；8 类基因计数核对与不可变查询库，前后端测试及 Chromium E2E 已通过。
 
 - [MAG 功能可视化完善方案 v1.1](development/2026-10-23-mag-functional-visualization-plan.md)：核对 872 个 MAG 的 DRAM2 汇总与 distill 差异；明确匹配现有 MAG 风格的 ECharts 图型、页面布局、组件复用、交互、导出及分期验收。
 
 - [20261022更新](development/20261022-update.md)：首页内容与截图集中管理、数据与方法区域、MAG 上下游流程和来源清单核对。
 - [20261020更新](development/20261020-update.md)：MAG 由版本化数据包切换到队列与模块修订管理；记录原文件归档、解析模块、数据库迁移、功能边界和回归结果。
+- [2026-10-20 群落功能缓存登记恢复](development/2026-10-20-community-function-recovery.md)：摘要 500 的原因、已存计算版本恢复、当前默认运行与历史引用保持。
+
 - [DiTing KO 与通路接入](development/2026-10-16-diting-functional-integration.md)：新版 9,537 个 KO、95 项通路、同批版本绑定，以及主分析风格的气泡图、森林图、雨云图与热图。
 - [DiTing 十图型与 MAG 工具适配](development/2026-10-17-diting-pathway-gallery.md)：三个入口内切换十种图型，复用缩放、预览、摇杆、框选、科研样式和导出；支持完整 95 项选择、分面分页和热图转置。
 

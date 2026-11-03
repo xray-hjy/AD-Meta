@@ -9,9 +9,9 @@ import MagFunctionalChart from './MagFunctionalChart';
 import { functionMatrixOption } from './magFunctionOptions';
 
 vi.mock('../../components/Charts/HeatmapEChart', () => ({
-  default: forwardRef(function Surface({ option }, ref) {
+  default: forwardRef(function Surface({ option, opts }, ref) {
     useImperativeHandle(ref, () => ({ getEchartsInstance: () => ({ getOption: () => option }) }));
-    return <output data-testid="functional-surface">{JSON.stringify({ grid: option.grid, zoom: option.dataZoom })}</output>;
+    return <output data-testid="functional-surface">{JSON.stringify({ grid: option.grid, zoom: option.dataZoom, opts })}</output>;
   }),
 }));
 vi.mock('../../components/Charts/ZoomableChartViewport', () => ({
@@ -32,6 +32,9 @@ it('renders a functional matrix using the shared viewport contract, which does n
   render(<MagFunctionalChart kind="matrix" data={data} buildOption={functionMatrixOption} camera />);
   const rendered = JSON.parse(screen.getByTestId('functional-surface').textContent);
   expect(rendered.grid.width).toBeGreaterThan(0);
+  expect(rendered.grid.outerBoundsMode).toBe('none');
+  expect(rendered.grid.height).toBe(48);
+  expect(rendered.opts).toMatchObject({ width: 1000, height: 600 });
   expect(rendered.zoom[0].start).toBe(0);
   expect(rendered.zoom[1].end).toBe(100);
   expect(JSON.stringify(rendered)).not.toContain('null');

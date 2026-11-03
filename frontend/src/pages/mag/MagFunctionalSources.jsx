@@ -9,23 +9,28 @@ import LoadingState from '../../components/ui/LoadingState';
 import ErrorState from '../../components/ui/ErrorState';
 import MagFunctionalChart from './MagFunctionalChart';
 import { functionBarOption, functionMatrixOption, geneTrackOption } from './magFunctionOptions';
+import CountControl from './MagCountControl';
 
 const fmt = n => n == null ? '—' : Number(n).toLocaleString('en-US', { maximumSignificantDigits: 4 });
 
-export default function MagFunctionalSources({ module, revision, overview, initialMagId, onDetail }) {
+export default function MagFunctionalSources({ module, revision, overview, selection, initialMagId, onDetail }) {
   const arg = module === 'arg';
   const storageKey = `admeta:mag:functional-source:${revision}:${module}`;
   const [saved] = useState(() => { try { return JSON.parse(sessionStorage.getItem(storageKey) || 'null') || {}; } catch { return {}; } });
   const [category, setCategory] = useState(saved.category || 'known_hmm_hit'), [mag, setMag] = useState(saved.initialMagId === initialMagId ? saved.mag || '' : initialMagId || '');
   const [draftMag, setDraftMag] = useState(mag), [query, setQuery] = useState(saved.query || ''), [draftQuery, setDraftQuery] = useState(saved.query || '');
-  const [page, setPage] = useState(saved.page || 1), [magLimit, setMagLimit] = useState(saved.magLimit || 40), [featureLimit, setFeatureLimit] = useState(saved.featureLimit || 30);
+  const [page, setPage] = useState(saved.page || 1), [localMagLimit, setMagLimit] = useState(saved.magLimit || 40), [localFeatureLimit, setFeatureLimit] = useState(saved.featureLimit || 30);
+  const magLimit = selection?.magLimit ?? localMagLimit, featureLimit = selection?.featureLimit ?? localFeatureLimit;
   const [selected, setSelected] = useState(null), [plot, setPlot] = useState(saved.plot || 'matrix');
   useEffect(() => { try { sessionStorage.setItem(storageKey, JSON.stringify({ category, mag, query, page, magLimit, featureLimit, plot, initialMagId })); } catch { /* Optional state. */ } }, [storageKey, category, mag, query, page, magLimit, featureLimit, plot, initialMagId]);
-  const matrix = useQuery({ queryKey: ['mag', 'functional-source-matrix', revision, module, category, magLimit, featureLimit],
-    queryFn: ({ signal }) => getMagFunctions(`sources/${module}/matrix`, { revision, category, magLimit, featureLimit }, { signal }) });
+  const matrixParams = { ...selection, revision, category, magLimit, featureLimit };
+  const matrix = useQuery({ queryKey: ['mag', 'functional-source-matrix', module, matrixParams],
+    queryFn: ({ signal }) => getMagFunctions(`sources/${module}/matrix`, matrixParams, { signal }) });
   const metric = arg ? category === 'known_hmm_hit' ? 'knownHits' : category === 'novel095' ? 'novel095' : 'novel075' : 'regionCount';
-  const ranking = useQuery({ queryKey: ['mag', 'functional-source-ranking', revision, module, metric, magLimit], enabled: plot === 'ranking',
-    queryFn: ({ signal }) => getMagRecords(module, { revision, kind: arg ? 'arg_summary' : 'bgc_status', rankBy: metric, limit: magLimit }, { signal }) });
+  const ranking = useQuery({ queryKey: ['mag', 'functional-source-ranking', revision, module, metric], enabled: plot === 'ranking',
+    queryFn: ({ signal }) => getMagRecords(module, { revision, kind: arg ? 'arg_summary' : 'bgc_status', rankBy: metric, limit: 1000 }, { signal }) });
+  const selectedIds = new Set(matrix.data?.mags.map(r => r.magId) || []);
+  const rankingData = ranking.data && matrix.data ? { ...ranking.data, items: ranking.data.items.filter(r => selectedIds.has(r.magId)) } : null;
   const params = { revision, magId: mag, query, category: arg ? category : '', limit: 25, offset: (page - 1) * 25 };
   const details = useQuery({ queryKey: ['mag', 'functional-source-details', module, params],
     queryFn: ({ signal }) => getMagFunctions(`sources/${module}/details`, params, { signal }) });
@@ -43,15 +48,15 @@ export default function MagFunctionalSources({ module, revision, overview, initi
     <div className="analysis-filter-form mag-functional-source-controls">
       {arg && <label>证据类型<StyledSelect value={category} onChange={e => { setCategory(e.target.value); setPage(1); setSelected(null); }}><option value="known_hmm_hit">ARG HMM 命中</option><option value="novel_candidate">新候选 passed_0.75</option><option value="novel095">新候选 passed_0.95</option></StyledSelect></label>}
       <label>图形<StyledSelect value={plot} onChange={e => setPlot(e.target.value)}><option value="matrix">MAG × 类型矩阵</option><option value="ranking">MAG 数量排名</option></StyledSelect></label>
-      <label>展示 MAG<StyledSelect value={magLimit} onChange={e => setMagLimit(Number(e.target.value))}>{[20, 40, 80, 100, 200].map(n => <option key={n}>{n}</option>)}</StyledSelect></label>
-      <label>展示类型<StyledSelect value={featureLimit} onChange={e => setFeatureLimit(Number(e.target.value))}>{[10, 20, 30, 60, 100].map(n => <option key={n}>{n}</option>)}</StyledSelect></label>
+      {!selection && <><CountControl value={magLimit} max={overview.provenance.magCount} onChange={setMagLimit} />
+        <CountControl value={featureLimit} max={100} noun="功能" onChange={setFeatureLimit} /></>}
     </div>
     <div className="mag-functional-context">{arg ? <><span>HMM 命中 {fmt(report.knownHits)}</span><span>新候选 0.75 / 0.95：{fmt(report.novel075)} / {fmt(report.novel095)}</span></>
       : <><span>唯一 BGC 区域 {fmt(report.regionCount)}</span><span>未完整提供的 MAG {fmt(report.incompleteMags)}</span></>}</div>
     <CollapsibleResultSection title={arg ? 'ARG 功能证据' : 'BGC 合成潜力'} summary={plot === 'matrix' ? '完整目录的展示集合' : '按唯一对象计数排名'} storageKey={`admeta:mag:${module}:${plot}:fold`}>
       {matrix.error || ranking.error ? <ErrorState message={(matrix.error || ranking.error).message} onRetry={() => { matrix.refetch(); if (plot === 'ranking') ranking.refetch(); }} /> : null}
       {plot === 'matrix' ? matrix.data ? <MagFunctionalChart kind={`${module}-matrix`} data={matrix.data} buildOption={functionMatrixOption} camera onSelect={pick} /> : <LoadingState />
-        : ranking.data ? <MagFunctionalChart kind={`${module}-ranking`} data={ranking.data} buildOption={buildRanking} onSelect={pick} /> : <LoadingState />}
+        : rankingData ? <MagFunctionalChart kind={`${module}-ranking`} data={rankingData} buildOption={buildRanking} onSelect={pick} /> : <LoadingState />}
       <p className="mag-muted">{arg ? 'HMM 命中与模型候选分别展示。0.95 是 0.75 候选的子集，passed 沿用来源，不重算为概率阈值。' : '一个 region 可有多个 product 标签；类型计数之和不等于唯一区域数。成功零命中与结果不完整分别显示。'} 编码潜力不等于表达、表型或产物量。</p>
     </CollapsibleResultSection>
     <form className="analysis-filter-form" onSubmit={e => { e.preventDefault(); setMag(draftMag.trim()); setQuery(draftQuery.trim()); setPage(1); setSelected(null); }}>

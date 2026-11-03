@@ -6,8 +6,8 @@ from fastapi.responses import JSONResponse, PlainTextResponse, Response
 
 from app.api.gmrepo_models import (
     GmrepoAuditResponse,
-    GmrepoCatalogResponse,
     GmrepoCandidateRequest,
+    GmrepoCatalogResponse,
     GmrepoDistributionResponse,
     GmrepoErrorResponse,
     GmrepoEvaluationPackageResponse,
@@ -87,8 +87,8 @@ def candidate_comparison(data: Data, request: GmrepoCandidateRequest):
 
 @router.get("/candidate-report", response_class=PlainTextResponse)
 def candidate_report(data: Data, evaluationId: str = Query(pattern=r"^[0-9a-f]{64}$")):
-    from app.services.gmrepo_snapshot_service import load
     from app.services.gmrepo_candidate_service import report
+    from app.services.gmrepo_snapshot_service import load
 
     try:
         return PlainTextResponse(report(load(evaluationId)), headers={"Content-Disposition": 'attachment; filename="gmrepo-candidate-comparison.md"'})

@@ -1,4 +1,4 @@
-import { getMagOverview, magDownloadUrl, magParams } from './mag';
+import { getMagOverview, getMagFunctions, getMagTaxonomy, magFunctionalRequest, magDownloadUrl, magParams } from './mag';
 import { completeResultsDownloadUrl } from './completeResults';
 
 test('encodes scope and identity, retaining zero thresholds but omitting empty filters', () => {
@@ -47,4 +47,36 @@ test('MAG initialization still respects cancellation', async () => {
   } finally {
     vi.unstubAllGlobals();
   }
+});
+
+test('large explicit selections use a JSON body while retaining release and settings in the URL', async () => {
+  const ids = Array.from({ length: 869 }, (_, i) => `CRR${i}__cleanbin_000001`).join(',');
+  vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => ({ values: [] }) })));
+  try {
+    await getMagFunctions('matrix', { revision: 'pinned', magIds: ids, magLimit: 1000, featureIds: 'K00929' });
+    const [url, options] = fetch.mock.calls[0];
+    expect(url.length).toBeLessThan(1800);
+    expect(url).toContain('/functions/query/matrix?revision=pinned');
+    expect(url).toContain('magLimit=1000');
+    expect(options.method).toBe('POST');
+    expect(JSON.parse(options.body)).toEqual({ magIds: ids, featureIds: 'K00929' });
+    expect(magFunctionalRequest('download/matrix', { revision: 'pinned', magIds: ids }).post).toBe(true);
+    expect(magFunctionalRequest('matrix', { magIds: 'M1,M2' }).post).toBe(false);
+  } finally { vi.unstubAllGlobals(); }
+});
+
+test('taxonomy uses the MAG cold-load budget and still supports cancellation', async () => {
+  vi.useFakeTimers();
+  vi.stubGlobal('fetch', vi.fn((_url, { signal }) => new Promise((resolve, reject) => {
+    const timer = setTimeout(() => resolve({ ok: true, json: async () => ({ totalMagCount: 872 }) }), 20_000);
+    signal.addEventListener('abort', () => { clearTimeout(timer); reject(new DOMException('aborted', 'AbortError')); });
+  })));
+  try {
+    const result = getMagTaxonomy({ rank: 'phylum' });
+    await vi.advanceTimersByTimeAsync(20_000);
+    await expect(result).resolves.toEqual({ totalMagCount: 872 });
+    const controller = new AbortController();
+    const cancelled = getMagTaxonomy({}, { signal: controller.signal }); controller.abort();
+    await expect(cancelled).rejects.toMatchObject({ kind: 'cancelled' });
+  } finally { vi.unstubAllGlobals(); vi.useRealTimers(); }
 });

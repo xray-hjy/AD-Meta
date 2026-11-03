@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 import EChart from '../../components/Charts/HeatmapEChart';
 import '../../components/Charts/CartesianEChart';
 import '../../components/Charts/TaxonomyEChart';
-import { echarts } from '../../components/Charts/EChartBase';
 import ZoomableChartViewport from '../../components/Charts/ZoomableChartViewport';
 import ChartStyleToolbar from '../../components/Charts/ChartStyleToolbar';
 import useChartStylePreferences from '../../components/Charts/useChartStylePreferences';
@@ -12,23 +11,25 @@ import { exportEChart } from '../../components/Charts/chartExport';
 import { HEATMAP_PALETTE_OPTIONS } from './magHeatmapOption';
 import { researchPaletteOptions } from '../../components/Charts/researchPalettes';
 import { GROUP_COLORS } from '../../components/Charts/groupPalette';
+import { functionalMatrixGeometry } from './magFunctionalGeometry';
 
 const DEFAULTS = { palette: 'pubugn', labels: true, hover: true, borders: false, annotations: true,
   transposed: false, values: false, grid: true, legend: true, fontSize: '11', pointSize: '7', dendrograms: true };
 
-function CameraSurface({ option, world, visible, plot, dimensions, onEvents, chartRef, label }) {
+function CameraSurface({ option, world, visible, plot, dimensions, camera, onEvents, chartRef, label }) {
   const fromX = Math.max(0, visible.x), toX = Math.min(world.width, visible.x + visible.width);
   const fromY = Math.max(0, visible.y), toY = Math.min(world.height, visible.y + visible.height);
   const x0 = fromX / world.width * 100, x1 = toX / world.width * 100;
   const y0 = fromY / world.height * 100, y1 = toY / world.height * 100;
-  const rendered = { ...option, grid: { left: plot.left + (fromX - visible.x) * plot.width / visible.width,
-    top: plot.top + (fromY - visible.y) * plot.height / visible.height,
-    width: Math.max(1, (toX - fromX) * plot.width / visible.width), height: Math.max(1, (toY - fromY) * plot.height / visible.height) },
+  const scale = camera?.k || 1;
+  const rendered = { ...option, grid: { outerBoundsMode: 'none', left: (camera?.x ?? plot.left) + fromX * scale,
+    top: (camera?.y ?? plot.top) + fromY * scale,
+    width: Math.max(1, (toX - fromX) * scale), height: Math.max(1, (toY - fromY) * scale) },
     visualMap: { ...option.visualMap, right: 4, top: plot.top },
-    dataZoom: [{ type: 'inside', disabled: true, xAxisIndex: 0, start: x0, end: x1, filterMode: 'none' },
-      { type: 'inside', disabled: true, yAxisIndex: 0, start: option.yAxis.inverse ? y0 : 100 - y1, end: option.yAxis.inverse ? y1 : 100 - y0, filterMode: 'none' }] };
+    dataZoom: [{ type: 'inside', disabled: true, xAxisIndex: 0, start: x0, end: x1, filterMode: 'filter' },
+      { type: 'inside', disabled: true, yAxisIndex: 0, start: option.yAxis.inverse ? y0 : 100 - y1, end: option.yAxis.inverse ? y1 : 100 - y0, filterMode: 'filter' }] };
   return <EChart ref={chartRef} option={rendered} replaceMerge={['series', 'visualMap', 'dataZoom']} showDataTable={false}
-    opts={{ renderer: 'svg' }} style={{ width: dimensions.width, height: dimensions.height }} onEvents={onEvents}
+    opts={{ renderer: 'svg', width: dimensions.width, height: dimensions.height }} style={{ width: dimensions.width, height: dimensions.height }} onEvents={onEvents}
     ariaLabel={label} frameActions />;
 }
 
@@ -99,19 +100,24 @@ export default function MagFunctionalChart({ kind, data, buildOption, onSelect, 
       onBrush?.([...new Set(entries.flatMap(s => s.dataIndex.map(i => option.series[s.seriesIndex]?.data[i]?.magId)).filter(Boolean))]);
     },
   };
-  const world = useMemo(() => ({ width: Math.max(1, option.xAxis?.data?.length || 1) * 24,
-    height: Math.max(1, option.yAxis?.data?.length || 1) * 24 }), [option.xAxis, option.yAxis]);
+  const geometry = useMemo(() => functionalMatrixGeometry(option.yAxis?.data?.length || 1, option.xAxis?.data?.length || 1), [option.xAxis, option.yAxis]);
+  const world = geometry.world;
   const preview = useMemo(() => {
     if (!camera) return '';
-    const instance = echarts.init(null, null, { renderer: 'svg', ssr: true, width: 500, height: 300 });
-    try {
-      instance.setOption({ ...option, tooltip: { show: false }, visualMap: { ...option.visualMap, show: false },
-        grid: { left: 4, right: 4, top: 4, bottom: 4 }, xAxis: { ...option.xAxis, axisLabel: { show: false } },
-        yAxis: { ...option.yAxis, axisLabel: { show: false } }, animation: false });
-      return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(instance.renderToSVGString())}`;
-    } finally { instance.dispose(); }
-  }, [camera, option]);
-  const actualHeight = kind === 'comparison-distribution' ? Math.ceil((data?.items.length || 1) / (containerWidth > 900 ? 2 : 1)) * 270 : height;
+    const rows = style.transposed ? data.features.length : data.mags.length;
+    const columns = style.transposed ? data.mags.length : data.features.length;
+    const rowStep = Math.max(1, Math.ceil(rows / 100)), columnStep = Math.max(1, Math.ceil(columns / 100));
+    const colors = HEATMAP_PALETTE_OPTIONS.find(p => p.value === style.palette)?.colors || ['#edf0f4', '#0a5747'];
+    const rects = [];
+    for (let y = 0; y < rows; y += rowStep) for (let x = 0; x < columns; x += columnStep) {
+      const value = style.transposed ? data.values[x][y] : data.values[y][x];
+      const color = value == null ? '#a2aab5' : value > 0 ? colors[colors.length - 1] : '#edf0f4';
+      rects.push(`<rect x="${x}" y="${y}" width="${Math.min(columnStep, columns - x)}" height="${Math.min(rowStep, rows - y)}" fill="${color}"/>`);
+    }
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${Math.max(1, columns)} ${Math.max(1, rows)}" preserveAspectRatio="none">${rects.join('')}</svg>`)}`;
+  }, [camera, data, style.transposed, style.palette]);
+  const actualHeight = kind === 'comparison-distribution' ? Math.ceil((data?.items.length || 1) / (containerWidth > 900 ? 2 : 1)) * 270
+    : kind.includes('ranking') ? Math.min(760, Math.max(260, (data?.items.length || 1) * 25 + 100)) : height;
   return <div className="mag-functional-chart" ref={host}>
     {target ? createPortal(tools, target) : tools}
     {exportStatus && <p className="mag-muted" role="status">{exportStatus}</p>}
@@ -119,11 +125,12 @@ export default function MagFunctionalChart({ kind, data, buildOption, onSelect, 
       onClick={() => { const next = !brushing; setBrushing(next); chart.current?.getEchartsInstance()?.dispatchAction({ type: 'takeGlobalCursor', key: 'brush', brushOption: { brushType: next ? 'rect' : false } }); }}>框选 MAG</button>
       <button className="analysis-button" type="button" onClick={() => { chart.current?.getEchartsInstance()?.dispatchAction({ type: 'brush', areas: [] }); setBrushing(false); onBrush([]); }}>清除框选</button>
       <span>框选定位目录，不改变分析集合。</span></div>}
-    {camera ? <ZoomableChartViewport world={world} resetKey={`${data.projectionFingerprint}:${style.transposed}`} preview={preview}
-      insets={{ left: option.grid.left, top: option.grid.top }} extraRight={85} extraBottom={55}
-      viewportHeight="clamp(520px,68vh,760px)" ariaLabel={label}>
+    {camera ? <><ZoomableChartViewport world={world} resetKey={`${data.projectionFingerprint}:${style.transposed}`} preview={preview}
+      initialScale={1} initialNavigationOpen={false} previewStretch
+      insets={{ left: option.grid.left, top: option.grid.top }} extraRight={80}
+      viewportHeight={`min(${geometry.viewportHeight}px, 78vh)`} ariaLabel={label}>
       {viewport => <CameraSurface {...viewport} world={world} option={option} onEvents={events} label={label} chartRef={chart} />}
-    </ZoomableChartViewport> : <EChart ref={chart} option={option} replaceMerge={['series', 'visualMap', 'dataZoom', 'xAxis', 'yAxis', 'grid']}
-      opts={{ renderer: 'svg' }} style={{ height: actualHeight }} frameActions showDataTable={false} ariaLabel={label} onEvents={events} />}
+    </ZoomableChartViewport><p className="mag-functional-viewport-note">全部 {data.mags.length} 个 MAG × {data.features.length} 项功能已载入。默认按可读单元格显示；Alt + 拖动或方向键平移，“全图”用于定位，“1:1”恢复读值。缩略图抽样用于定位，数值以主图为准；左侧窄轨道为完整度 / 污染率。</p></> : <EChart ref={chart} option={option} replaceMerge={['series', 'visualMap', 'dataZoom', 'xAxis', 'yAxis', 'grid']}
+      opts={{ renderer: 'svg', width: containerWidth, height: actualHeight }} style={{ height: actualHeight }} frameActions showDataTable={false} ariaLabel={label} onEvents={events} />}
   </div>;
 }

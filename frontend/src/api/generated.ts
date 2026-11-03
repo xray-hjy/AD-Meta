@@ -718,6 +718,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/mag/functions/query/{resource}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Functional Query */
+        post: operations["functional_query_api_mag_functions_query__resource__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/mag/functions/signals": {
         parameters: {
             query?: never;
@@ -2015,6 +2032,16 @@ export interface components {
             testFamily?: number | null;
             /** Total */
             total: number;
+        };
+        /**
+         * FunctionalIds
+         * @description Long explicit selections travel in a JSON body; identity stays in the URL.
+         */
+        FunctionalIds: {
+            /** Featureids */
+            featureIds?: string | null;
+            /** Magids */
+            magIds?: string | null;
         };
         /** FunctionalMatrix */
         FunctionalMatrix: {
@@ -6004,6 +6031,80 @@ export interface operations {
             };
         };
     };
+    functional_query_api_mag_functions_query__resource__post: {
+        parameters: {
+            query?: {
+                limit?: number | null;
+                offset?: number;
+                magId?: string;
+                featureId?: string;
+                category?: string;
+                allMatches?: boolean;
+                signalKind?: string;
+                contig?: string;
+                revision?: string;
+                dataset?: string;
+                release?: string;
+                disease?: "" | "AD" | "NC";
+                gender?: "" | "F" | "M";
+                batch?: string;
+                ageMin?: number | null;
+                ageMax?: number | null;
+                abundanceThresholdPercent?: number;
+                namespace?: string;
+                query?: string;
+                magQuery?: string;
+                featureIds?: string;
+                magIds?: string;
+                magLimit?: number;
+                featureLimit?: number;
+                minCompleteness?: number | null;
+                maxContamination?: number | null;
+                rowOrder?: "taxonomy" | "cluster";
+                columnOrder?: "rank" | "id" | "cluster";
+                valueKind?: "presence" | "count";
+            };
+            header?: never;
+            path: {
+                resource: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FunctionalIds"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
     functional_signals_api_mag_functions_signals_get: {
         parameters: {
             query?: {
@@ -6111,11 +6212,21 @@ export interface operations {
         parameters: {
             query?: {
                 category?: string;
-                magLimit?: number;
-                featureLimit?: number;
                 revision?: string;
                 dataset?: string;
                 release?: string;
+                namespace?: string;
+                query?: string;
+                magQuery?: string;
+                featureIds?: string;
+                magIds?: string;
+                magLimit?: number;
+                featureLimit?: number;
+                minCompleteness?: number | null;
+                maxContamination?: number | null;
+                rowOrder?: "taxonomy" | "cluster";
+                columnOrder?: "rank" | "id" | "cluster";
+                valueKind?: "presence" | "count";
             };
             header?: never;
             path: {
@@ -6157,11 +6268,21 @@ export interface operations {
     functional_theme_api_mag_functions_themes__theme_id__get: {
         parameters: {
             query?: {
-                magIds?: string;
-                magLimit?: number;
                 revision?: string;
                 dataset?: string;
                 release?: string;
+                namespace?: string;
+                query?: string;
+                magQuery?: string;
+                featureIds?: string;
+                magIds?: string;
+                magLimit?: number;
+                featureLimit?: number;
+                minCompleteness?: number | null;
+                maxContamination?: number | null;
+                rowOrder?: "taxonomy" | "cluster";
+                columnOrder?: "rank" | "id" | "cluster";
+                valueKind?: "presence" | "count";
             };
             header?: never;
             path: {

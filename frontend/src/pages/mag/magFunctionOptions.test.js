@@ -5,6 +5,7 @@ import { GridComponent, VisualMapComponent, TooltipComponent, DataZoomComponent 
 import { SVGRenderer } from 'echarts/renderers';
 import { setPlatformAPI } from 'zrender/lib/core/platform';
 import { functionMatrixOption, geneTrackOption, phylogenyTrackOption, coverageSensitivityOption } from './magFunctionOptions';
+import { functionalMatrixGeometry, phylogenyHeight } from './magFunctionalGeometry';
 
 const matrix = { namespace: 'kofam_ko', valueKind: 'count', mags: [{ magId: 'M1', quality: { completenessPercent: 90, contaminationPercent: 1 } }, { magId: 'M2' }],
   features: [{ featureId: 'K00929', description: 'butyrate kinase' }, { featureId: 'K01580' }], values: [[2, 0], [null, 1]] };
@@ -32,6 +33,27 @@ describe('functional ECharts projections', () => {
     expect(chart.dataZoom[0].filterMode).toBe('weakFilter');
     expect(chart.series[0].data[0].value).toEqual([20, 100, 0, -1]);
     expect(chart.series[0].data[0].start).toBe(100);
+  });
+
+  it('keeps quality tracks narrow and outside feature columns', () => {
+    const chart = functionMatrixOption(matrix, { annotations: true });
+    expect(chart.xAxis.data).toEqual(['K00929', 'K01580']);
+    expect(chart.series[2].data.map(r => r.trackIndex)).toEqual([0, 1, 0, 1]);
+    expect(functionalMatrixGeometry(872, 2)).toMatchObject({ cellWidth: 64, cellHeight: 24, viewportHeight: 760 });
+    expect(functionalMatrixGeometry(3, 2).viewportHeight).toBe(280);
+  });
+
+  it('adapts small trees and gives large trees an aligned readable initial leaf window', () => {
+    expect(phylogenyHeight(3)).toBe(240);
+    expect(phylogenyHeight(869)).toBe(740);
+    const children = Array.from({ length: 869 }, (_, i) => ({ name: `M${i}`, branchLength: i / 10 }));
+    const chart = phylogenyTrackOption({ tree: { children } }, matrix, {}, 'length');
+    expect(chart.series[1].data).toHaveLength(869);
+    expect(chart.series[1].data[868].value[0]).toBe(86.8);
+    expect(chart.dataZoom[0].endValue).toBe(23.5);
+    expect(chart.dataZoom[0].yAxisIndex).toEqual([0, 1]);
+    const short = phylogenyTrackOption({ tree: { children: [{ name: 'M1', branchLength: .02 }, { name: 'M2', branchLength: .01 }] } }, matrix, {}, 'length');
+    expect(short.xAxis[0].max).toBe(.02);
   });
 
   it('uses one leaf order for phylogeny and tracks even with reversed input rows', () => {

@@ -1,10 +1,10 @@
 """Name-based, revision-scoped primary-data evidence. No cross-platform pooling."""
 from __future__ import annotations
 
-import json
 import csv
 import hashlib
 import io
+import json
 import sqlite3
 from collections import Counter
 from functools import lru_cache
@@ -13,8 +13,8 @@ from typing import Any
 import pymysql
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.core.database import connect
 from app.core.config import BACKEND_ROOT
+from app.core.database import connect
 from app.services.dataset_description_service import _verified_cohort
 
 CONTEXT_PATH = BACKEND_ROOT / "metadata/gmrepo_primary_context.json"
@@ -109,7 +109,7 @@ def primary_evidence(genus: dict[str, Any], revision: str = "", dataset_slug: st
         if not cohort:
             result["reasons"].append("主矩阵样本集合与已核实队列登记不符，来源需重新审查。")
         if result["cohortEvidence"]["status"] == "source_bound":
-            result["reasons"].append("已有原研究人数及样本分组依据；公开资料缺少逐人 ID，重复采样未逐人验证，主外队列的受试者重叠也未排除。")
+            result["reasons"].append("已有固定样本映射及分组依据；公开资料缺少逐人 ID，重复采样未逐人验证，主外队列的受试者重叠也未排除。")
         else:
             result["reasons"].append("主矩阵的受试者来源说明尚未与当前样本范围绑定。")
         result["reasons"].append("16S 属级与宏基因组物种级处理流程不同；同属结果可以并列参考，不能解释为物种/MAG 或独立跨队列验证。")

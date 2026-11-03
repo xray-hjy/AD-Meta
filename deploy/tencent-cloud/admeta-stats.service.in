@@ -1,0 +1,21 @@
+[Unit]
+Description=AD-Meta R statistics worker
+After=network.target
+
+[Service]
+Type=simple
+User=admeta
+Group=admeta
+WorkingDirectory=@@APP_ROOT@@/stats-worker
+Environment=R_USER=/var/lib/admeta
+Environment=AD_META_STATS_WORKER_HOST=127.0.0.1
+Environment=AD_META_STATS_WORKER_PORT=8001
+Environment=OPENBLAS_NUM_THREADS=1
+Environment=OMP_NUM_THREADS=1
+Environment=MKL_NUM_THREADS=1
+ExecStart=@@RSCRIPT@@ server.R
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

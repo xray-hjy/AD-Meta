@@ -7,13 +7,14 @@ import { constrainCamera, fitCamera, visibleWorld, zoomCamera, rangeCamera, resi
 import './chart-zoom.css';
 
 // Chart adapters draw in these coordinates; labels and tooltips are not CSS-scaled.
-export default function ZoomableChartViewport({ world, resetKey, preview, insets, children, toolbarTarget, coordinateKey, remapCamera, viewportHeight, navigationAxis = 'both', navigationUnit = 1, renderFooter: Footer, footerProps, extraBottom = 0, extraRight = 0, navigationDockBottom, nativeWheel = false, interactionLocked = false, ariaLabel = '可缩放图表' }) {
-  const hostRef = useRef(null), behaviorRef = useRef(null), cameraRef = useRef(null), modeRef = useRef('fit');
+export default function ZoomableChartViewport({ world, resetKey, preview, insets, children, toolbarTarget, coordinateKey, remapCamera, viewportHeight, navigationAxis = 'both', navigationUnit = 1, initialScale, initialNavigationOpen = true, previewStretch = false, renderFooter: Footer, footerProps, extraBottom = 0, extraRight = 0, navigationDockBottom, nativeWheel = false, interactionLocked = false, ariaLabel = '可缩放图表' }) {
+  const initialLeft = initialScale == null ? 0 : insets.left, initialTop = initialScale == null ? 0 : insets.top;
+  const hostRef = useRef(null), behaviorRef = useRef(null), cameraRef = useRef(initialScale == null ? null : { k: initialScale, x: initialLeft, y: initialTop }), modeRef = useRef(initialScale == null ? 'fit' : 'manual');
   const [dimensions, setDimensions] = useState({ width: 1000, height: 560 });
-  const [manualCamera, setManualCamera] = useState(null);
+  const [manualCamera, setManualCamera] = useState(initialScale == null ? null : { k: initialScale, x: initialLeft, y: initialTop });
   const [panMode, setPanMode] = useState(false);
-  const [navigationOpen, setNavigationOpen] = useState(true);
-  const [coordinateLayout, setCoordinateLayout] = useState({ key: coordinateKey, plot: null, navigationOpen: true });
+  const [navigationOpen, setNavigationOpen] = useState(initialNavigationOpen);
+  const [coordinateLayout, setCoordinateLayout] = useState({ key: coordinateKey, plot: null, navigationOpen: initialNavigationOpen });
   const scaleFrameRef = useRef(null), pendingScaleRef = useRef(null);
   const cameraFrameRef = useRef(null);
   const cancelCameraMotion = useCallback(() => {
@@ -66,8 +67,10 @@ export default function ZoomableChartViewport({ world, resetKey, preview, insets
   const minScale = navigationAxis === 'both' ? Math.min(.05, fitted.k) : fitted.k;
   const maxScale = Math.max(8, fitted.k, navigationAxis === 'both' ? 0 : (navigationAxis === 'x' ? plot.width : plot.height) / navigationUnit);
   useEffect(() => {
-    modeRef.current = 'fit'; setManualCamera(null);
-  }, [resetKey]);
+    modeRef.current = initialScale == null ? 'fit' : 'manual';
+    cameraRef.current = initialScale == null ? null : { k: initialScale, x: initialLeft, y: initialTop };
+    setManualCamera(initialScale == null ? null : { k: initialScale, x: initialLeft, y: initialTop });
+  }, [resetKey, initialScale, initialLeft, initialTop]);
   // D3 owns the live gesture position. A passive effect from an older React
   // commit must not overwrite it while the next animation frame is panning.
   const apply = useCallback((next, mode = 'manual', animate = false) => {
@@ -172,7 +175,7 @@ export default function ZoomableChartViewport({ world, resetKey, preview, insets
       <ChartNavigationDock open={navigationOpen} onOpenChange={setNavigationOpen}
         style={{ bottom: !navigationOpen || dimensions.width > 900 ? navigationDockBottom : extraBottom ? extraBottom + 8 : undefined }}
         onPan={panBy} canPan={canPan} panMode={panMode} world={world} visible={visible} viewport={plot}
-        onTogglePan={() => setPanMode(value => !value)} preview={preview} stretch={navigationAxis !== 'both'}
+        onTogglePan={() => setPanMode(value => !value)} preview={preview} stretch={previewStretch || navigationAxis !== 'both'}
         ariaLabel={`${ariaLabel}全局预览`} onNavigate={(x, y) => apply(constrainCamera({ ...camera,
           x: plot.left - x * camera.k, y: plot.top - y * camera.k }, world, plot, navigationAxis))} />
     </div>

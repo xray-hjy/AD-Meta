@@ -6,11 +6,11 @@ decisions. Publication is explicit and validates sources before moving indexes.
 from __future__ import annotations
 
 import argparse
-from collections import Counter
 import hashlib
 import json
 import re
 import urllib.request
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from pathlib import Path

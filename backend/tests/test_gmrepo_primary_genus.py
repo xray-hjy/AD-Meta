@@ -38,11 +38,16 @@ def test_mass_conservation_and_unknowns_remain_in_full_family():
 @pytest.mark.parametrize("failure", ["missing_covariate", "duplicate_sample", "wrong_group", "bad_scale", "negative", "outside"])
 def test_scope_and_units_fail_closed(failure):
     s, a, c = matrix()
-    if failure == "missing_covariate": c.pop()
-    if failure == "duplicate_sample": s.append(s[0])
-    if failure == "wrong_group": c[0]["stage"] = "NC"
-    if failure == "negative": a[0]["abundance"] = -.1
-    if failure == "outside": a[0]["sample_code"] = "OTHER"
+    if failure == "missing_covariate":
+        c.pop()
+    if failure == "duplicate_sample":
+        s.append(s[0])
+    if failure == "wrong_group":
+        c[0]["stage"] = "NC"
+    if failure == "negative":
+        a[0]["abundance"] = -.1
+    if failure == "outside":
+        a[0]["sample_code"] = "OTHER"
     with pytest.raises(ValueError):
         primary.derive(s, a, c, 1 if failure == "bad_scale" else 100)
 

@@ -54,6 +54,7 @@ yarn-error.log*
 /图片/
 /*.psd
 /design-assets/
+/deployment-bundles/
 /.superpowers/
 /docs/superpowers/
 

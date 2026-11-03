@@ -35,3 +35,13 @@ IQ_TREE 的最终树用于系统发育拓扑展示；iTOL 是另外保存的衍�
 - 不从群落 KO 表生成未经证据支持的 MAG→KO 关联；不默认把 GTDB 名称对应到 MetaPhlAn 特征。
 
 该导入流程不读取历史 MAG 交付包。
+
+## 2026-10-24 本机接收 DRAM2 summary
+
+桌面 summary 已独立复制至 `DRAM2/summary/runs/20261022_233830_828587_1595139/`；26 个文件、254,239,398 字节全部通过 SHA-256 校验，原件保持不变。此前关于 DRAM2 尚在运行的说明为首批归档时的状态。
+
+已核对 872 个 MAG、2,113,311 条基因及全部 8 类功能矩阵，生成只读查询索引并发布本机队列，metabolism 为 ready。上游 distill 的差异原样保留，功能查询使用与基因记录一致的计数矩阵。
+
+本清单保留原有 3,459 行，新增本次 26 行；共登记 3,485 项。本机仍缺少先前登记的 `dRep/dRep_input/genomeInfo.csv`、`quality_filtered_MAGs.list` 和 `quality_filtered_MAGs.tsv`，因此 lineage 为 not_provided、完整 archive 校验为 invalid；不补造原件，不影响本次已通过的功能注释。
+
+接收、审计、API 和保护校验凭据位于 `backend/storage/provenance/dram2/2026-10-24-summary-reception/`；详细实施记录见 `docs/development/20261024-dram2-summary-ingest.md`。

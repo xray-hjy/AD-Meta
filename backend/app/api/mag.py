@@ -11,6 +11,7 @@ from app.api.mag_function_models import (
     FunctionalCommunity,
     FunctionalEvidence,
     FunctionalGenePage,
+    FunctionalIds,
     FunctionalMatrix,
     FunctionalOverview,
     FunctionalPage,
@@ -157,16 +158,53 @@ def functional_genes(data: Data, mag_id: str = Query(..., alias='magId', max_len
 
 
 @router.get('/functions/themes/{theme_id}', response_model=FunctionalMatrix)
-def functional_theme(theme_id: str, data: Data, mag_ids: str = Query('', alias='magIds', max_length=150000),
-                     mag_limit: int = Query(40, alias='magLimit', ge=1, le=1000)):
-    return functional_call(functions.theme, data, theme_id, mag_ids, mag_limit)
+def functional_theme(theme_id: str, data: Data, settings: Annotated[dict, Depends(functional_settings)]):
+    return functional_call(functions.theme, data, theme_id, **_mag_selection(settings))
 
 
 @router.get('/functions/sources/{module}/matrix', response_model=FunctionalMatrix)
-def functional_source_matrix(module: Literal['arg', 'bgc'], data: Data, category: str = 'known_hmm_hit',
-                              mag_limit: int = Query(40, alias='magLimit', ge=1, le=200),
-                              feature_limit: int = Query(30, alias='featureLimit', ge=1, le=100)):
-    return functional_call(functions.source_matrix, data, module, category, mag_limit, feature_limit)
+def functional_source_matrix(module: Literal['arg', 'bgc'], data: Data,
+                              settings: Annotated[dict, Depends(functional_settings)], category: str = 'known_hmm_hit'):
+    return functional_call(functions.source_matrix, data, module, category,
+                           feature_limit=settings['feature_limit'], **_mag_selection(settings))
+
+
+def _mag_selection(settings):
+    return {key: settings[key] for key in ('mag_ids', 'mag_limit', 'mag_query', 'completeness', 'contamination')}
+
+
+@router.post('/functions/query/{resource:path}', response_model=None)
+def functional_query(resource: str, ids: FunctionalIds, data: Data, scope: Scope,
+                     settings: Annotated[dict, Depends(functional_settings)],
+                     limit: int | None = Query(None, ge=1, le=1000), offset: int = Query(0, ge=0),
+                     mag_id: str = Query('', alias='magId', max_length=160),
+                     feature_id: str = Query('', alias='featureId', max_length=300), category: str = '',
+                     all_matches: bool = Query(False, alias='allMatches'),
+                     signal_kind: str = Query('carriers', alias='signalKind'), contig: str = Query('', max_length=300)):
+    settings = {**settings, **ids.model_dump(exclude_none=True)}
+    if resource == 'matrix':
+        return functional_call(functions.matrix, data, **settings)
+    if resource == 'features':
+        return functional_call(functions.feature_page, data, settings['namespace'], settings['query'],
+                               mag_id, settings['feature_ids'], limit or 25, offset)
+    if resource == 'compare':
+        return functional_call(functions.compare, data, scope, settings['mag_ids'])
+    if resource == 'distributions':
+        page_size = limit or 6
+        if page_size > 12:
+            raise HTTPException(422, '候选分布每页最多 12 个 MAG。')
+        return functional_call(functions.distributions, data, scope, settings['mag_ids'], page_size, offset)
+    if resource.startswith('themes/'):
+        return functional_call(functions.theme, data, resource.removeprefix('themes/'), **_mag_selection(settings))
+    if resource in {'sources/arg/matrix', 'sources/bgc/matrix'}:
+        return functional_call(functions.source_matrix, data, resource.split('/')[1], category,
+                               feature_limit=settings['feature_limit'], **_mag_selection(settings))
+    if resource.startswith('download/'):
+        kind = resource.removeprefix('download/')
+        if kind not in {'features', 'matrix', 'carriers', 'genes', 'arg', 'bgc', 'signals', 'provenance', 'distributions'}:
+            raise HTTPException(404, '没有对应下载类型。')
+        return functional_download(kind, data, scope, settings, mag_id, feature_id, all_matches, category, signal_kind, contig)
+    raise HTTPException(404, '没有对应功能查询。')
 
 
 @router.get('/functions/sources/{module}/details', response_model=FunctionalPage)

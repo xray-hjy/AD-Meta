@@ -1,9 +1,13 @@
 {
   "runs": {
-    "ad-nc-community-diting-2026-10-16": {
+    "ad-nc-community-diting-2026-10-20": {
       "name": "AD/NC 群落分析",
       "selectorVisible": true,
       "isDefault": true
+    },
+    "ad-nc-community-diting-2026-10-16": {
+      "name": "AD/NC 群落分析（历史登记）",
+      "selectorVisible": false
     },
     "ad-nc-community-crr-only-2026-09": {
       "name": "AD/NC 群落分析（旧版）",

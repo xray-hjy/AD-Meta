@@ -41,3 +41,20 @@ test('on narrow screens collapse reclaims the panel height and leaves native sli
   expect(390 - after.plot.left - after.plot.width).toBe(72);
   expect(650 - after.plot.top - after.plot.height).toBe(179);
 });
+
+test('readable initialization survives mounting and resets while full-fit remains available', () => {
+  vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: false, addEventListener() {}, removeEventListener() {} })));
+  const view = key => <ZoomableChartViewport world={{ width: 128, height: 20928 }} insets={{ left: 210, top: 45 }} resetKey={key}
+    initialScale={1} initialNavigationOpen={false}>
+    {({ plot, camera, visible }) => <output data-testid="viewport-layout">{JSON.stringify({ plot, camera, visible })}</output>}
+  </ZoomableChartViewport>;
+  const mounted = render(view('first'));
+  expect(snapshot().camera.k).toBe(1);
+  expect(snapshot().visible.y).toBe(0);
+  expect(snapshot().visible.x).toBe(0);
+  expect(snapshot().visible.height).toBeLessThan(600);
+  fireEvent.click(screen.getByRole('button', { name: '适应视口' }));
+  expect(snapshot().camera.k).toBeLessThan(.1);
+  mounted.rerender(view('second'));
+  expect(snapshot().camera.k).toBe(1);
+});

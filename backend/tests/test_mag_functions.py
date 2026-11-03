@@ -120,3 +120,50 @@ def test_http_contracts_and_csv_use_the_same_pinned_values(data):
         assert 'M1,2,0' in response.text and 'M2,0,1' in response.text
         assert client.get('/api/mag/functions/matrix', params={'magIds': 'unknown'}).status_code == 422
         assert client.get('/api/mag/functions/download/matrix', params={'magIds': 'unknown'}).status_code == 422
+
+
+def test_large_body_queries_preserve_matrix_order_download_values_and_validation(data):
+    app = FastAPI()
+    app.include_router(api.router)
+    app.dependency_overrides[api.dataset] = lambda: data
+    ids = ','.join(['M2', 'M1'] * 500)
+    with TestClient(app) as client:
+        response = client.post('/api/mag/functions/query/matrix', json={'magIds': ids, 'featureIds': 'K01580,K00929'})
+        assert response.status_code == 200
+        assert [r['magId'] for r in response.json()['mags']] == ['M2', 'M1']
+        assert response.json()['values'] == [[1, 0], [0, 2]]
+        csv = client.post('/api/mag/functions/query/download/matrix', json={'magIds': ids, 'featureIds': 'K00929'})
+        assert csv.status_code == 200 and 'M1,2' in csv.text and 'M2,0' in csv.text
+        assert client.post('/api/mag/functions/query/matrix', json={'magIds': 'unknown'}).status_code == 422
+        assert client.post('/api/mag/functions/query/matrix', json={'magIds': 'M1', 'foreign': 1}).status_code == 422
+        assert client.post('/api/mag/functions/query/matrix?magLimit=0', json={'magIds': 'M1'}).status_code == 422
+        assert client.post('/api/mag/functions/query/matrix', json={'magIds': 'x' * 150001}).status_code == 422
+        distributions = client.post('/api/mag/functions/query/distributions', json={'magIds': 'M2,M1'})
+        assert distributions.status_code == 200 and distributions.json()['limit'] == 6
+
+
+def test_complete_cohort_times_thirty_features_fits_the_display_budget(data, monkeypatch):
+    # Only catalog size is synthetic; existing nonzero cells still come from the independent SQLite fixture.
+    mags = [{'magId': f'M{i}'} for i in range(1, 873)]
+    features = [{'featureId': 'K00929'}, *[{'featureId': f'K{i:05}'} for i in range(29)]]
+    monkeypatch.setattr(service, '_mags', lambda *a, **kw: mags)
+    monkeypatch.setattr(service, 'feature_rows', lambda *a, **kw: features)
+    result = service.matrix(data, mag_limit=872, feature_limit=30)
+    assert len(result['values']) == 872 and len(result['values'][0]) == 30
+    assert result['values'][0][0] == 2
+    monkeypatch.setattr(service, 'feature_rows', lambda *a, **kw: [{'featureId': f'K{i:05}'} for i in range(200)])
+    with pytest.raises(ValueError, match='100,000'):
+        service.matrix(data, mag_limit=872, feature_limit=200)
+
+
+def test_bgc_selection_preserves_manual_order_and_missing_results(data, monkeypatch):
+    from dataclasses import replace
+
+    selected = replace(data, modules={**data.modules, 'bgc': {'revision': 'bgc', 'status': 'partial'}})
+    monkeypatch.setattr(service, '_source_rows', lambda revision, kind:
+                        [{'magId': 'M1', 'products': ['NRPS']}] if kind == 'bgc_regions' else
+                        [{'magId': 'M1', 'status': 'success'}, {'magId': 'M2', 'status': 'not_provided'}])
+    result = service.source_matrix(selected, 'bgc', mag_ids='M2,M1', mag_limit=2)
+    assert [r['magId'] for r in result['mags']] == ['M2', 'M1']
+    assert result['values'] == [[None], [1]]
+    assert service.source_matrix(selected, 'bgc', mag_ids='M2', mag_limit=1)['selection']['shownMags'] == 1

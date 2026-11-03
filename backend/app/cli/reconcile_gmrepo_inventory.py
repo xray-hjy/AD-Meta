@@ -1,8 +1,8 @@
 """Reconcile captured all-run pages at their actual Run × phenotype grain."""
 import argparse
-from collections import Counter
 import hashlib
 import json
+from collections import Counter
 from pathlib import Path
 
 

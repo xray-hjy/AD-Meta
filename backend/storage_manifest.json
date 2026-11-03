@@ -2,7 +2,7 @@
   "manifestVersion": "1.0",
   "analysisRuns": [
     {
-      "key": "ad-nc-community-diting-2026-10-16",
+      "key": "ad-nc-community-diting-2026-10-20",
       "name": "AD/NC 群落分析",
       "description": "185 个 CRA014435 AD/NC 样本；MetaPhlAn 4 物种、DiTing KO 与 95 项通路指标。",
       "status": "published",

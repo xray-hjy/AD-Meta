@@ -157,6 +157,9 @@ def snapshot(revision: str = "", dataset_slug: str = "ad-nc-species") -> dict:
                                   WHERE d.slug=? AND d.status='published' AND r.status='published'""", (dataset_slug,)).fetchone()
     if row is None or "MetaPhlAn 4" not in (row["normalization"] or ""):
         raise ValueError("This derivation requires the published MetaPhlAn 4 species revision; no fallback to another revision.")
+    if context.get("sourceRevision") and (row["revision_key"] != context["sourceRevision"]
+            or row["source_sha256"] != context["sourceSha256"] or dataset_slug != context["datasetSlug"]):
+        raise ValueError("Primary source context is bound to another published revision; no substitution.")
     factor = {"relative_abundance": 100., "relative_abundance_percent": 1., "percent": 1.}.get(row["abundance_scale"])
     if factor is None:
         raise ValueError("Unsupported or unknown primary abundance unit.")
@@ -176,7 +179,7 @@ def snapshot(revision: str = "", dataset_slug: str = "ad-nc-species") -> dict:
                   "derivationVersion": DERIVATION, "methodVersion": analysis.METHOD_VERSION, "implementation": implementation,
                   "inputSha256": digest(inputs), "contextFingerprint": context["fingerprint"], "sampleSetSha256": sample_hash,
                   "unit": "relative_abundance_percent", "normalization": "按已发布种级矩阵的域与属求和，比例乘 100，不二次闭合；未知属保留在完整检验族。",
-                  "identityBasis": "原研究人数/样本数与分组依据；本次探索性计算采用独立观测假设，未完成逐人 ID 核验或跨队列独立性认证。"}
+                  "identityBasis": context.get("identityBasis") or "原研究人数/样本数与分组依据；本次探索性计算采用独立观测假设，未完成逐人 ID 核验或跨队列独立性认证。"}
     key = digest(provenance)
     folder = ROOT / key
     if not folder.exists():
