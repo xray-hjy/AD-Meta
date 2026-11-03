@@ -3,6 +3,7 @@ import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
+import { createE2eManifest } from '../e2e/fixtures.js';
 
 import {
   e2eBackendEnvironment,
@@ -24,7 +25,8 @@ for (const target of [e2eDatabasePath, e2eStorageRoot]) {
 rmSync(e2eDatabasePath, { force: true });
 rmSync(e2eStorageRoot, { force: true, recursive: true });
 
-const result = spawnSync(e2ePython, ['-m', 'app.cli.bootstrap_storage'], {
+const manifest = createE2eManifest(path.join(e2eStorageRoot, 'fixtures'));
+const result = spawnSync(e2ePython, ['-m', 'app.cli.bootstrap_storage', '--manifest', manifest], {
   cwd: backendRoot,
   env: {
     ...process.env,

@@ -197,7 +197,7 @@ def functional_query(resource: str, ids: FunctionalIds, data: Data, scope: Scope
     if resource.startswith('themes/'):
         return functional_call(functions.theme, data, resource.removeprefix('themes/'), **_mag_selection(settings))
     if resource in {'sources/arg/matrix', 'sources/bgc/matrix'}:
-        return functional_call(functions.source_matrix, data, resource.split('/')[1], category,
+        return functional_call(functions.source_matrix, data, resource.split('/')[1], category or 'known_hmm_hit',
                                feature_limit=settings['feature_limit'], **_mag_selection(settings))
     if resource.startswith('download/'):
         kind = resource.removeprefix('download/')

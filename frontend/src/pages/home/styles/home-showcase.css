@@ -70,7 +70,7 @@
 }
 
 .admeta-home .chapter[data-domain="function"] .chapter-index {
-  color: var(--teal);
+  color: #08767b;
 }
 
 .admeta-home .chapter[data-domain="mag"] .chapter-index {
@@ -154,6 +154,10 @@
   text-decoration: none;
   font-size: clamp(15px, .95vw, 18px);
   font-weight: 700;
+}
+
+.admeta-home .chapter[data-domain="function"] .chapter-link {
+  color: #08767b;
 }
 
 .admeta-home .chapter-link span {

@@ -4,6 +4,8 @@ React 19 + Vite 6。运行要求 Node.js 22.12 或更新版本；依赖以 `pack
 
 浏览器回归使用 `npm run test:e2e`；先安装后端 `backend/.venv` 的开发依赖及 `npx playwright install chromium`。测试的 Python 路径、端口和独立临时数据在 `e2e/environment.js` 中维护，支持 Windows 与 Linux。
 
+`e2e/fixtures.js` 在临时目录生成八样本合成输入，明确标注为 UI fixture，使用独立 SQLite 且不连接 R worker 或科研数据库。无障碍用例检查减少动态效果下的稳定内容，动效用例单独恢复动画；浏览器测试通过不代表正式统计模型或科研发布数据已重新验证。
+
 ## 目录职责
 
 ```text

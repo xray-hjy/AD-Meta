@@ -1,5 +1,6 @@
 """Small independent scientific checks; no full cohort/browser regression suite."""
 import sqlite3
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
@@ -157,8 +158,6 @@ def test_complete_cohort_times_thirty_features_fits_the_display_budget(data, mon
 
 
 def test_bgc_selection_preserves_manual_order_and_missing_results(data, monkeypatch):
-    from dataclasses import replace
-
     selected = replace(data, modules={**data.modules, 'bgc': {'revision': 'bgc', 'status': 'partial'}})
     monkeypatch.setattr(service, '_source_rows', lambda revision, kind:
                         [{'magId': 'M1', 'products': ['NRPS']}] if kind == 'bgc_regions' else
@@ -167,3 +166,75 @@ def test_bgc_selection_preserves_manual_order_and_missing_results(data, monkeypa
     assert [r['magId'] for r in result['mags']] == ['M2', 'M1']
     assert result['values'] == [[None], [1]]
     assert service.source_matrix(selected, 'bgc', mag_ids='M2', mag_limit=1)['selection']['shownMags'] == 1
+
+
+@pytest.fixture
+def functional_client(data, monkeypatch):
+    modules = {**data.modules, 'arg': {'revision': 'arg', 'status': 'ready'},
+               'bgc': {'revision': 'bgc', 'status': 'partial'}}
+    selected = replace(data, modules=modules)
+    records = {
+        'arg_hits': [{'magId': 'M1', 'category': 'known_hmm_hit', 'queryName': 'ARG fixture', 'passes': {}},
+                     {'magId': 'M2', 'category': 'novel_candidate', 'queryName': 'Novel fixture', 'passes': {'passed_0.95': True}}],
+        'arg_summary': [{'magId': 'M1', 'status': 'success'}, {'magId': 'M2', 'status': 'success'}],
+        'bgc_regions': [{'magId': 'M1', 'products': ['NRPS']}],
+        'bgc_status': [{'magId': 'M1', 'status': 'success'}, {'magId': 'M2', 'status': 'not_provided'}],
+    }
+    monkeypatch.setattr(service, '_source_rows', lambda revision, kind: records[kind])
+    app = FastAPI()
+    app.include_router(api.router)
+    app.dependency_overrides[api.dataset] = lambda: selected
+    with TestClient(app) as client:
+        yield client
+
+
+@pytest.mark.parametrize('resource', [
+    'features', 'compare', 'distributions', 'themes/butyrate', 'themes/bile', 'themes/cofactor',
+    'sources/arg/matrix', 'sources/bgc/matrix',
+])
+def test_body_and_query_projections_have_identical_scope_and_values(functional_client, resource):
+    ids = {'magIds': 'M2,M1', 'featureIds': 'K00929'}
+    params = {'magLimit': 2, 'featureLimit': 2}
+    get_ids = {**ids}
+    if resource == 'features':
+        get_ids['ids'] = get_ids.pop('featureIds')
+    expected = functional_client.get('/api/mag/functions/' + resource, params={**params, **get_ids})
+    actual = functional_client.post('/api/mag/functions/query/' + resource, params=params, json=ids)
+    assert actual.status_code == expected.status_code == 200
+    # GET response contracts add optional null fields; the scientific payload and
+    # fixed release/selection fingerprints must be the same through either route.
+    actual_payload = actual.json()
+    if resource.startswith(('sources/', 'themes/')):
+        actual_payload = api.FunctionalMatrix.model_validate(actual_payload).model_dump()
+    assert {k: v for k, v in actual_payload.items() if v is not None} == {
+        k: v for k, v in expected.json().items() if v is not None}
+    assert actual.json()['annotationRevision'] == 'tiny-annotation'
+
+
+@pytest.mark.parametrize('kind', [
+    'features', 'matrix', 'carriers', 'genes', 'arg', 'bgc', 'signals', 'provenance', 'distributions',
+])
+def test_body_downloads_match_query_exports_and_keep_all_selected_rows(functional_client, kind):
+    ids = {'magIds': 'M2,M1', 'featureIds': 'K00929'}
+    params = {'magId': 'M1', 'featureId': 'K00929', 'allMatches': 'true', 'valueKind': 'count'}
+    expected = functional_client.get('/api/mag/functions/download/' + kind, params={**params, **ids})
+    actual = functional_client.post('/api/mag/functions/query/download/' + kind, params=params, json=ids)
+    assert actual.status_code == expected.status_code == 200
+    assert actual.content == expected.content
+    if kind == 'matrix':
+        assert 'M2,0' in actual.text and 'M1,2' in actual.text
+    if kind == 'distributions':
+        assert len(actual.text.splitlines()) == 9  # 2 MAGs x 4 actual samples + header.
+
+
+def test_body_router_rejects_unknown_resources_and_excess_distribution_pages(functional_client):
+    for resource in ['unlisted', 'download/unlisted']:
+        response = functional_client.post('/api/mag/functions/query/' + resource, json={'magIds': 'M1'})
+        assert response.status_code == 404
+    response = functional_client.post('/api/mag/functions/query/distributions?limit=13', json={'magIds': 'M1'})
+    assert response.status_code == 422
+    response = functional_client.post('/api/mag/functions/query/matrix?magIds=M1&featureIds=K00929',
+                                      params={'valueKind': 'count'}, json={'magIds': 'M2', 'featureIds': 'K01580'})
+    assert response.status_code == 200
+    assert [row['magId'] for row in response.json()['mags']] == ['M2']
+    assert response.json()['values'] == [[1]]

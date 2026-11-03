@@ -20,6 +20,7 @@ export const e2eBackendEnvironment = {
   AD_META_DB_ENGINE: 'sqlite',
   AD_META_DB_PATH: e2eDatabasePath,
   AD_META_STORAGE_ROOT: e2eStorageRoot,
+  AD_META_STATS_WORKER_URL: '',
 };
 
 export const e2eApiProxyTarget = `http://127.0.0.1:${e2eBackendPort}`;

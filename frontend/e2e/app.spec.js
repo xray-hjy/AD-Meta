@@ -5,6 +5,12 @@ import { HOME_MOTION } from '../src/pages/home/motion/motionConfig.js';
 const SPECIES_DATASET = 'ad-nc-species';
 const KO_DATASET = 'ad-nc-ko-abundance';
 
+// Accessibility checks inspect settled content, rather than a translucent frame
+// in the scroll/intro animation. Motion-specific cases opt back in below.
+test.beforeEach(async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+});
+
 async function expectNoBlockingAccessibilityViolations(page) {
   const results = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa'])
@@ -23,14 +29,23 @@ async function expectNoBlockingAccessibilityViolations(page) {
 }
 
 test('home page opens the analysis workspace and passes the accessibility gate', async ({ page }) => {
+  const runtimeErrors = [];
+  page.on('pageerror', error => runtimeErrors.push(error.message));
+  page.on('console', message => { if (message.type() === 'error') runtimeErrors.push(message.text()); });
   await page.goto('/');
   await expect(page.getByRole('heading', { name: /物种、KO、MAG，\s*在一个工作区里查看。/, level: 1 })).toBeVisible();
   await expectNoBlockingAccessibilityViolations(page);
+  await page.screenshot({ path: test.info().outputPath('home-desktop.png') });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expectNoBlockingAccessibilityViolations(page);
+  await page.locator('#home-function').scrollIntoViewIfNeeded();
+  await page.screenshot({ path: test.info().outputPath('home-function-mobile.png') });
 
-  await page.getByRole('link', { name: /进入工作区/ }).click();
+  await page.getByRole('link', { name: '进入工作区', exact: true }).click();
   await expect(page).toHaveURL(/\/analysis\/abundance/);
   await expect(page.getByRole('heading', { name: /Top N (物种|KO)丰度对比/, level: 2 })).toBeVisible();
   await expectNoBlockingAccessibilityViolations(page);
+  expect(runtimeErrors).toEqual([]);
 });
 
 test('skipping the intro preserves the slow hero background cycle', async ({ page }) => {
