@@ -1,10 +1,13 @@
 export const TAXONOMY_VIEWPORT_POLICY = Object.freeze({
-  sunburst: { minHeight: 620, maxHeight: 1320 },
-  treemap: { minHeight: 620, maxHeight: 1320, maxAspectRatio: 1.7 },
+  sunburst: { minHeight: 820, maxHeight: 1320 },
+  treemap: { minHeight: 760, maxHeight: 1500 },
   sankey: {
     minHeight: 640,
     maxHeight: 1320,
-    maxCanvasHeight: 3040,
+    maxCanvasHeight: 4800,
+    maxCanvasWidth: 8192,
+    maxMinimumWidth: 2800,
+    maxCanvasPixels: 12_000_000,
     maxDevicePixelRatio: 1.5,
     leftInset: 112,
     rightInset: 216,
@@ -24,33 +27,34 @@ export function resolveTreemapCanvasSize({ width, height }) {
   const safeHeight = Math.max(policy.minHeight, Number(height) || policy.minHeight);
 
   return {
-    width: Math.min(safeWidth, Math.round(safeHeight * policy.maxAspectRatio)),
+    width: safeWidth,
     height: safeHeight,
   };
 }
 
-export function resolveSankeyCanvasConstraints({ naturalWidth, maxDepth }) {
+export function resolveSankeyCanvasConstraints({ naturalWidth, containerWidth, maxDepth, spacing = 1 }) {
   const policy = TAXONOMY_VIEWPORT_POLICY.sankey;
   const depthCount = Math.max(1, Number(maxDepth) || 1);
-  const readableWidth = policy.leftInset
+  const readableWidth = Math.min(policy.maxMinimumWidth, (policy.leftInset
     + policy.rightInset
-    + depthCount * policy.minimumColumnSpan;
-  const safeNaturalWidth = Math.max(readableWidth, Number(naturalWidth) || readableWidth);
+    + depthCount * policy.minimumColumnSpan) * spacing);
+  // Natural layout size is only an initial fallback, not a width ceiling. Page
+  // zoom changes the available CSS width, so re-layout into the measured box.
+  const measuredWidth = Number(containerWidth) > 0 ? Number(containerWidth)
+    : (Number(naturalWidth) || readableWidth) * spacing;
 
   return {
-    minWidth: Math.min(readableWidth, safeNaturalWidth),
-    maxWidth: safeNaturalWidth,
+    minWidth: readableWidth,
+    maxWidth: policy.maxCanvasWidth,
+    width: Math.min(policy.maxCanvasWidth, Math.max(readableWidth, measuredWidth)),
   };
 }
 
-export function resolveSankeyCanvasHeight({ naturalHeight, viewportHeight }) {
+export function resolveSankeyCanvasHeight({ naturalHeight, viewportHeight, canvasWidth = 2200, spacing = 1 }) {
   const policy = TAXONOMY_VIEWPORT_POLICY.sankey;
   const visibleHeight = Math.max(policy.minHeight, Number(viewportHeight) || 0);
-  const boundedNaturalHeight = Math.min(
-    policy.maxCanvasHeight,
-    Math.max(0, Number(naturalHeight) || 0)
-  );
-  return Math.min(policy.maxCanvasHeight, Math.max(visibleHeight, boundedNaturalHeight));
+  const limit = Math.min(policy.maxCanvasHeight, Math.floor(policy.maxCanvasPixels / Math.max(1, canvasWidth)));
+  return Math.min(limit, Math.max(visibleHeight, (Number(naturalHeight) || 0) * spacing));
 }
 
 export function resolveSankeyDevicePixelRatio(devicePixelRatio) {

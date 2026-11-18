@@ -47,7 +47,7 @@ export function groupedBarExportOption(model, preferences, config, seriesMode = 
   }) };
 }
 
-export default function ZoomableGroupedBarChart({ model: inputModel, barStyleConfig, exportConfig, onSelect, toolbarTarget }) {
+export default function ZoomableGroupedBarChart({ model: inputModel, barStyleConfig, exportConfig, onSelect, toolbarTarget, showDataTable = true }) {
   const model = useMemo(() => ({ featureLabel: 'MAG', ...inputModel,
     items: inputModel.items.map(item => ({ ...item, id: item.id || item.feature || item.label,
       label: item.label || item.feature || item.id })) }), [inputModel]);
@@ -159,11 +159,11 @@ export default function ZoomableGroupedBarChart({ model: inputModel, barStyleCon
       {viewport => <NativeGroupedBarSurface {...viewport} nativeRef={nativeRef} model={model} option={option} settings={settings} transposed={transposed} lineMode={lineMode} onSelect={onSelect} colorBlindFriendly={colorBlindFriendly}
         hiddenSeries={hiddenSeries} onLegendChange={selected => setHiddenSeries(model.series.filter(series => selected[series.label] === false).map(series => series.key))} onToggleSeries={key => setHiddenSeries(current => current.includes(key) ? current.filter(value => value !== key) : [...current, key])} />}
     </ZoomableChartViewport>
-    <ChartSupplement><ResultDisclosure title="当前图表数据（只读）" summary={`${model.items.length} 个${model.featureLabel} · 当前排序与数值${barStyleConfig.suffix || ''}`} open={tableOpen} onToggle={event => setTableOpen(event.currentTarget.open)}>
+    {showDataTable ? <ChartSupplement><ResultDisclosure title="当前图表数据（只读）" summary={`${model.items.length} 个${model.featureLabel} · 当前排序与数值${barStyleConfig.suffix || ''}`} open={tableOpen} onToggle={event => setTableOpen(event.currentTarget.open)}>
       {tableOpen && <ClientDataTable ariaLabel={`${model.featureLabel}图表原始数据，只读`} rows={tableRows}
         renderRow={row => <tr key={row.id}><td>{row.id}</td><td>{row.name}</td>{model.series.map(series => <td key={series.key}>{row[series.key]}</td>)}</tr>}>
         <thead><tr><th>{model.featureLabel} ID</th><th>{model.nameColumn || '名称 / 分类'}</th>{model.series.map(series => <th key={series.key}>{series.label}{barStyleConfig.suffix ? `（${barStyleConfig.suffix}）` : ''}</th>)}</tr></thead>
       </ClientDataTable>}
-    </ResultDisclosure></ChartSupplement>
+    </ResultDisclosure></ChartSupplement> : null}
   </>;
 }

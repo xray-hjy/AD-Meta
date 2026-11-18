@@ -2,6 +2,16 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { vi } from 'vitest';
 import AnalysisScopeToolbar from './AnalysisScopeToolbar';
 
+test('keeps custom sample selection before feature controls in the sidebar workflow', () => {
+  const { container } = render(<AnalysisScopeToolbar scope={{ mode: 'subset', groups: [], sampleCodes: ['S1', 'S2'] }}
+    topN={20} featureLabel="物种" samples={[{ sampleCode: 'S1', phenotype: 'AD' }, { sampleCode: 'S2', phenotype: 'NC' }]}
+    samplesLoading={false} onChange={vi.fn()} chartControls={<div>对象池控件</div>} />);
+  const picker = container.querySelector('.projection-subset-picker');
+  const features = container.querySelector('.projection-controls__chart');
+  expect(picker.compareDocumentPosition(features) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(screen.getByRole('button', { name: '应用范围' })).toBeEnabled();
+});
+
 test('single sample autocomplete searches beyond the first 20 and commits only a confirmed sample code', async () => {
   const change = vi.fn();
   render(<AnalysisScopeToolbar scope={{ mode: 'cohort', groups: [], sampleCodes: [] }} topN={20} featureLabel="物种"

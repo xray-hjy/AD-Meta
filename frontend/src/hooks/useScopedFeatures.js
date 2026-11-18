@@ -14,6 +14,7 @@ export default function useScopedFeatures(runKey, artifactKey, request, enabled 
     data: query.data || null,
     loading: query.isPending,
     fetching: query.isFetching,
+    placeholder: query.isPlaceholderData,
     error: query.error?.message || null,
   };
 }

@@ -47,6 +47,8 @@ def _prune_taxonomy_tree_children(children: list[dict], rank: str, parent_total:
                 "value": hidden_value,
                 "ratio": hidden_value / parent_total,
                 "mergedCount": len(hidden),
+                "aggregationKind": "taxonomy_long_tail",
+                "sourceMembers": hidden,
             }
         )
 

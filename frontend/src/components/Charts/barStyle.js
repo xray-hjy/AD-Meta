@@ -31,7 +31,9 @@ function labelFormatter(original, settings, config) {
   return params => {
     const value = numericValue(params.value);
     if (params.value == null || !Number.isFinite(value)) return '—';
-    return (value * (config.scale ?? 1)).toLocaleString('en-US', {
+    const scaled = value * (config.scale ?? 1);
+    if (config.preserveNonzero && scaled !== 0 && Number(scaled.toFixed(Number(settings.precision))) === 0) return scaled.toExponential(3) + (config.suffix || '');
+    return scaled.toLocaleString('en-US', {
       minimumFractionDigits: config.integerValues ? 0 : Number(settings.precision),
       maximumFractionDigits: config.integerValues ? 0 : Number(settings.precision),
     }) + (config.suffix || '');

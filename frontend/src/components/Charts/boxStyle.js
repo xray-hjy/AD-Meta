@@ -93,5 +93,7 @@ export function applyBoxStyle(option, preferences, config = {}) {
     ...(settings.animation == null ? {} : { animation: settings.animation }),
     xAxis: mapShape(option.xAxis, axisStyle), yAxis: mapShape(option.yAxis, axisStyle),
     legend: mapShape(option.legend, legend => ({ ...legend, ...(settings.legend == null ? {} : { show: settings.legend }) })),
-    series: [...series, ...(settings.medians ? boxIndices.map(index => medianLabels(series[index], index, boxIndices, config, fontDelta)) : [])] };
+    series: [...series, ...(settings.medians ? boxIndices.map(index => medianLabels(series[index], index,
+      boxIndices.filter(other => (series[other].xAxisIndex || 0) === (series[index].xAxisIndex || 0)
+        && (series[other].yAxisIndex || 0) === (series[index].yAxisIndex || 0)), config, fontDelta)) : [])] };
 }

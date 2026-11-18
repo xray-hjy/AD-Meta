@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 
 from app.compute.common import AD, FEATURE_META, NC, group_frames
@@ -24,6 +25,9 @@ def compute_detection_heatmap(
     第一行 AD 检出率，第二行 NC 检出率。
     """
 
+    values = df[species_cols].to_numpy(dtype=float)
+    if not np.isfinite(values).all() or (values < 0).any():
+        raise ValueError('检出率输入含缺失、非有限或负丰度，不能静默当作未检出')
     ad, nc = group_frames(df, species_cols)
 
     # presence 是布尔矩阵：丰度大于 0 表示该样本检出了这个 KO。
@@ -50,6 +54,9 @@ def compute_detection_heatmap(
         item = {
                 "koId": col,
                 "koName": col,
+                "adSampleCount": ad_sample_count,
+                "ncSampleCount": nc_sample_count,
+                "rateGapPercentagePoints": float((ad_rate - nc_rate) * 100),
                 "adDetectedSamples": ad_detected,
                 "adDetectionRate": float(ad_rate),
                 "ncDetectedSamples": nc_detected,
@@ -75,6 +82,7 @@ def compute_detection_heatmap(
     selected_ids = {item["koId"] for item in items[:max_features]}
     items = items[:max_features]
 
+    all_items = [dict(item) for item in audit_items]
     if include_audit:
         eligible_ids = {item["koId"] for item in audit_items if item["overallDetectedSamples"] > 0}
         for item in audit_items:
@@ -112,6 +120,10 @@ def compute_detection_heatmap(
             [item["ncDetectionRate"] for item in items],
         ],
         "items": items,
+        "allItems": all_items,
+        "colorDomain": [0, 1],
+        "samples": df[["Sample", "Group"]].to_dict(orient="records"),
+        "interpretation": "descriptive detection rates; not an abundance test or statistical significance",
     }
     if include_audit:
         payload["_auditRows"] = audit_items

@@ -1,4 +1,5 @@
 import * as echarts from 'echarts/core';
+import { createChartArchive, dataUrlBytes } from './chartExportArchive';
 
 const DOWNLOAD_ICON = 'path://M3 19h18v2H3v-2zm8-18h2v11.17l3.59-3.58L18 10l-6 6-6-6 1.41-1.41L11 12.17V1z';
 
@@ -108,6 +109,11 @@ function exportSize(chart, option, config) {
   };
 }
 
+export function exportPixelRatio(size, requested = 2) {
+  return Math.min(Math.max(1, Number(requested) || 2), 16384 / size.width, 16384 / size.height,
+    Math.sqrt(32000000 / (size.width * size.height)));
+}
+
 function withExportGrid(option, gridOverrides) {
   if (!gridOverrides || !option?.grid) return option;
   const grid = asList(option.grid).map(item => ({ ...item, ...gridOverrides }));
@@ -162,7 +168,7 @@ function rasterizeSvg(url, size, pixelRatio) {
   });
 }
 
-export async function exportEChart(chartRefOrInstance, config = {}) {
+async function renderExport(chartRefOrInstance, config = {}) {
   const sourceChart = resolveChart(chartRefOrInstance);
   if (!sourceChart || typeof document === 'undefined') return false;
 
@@ -174,7 +180,8 @@ export async function exportEChart(chartRefOrInstance, config = {}) {
   const preparedOption = typeof config.prepareOption === 'function'
     ? config.prepareOption(layoutOption, { sourceChart, size })
     : layoutOption;
-  const option = preparedOption || layoutOption;
+  const option = withoutTransientInteraction(preparedOption || layoutOption, config);
+  const pixelRatio = format === 'png' ? exportPixelRatio(size, config.pixelRatio) : 1;
   const host = document.createElement('div');
   host.setAttribute('aria-hidden', 'true');
   Object.assign(host.style, {
@@ -196,15 +203,14 @@ export async function exportEChart(chartRefOrInstance, config = {}) {
     await waitForChart(exportChart);
     let url = exportChart.getDataURL({
       type: vectorRaster ? 'svg' : format,
-      pixelRatio: format === 'png' ? (Number(config.pixelRatio) || 2) : 1,
+      pixelRatio,
       backgroundColor: '#ffffff',
       excludeComponents: ['toolbox', 'dataZoom', 'brush'],
     });
     // Large heatmaps can leave incremental canvas paint callbacks after disposal.
     // Rasterizing a complete SVG avoids that lifecycle and retains the vector colors/order.
-    if (vectorRaster) url = await rasterizeSvg(url, size, Number(config.pixelRatio) || 2);
-    triggerDownload(url, `${safeFileName(config.fileName)}-${dateStamp()}.${format}`);
-    return true;
+    if (vectorRaster) url = await rasterizeSvg(url, size, pixelRatio);
+    return { url, name: `${safeFileName(config.fileName)}-${dateStamp()}.${format}` };
   } catch (error) {
     console.error('Export chart failed:', error);
     return false;
@@ -212,6 +218,39 @@ export async function exportEChart(chartRefOrInstance, config = {}) {
     exportChart?.dispose?.();
     host.remove();
   }
+}
+
+export async function exportEChart(chartRefOrInstance, config = {}) {
+  const chart = resolveChart(chartRefOrInstance);
+  const sourceOption = chart?.getOption?.() || {};
+  const pages = config.pages?.length ? config.pages : [{}];
+  const attachments = config.attachments
+    ? await config.attachments({ sourceOption, pages: pages.map((page, index) => {
+      const settings = { ...config, ...page };
+      const size = exportSize(chart, sourceOption, settings);
+      return { page: index + 1, ...size, pixelRatio: settings.format === 'png' ? exportPixelRatio(size, settings.pixelRatio) : 1,
+        ...settings.pageMetadata };
+    }) }) : [];
+  if (!config.pages?.length && !attachments.length) {
+    const result = await renderExport(chartRefOrInstance, config);
+    if (result) triggerDownload(result.url, result.name);
+    return Boolean(result);
+  }
+  const files = [...attachments];
+  for (const [index, page] of pages.entries()) {
+    config.onProgress?.(index + 1, pages.length);
+    const result = await renderExport(chartRefOrInstance, { ...config, ...page, pages: undefined });
+    if (!result) return false;
+    files.push({ name: result.name, bytes: dataUrlBytes(result.url) });
+  }
+  downloadChartArchive(files, config.fileName);
+  return true;
+}
+
+export function downloadChartArchive(files, fileName) {
+  const url = URL.createObjectURL(createChartArchive(files));
+  triggerDownload(url, `${safeFileName(fileName)}-${dateStamp()}.zip`);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 export function withChartExport(option, chartRef, config) {

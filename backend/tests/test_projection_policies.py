@@ -59,6 +59,9 @@ def test_policy_parameters_have_defaults_and_authoritative_bounds() -> None:
         heatmap.resolve_parameter({"qValueMax": 2}, "qValueMax")
 
     assert heatmap.resolve_parameters({"qValueMax": 0.01}) == {
+        "prefilter": "none", "minimumPrevalence": 0.1, "detectionThreshold": 0.0001,
+        "viewMode": "differential", "explorationRanking": "abundance", "visualTransform": "log1p",
+        "visualPseudocount": 0.00001, "clustering": "hierarchical",
         "qValueMax": pytest.approx(0.01),
         "log2FcMinAbs": pytest.approx(1.0),
     }
@@ -71,8 +74,8 @@ def test_projection_policies_distinguish_display_caps_from_computation() -> None
     assert PROJECTION_POLICIES["detection"].top_n_role == "display_cap"
     assert PROJECTION_POLICIES["differential_ko"].top_n_role == "display_cap"
     assert PROJECTION_POLICIES["pca"].top_n_role == "feature_selection"
-    assert PROJECTION_POLICIES["pcoa"].top_n_role == "not_applicable"
-    assert PROJECTION_POLICIES["composition"].top_n_role == "aggregation_limit"
+    assert PROJECTION_POLICIES["pcoa"].top_n_role == "feature_selection"
+    assert PROJECTION_POLICIES["composition"].top_n_role == "not_applicable"
     assert PROJECTION_POLICIES["composition"].feature_kind == "taxonomy"
     assert PROJECTION_POLICIES["ko_contribution"].top_n_role == "display_cap"
     assert PROJECTION_POLICIES["ko_contribution"].feature_kind == "ko"
@@ -145,7 +148,7 @@ def test_pca_discloses_composition_preprocessing_and_ellipse_semantics() -> None
     frame, features = _ordination_frame(["AD", "AD", "AD", "NC", "NC", "NC"])
     payload = compute_pca(frame, features, top_n=3)
 
-    assert payload["featureSelection"] == {
+    assert {key: payload["featureSelection"][key] for key in ("method", "requestedTopN", "selectedCount")} == {
         "method": PCA_FEATURE_SELECTION_METHOD,
         "requestedTopN": 3,
         "selectedCount": 3,

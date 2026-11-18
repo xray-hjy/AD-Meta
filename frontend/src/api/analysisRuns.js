@@ -109,6 +109,18 @@ export function projectChart(runKey, artifactKey, projectionKind, request, optio
 /**
  * @param {string} runKey
  * @param {string} artifactKey
+ * @param {import('./generated').components['schemas']['BoxplotReviewRequest']} request
+ * @param {FetchJsonOptions} [options]
+ * @returns {Promise<import('./generated').components['schemas']['BoxplotReviewDataResponse']>}
+ */
+export function getBoxplotReviewData(runKey, artifactKey, request, options = {}) {
+  return fetchJson(`/api/analysis-runs/${runKey}/artifacts/${artifactKey}/projections/boxplot/review-data`,
+    { timeoutMs: 120_000, ...options, method: 'POST', body: request });
+}
+
+/**
+ * @param {string} runKey
+ * @param {string} artifactKey
  * @param {string} projectionKind
  * @param {ProjectionAuditRequest} request
  * @param {FetchJsonOptions} [options]

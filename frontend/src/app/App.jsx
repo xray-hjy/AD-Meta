@@ -1,4 +1,5 @@
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import OrdinationFilterControls from '../components/analysisScope/OrdinationFilterControls';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { selectAnalysisRun } from '../components/analysisRun/analysisRunSelection';
 import { useSearchParams } from 'react-router-dom';
 import { getChart } from '../api/datasets';
@@ -41,6 +42,8 @@ import useAnalysisProjection, {
 } from '../hooks/useAnalysisProjection';
 import useFeatureSelection from '../hooks/useFeatureSelection';
 
+const FunctionExploration = lazy(() => import('../components/Charts/FunctionExploration'));
+
 const ATTACHED_SOURCE = Object.freeze({});
 
 function renderChartComponent(chartType, chartData, summary, context = {}) {
@@ -59,7 +62,10 @@ function renderChartComponent(chartType, chartData, summary, context = {}) {
         revision={context.revision} mode={definition.mode} />;
       break;
     case 'phylum':
-      chart = <ChartComponent data={chartData} featureKind={featureKind} featureLabel={featureLabel} />;
+      chart = <ChartComponent projection={context.compositionProjection} data={chartData} featureKind={featureKind} featureLabel={featureLabel} />;
+      break;
+    case 'differential_ko':
+      chart = <><FunctionExploration slug={context.slug} revision={context.revision} projection={context.functionProjection} /><ChartComponent data={chartData} /></>;
       break;
     case 'koContribution':
       chart = <ChartComponent data={chartData} />;
@@ -72,6 +78,7 @@ function renderChartComponent(chartType, chartData, summary, context = {}) {
         <ChartComponent
           data={chartData}
           title={summary?.datasetName}
+          projection={context.taxonomyProjection}
           featureKind={featureKind}
           mode={definition.mode}
         />
@@ -79,7 +86,7 @@ function renderChartComponent(chartType, chartData, summary, context = {}) {
       break;
     case 'pca':
     case 'pcoa':
-      chart = <ChartComponent data={chartData} featureKind={featureKind} featureLabel={featureLabel} />;
+      chart = <ChartComponent projection={context.ordinationProjection} data={chartData} featureKind={featureKind} featureLabel={featureLabel} />;
       break;
     case 'boxplot':
       chart = (
@@ -87,11 +94,18 @@ function renderChartComponent(chartType, chartData, summary, context = {}) {
           data={chartData}
           featureLabel={featureLabel}
           featureSelectionConfig={definition.analysisPolicy?.featureSelection}
+          groupCounts={context.groupCounts}
+          projection={context.boxplotProjection}
         />
       );
       break;
-    case 'species':
+    case 'detection':
+      chart = <ChartComponent data={chartData} projection={context.detectionProjection} onInspectKO={context.onDetectionInspect} />;
+      break;
     case 'heatmap':
+      chart = <ChartComponent data={chartData} featureLabel={featureLabel} projection={context.heatmapProjection} onExplore={context.onHeatmapExplore} />;
+      break;
+    case 'species':
       chart = <ChartComponent data={chartData} featureLabel={featureLabel} abundanceScale={summary?.abundanceScale} />;
       break;
     default:
@@ -404,7 +418,19 @@ function App({ datasetsState, onDomainChange }) {
     ? <EmptyState message="当前图表不支持所选分析范围，请在上方选择可用范围。" />
     : scopeInvalid
       ? <EmptyState message={scopeValidation.reason} />
-      : renderChartComponent(activeChart, activeChartData, summaryState.data, { slug: activeDataset, revision: descriptionRevision });
+      : renderChartComponent(activeChart, activeChartData, summaryState.data, {
+        slug: activeDataset, revision: descriptionRevision,
+        groupCounts: projectionState.data?.projection?.groupCounts,
+        boxplotProjection: projectionKind === 'boxplot' ? projectionState.data : null,
+        ordinationProjection: ['pca', 'pcoa'].includes(projectionKind) ? projectionState.data : null,
+        compositionProjection: projectionKind === 'composition' ? projectionState.data : null,
+        taxonomyProjection: ['taxonomy', 'taxonomy_sankey'].includes(projectionKind) ? projectionState.data : null,
+        detectionProjection: projectionKind === 'detection' ? projectionState.data : null,
+        onDetectionInspect: id => setSearchParams(current => { const next = new URLSearchParams(current); next.set('chart', 'differential_ko'); next.delete('topN'); next.set('functionKind', 'ko'); next.set('functionObject', id); next.set('functionScope', JSON.stringify(projectionState.data?.scope || { mode: 'cohort' })); return next; }),
+        functionProjection: projectionKind === 'differential_ko' ? projectionState.data : null,
+        heatmapProjection: projectionKind === 'heatmap' ? projectionState.data : null,
+        onHeatmapExplore: () => changeProjection(projectionSelection.scope, projectionSelection.topN, { ...projectionSelection.parameters, viewMode: 'exploratory' }),
+      });
   const activeChartMeta = useMemo(
     () => resolveChartMeta(activeChart, {
       featureKind: summaryState.data?.featureKind,
@@ -419,6 +445,7 @@ function App({ datasetsState, onDomainChange }) {
   const projectionControls = projectionKind && activeRun && activeArtifact ? (
     <AnalysisScopeToolbar
       showTopN={false}
+      externalParameters={['pca', 'pcoa'].includes(projectionKind)}
       scope={projectionSelection.scope}
       topN={projectionSelection.topN}
       parameters={projectionSelection.parameters}
@@ -428,8 +455,12 @@ function App({ datasetsState, onDomainChange }) {
       supportedScopes={activeChartMeta?.supportedScopes}
       controls={activeChartMeta?.controls}
       scopeRequirement={activeChartMeta?.scopeRequirement}
-      analysisPolicy={activeChartMeta?.analysisPolicy}
-      chartControls={projectionKind === 'boxplot' ? (
+      analysisPolicy={['pca', 'pcoa'].includes(projectionKind) ? { ...activeChartMeta?.analysisPolicy, controls: [] } : activeChartMeta?.analysisPolicy}
+      chartControls={['pca', 'pcoa'].includes(projectionKind) ? <OrdinationFilterControls
+        key={`${activeRun.key}:${activeArtifact.key}:${projectionKind}:${JSON.stringify(projectionSelection.scope)}`}
+        runKey={activeRun.key} artifactKey={activeArtifact.key} kind={projectionKind}
+        scope={projectionSelection.scope} topN={projectionSelection.topN} parameters={projectionSelection.parameters}
+        onChange={changeProjection} /> : projectionKind === 'boxplot' ? (
         <BoxplotFeatureSelector
           runKey={activeRun.key}
           artifactKey={activeArtifact.key}
@@ -441,6 +472,8 @@ function App({ datasetsState, onDomainChange }) {
           isDirty={boxplotSelection.isDirty}
           dirtyCount={boxplotSelection.dirtyCount}
           applying={projectionState.refreshing}
+          refreshError={projectionState.refreshError}
+          plottedItems={activeChartData?.items || []}
           featureLabel={summaryState.data?.featureLabel || '物种'}
           evidenceEnabled={summaryState.data?.featureKind === 'taxonomy'}
           config={activeChartDefinition?.analysisPolicy?.featureSelection}
@@ -496,7 +529,7 @@ function App({ datasetsState, onDomainChange }) {
     mainContent = (
         <ChartFrame
         sectioned
-        chartControls={projectionControls ? <AnalysisTopNControl
+        chartControls={projectionControls && !['pca', 'pcoa'].includes(projectionKind) ? <AnalysisTopNControl
           control={(activeChartMeta?.analysisPolicy?.controls || activeChartMeta?.controls || []).find(control => control.key === 'topN')}
           value={projectionSelection.topN}
           featureLabel={activeChartMeta?.projection === 'composition' ? '分类' : summaryState.data?.featureLabel || '物种'}
@@ -516,9 +549,13 @@ function App({ datasetsState, onDomainChange }) {
         empty={!scopeUnavailable && !scopeInvalid && !loading && !error && !chartBody}
         layout={activeChartMeta?.layout || 'fit'}
         controls={projectionControls}
+        selectionPanel={projectionKind === 'boxplot' ? { summary: <>
+          <span>对象池 {boxplotSelection.value.items.length} 个 · 当前图表 {activeChartData?.items?.length || 0} 个</span>
+          <span>{projectionState.refreshing ? '正在计算，图表仍为上一版本' : projectionState.refreshError ? '计算失败，图表仍为上一版本' : boxplotSelection.isDirty ? '有修改尚未应用' : '选择已应用'}</span>
+        </> } : null}
         description={descriptionPanel}
         disclosure={chartDisclosure}
-        audit={<>{projectionAudit}{!attachedSource && activeRun && activeArtifact ? <CompleteResultsPanel key={`${activeRun.key}:${activeArtifact.key}`} runKey={activeRun.key} artifactKey={activeArtifact.key} /> : null}</>}
+        audit={<>{projectionAudit}{!attachedSource && activeRun && activeArtifact ? <CompleteResultsPanel key={`${activeRun.key}:${activeArtifact.key}`} runKey={activeRun.key} artifactKey={activeArtifact.key} contextNote={projectionKind === 'composition' ? '本区查询全数据集的样本 × 物种已存储记录，不是门级或组均值。门级样本矩阵与组汇总 CSV 位于上方完整门级结果下载。' : null} /> : null}</>}
         loadingState={projectionKind ? <ProjectionLoadingState /> : null}
       >
         {chartBody}

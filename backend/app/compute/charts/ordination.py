@@ -28,6 +28,7 @@ PCOA_DISTANCE = "bray_curtis"
 PCOA_PERMUTATIONS = 999
 PCOA_PERMANOVA_SEED = 20240514
 PCOA_PERMDISP_SEED = 20240515
+ORDINATION_METHOD_VERSION = "2026-11-14-ordination-filter-v2"
 PCA_MAX_COMPONENTS = 20
 PCOA_NEGATIVE_EIGEN_WARNING_RATIO = 0.01
 PCA_FEATURE_SELECTION_METHOD = "top_n_by_mean_relative_abundance_after_sample_closure"
@@ -102,6 +103,19 @@ def _distribution_ellipses(points: list[dict]) -> list[dict]:
     return ellipses
 
 
+def _axis_views(points: list[dict], coordinates: np.ndarray, variance: list[float]) -> list[dict]:
+    """First three computed axes; switching views never refits the model."""
+    views = []
+    available = [index for index in range(min(3, coordinates.shape[1])) if variance[index] > 1e-12]
+    for x_axis in available:
+        for y_axis in [index for index in available if index > x_axis]:
+            projected = [{**point, "x": float(coordinates[index, x_axis]), "y": float(coordinates[index, y_axis])}
+                         for index, point in enumerate(points)]
+            views.append({"axes": [x_axis + 1, y_axis + 1], "points": projected,
+                          "variance": [variance[x_axis], variance[y_axis]], "ellipses": _distribution_ellipses(projected)})
+    return views
+
+
 def _validate_and_close(df: pd.DataFrame, feature_cols: list[str], context: str) -> tuple[np.ndarray, np.ndarray]:
     """Return non-empty sample compositions and the matching source row indices."""
 
@@ -151,19 +165,28 @@ def prepare_pca_input(
     species_cols: list[str],
     top_n: int = 50,
     include_audit: bool = False,
+    filter_preset: str = "top_n",
+    minimum_relative_abundance: float = 0.0001,
+    minimum_prevalence: float = 0.1,
 ) -> dict:
     """Close, rank and select a PCA subcomposition without running the SVD."""
 
     relative, source_rows = _validate_and_close(df, species_cols, "PCA")
     mean_relative = relative.mean(axis=0) if len(relative) else np.zeros(len(species_cols))
     order = np.lexsort((np.asarray(species_cols, dtype=str), -mean_relative))
-    selected_indices = order[:min(top_n, len(species_cols))]
+    filtered = prepare_pcoa_input(
+        df, species_cols, filter_preset, minimum_relative_abundance, minimum_prevalence, top_n,
+    )
+    retained = set(filtered["retainedFeatures"])
+    selected_indices = np.array([index for index in order if species_cols[index] in retained], dtype=int)
     selected_set = set(selected_indices.tolist())
     rank_by_index = {int(feature_index): rank + 1 for rank, feature_index in enumerate(order)}
+    filter_rows = {row["feature"]: row for row in filtered["auditRows"]}
     audit_rows = []
     if include_audit:
         audit_rows = [
             {
+                **filter_rows[str(feature)],
                 "feature": str(feature),
                 "fullName": str(feature),
                 "_featureKeys": [str(feature)],
@@ -172,15 +195,17 @@ def prepare_pca_input(
                 "rankValue": float(mean_relative[index]),
                 "status": "displayed" if index in selected_set else "excluded",
                 "reason": (
-                    "within_top_n_by_mean_relative_abundance"
+                    ("within_top_n_by_mean_relative_abundance" if filter_preset == "top_n" else filter_rows[str(feature)]["reason"])
                     if index in selected_set
-                    else "outside_top_n_by_mean_relative_abundance"
+                    else ("outside_top_n_by_mean_relative_abundance" if filter_preset == "top_n" else filter_rows[str(feature)]["reason"])
                 ),
             }
             for index, feature in enumerate(species_cols)
         ]
         audit_rows.sort(key=lambda row: row["rank"])
     return {
+        "filter": {**filtered["filter"], "method": PCA_FEATURE_SELECTION_METHOD if filter_preset == "top_n" else filtered["filter"]["method"], "requestedTopN": top_n if filter_preset == "top_n" else None},
+        "sampleFiltering": filtered["sampleFiltering"],
         "relative": relative,
         "sourceRows": source_rows,
         "meanRelativeAbundance": mean_relative,
@@ -198,12 +223,13 @@ def _empty_pca_payload(
     zero_total_samples: list[str],
     zero_after_selection: int,
     include_audit: bool,
-    selected_sample_count: int = 0,
+    selected_sample_count: int | None = None,
 ) -> dict:
     ranked = prepared["selectedFeatures"]
     source_rows = prepared["sourceRows"]
     return {
         "method": "PCA",
+        "methodVersion": ORDINATION_METHOD_VERSION,
         "projectionStatus": status,
         "featureLabel": df.attrs.get("feature_label", FEATURE_META["taxonomy"]["label"]),
         "featureCount": len(ranked),
@@ -211,14 +237,11 @@ def _empty_pca_payload(
         "variance": [],
         "points": [],
         "ellipses": [],
-        "featureSelection": {
-            "method": PCA_FEATURE_SELECTION_METHOD,
-            "requestedTopN": top_n,
-            "selectedCount": len(ranked),
-        },
+        "featureSelection": prepared["filter"],
         "sampleFiltering": {
+            **prepared["sampleFiltering"],
             "sourceSampleCount": len(df),
-            "selectedSampleCount": selected_sample_count,
+            "selectedSampleCount": prepared["sampleFiltering"]["selectedSampleCount"] if selected_sample_count is None else selected_sample_count,
             "validTotalSampleCount": int(len(source_rows)),
             "zeroTotalSampleCount": len(zero_total_samples),
             "excludedZeroTotalSamples": zero_total_samples,
@@ -231,6 +254,7 @@ def _empty_pca_payload(
             "zeroReplacement": "multiplicative_smallest_positive_part",
         },
         "resources": {
+            "filterAudit": [{key: value for key, value in row.items() if not key.startswith("_")} for row in prepared["auditRows"]],
             "componentSummary": [],
             "featureLoadings": [],
             "selectionAudit": [],
@@ -244,6 +268,9 @@ def compute_pca(
     species_cols: list[str],
     top_n: int = 50,
     include_audit: bool = False,
+    filter_preset: str = "top_n",
+    minimum_relative_abundance: float = 0.0001,
+    minimum_prevalence: float = 0.1,
 ) -> dict:
     """Compute a scale-invariant, composition-aware exploratory PCA.
 
@@ -254,7 +281,7 @@ def compute_pca(
     keeping the original IDs available for inspection.
     """
 
-    prepared = prepare_pca_input(df, species_cols, top_n, include_audit)
+    prepared = prepare_pca_input(df, species_cols, top_n, True, filter_preset, minimum_relative_abundance, minimum_prevalence)
     relative = prepared["relative"]
     source_rows = prepared["sourceRows"]
     mean_relative = prepared["meanRelativeAbundance"]
@@ -303,19 +330,18 @@ def compute_pca(
     ]
     return {
         "method": "PCA",
+        "methodVersion": ORDINATION_METHOD_VERSION,
         "projectionStatus": "computed",
         "featureLabel": df.attrs.get("feature_label", FEATURE_META["taxonomy"]["label"]),
         "featureCount": len(ranked),
         "speciesCount": len(ranked),
+        "axisViews": _axis_views(points, coords, model.explained_variance_ratio_.tolist()),
         "variance": model.explained_variance_ratio_.tolist(),
         "points": points,
         "ellipses": _distribution_ellipses(points),
-        "featureSelection": {
-            "method": PCA_FEATURE_SELECTION_METHOD,
-            "requestedTopN": top_n,
-            "selectedCount": len(ranked),
-        },
+        "featureSelection": prepared["filter"],
         "sampleFiltering": {
+            **prepared["sampleFiltering"],
             "sourceSampleCount": len(df), "selectedSampleCount": int(len(active_rows)),
             "zeroTotalSampleCount": len(zero_total_samples), "excludedZeroTotalSamples": zero_total_samples,
             "zeroAfterFeatureSelectionSampleCount": int((~usable).sum()),
@@ -330,6 +356,7 @@ def compute_pca(
             "sourceNormalization": df.attrs.get("normalization", "unknown"),
         },
         "resources": {
+            "filterAudit": [{key: value for key, value in row.items() if not key.startswith("_")} for row in prepared["auditRows"]],
             "componentSummary": [
                 {"component": index + 1, "eigenvalue": float(model.explained_variance_[index]), "explainedVarianceRatio": float(model.explained_variance_ratio_[index]), "cumulativeExplainedVarianceRatio": float(model.explained_variance_ratio_[:index + 1].sum())}
                 for index in range(n_components)
@@ -557,6 +584,9 @@ def prepare_pcoa_input(
     df: pd.DataFrame,
     feature_cols: list[str],
     filter_preset: str = "standard",
+    minimum_relative_abundance: float = 0.0001,
+    minimum_prevalence: float = 0.1,
+    top_n: int = 50,
 ) -> dict:
     """Validate, close and filter a feature matrix for Bray-Curtis PCoA.
 
@@ -565,9 +595,14 @@ def prepare_pcoa_input(
     endpoint so both surfaces describe exactly the same scientific decision.
     """
 
-    if filter_preset not in PCOA_FILTER_PRESETS:
-        raise ValueError(f"Unsupported PCoA filter preset: {filter_preset}")
-    thresholds = PCOA_FILTER_PRESETS[filter_preset]
+    if filter_preset not in {*PCOA_FILTER_PRESETS, "custom", "top_n"}:
+        raise ValueError(f"Unsupported ordination filter preset: {filter_preset}")
+    if not (0 <= minimum_relative_abundance <= 1 and 0 <= minimum_prevalence <= 1):
+        raise ValueError("Ordination thresholds must be finite fractions between 0 and 1")
+    thresholds = PCOA_FILTER_PRESETS.get(filter_preset, {
+        "minimumRelativeAbundance": minimum_relative_abundance,
+        "minimumPrevalence": minimum_prevalence,
+    })
     raw = _numeric_abundance_matrix(df, feature_cols, "PCoA")
 
     totals = raw.sum(axis=1)
@@ -594,6 +629,10 @@ def prepare_pcoa_input(
         if filter_preset == "unfiltered"
         else prevalence >= minimum_prevalence
     )
+    if filter_preset == "top_n":
+        order = np.lexsort((np.asarray(feature_cols, dtype=str), -means))
+        retained_mask = np.zeros(len(feature_cols), dtype=bool)
+        retained_mask[order[:top_n]] = True
     retained = [
         feature
         for feature, keep in zip(feature_cols, retained_mask, strict=False)
@@ -614,6 +653,8 @@ def prepare_pcoa_input(
         else:
             reason = "below_minimum_prevalence"
             status = "filtered"
+        if filter_preset == "top_n":
+            reason = "within_top_n_by_mean_relative_abundance" if retained_mask[index] else "outside_top_n_by_mean_relative_abundance"
         audit_rows.append({
             "feature": str(feature),
             "fullName": str(feature),
@@ -656,8 +697,11 @@ def prepare_pcoa_input(
         "retainedFeatures": retained,
         "auditRows": audit_rows,
         "filter": {
-            "method": "label_blind_relative_abundance_and_prevalence",
+            "method": PCA_FEATURE_SELECTION_METHOD if filter_preset == "top_n" else "label_blind_relative_abundance_and_prevalence",
             "preset": filter_preset,
+            "comparison": "mean_relative_abundance_rank" if filter_preset == "top_n" else ">=" if minimum_abundance > 0 else ">0",
+            "prevalenceDenominator": int(len(valid_raw)),
+            "requestedTopN": top_n if filter_preset == "top_n" else None,
             "minimumRelativeAbundance": minimum_abundance,
             "minimumPrevalence": minimum_prevalence,
             "sourceFeatureCount": len(feature_cols),
@@ -691,6 +735,7 @@ def _empty_pcoa_payload(
     selection = prepared["filter"]
     return {
         "method": "PCoA",
+        "methodVersion": ORDINATION_METHOD_VERSION,
         "distance": "Bray-Curtis",
         "distanceFingerprint": None,
         "featureLabel": df.attrs.get("feature_label", FEATURE_META["taxonomy"]["label"]),
@@ -724,6 +769,7 @@ def _empty_pcoa_payload(
                 "permutations or covariate adjustment."
             ),
         },
+        "resources": {"filterAudit": [{key: value for key, value in row.items() if not key.startswith("_")} for row in prepared["auditRows"]]},
         **({"_auditRows": prepared["auditRows"]} if include_audit else {}),
     }
 
@@ -734,10 +780,13 @@ def compute_pcoa(
     filter_preset: str = "standard",
     inference_min_per_group: int = 3,
     include_audit: bool = False,
+    minimum_relative_abundance: float = 0.0001,
+    minimum_prevalence: float = 0.1,
+    top_n: int = 50,
 ) -> dict:
     """Compute a reproducible Bray-Curtis PCoA from a documented filter preset."""
 
-    prepared = prepare_pcoa_input(df, species_cols, filter_preset)
+    prepared = prepare_pcoa_input(df, species_cols, filter_preset, minimum_relative_abundance, minimum_prevalence, top_n)
     ranked = prepared["retainedFeatures"]
     X = prepared["matrix"]
     if len(ranked) < 2 or len(X) < 3:
@@ -866,8 +915,10 @@ def compute_pcoa(
 
     return {
         "method": "PCoA",
+        "methodVersion": ORDINATION_METHOD_VERSION,
         "distance": "Bray-Curtis",
         "distanceFingerprint": distance_fingerprint,
+        "axisViews": _axis_views(points, positive_coordinates, (values / values.sum()).tolist()) if len(values) >= 2 else [],
         "featureLabel": df.attrs.get("feature_label", FEATURE_META["taxonomy"]["label"]),
         "featureCount": len(ranked),
         "speciesCount": len(ranked),
@@ -918,6 +969,7 @@ def compute_pcoa(
             "varianceBasis": "positive_eigenvalues",
         },
         "resources": {
+            "filterAudit": [{key: value for key, value in row.items() if not key.startswith("_")} for row in prepared["auditRows"]],
             "dispersionDistances": dispersion_rows,
             "eigenDiagnostics": [
                 {

@@ -1,0 +1,24 @@
+.boxplot-view-controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin: 12px 0 8px; font-size: 12px; color: var(--color-text-muted); }
+.boxplot-view-controls label { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.boxplot-view-controls select { min-height: 32px; max-width: 100%; border: 1px solid var(--color-border); border-radius: 6px; padding: 4px 7px; background: var(--color-surface, #fff); color: var(--color-text); }
+.boxplot-view-note { margin: 8px 0; color: var(--color-text-muted); font-size: 12px; line-height: 1.7; }
+.boxplot-focus-note { margin: 10px 0; padding: 12px; border: 1px solid #e4c48c; background: #fffbeb; border-radius: 8px; color: #78350f; font-size: 12px; line-height: 1.7; }
+.boxplot-focus-note p { margin: 0 0 8px; }
+.boxplot-focus-note details { margin-top: 8px; min-width: 0; }
+.boxplot-focus-note summary { cursor: pointer; }
+.boxplot-pagination { display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--color-text-muted); }
+.boxplot-export-status { margin: 8px; font-size: 12px; color: var(--color-text-muted); }
+.boxplot-research-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 10px 0; font-size: 12px; color: var(--color-text-muted); }
+.boxplot-research-provenance { margin: 10px 0; font-size: 12px; line-height: 1.7; }
+.boxplot-research-provenance summary { cursor: pointer; }
+.boxplot-research-provenance dl { display: grid; grid-template-columns: minmax(70px, 100px) minmax(0, 1fr); gap: 4px 12px; }
+.boxplot-research-provenance dd { margin: 0; overflow-wrap: anywhere; }
+.boxplot-research .data-table-viewport :is(th, td) { font-size: 11px; padding-inline: 8px; }
+.boxplot-research .data-table-viewport th { white-space: normal; }
+.boxplot-research .data-table-viewport :is(th, td):first-child { width: 190px; min-width: 170px; max-width: 230px; white-space: normal; overflow-wrap: anywhere; }
+.boxplot-research .data-table-viewport summary { cursor: pointer; }
+.boxplot-research-identity { margin-top: 6px; color: var(--color-text-muted); font-size: 10px; line-height: 1.6; }
+@media (max-width: 600px) {
+  .boxplot-view-controls { gap: 10px; }
+  .boxplot-view-controls label { min-width: 0; }
+}

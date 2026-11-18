@@ -14,11 +14,11 @@ import numpy as np
 import pandas as pd
 
 from app.compute.charts.boxplot import (
-    _box_summary,
-    _log10_abundance,
-    _sqrt_abundance,
+    BOXPLOT_STATISTICAL_METHODS,
     boxplot_display,
+    describe_boxplot_group,
 )
+from app.compute.charts.composition import compute_phylum_composition
 from app.compute.charts.detection import compute_detection_heatmap
 from app.compute.charts.heatmap import compute_heatmap
 from app.compute.charts.ko_contribution import compute_ko_contribution
@@ -52,6 +52,7 @@ from app.services.analysis_projection_service import (
     _revision_series_sample_ids,
     _select_scope_samples,
 )
+from app.services.heatmap_analysis_record_service import get_heatmap_analysis
 from app.services.projection_file_cache import read_json as read_cached_json
 from app.services.projection_file_cache import write_json as write_cached_json
 from app.services.scoped_feature_catalog_service import (
@@ -66,7 +67,7 @@ PROJECTION_RULES: dict[str, dict[str, Any]] = {
     key: policy.as_legacy_rule() for key, policy in PROJECTION_POLICIES.items()
 }
 
-CHART_PROJECTION_CACHE_SCHEMA = "1.4"
+CHART_PROJECTION_CACHE_SCHEMA = "2.0"
 REVISION_MATRIX_CACHE_SCHEMA = "1.1"
 REVISION_MATRIX_CACHE_SIZE = 4
 
@@ -454,8 +455,12 @@ def _series_values(df: pd.DataFrame, features: list[str], scope: AnalysisScope) 
     return series, values
 
 
-def _compute_composition(df: pd.DataFrame, features: list[str], scope: AnalysisScope, top_n: int) -> dict[str, Any]:
+def _compute_composition(df: pd.DataFrame, features: list[str], scope: AnalysisScope, top_n: int, merge_below: float = 0) -> dict[str, Any]:
     series, series_values = _series_values(df, features, scope)
+    if df.attrs.get("feature_kind") == "taxonomy":
+        payload = compute_phylum_composition(df, features, series, merge_below)
+        payload.pop("_aggregationRows", None)
+        return payload
     buckets: dict[str, dict[str, float]] = {}
     for feature in features:
         label = short_name(feature) if df.attrs["feature_kind"] == "ko" else (get_level(feature, "p") or "Unclassified").replace("_", " ")
@@ -522,34 +527,33 @@ def _compute_boxplot(
     display_scale, display = boxplot_display(df.attrs.get("abundance_scale", "unknown"))
     for feature in selected_features:
         values_by_series = {}
+        group_stats = {}
         for series_item in series:
             rows = df if scope.mode == "sample" else df.loc[df["Group"] == series_item["group"]]
             values = rows[feature].to_numpy(dtype=float) * display_scale
             samples = rows["Sample"].astype(str).to_numpy()
-            raw = _box_summary(values, samples)
-            square_root = _box_summary(_sqrt_abundance(values), samples)
-            logged = _box_summary(_log10_abundance(values), samples)
-            values_by_series[series_item["key"]] = {
-                "raw": raw,
-                "sqrt": square_root,
-                "log": logged,
-            }
+            counts, summaries = describe_boxplot_group(values, samples)
+            group_stats[series_item["key"]] = counts
+            values_by_series[series_item["key"]] = summaries
         entry = catalog_entries.get(str(feature_id_by_name.get(feature, feature))) if catalog_entries else None
+        has_valid = any(stats["validCount"] for stats in group_stats.values())
         items.append({
             "featureId": str(feature_id_by_name.get(feature, feature)),
             "fullName": feature,
             "shortName": short_name(feature),
             "rank": int(ranks[feature]),
-            "meanAbundance": float(means[feature]),
-            "total": float(df[feature].sum()),
+            "meanAbundance": float(means[feature]) if np.isfinite(means[feature]) else None,
+            "total": float(df[feature].sum()) if has_valid else None,
             "detectedSampleCount": entry.detected_sample_count if entry else int((df[feature] > 0).sum()),
-            "prevalence": entry.prevalence if entry else float((df[feature] > 0).mean()),
-            "detectedInScope": bool((df[feature] > 0).any()),
+            "prevalence": (entry.prevalence if entry else float((df[feature] > 0).mean())) if has_valid else None,
+            "detectedInScope": bool((df[feature] > 0).any()) if has_valid else None,
             "values": values_by_series,
+            "groupStats": group_stats,
         })
     return {
         "series": series,
         "items": items,
+        "statisticalMethods": BOXPLOT_STATISTICAL_METHODS,
         "featureSelection": {
             "mode": resolved.mode,
             "ranking": resolved.ranking,
@@ -641,7 +645,10 @@ def _compute_payload(
 ):
     policy = PROJECTION_POLICIES[kind]
     if kind == "composition":
-        return _compute_composition(df, features, scope, top_n)
+        try:
+            return _compute_composition(df, features, scope, top_n, _policy_parameter(policy, parameters, "mergeBelow"))
+        except ValueError as exc:
+            raise AnalysisScopeError(str(exc)) from exc
     if kind == "ko_contribution":
         return compute_ko_contribution(
             df,
@@ -657,16 +664,24 @@ def _compute_payload(
     if kind == "taxonomy_sankey":
         return compute_taxonomy_sankey_projection(compute_taxonomy_hierarchy(df, features))
     if kind == "pca":
+        parameters = _resolve_projection_parameters(kind, parameters)
         try:
-            return compute_pca(df, features, top_n=top_n, include_audit=include_audit)
+            return compute_pca(df, features, top_n=top_n, include_audit=include_audit,
+                filter_preset=parameters["filterPreset"],
+                minimum_relative_abundance=parameters["minimumRelativeAbundance"],
+                minimum_prevalence=parameters["minimumPrevalence"])
         except ValueError as exc:
             raise AnalysisScopeError(str(exc)) from exc
     if kind == "pcoa":
+        parameters = _resolve_projection_parameters(kind, parameters)
         try:
             return compute_pcoa(
                 df,
                 features,
                 filter_preset=str(_policy_parameter(policy, parameters, "filterPreset")),
+                minimum_relative_abundance=parameters["minimumRelativeAbundance"],
+                minimum_prevalence=parameters["minimumPrevalence"],
+                top_n=top_n,
                 inference_min_per_group=policy.inference_min_per_group,
                 include_audit=include_audit,
             )
@@ -680,6 +695,14 @@ def _compute_payload(
             q_value_max=_policy_parameter(policy, parameters, "qValueMax"),
             log2_fc_min_abs=_policy_parameter(policy, parameters, "log2FcMinAbs"),
             include_audit=include_audit,
+            prefilter=str(_policy_parameter(policy, parameters, "prefilter")),
+            minimum_prevalence=_policy_parameter(policy, parameters, "minimumPrevalence"),
+            detection_threshold=_policy_parameter(policy, parameters, "detectionThreshold"),
+            view_mode=str(_policy_parameter(policy, parameters, "viewMode")),
+            exploration_ranking=str(_policy_parameter(policy, parameters, "explorationRanking")),
+            visual_transform=str(_policy_parameter(policy, parameters, "visualTransform")),
+            visual_pseudocount=_policy_parameter(policy, parameters, "visualPseudocount"),
+            clustering=str(_policy_parameter(policy, parameters, "clustering")),
         )
     if kind == "detection":
         return compute_detection_heatmap(
@@ -740,7 +763,7 @@ def _projection_metadata(
             "sourceCategoryCount": source_categories,
             "displayedCategoryCount": displayed_categories,
             "projectionUnit": "categories",
-            "filters": [{"type": "category_top_n", "value": top_n}],
+            "filters": [{"type": "explicit_low_abundance_merge", "value": payload.get("merge")}],
             "isComplete": merged_categories == 0,
         })
         return metadata
@@ -808,7 +831,7 @@ def _projection_metadata(
             "returnedFeatureCount": returned,
             "truncatedFeatureCount": max(0, source_feature_count - returned),
             "samplePointCount": len(payload.get("points") or []),
-            "filters": [{"type": PCA_FEATURE_SELECTION_METHOD, "value": top_n}],
+            "filters": [{"type": (payload.get("featureSelection") or {}).get("method", PCA_FEATURE_SELECTION_METHOD), "value": payload.get("featureSelection")}],
             "isComplete": returned >= source_feature_count,
         })
         return metadata
@@ -847,6 +870,10 @@ def _projection_metadata(
             "filters": _payload_filter_entries(payload),
             "isComplete": displayed >= significant,
         })
+        if (payload.get("display") or {}).get("viewMode") == "exploratory":
+            tested = int((payload.get("summary") or {}).get("testedFeatureCount", 0))
+            metadata.update(selectionMode="explicit_exploratory_ranking_not_significance",
+                eligibleFeatureCount=tested, truncatedFeatureCount=max(0, tested - displayed), isComplete=displayed >= tested)
         return metadata
 
     if projection_kind == "detection":
@@ -967,16 +994,27 @@ def _compute_chart_projection(
         if source_feature_count is None:
             source_feature_count = len(features)
 
-    payload = _compute_payload(
-        projection_kind,
-        frame,
-        features,
-        scope,
-        top_n,
-        parameters,
-        selection,
-        catalog,
-    )
+    if projection_kind == "heatmap":
+        try:
+            analysis = get_heatmap_analysis(int(run["id"]), int(artifact["id"]), str(artifact["revision_key"]), frame, features, parameters)
+            payload = compute_heatmap(frame, features, top_n=top_n,
+                q_value_max=parameters["qValueMax"], log2_fc_min_abs=parameters["log2FcMinAbs"],
+                view_mode=parameters["viewMode"], exploration_ranking=parameters["explorationRanking"],
+                visual_transform=parameters["visualTransform"], visual_pseudocount=parameters["visualPseudocount"],
+                clustering=parameters["clustering"], analysis=analysis)
+        except ValueError as exc:
+            raise AnalysisScopeError(str(exc)) from exc
+    else:
+        payload = _compute_payload(
+            projection_kind,
+            frame,
+            features,
+            scope,
+            top_n,
+            parameters,
+            selection,
+            catalog,
+        )
     projection_metadata = _projection_metadata(
         projection_kind,
         payload,
@@ -993,6 +1031,7 @@ def _compute_chart_projection(
     if projection_kind == "boxplot":
         data_semantics.update(
             {
+                "computeVersion": COMPUTE_VERSION,
                 "visualTransforms": payload_metadata.get("valueTransforms"),
                 "visualTransformNote": payload_metadata.get("valueTransformNote"),
             }
@@ -1029,6 +1068,13 @@ def _compute_chart_projection(
             } if projection_kind == "pcoa" else None,
         },
     }
+    if projection_kind == "boxplot":
+        result["projectionRequest"] = {
+            "scope": scope.model_dump(), "topN": top_n, "parameters": parameters,
+            "selection": selection.model_dump() if selection else None,
+        }
+    if projection_kind == "heatmap":
+        result["projectionRequest"] = {"scope": scope.model_dump(), "topN": top_n, "parameters": parameters}
     _write_projection_cache(cache_path, result)
     return result
 

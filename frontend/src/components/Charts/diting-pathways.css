@@ -33,3 +33,6 @@
 .diting-method summary { cursor: pointer; color: var(--workspace-ink); }
 .diting-method code { overflow-wrap: anywhere; font-size: 11px; }
 @media (max-width: 720px) { .diting-toolbar { gap: 10px; } .diting-picker { flex-basis: 100%; } }
+.diting-research-context,.diting-focused-summary { padding: 14px 16px; margin-block: 12px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-bg-panel); font-size: 12px; line-height: 1.8; overflow-wrap: anywhere; }
+.diting-focused-summary h3 { font-size: 14px; margin: 0 0 8px; }
+.diting-research-context p,.diting-focused-summary p { margin-block: 7px; }

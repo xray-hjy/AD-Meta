@@ -11,6 +11,7 @@ from app.api.models import (
     AnalysisRunResponse,
     AnalysisSampleDetailResponse,
     AnalysisSamplePageResponse,
+    BoxplotReviewDataResponse,
     ChartProjectionResponse,
     CompleteResultPageResponse,
     ErrorResponse,
@@ -22,6 +23,7 @@ from app.api.models import (
 from app.domain.analysis_scope import (
     AbundanceProjectionRequest,
     AuditProjectionKind,
+    BoxplotReviewRequest,
     ChartProjectionRequest,
     ProjectionAuditRequest,
     ProjectionKind,
@@ -38,12 +40,14 @@ from app.services.analysis_projection_service import (
     project_abundance,
 )
 from app.services.analysis_run_service import get_analysis_run, list_analysis_runs
+from app.services.boxplot_review_service import BoxplotReviewMismatch, get_boxplot_review_data
 from app.services.chart_projection_service import project_chart, query_scoped_features
 from app.services.full_result_service import (
     FullResultError,
     query_complete_results,
     stream_complete_results_csv,
 )
+from app.services.ordination_preview_service import preview_ordination
 from app.services.projection_audit_service import (
     ProjectionAuditMismatch,
     get_projection_audit,
@@ -219,6 +223,7 @@ def scoped_analysis_samples(
             artifact_key,
             request.scope,
             query=request.query,
+            phenotype=request.phenotype,
             limit=request.limit,
             offset=request.offset,
         )
@@ -254,6 +259,27 @@ def abundance_projection(
 ):
     try:
         return project_abundance(run_key, artifact_key, request)
+    except (AnalysisRunNotFound, AnalysisArtifactNotFound, AnalysisScopeError) as exc:
+        raise _projection_error(exc) from exc
+
+
+@router.post(
+    "/{run_key}/artifacts/{artifact_key}/projections/boxplot/review-data",
+    response_model=BoxplotReviewDataResponse,
+)
+def boxplot_review_data(run_key: str, artifact_key: str, request: BoxplotReviewRequest):
+    try:
+        return get_boxplot_review_data(run_key, artifact_key, request)
+    except BoxplotReviewMismatch as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except (AnalysisRunNotFound, AnalysisArtifactNotFound, AnalysisScopeError) as exc:
+        raise _projection_error(exc) from exc
+
+
+@router.post("/{run_key}/artifacts/{artifact_key}/ordinations/{projection_kind}/preview")
+def ordination_preview(run_key: str, artifact_key: str, projection_kind: str, request: ChartProjectionRequest):
+    try:
+        return preview_ordination(run_key, artifact_key, projection_kind, request)
     except (AnalysisRunNotFound, AnalysisArtifactNotFound, AnalysisScopeError) as exc:
         raise _projection_error(exc) from exc
 

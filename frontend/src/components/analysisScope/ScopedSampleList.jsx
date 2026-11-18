@@ -10,26 +10,33 @@ export default function ScopedSampleList({
   scope,
   sampleCount,
   prominent = false,
+  expanded = false,
+  searchable = false,
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(expanded);
+  const [query, setQuery] = useState('');
+  const [phenotype, setPhenotype] = useState('');
   const [offset, setOffset] = useState(0);
   const limit = 200;
   const scopeKey = JSON.stringify(scope || {});
 
   useEffect(() => {
-    setOpen(false);
+    setOpen(expanded);
+    setQuery('');
+    setPhenotype('');
     setOffset(0);
-  }, [runKey, artifactKey, scopeKey]);
+  }, [runKey, artifactKey, scopeKey, expanded]);
 
   const request = useMemo(() => ({
     scope: scope || { mode: 'cohort', groups: [], sampleCodes: [] },
-    query: '',
+    query,
+    ...(phenotype ? { phenotype } : {}),
     limit,
     offset,
-  }), [limit, offset, scope]);
+  }), [limit, offset, scope, query, phenotype]);
   const state = useScopedAnalysisSamples(runKey, artifactKey, request, open);
   const showSourceStudy = state.availableFields.includes('sourceStudy');
-  const total = state.total || Number(sampleCount) || 0;
+  const total = state.data.length || query || phenotype || !state.loading ? state.total : Number(sampleCount) || 0;
   const pageStart = total ? offset + 1 : 0;
   const pageEnd = Math.min(offset + limit, total);
 
@@ -42,6 +49,10 @@ export default function ScopedSampleList({
     >
       {open ? (
         <div className="projection-samples__content">
+          {searchable ? <div className="phylum-view-controls">
+            <label>搜索参与样本<input aria-label="搜索参与样本" type="search" value={query} onChange={event => { setQuery(event.target.value); setOffset(0); }} /></label>
+            <label>参与样本分组<select aria-label="参与样本分组" value={phenotype} onChange={event => { setPhenotype(event.target.value); setOffset(0); }}><option value="">全部分组</option><option>AD</option><option>NC</option></select></label>
+          </div> : null}
           <div className="projection-samples__meta">
             <span>仅列出当前图表分析范围内的样本元数据。</span>
             <span>{state.fetching ? '正在读取...' : `共 ${total} 个，显示 ${pageStart}-${pageEnd}`}</span>

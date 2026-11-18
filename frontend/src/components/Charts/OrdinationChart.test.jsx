@@ -102,7 +102,7 @@ test('updates only the grid on resize without rebuilding the chart option', asyn
     observe() {}
     disconnect() {}
   };
-  const chart = { setOption: vi.fn() };
+  const chart = { setOption: vi.fn(), resize: vi.fn() };
   const { container } = render(
     <OrdinationChart
       data={{
@@ -124,6 +124,9 @@ test('updates only the grid on resize without rebuilding the chart option', asyn
   act(() => resizeCallback([]));
 
   await waitFor(() => expect(chart.setOption).toHaveBeenCalled());
+  expect(chart.resize).toHaveBeenLastCalledWith({ width: 800, height: 600 });
+  expect(chart.resize.mock.invocationCallOrder[0]).toBeLessThan(chart.setOption.mock.invocationCallOrder[0]);
+  expect(chartProps.mock.calls.at(-1)[0].autoResize).toBe(false);
   expect(chartProps.mock.calls).toHaveLength(initialRenderCount);
   expect(chartProps.mock.calls.at(-1)[0].option).toBe(initialOption);
   expect(chart.setOption).toHaveBeenLastCalledWith(

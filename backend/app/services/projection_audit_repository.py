@@ -15,7 +15,7 @@ from app.core.database import connect, utcnow
 
 # Increment this whenever persisted audit metadata or its public semantics change.
 # Existing rows remain reproducible, while new requests build a compatible read model.
-AUDIT_SCHEMA_VERSION = "1.2"
+AUDIT_SCHEMA_VERSION = "1.3"
 
 
 def _loads(value: Any, fallback):

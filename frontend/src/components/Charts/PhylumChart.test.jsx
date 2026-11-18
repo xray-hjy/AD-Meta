@@ -32,10 +32,10 @@ test('renders taxonomy composition summary cards', () => {
   expect(screen.getByText('3 项')).toBeTruthy();
   expect(screen.getByText('AD 最高')).toBeTruthy();
   expect(screen.getByText('NC 最高')).toBeTruthy();
-  expect(screen.getByText('最大组间差异')).toBeTruthy();
+  expect(screen.getByText('最大均值差（描述性）')).toBeTruthy();
   expect(screen.getAllByText('Bacteroidota').length).toBeGreaterThan(0);
   expect(screen.getAllByText('Firmicutes').length).toBeGreaterThan(0);
-  expect(screen.getByText('AD 高 15.0 pp')).toBeTruthy();
+  expect(screen.getByText('AD 高 15 pp')).toBeTruthy();
   expect(screen.getByTestId('echarts-chart')).toBeTruthy();
 });
 
@@ -55,7 +55,7 @@ test('renders KO composition summary cards with KO labels', () => {
   expect(screen.getByText('Top KO 功能')).toBeTruthy();
   expect(screen.getByText('K03088')).toBeTruthy();
   expect(screen.getAllByText('K21572').length).toBeGreaterThan(0);
-  expect(screen.getByText('NC 高 8.0 pp')).toBeTruthy();
+  expect(screen.getByText('NC 高 8 pp')).toBeTruthy();
 });
 
 test('uses compact horizontal bars with abundance-style hover shadow', () => {
@@ -84,5 +84,5 @@ test('uses compact horizontal bars with abundance-style hover shadow', () => {
   expect(lastOption.dataZoom).toBeUndefined();
   expect(lastOption.xAxis[0].max).toBe(1);
   expect(lastOption.xAxis[0].axisLabel.formatter(0.45)).toBe('45%');
-  expect(lastOption.series[0].label.formatter({ value: 0.45 })).toBe('45.0%');
+  expect(lastOption.series[0].label.formatter({ value: 0.45 })).toBe('45%');
 });

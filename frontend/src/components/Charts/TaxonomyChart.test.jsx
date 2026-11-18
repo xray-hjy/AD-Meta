@@ -75,7 +75,7 @@ test('uses bounded rendering settings for dense sankey projections', () => {
 
   expect(screen.getByTestId('echarts')).toBeTruthy();
   const props = mockEChartsProps.mock.calls.at(-1)[0];
-  expect(props.style.height).toBe(3040);
+  expect(props.style.height).toBe(4800);
   expect(props.option.animation).toBe(false);
   expect(props.option.series[0].layoutIterations).toBe(16);
   expect(props.opts.renderer).toBe('canvas');
@@ -90,7 +90,7 @@ test('uses bounded rendering settings for dense sankey projections', () => {
     fileName: 'taxonomy-sankey',
     format: 'png',
     minWidth: 1228,
-    minHeight: 3040,
+    minHeight: 4800,
   });
   expect(props.frameActions).toBe(true);
 });
@@ -121,7 +121,8 @@ test('keeps ancestor emphasis and the reusable color-blind palette on the sunbur
   });
   expect(props.frameActions).toBe(true);
   const exportedOption = props.exportConfig.prepareOption(props.option);
-  expect(exportedOption.series[0].center).toEqual(['38%', '50%']);
+  expect(exportedOption.series[0].center).toEqual([520, 500]);
+  expect(exportedOption.series[0].radius[1]).toBeLessThan(370);
   expect(exportedOption.graphic).toEqual(expect.arrayContaining([
     expect.objectContaining({ type: 'group' }),
   ]));

@@ -39,14 +39,15 @@ function projectionSummary(data) {
       `来源 ${projection.sourceFeatureCount} 个${featureLabel}`,
       `汇总为 ${projection.sourceCategoryCount || 0} 个类别`,
       projection.mergedFeatureCount > 0
-        ? `展示 ${projection.displayedCategoryCount || 0} 项，末尾聚合 ${projection.mergedFeatureCount} 类`
-        : `完整展示 ${projection.displayedCategoryCount || 0} 类`,
+        ? `展示 ${projection.displayedCategoryCount || 0} 项，主动合并 ${projection.mergedFeatureCount} 类`
+        : `完整展示 ${projection.displayedCategoryCount || 0} 类，不默认合并`,
+      '逐样本汇总后求组算术均值；保留原始合计，不重新闭合',
     ];
   }
   if (projection.kind === 'pca') {
     const selection = projection.featureSelection?.method === PCA_FEATURE_SELECTION_METHOD
       ? '按样本闭合后的平均相对丰度排序选取'
-      : '按当前策略选取';
+      : projection.featureSelection?.preset === 'unfiltered' ? '全部可用物种保留' : '按相对丰度与样本比例筛选';
     const variance = Array.isArray(payload.variance) ? payload.variance : [];
     const axisSummary = variance.length >= 2
       ? `PC1 ${formatPercent(variance[0])}，PC2 ${formatPercent(variance[1])}，前两轴合计 ${formatPercent(Number(variance[0]) + Number(variance[1]))}`
@@ -69,7 +70,7 @@ function projectionSummary(data) {
     const retainedMass = projection.retainedMass || selection.retainedMass || {};
     const messages = [
       `无标签过滤保留 ${projection.returnedFeatureCount}/${projection.sourceFeatureCount} 个${featureLabel}`,
-      selection.preset === 'unfiltered'
+      selection.preset === 'top_n' ? `高丰度 Top ${selection.requestedTopN} 子集探索` : selection.preset === 'unfiltered'
         ? `未启用稀有${featureLabel}过滤`
         : `相对丰度 ≥ ${formatPercent(selection.minimumRelativeAbundance)}，检出率 ≥ ${formatPercent(selection.minimumPrevalence)}`,
       `过滤前后均按样本总和闭合；平均保留质量 ${formatPercent(retainedMass.mean)}`,
@@ -119,8 +120,13 @@ function projectionSummary(data) {
     const parameters = projection.parameters || {};
     return [
       `来源 ${projection.sourceFeatureCount} 个${featureLabel}`,
+      ...(payload.display?.viewMode === 'exploratory' ? [
+        `探索性展示 ${projection.returnedFeatureCount || 0} 个，未按显著性筛选`,
+        `当前统计条件同时通过 ${payload.summary?.bothPassCount || 0} 个`,
+      ] : [
       `筛得 ${projection.eligibleFeatureCount || 0} 个满足 q < ${parameters.qValueMax} 且 |log2FC| > ${parameters.log2FcMinAbs} 的候选`,
       `展示排名前 ${projection.returnedFeatureCount || 0} 个`,
+      ]),
     ];
   }
   if (projection.kind === 'detection') {

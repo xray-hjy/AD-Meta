@@ -3,6 +3,7 @@ import EmptyState from '../ui/EmptyState';
 import ErrorState from '../ui/ErrorState';
 import LoadingState from '../ui/LoadingState';
 import ChartFrameActionGroup from './ChartFrameActionGroup';
+import SelectionWorkspace from '../analysisScope/SelectionWorkspace';
 import { ChartFrameActionsProvider } from './ChartFrameActionsContext';
 import '../data-display/result-section.css';
 
@@ -24,6 +25,7 @@ export default function ChartFrame({
   collapsible = false,
   sectioned = false,
   chartControls = null,
+  selectionPanel = null,
   children,
 }) {
   const contentId = useId();
@@ -68,11 +70,7 @@ export default function ChartFrame({
     </div> : null}
   </>;
 
-  if (sectioned) return <ChartFrameActionsProvider registerActions={registerActions}
-    toolbarTarget={toolbarTarget} supplementTarget={supplementTarget}>
-    {description}
-    {controls ? <section className="community-scope-card" aria-label="分析范围与筛选">{controls}</section> : null}
-    <section className={`chart-frame chart-frame--${layout} chart-frame--sectioned`} data-chart-layout={layout}>
+  const sectionedChart = sectioned ? <section className={`chart-frame chart-frame--${layout} chart-frame--sectioned`} data-chart-layout={layout}>
       <header className="chart-frame__header">
         <div><h2 className="chart-frame__title">{title}</h2>
           {subtitle ? <p className="chart-frame__subtitle">{subtitle}</p> : null}</div>
@@ -101,7 +99,17 @@ export default function ChartFrame({
         <div className="chart-frame__results" ref={setSupplementTarget} />
         {audit ? <div className="chart-frame__audit">{audit}</div> : null}
       </div>
-    </section>
+    </section> : null;
+
+  if (sectioned) return <ChartFrameActionsProvider registerActions={registerActions}
+    toolbarTarget={toolbarTarget} supplementTarget={supplementTarget}>
+    {description}
+    {selectionPanel && controls ? <SelectionWorkspace controls={controls} summary={selectionPanel.summary}>
+      {sectionedChart}
+    </SelectionWorkspace> : <>
+      {controls ? <section className="community-scope-card" aria-label="分析范围与筛选">{controls}</section> : null}
+      {sectionedChart}
+    </>}
   </ChartFrameActionsProvider>;
 
   return (

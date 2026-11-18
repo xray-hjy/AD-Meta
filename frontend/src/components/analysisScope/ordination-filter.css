@@ -1,0 +1,12 @@
+.ordination-filter { padding: 14px; border: 1px solid var(--border-color, #dce4ee); border-radius: 12px; background: var(--surface-color, #fff); min-width: 0; }
+.ordination-filter__fields { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
+.ordination-filter__fields label { display: grid; gap: 6px; font-size: 13px; }
+.ordination-filter select, .ordination-filter input, .ordination-filter button { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: white; color: #334155; min-height: 38px; max-width: 100%; }
+.ordination-filter input { width: 150px; }
+.ordination-filter button { background: #e8f0ff; cursor: pointer; }
+.ordination-filter button:disabled { opacity: .5; cursor: default; }
+.ordination-filter p, .ordination-filter small { font-size: 12px; line-height: 1.7; color: #475569; }
+.ordination-filter__table { overflow: auto; max-height: 320px; }
+.ordination-filter table { border-collapse: collapse; font-size: 12px; width: 100%; }
+.ordination-filter th, .ordination-filter td { padding: 7px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+@media(max-width: 600px) { .ordination-filter__fields label, .ordination-filter__fields button { width: 100%; } }

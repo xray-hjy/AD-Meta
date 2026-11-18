@@ -1,0 +1,10 @@
+.heatmap-analysis { margin-block: 10px 20px; padding: 16px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-bg-panel, white); color: var(--color-text-main); font-size: 12px; line-height: 1.8; overflow-wrap: anywhere; }
+.heatmap-analysis h3 { font-size: 15px; margin: 0 0 10px; }
+.heatmap-analysis__summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin: 10px 0; }
+.heatmap-analysis__summary div { border: 1px solid var(--color-border); padding: 9px; border-radius: 8px; }
+.heatmap-analysis dt { color: var(--color-text-muted); font-size: 11px; }
+.heatmap-analysis dd { margin: 0; font-size: 18px; font-weight: 650; }
+.heatmap-analysis__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-block: 12px; }
+.heatmap-analysis button { border: 1px solid var(--color-border); padding: 7px 12px; background: var(--color-bg-panel); color: var(--workspace-accent); border-radius: 7px; cursor: pointer; }
+.heatmap-analysis__caution { padding: 8px 12px; background: #fff7ed; color: #9a3412; border-radius: 6px; }
+.heatmap-single-feature { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--color-border); }

@@ -33,6 +33,8 @@
 
 ## 开发记录
 
+- [20261118 群落图表与研究工作区更新](development/updates.md#20261118-群落图表与研究工作区更新)，包含 [PCA / PCoA](development/2026-11-14-opt002-ordination.md)、[门级组成](development/2026-11-15-opt003-phylum.md)和 [分类层级图](development/2026-11-15-opt004-taxonomy.md)专题记录。
+
 - [20261103 本地项目发布整理](development/updates.md#20261103-本地项目发布整理)：MAG 可视化、群落与 GMrepo 恢复、部署工具、发布边界及验证记录。
 
 - [20261024 DRAM2 summary 本机接入](development/20261024-dram2-summary-ingest.md)：26 文件接收、基因 / 矩阵核对、后端发布与页面验证、旧数据库保留及 dRep 缺项。

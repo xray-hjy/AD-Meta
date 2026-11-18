@@ -14,7 +14,7 @@ function restoredResults(runKey, artifactKey) {
   try { return JSON.parse(sessionStorage.getItem(`admeta:evidence:results:${runKey}:${artifactKey}`) || 'null') || {}; } catch { return {}; }
 }
 
-export default function CompleteResultsPanel({ runKey, artifactKey }) {
+export default function CompleteResultsPanel({ runKey, artifactKey, contextNote = null }) {
   const [restored] = useState(() => restoredResults(runKey, artifactKey));
   const [open, setOpen] = useState(restored.open || false);
   const [page, setPage] = useState(restored.page || 1);
@@ -34,6 +34,7 @@ export default function CompleteResultsPanel({ runKey, artifactKey }) {
   const speciesResults = data && ['species', 'taxonomy'].includes(data.featureKind);
   return <ResultDisclosure title="完整结果查询与下载（独立于当前图表）" summary="完整记录查询与 CSV 导出" className="complete-results" open={open} onToggle={e => setOpen(e.currentTarget.open)}>
     {open ? <>
+      {contextNote ? <p>{contextNote}</p> : null}
       <p>查询当前分析产物的完整已存储丰度记录，不沿用图表的样本筛选、Top N、聚合或显著性阈值。稀疏存储未记录的样本×特征组合不会补零。</p>
       <div className="analysis-controls">
         <form className="analysis-filter-form" onSubmit={event => { event.preventDefault(); setQuery(draft.trim()); setPage(1); }}>

@@ -1,4 +1,6 @@
 import TaxonomyEChart from '../TaxonomyEChart';
+import FloatingTaxonomyLegend from './FloatingTaxonomyLegend';
+import { preciseTaxonomy } from '../taxonomyExploration';
 
 function flattenLegendItems(items) {
   return (items || []).flatMap(item => [
@@ -7,7 +9,7 @@ function flattenLegendItems(items) {
   ]);
 }
 
-function buildSunburstExportOption(option, legendItems, hasMergedPhyla) {
+function buildSunburstExportOption(option, legendItems, hasMergedPhyla, size = { width: 1400, height: 1000 }) {
   const rows = flattenLegendItems(legendItems);
   const rowHeight = 27;
   const children = [
@@ -21,7 +23,7 @@ function buildSunburstExportOption(option, legendItems, hasMergedPhyla) {
       type: 'text',
       right: 0,
       top: 0,
-      style: { text: '真实丰度比例', fill: '#64748b', font: '600 12px sans-serif', textAlign: 'right' },
+      style: { text: '占完整范围总和', fill: '#64748b', font: '600 12px sans-serif', textAlign: 'right' },
     },
     ...rows.flatMap((item, index) => {
       const y = 31 + index * rowHeight;
@@ -61,7 +63,7 @@ function buildSunburstExportOption(option, legendItems, hasMergedPhyla) {
           right: 0,
           top: y - 1,
           style: {
-            text: `${(ratio * 100).toFixed(ratio * 100 < 1 ? 2 : 1)}%`,
+            text: `${preciseTaxonomy(ratio * 100)}%`,
             fill: '#64748b',
             font: '11px sans-serif',
             textAlign: 'right',
@@ -86,7 +88,8 @@ function buildSunburstExportOption(option, legendItems, hasMergedPhyla) {
 
   const series = (Array.isArray(option.series) ? option.series : [option.series]).map(item => ({
     ...item,
-    center: ['38%', '50%'],
+    center: [(size.width - 360) / 2, size.height / 2],
+    radius: [30, Math.max(100, Math.min((size.width - 360) / 2 - 150, size.height / 2 - 150))],
   }));
   const existingGraphic = option.graphic == null
     ? []
@@ -109,6 +112,13 @@ function buildSunburstExportOption(option, legendItems, hasMergedPhyla) {
   };
 }
 
+function withExportNote(option, note) {
+  if (!note) return option;
+  const graphic = option.graphic == null ? [] : Array.isArray(option.graphic) ? option.graphic : [option.graphic];
+  return { ...option, graphic: [...graphic, { type: 'text', left: 18, bottom: 10,
+    style: { text: note, fill: '#475569', font: '11px sans-serif', width: 1100, overflow: 'break', lineHeight: 16 } }] };
+}
+
 export function SunburstRenderer({
   chartRef,
   option,
@@ -120,6 +130,9 @@ export function SunburstRenderer({
   legendContent,
   legendItems,
   hasMergedPhyla,
+  exportNote,
+  legendVisible,
+  onLegendVisibleChange,
 }) {
   return (
     <div className="taxonomy-sunburst-layout">
@@ -135,21 +148,23 @@ export function SunburstRenderer({
           exportConfig={{
             fileName: `taxonomy-sunburst-${view}`,
             format: 'svg',
-            minWidth: size + 360,
-            minHeight: size,
-            prepareOption: exportedOption => buildSunburstExportOption(
+            minWidth: Math.max(1200, size + 360),
+            minHeight: Math.max(size, flattenLegendItems(legendItems).length * 27 + 200),
+            prepareOption: (exportedOption, context) => withExportNote(buildSunburstExportOption(
               exportedOption,
               legendItems,
               hasMergedPhyla,
-            ),
+              context?.size,
+            ), exportNote),
           }}
           style={{ width: size, height: size }}
         />
       </div>
+      <FloatingTaxonomyLegend resetKey={view} visible={legendVisible} onVisibleChange={onLegendVisibleChange}>
       <div className="taxonomy-phylum-panel">
         <div className="taxonomy-phylum-panel__header">
           <span>门级占比</span>
-          <span>真实丰度比例</span>
+          <span>占完整范围总和</span>
         </div>
         <div className="taxonomy-phylum-list">{legendContent}</div>
         {hasMergedPhyla ? (
@@ -158,20 +173,23 @@ export function SunburstRenderer({
           </div>
         ) : null}
       </div>
+      </FloatingTaxonomyLegend>
     </div>
   );
 }
 
-export function RadialTreeRenderer({ option, size }) {
+export function RadialTreeRenderer({ option, size, onReady, onClick, exportNote }) {
   return (
     <TaxonomyEChart
       className="taxonomy-chart-surface"
       option={option}
       opts={{ renderer: 'svg' }}
+      onChartReady={onReady} onEvents={{ click: onClick }}
       frameActions
       exportConfig={{
         fileName: 'taxonomy-radial-tree',
-        format: 'svg',
+        format: 'svg', prepareOption: current => withExportNote({ ...current,
+          series: current.series.map(series => ({ ...series, zoom: 1, center: undefined })) }, exportNote),
         minWidth: size,
         minHeight: size,
       }}
@@ -180,7 +198,7 @@ export function RadialTreeRenderer({ option, size }) {
   );
 }
 
-export function SankeyRenderer({ option, opts, height, constraints, onReady }) {
+export function SankeyRenderer({ option, opts, height, constraints, onReady, onClick, exportNote }) {
   return (
     <div className="taxonomy-sankey-scroll">
       <TaxonomyEChart
@@ -189,17 +207,19 @@ export function SankeyRenderer({ option, opts, height, constraints, onReady }) {
         opts={opts}
         autoResize={false}
         onChartReady={onReady}
+        onEvents={{ click: onClick }}
         frameActions
         exportConfig={{
           fileName: 'taxonomy-sankey',
-          format: 'png',
+          title: '导出完整桑基图 PNG',
+          format: 'png', prepareOption: current => withExportNote(current, exportNote),
           pixelRatio: 2,
           minWidth: constraints.minWidth,
           minHeight: height,
           maxWidth: constraints.maxWidth,
         }}
         style={{
-          width: `clamp(${constraints.minWidth}px, 100%, ${constraints.maxWidth}px)`,
+          width: constraints.width,
           height,
         }}
       />
@@ -207,7 +227,7 @@ export function SankeyRenderer({ option, opts, height, constraints, onReady }) {
   );
 }
 
-export function TreemapRenderer({ option, size, onReady, onFinished }) {
+export function TreemapRenderer({ option, size, onReady, onFinished, onClick, exportNote }) {
   return (
     <div
       className="taxonomy-treemap-panel"
@@ -217,11 +237,11 @@ export function TreemapRenderer({ option, size, onReady, onFinished }) {
         className="taxonomy-chart-surface taxonomy-chart-surface--treemap"
         option={option}
         onChartReady={onReady}
-        onEvents={{ finished: onFinished }}
+        onEvents={{ finished: onFinished, click: onClick }}
         frameActions
         exportConfig={{
           fileName: 'taxonomy-treemap',
-          format: 'svg',
+          format: 'svg', prepareOption: current => withExportNote(current, exportNote),
           minWidth: 1200,
           minHeight: size.height,
         }}

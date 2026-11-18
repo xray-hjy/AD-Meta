@@ -47,6 +47,13 @@ function topNPresetControl(label, defaultValue, options, purpose = 'display') {
     min: purpose === 'feature_selection' ? 2 : 1, presets: options };
 }
 
+function ordinationControls(defaultPreset) {
+  return [topNPresetControl('高丰度子集物种数', 50, [50, 100, 200, 500], 'feature_selection'),
+    selectControl('filterPreset', '物种范围', defaultPreset, ['top_n', 'unfiltered', 'standard', 'inclusive', 'robust', 'custom'], 'ordination_filter'),
+    { key: 'minimumRelativeAbundance', input: 'number', defaultValue: 0.0001, min: 0, max: 1 },
+    { key: 'minimumPrevalence', input: 'number', defaultValue: 0.1, min: 0, max: 1 }];
+}
+
 function analysisPolicy({
   scopes,
   controls = [],
@@ -110,14 +117,19 @@ export const CHART_REGISTRY = {
     navLabel: '门级组成',
     navSubtitle: '各门相对丰度占比',
     title: '门级组成概览',
-    subtitle: '基于 AD/NC 平均丰度占比，按门水平汇总',
+    subtitle: '种级输入按门汇总 · 完整展示 · 组均值与逐样本组成',
     availableFor: ['taxonomy'],
     component: PhylumChart,
     layout: 'fit',
     projection: 'composition',
     analysisPolicy: analysisPolicy({
       scopes: ALL_SCOPES,
-      controls: [rangeControl('显示组成项', 8, 50)],
+      controls: [selectControl('mergeBelow', '合并低丰度项', 0, [
+        { value: 0, label: '不合并（显示全部门）' },
+        { value: 0.0001, label: '主动合并：样本平均相对丰度 <0.01%' },
+        { value: 0.001, label: '主动合并：样本平均相对丰度 <0.1%' },
+        { value: 0.01, label: '主动合并：样本平均相对丰度 <1%' },
+      ])],
     }),
   },
   koContribution: {
@@ -161,10 +173,11 @@ export const CHART_REGISTRY = {
   heatmap: {
     navLabel: '差异热图',
     navSubtitle: ({ featureLabel }) => `差异${featureLabel}聚类分析`,
-    title: '差异丰度热图',
+    title: context => selectedValue(context, 'viewMode', 'differential') === 'exploratory' ? '探索性丰度热图' : '差异丰度热图',
     subtitle: context => {
       const q = selectedValue(context, 'qValueMax', 0.05);
       const log2fc = selectedValue(context, 'log2FcMinAbs', 1);
+      if (selectedValue(context, 'viewMode', 'differential') === 'exploratory') return '探索性丰度查看：按明确排序规则选择物种，不代表通过显著性筛选；统计检验与显示变换分开记录';
       return `Mann-Whitney U、BH-FDR q<${q} 且 |log2FC|>${log2fc} 的差异${resolvedFeatureLabel(context)}；包含 AD、NC、合并聚类与差异视图`;
     },
     availableFor: ['taxonomy'],
@@ -176,22 +189,30 @@ export const CHART_REGISTRY = {
       minSamples: 6,
       minPerGroup: 3,
       controls: [
-        topNPresetControl(({ featureLabel }) => `差异${featureLabel}展示上限`, 50, [20, 50, 100, 200]),
+        topNPresetControl(({ featureLabel }) => `${featureLabel}展示上限`, 50, [20, 50, 100, 200]),
+        selectControl('viewMode', '查看方式', 'differential', [{ value: 'differential', label: '差异分析结果' }, { value: 'exploratory', label: '探索性丰度热图（非显著性筛选）' }], 'display'),
         selectControl('qValueMax', 'FDR q 值上限', 0.05, [0.01, 0.05, 0.1]),
-        selectControl('log2FcMinAbs', '|log2FC| 下限', 1, [0.5, 1, 1.5, 2]),
+        selectControl('log2FcMinAbs', '|log2FC| 下限', 1, [0, 0.5, 1, 1.5, 2]),
+        selectControl('prefilter', '检验前预筛', 'none', [{ value: 'none', label: '不预筛（保留当前默认）' }, { value: 'prevalence', label: '按合并样本中丰度 > 0 的比例' }, { value: 'abundance_prevalence', label: '按超过相对丰度阈值的样本比例' }]),
+        selectControl('minimumPrevalence', '预筛最低样本比例', 0.1, [{ value: 0.05, label: '5%' }, { value: 0.1, label: '10%' }, { value: 0.2, label: '20%' }]),
+        selectControl('detectionThreshold', '预筛相对丰度阈值', 0.0001, [{ value: 0, label: '严格 > 0' }, { value: 0.0001, label: '严格 > 0.01%' }, { value: 0.001, label: '严格 > 0.1%' }]),
+        selectControl('explorationRanking', '探索排序', 'abundance', [{ value: 'abundance', label: '合并样本平均丰度' }, { value: 'variance', label: '合并样本丰度方差' }, { value: 'q_value', label: 'q 值从小到大（使用疾病标签）' }], 'display'),
+        selectControl('visualTransform', '热图颜色值', 'log1p', [{ value: 'log1p', label: 'log10(存储丰度 + 1)（当前默认）' }, { value: 'relative', label: '原始丰度（相对丰度显示 %）' }, { value: 'log', label: 'log10(存储丰度 + 明确伪计数)' }, { value: 'zscore', label: '物种内对数 Z-score' }], 'display'),
+        selectControl('visualPseudocount', '显示对数伪计数（存储单位）', 0.00001, [1e-8, 1e-6, 1e-5], 'display'),
+        selectControl('clustering', '样本与物种排序', 'hierarchical', [{ value: 'hierarchical', label: '层次聚类（合并图可跨组混排）' }, { value: 'grouped', label: '按 AD / NC 分组，物种按选择排名' }], 'display'),
       ],
       requirement: '至少 3 个 AD 与 3 个 NC 样本',
       inference: { method: 'mann_whitney_bh_fdr', requiresComparison: true },
     }),
   },
   detection: {
-    navLabel: 'KO 检出率热图',
+    navLabel: 'KO 检出率探索',
     navSubtitle: 'AD/NC 检出率与检出样本数',
-    title: 'KO 检出率热图',
-    subtitle: '当前矩阵中丰度 > 0 视为检出；单元格数字为检出样本数，颜色表示检出率',
+    title: 'KO 检出率探索',
+    subtitle: '组内检出人数 / 参与样本数；固定检出率色阶，多视图与对象池用于描述性比较',
     availableFor: ['ko'],
     component: DetectionHeatmap,
-    layout: 'fit',
+    layout: 'document',
     projection: 'detection',
     analysisPolicy: analysisPolicy({
       scopes: COMPARISON_SCOPES,
@@ -286,7 +307,7 @@ export const CHART_REGISTRY = {
     title: '样本丰度结构 PCA',
     subtitle: context => {
       const featureLabel = resolvedFeatureLabel(context);
-      return `按样本闭合后的平均相对丰度选取 ${resolvedFeatureCount(context) || selectedValue(context, 'topN', 50)} 个${featureLabel}，CLR 变换后进行 PCA`;
+      return `当前筛选 ${resolvedFeatureCount(context)} 个${featureLabel}；子组成闭合、乘法零值替换与 CLR 转换后进行 PCA`;
     },
     availableFor: ['taxonomy'],
     component: PCAPlot,
@@ -296,7 +317,7 @@ export const CHART_REGISTRY = {
     analysisPolicy: analysisPolicy({
       scopes: DISTRIBUTION_SCOPES,
       minSamples: 3,
-      controls: [topNPresetControl(({ featureLabel }) => `参与计算的${featureLabel}数`, 50, [50, 100, 200, 500], 'feature_selection')],
+      controls: ordinationControls('top_n'),
       requirement: '至少 3 个样本；按样本闭合后的平均相对丰度选取物种，零值替换并 CLR 变换',
       inference: { method: 'exploratory_ordination', ellipse: 'group_data_distribution_95' },
     }),
@@ -320,12 +341,7 @@ export const CHART_REGISTRY = {
     analysisPolicy: analysisPolicy({
       scopes: DISTRIBUTION_SCOPES,
       minSamples: 3,
-      controls: [selectControl('filterPreset', '物种过滤策略', 'standard', [
-        { value: 'unfiltered', label: '不筛选（保留全部物种）' },
-        { value: 'inclusive', label: '宽松（相对丰度 ≥0.001%，检出率 ≥5%）' },
-        { value: 'standard', label: '标准（相对丰度 ≥0.01%，检出率 ≥10%）' },
-        { value: 'robust', label: '稳健（相对丰度 ≥0.05%，检出率 ≥20%）' },
-      ], 'ordination_filter')],
+      controls: ordinationControls('standard'),
       requirement: '至少 3 个样本；过滤不使用 AD/NC 标签；两组均不少于 3 个样本时进行探索性 PERMANOVA 与正/负轴校正的 PERMDISP',
       inference: {
         method: 'permanova_with_permdisp',
@@ -335,7 +351,7 @@ export const CHART_REGISTRY = {
     }),
   },
   ditingOverview: {
-    navLabel: '通路概览', navSubtitle: '覆盖率散点 · 哑铃 · 聚类热图',
+    navLabel: '通路概览', navSubtitle: '检出比例散点 · 哑铃 · 聚类热图',
     title: 'DiTing 通路概览', subtitle: 'AD / NC 功能指标概况 · 点击通路查看样本分布',
     availableFor: ['ko'], availability: 'analysis_projection', attachedSource: true,
     component: DitingPathwayChart, mode: 'overview', layout: 'special', prefetchPolicy: 'on_navigation',

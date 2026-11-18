@@ -329,7 +329,7 @@ class HeatmapPrecomputeTests(unittest.TestCase):
             "k__Bacteria|p__A|c__A|g__A|s__low_fc",
             "k__Bacteria|p__B|c__B|g__B|s__high_fc",
         ]
-        p_values = [SimpleNamespace(pvalue=0.001), SimpleNamespace(pvalue=0.02)]
+        p_values = [SimpleNamespace(pvalue=0.001, statistic=9), SimpleNamespace(pvalue=0.02, statistic=9)]
 
         with patch("app.compute.charts.heatmap.mannwhitneyu", side_effect=p_values):
             heatmap = compute_heatmap(df, species_cols)
@@ -479,6 +479,9 @@ class DetectionHeatmapPrecomputeTests(unittest.TestCase):
             {
                 "koId": "K00001",
                 "koName": "K00001",
+                "adSampleCount": 2,
+                "ncSampleCount": 2,
+                "rateGapPercentagePoints": 0.0,
                 "adDetectedSamples": 1,
                 "adDetectionRate": 0.5,
                 "ncDetectedSamples": 1,

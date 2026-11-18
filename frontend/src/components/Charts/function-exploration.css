@@ -1,0 +1,6 @@
+.function-exploration { margin: 12px 0; padding: 16px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-bg-panel); font-size: 12px; line-height: 1.8; overflow-wrap: anywhere; min-width: 0; }
+.function-exploration h3 { font-size: 16px; }
+.function-exploration__controls { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; margin-block: 12px; }
+.function-exploration button, .function-exploration input, .function-exploration select { padding: 6px 10px; border: 1px solid var(--color-border); border-radius: 5px; background: var(--color-bg-panel); color: var(--color-text-main); max-width: 100%; }
+.function-exploration table { font-size: 12px; }
+.function-exploration label { display: inline-flex; gap: 5px; align-items: center; flex-wrap: wrap; }

@@ -1,7 +1,7 @@
 import OrdinationChart from './OrdinationChart';
 
-function PCAPlot({ data }) {
-  return <OrdinationChart data={data} />;
+function PCAPlot({ data, projection }) {
+  return <OrdinationChart data={data} projection={projection} />;
 }
 
 export default PCAPlot;

@@ -97,6 +97,7 @@ const EChartBase = forwardRef(function EChartBase(
   const { colorBlindFriendly } = useColorVision();
   const [tableOpen, setTableOpen] = useState(false);
   const [seriesMode, setSeriesMode] = useState(null);
+  const [exportStatus, setExportStatus] = useState(null);
   const styleConfig = barStyleConfig || boxStyleConfig;
   const preferences = useChartStylePreferences(styleConfig?.key);
   const toolbarTarget = useChartFrameToolbarTarget();
@@ -131,14 +132,29 @@ const EChartBase = forwardRef(function EChartBase(
       ...(styledOption?.aria || {}),
     },
   }), [colorBlindFriendly, styledOption]);
+  const resolvedExportConfig = useMemo(() => {
+    if (!exportConfig) return null;
+    const prepare = config => config.buildOption ? { ...config, prepareOption: (_option, context) => {
+      const next = config.buildOption(context);
+      const styled = boxStyleConfig ? applyBoxStyle(next, preferences.values, boxStyleConfig)
+        : barStyleConfig ? applyBarStyle(next, preferences.values, barStyleConfig) : next;
+      const sourceLegends = Array.isArray(_option.legend) ? _option.legend : [_option.legend];
+      const legends = Array.isArray(styled.legend) ? styled.legend : [styled.legend];
+      const legend = legends.filter(Boolean).map((entry, index) => ({ ...entry,
+        ...(sourceLegends[index]?.selected ? { selected: sourceLegends[index].selected } : {}),
+      }));
+      return { ...styled, ...(styled.legend ? { legend } : {}), aria: accessibleOption.aria };
+    } } : config;
+    return { ...prepare(exportConfig), ...(exportConfig.pages ? { pages: exportConfig.pages.map(prepare) } : {}) };
+  }, [exportConfig, boxStyleConfig, barStyleConfig, preferences.values, accessibleOption.aria]);
   const renderedOption = useMemo(() => {
-    if (!frameActions) return withChartExport(accessibleOption, chartRef, exportConfig);
+    if (!frameActions) return withChartExport(accessibleOption, chartRef, resolvedExportConfig);
     if (!accessibleOption?.toolbox) return accessibleOption;
     const toolbox = Array.isArray(accessibleOption.toolbox)
       ? accessibleOption.toolbox.map(item => ({ ...item, show: false }))
       : { ...accessibleOption.toolbox, show: false };
     return { ...accessibleOption, toolbox };
-  }, [accessibleOption, exportConfig, frameActions]);
+  }, [accessibleOption, resolvedExportConfig, frameActions]);
   const assignChartRef = useCallback(node => {
     chartRef.current = node;
     if (typeof ref === 'function') ref(node);
@@ -212,17 +228,28 @@ const EChartBase = forwardRef(function EChartBase(
     if (supportsRestore) {
       actions.push({ id: 'restore', icon: 'restore', label: '重置图表', onClick: restoreChart });
     }
-    if (exportConfig) {
+    if (resolvedExportConfig) {
       actions.push({
         id: 'export',
         icon: 'export',
-        label: exportConfig.title || '导出图形',
-        onClick: () => { void exportEChart(chartRef, exportConfig); },
+        label: exportStatus?.busy ? '正在导出图形' : resolvedExportConfig.title || '导出图形',
+        disabled: exportStatus?.busy,
+        onClick: async () => {
+          setExportStatus({ busy: true, message: '正在准备导出…' });
+          try {
+            const success = await exportEChart(chartRef, { ...resolvedExportConfig,
+              onProgress: (page, count) => setExportStatus({ busy: true, message: `正在导出第 ${page} / ${count} 页…` }) });
+            setExportStatus({ busy: false, message: success ? '图形已导出' : '导出失败，请重试' });
+          } catch (error) {
+            setExportStatus({ busy: false, message: error?.message || '导出失败，请重试' });
+          }
+        },
       });
     }
     return actions;
   }, [
-    exportConfig,
+    resolvedExportConfig,
+    exportStatus?.busy,
     frameActions,
     hasDataTable,
     restoreChart,
@@ -279,6 +306,7 @@ const EChartBase = forwardRef(function EChartBase(
     <div className="styled-chart">
       {frameActions && toolbarTarget ? createPortal(styleToolbar, toolbarTarget) : styleToolbar}
       {content}
+      {exportStatus ? <p role="status" className="boxplot-export-status">{exportStatus.message}</p> : null}
     </div>
   ) : content;
 

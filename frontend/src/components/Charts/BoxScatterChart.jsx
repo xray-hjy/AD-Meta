@@ -39,7 +39,7 @@ export function buildBoxScatterOption({ available, series, activeTransform, visi
     series.forEach((seriesItem, seriesIndex) => {
       const color = seriesItem.color || FALLBACK_SERIES[seriesIndex % FALLBACK_SERIES.length].color;
       const boxes = available.map(item => (
-        item.values?.[seriesItem.key]?.[activeTransform.key]?.box || [0, 0, 0, 0, 0]
+        item.values?.[seriesItem.key]?.[activeTransform.key]?.box || ['-', '-', '-', '-', '-']
       ));
       const outliers = [];
       available.forEach(item => {
@@ -97,8 +97,11 @@ export function buildBoxScatterOption({ available, series, activeTransform, visi
           const box = Array.isArray(params.data) ? params.data : params.data.value;
           const item = grouped ? available[0] : available[params.dataIndex];
           const group = grouped ? series[params.dataIndex]?.label : params.seriesName;
+          const groupKey = grouped ? series[params.dataIndex]?.key : series.find(entry => entry.label === params.seriesName)?.key;
+          const stats = item?.groupStats?.[groupKey];
+          const counts = stats ? `<br/>有效 / 组内样本: ${escapeTooltipText(`${stats.validCount} / ${stats.sampleCount}`)}<br/>缺失: ${escapeTooltipText(stats.missingCount)}<br/>检出: ${escapeTooltipText(stats.detectionRate == null ? '—' : `${stats.detectedCount}/${stats.validCount} (${(stats.detectionRate * 100).toFixed(1)}%)`)}<br/>零值: ${escapeTooltipText(stats.zeroCount)}` : '';
           const detectionNote = item?.detectedInScope === false ? '<br/><b>当前范围未检出</b>' : '';
-          return `<b>${escapeTooltipText(group)} - ${escapeTooltipText(item?.shortName || params.name)}</b><br/>上须: ${format(box[4])}<br/>Q3: ${format(box[3])}<br/><b>中位数: ${format(box[2])}</b><br/>Q1: ${format(box[1])}<br/>下须: ${format(box[0])}${detectionNote}`;
+          return `<b>${escapeTooltipText(group)} - ${escapeTooltipText(item?.shortName || params.name)}</b><br/>尺度: ${escapeTooltipText(activeTransform.label)}<br/>上须: ${format(box[4])}<br/>Q3: ${format(box[3])}<br/><b>中位数: ${format(box[2])}</b><br/>Q1: ${format(box[1])}<br/>IQR: ${format(box[3] - box[1])}<br/>下须: ${format(box[0])}${counts}${detectionNote}`;
         },
       },
       legend: {
@@ -120,7 +123,10 @@ export function buildBoxScatterOption({ available, series, activeTransform, visi
           },
           interval: 0,
           formatter(value) {
-            if (grouped) return `${series.find(group => group.key === value)?.label || value} (n=${groupCounts[value] || 0})`;
+            if (grouped) {
+              const label = series.find(group => group.key === value)?.label || value;
+              return groupCounts[value] == null ? label : `${label} (n=${groupCounts[value]})`;
+            }
             const item = itemByFeatureId.get(String(value));
             if (!item) return value;
             return item.detectedInScope === false ? `${item.shortName}（未检出）` : item.shortName;

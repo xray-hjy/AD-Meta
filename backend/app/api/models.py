@@ -244,6 +244,25 @@ class ChartProjectionResponse(BaseModel):
     scope: dict[str, Any]
     payload: Any
     projection: dict[str, Any]
+    projectionRequest: dict[str, Any] | None = None
+
+
+class BoxplotReviewSampleResponse(BaseModel):
+    sampleCode: str
+    group: str
+
+
+class BoxplotReviewItemResponse(BaseModel):
+    featureId: str
+    storedValues: list[float | None]
+    displayValues: dict[str, list[float | None]]
+
+
+class BoxplotReviewDataResponse(BaseModel):
+    projectionKey: str
+    samples: list[BoxplotReviewSampleResponse]
+    items: list[BoxplotReviewItemResponse]
+    displayMultiplier: float
 
 
 class ProjectionAuditResponse(BaseModel):

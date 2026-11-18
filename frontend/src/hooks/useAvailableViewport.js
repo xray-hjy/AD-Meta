@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-const DEFAULT_SIZE = { width: 0, height: 0 };
+const DEFAULT_SIZE = { width: 0, height: 0, devicePixelRatio: 1 };
 
 export default function useAvailableViewport(ref, {
   minHeight = 620,
@@ -22,9 +22,11 @@ export default function useAvailableViewport(ref, {
         const nextSize = {
           width: Math.max(0, Math.floor(rect.width)),
           height: Math.max(minHeight, Math.min(maxHeight, Math.floor(availableHeight))),
+          devicePixelRatio: window.devicePixelRatio || 1,
         };
         setSize(current => (
           current.width === nextSize.width && current.height === nextSize.height
+            && current.devicePixelRatio === nextSize.devicePixelRatio
             ? current
             : nextSize
         ));

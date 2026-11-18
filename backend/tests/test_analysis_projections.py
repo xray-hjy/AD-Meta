@@ -15,7 +15,9 @@ from app.core.migrations import upgrade_database
 from app.domain.analysis_scope import (
     AbundanceProjectionRequest,
     AnalysisScope,
+    BoxplotReviewRequest,
     ChartProjectionRequest,
+    FeatureSelection,
     ProjectionAuditRequest,
 )
 from app.services.analysis_projection_service import (
@@ -26,6 +28,7 @@ from app.services.analysis_projection_service import (
     project_abundance,
 )
 from app.services.analysis_run_service import sync_analysis_runs_from_manifest
+from app.services.boxplot_review_service import BoxplotReviewMismatch, get_boxplot_review_data
 from app.services.chart_projection_service import (
     RevisionMatrixSnapshot,
     _compute_chart_projection,
@@ -181,9 +184,7 @@ def test_abundance_projection_preserves_scope_and_sparse_zero_semantics() -> Non
                     topN=2,
                 ),
             )
-            sample_page = list_analysis_samples(
-                "run-projection", artifact_key="species", phenotype="AD"
-            )
+            sample_page = list_analysis_samples("run-projection", artifact_key="species", phenotype="AD")
             database.dispose_engine()
             _compute_abundance_projection.cache_clear()
 
@@ -231,9 +232,7 @@ def test_projection_rejects_samples_not_covered_by_artifact() -> None:
                 project_abundance(
                     "run-projection",
                     "species",
-                    AbundanceProjectionRequest(
-                        scope=AnalysisScope(mode="sample", sampleCodes=["S999"])
-                    ),
+                    AbundanceProjectionRequest(scope=AnalysisScope(mode="sample", sampleCodes=["S999"])),
                 )
             database.dispose_engine()
             _compute_abundance_projection.cache_clear()
@@ -319,12 +318,10 @@ def test_projection_audit_is_bound_to_the_visible_projection_and_paginates() -> 
                     ),
                 )
             with database.connect() as conn:
-                artifact_count = conn.execute(
-                    "SELECT COUNT(*) AS value FROM projection_audit_artifacts"
-                ).fetchone()["value"]
-                row_count = conn.execute(
-                    "SELECT COUNT(*) AS value FROM projection_audit_rows"
-                ).fetchone()["value"]
+                artifact_count = conn.execute("SELECT COUNT(*) AS value FROM projection_audit_artifacts").fetchone()[
+                    "value"
+                ]
+                row_count = conn.execute("SELECT COUNT(*) AS value FROM projection_audit_rows").fetchone()["value"]
             database.dispose_engine()
             _compute_abundance_projection.cache_clear()
 
@@ -361,9 +358,10 @@ def test_projection_audit_is_bound_to_the_visible_projection_and_paginates() -> 
     assert feature_options["mode"] == "recommended"
     assert feature_options["initialOrder"] == "displayed_then_rank"
     assert feature_options["sourceFeatureCount"] == 2
-    assert ProjectionAuditOptionsResponse.model_validate(feature_options).model_dump()[
-        "initialOrder"
-    ] == "displayed_then_rank"
+    assert (
+        ProjectionAuditOptionsResponse.model_validate(feature_options).model_dump()["initialOrder"]
+        == "displayed_then_rank"
+    )
     assert artifact_count == 1
     assert row_count == 2
     assert audit["sections"] == [
@@ -385,10 +383,13 @@ def test_audit_metadata_uses_the_artifact_feature_label_for_generic_feature_colu
     assert _section_title("ordination_filter", species_projection) == "PCoA 物种过滤"
     assert _section_title("contribution_selection", ko_projection) == "展示与未展示 KO"
     assert _columns_for_section("feature_selection", species_projection)[1]["label"] == "物种"
-    assert [
-        column["key"]
-        for column in _columns_for_section("feature_selection", pca_projection)
-    ] == ["rank", "feature", "meanRelativeAbundance", "status", "reason"]
+    assert [column["key"] for column in _columns_for_section("feature_selection", pca_projection)] == [
+        "rank",
+        "feature",
+        "meanRelativeAbundance",
+        "status",
+        "reason",
+    ]
     assert _columns_for_section("statistical_filter", ko_projection)[0]["label"] == "KO"
     assert _columns_for_section("aggregation", species_projection)[1]["label"] == "类别"
     assert _columns_for_section("hierarchy_aggregation", species_projection)[0]["label"] == "原始物种"
@@ -460,7 +461,8 @@ def test_composition_audit_uses_the_visible_series_as_value_columns() -> None:
         "处理结果",
         "合并至",
     ]
-    assert audit["items"][0]["series_0"] == pytest.approx(1.0)
+    assert audit["items"][0]["series_0"] == pytest.approx(8.0)
+    assert audit["columns"][2]["format"] == "number"
 
 
 def test_chart_projection_uses_selected_sample_and_reports_scope() -> None:
@@ -494,13 +496,13 @@ def test_chart_projection_uses_selected_sample_and_reports_scope() -> None:
     assert result["projection"]["sampleCount"] == 1
     assert result["projection"]["groupCounts"] == {"AD": 1}
     assert result["projection"]["analysisFamily"] == "descriptive_composition"
-    assert result["projection"]["topNRole"] == "aggregation_limit"
+    assert result["projection"]["topNRole"] == "not_applicable"
     assert result["dataSemantics"] == {
         "abundanceScale": "unknown",
         "normalization": "unknown",
     }
     assert result["payload"]["series"][0]["key"] == "S2"
-    assert sum(item["values"]["S2"] for item in result["payload"]["items"]) == pytest.approx(1.0)
+    assert sum(item["values"]["S2"] for item in result["payload"]["items"]) == pytest.approx(8.0)
 
 
 def test_taxonomy_projection_preserves_tree_array_payload() -> None:
@@ -564,10 +566,12 @@ def test_chart_projection_rejects_scientifically_invalid_scope() -> None:
 
 def test_composition_honors_requested_top_n_before_explicit_other_bucket() -> None:
     features = [f"K{index:05d}" for index in range(15)]
-    frame = pd.DataFrame([
-        {"Sample": "S1", "Group": "AD", **{feature: 20 - index for index, feature in enumerate(features)}},
-        {"Sample": "S2", "Group": "NC", **{feature: 19 - index for index, feature in enumerate(features)}},
-    ])
+    frame = pd.DataFrame(
+        [
+            {"Sample": "S1", "Group": "AD", **{feature: 20 - index for index, feature in enumerate(features)}},
+            {"Sample": "S2", "Group": "NC", **{feature: 19 - index for index, feature in enumerate(features)}},
+        ]
+    )
     frame.attrs["feature_kind"] = "ko"
     payload = _compute_composition(
         frame,
@@ -583,11 +587,13 @@ def test_composition_honors_requested_top_n_before_explicit_other_bucket() -> No
 
 
 def test_detection_threshold_is_part_of_the_scientific_filter() -> None:
-    frame = pd.DataFrame({
-        "Sample": ["A1", "A2", "N1", "N2"],
-        "Group": ["AD", "AD", "NC", "NC"],
-        "K00001": [0.2, 0.8, 0.4, 1.2],
-    })
+    frame = pd.DataFrame(
+        {
+            "Sample": ["A1", "A2", "N1", "N2"],
+            "Group": ["AD", "AD", "NC", "NC"],
+            "K00001": [0.2, 0.8, 0.4, 1.2],
+        }
+    )
     frame.attrs["feature_label"] = "KO"
 
     payload = compute_detection_heatmap(
@@ -746,15 +752,13 @@ def test_cleanup_deletes_only_expired_temporary_projection_read_models() -> None
                     sha256="a" * 64,
                 )
 
-            deleted = cleanup_expired_audit_artifacts(
-                now="2026-08-20T00:00:00+00:00"
-            )
+            deleted = cleanup_expired_audit_artifacts(now="2026-08-20T00:00:00+00:00")
             expired_result = find_audit_artifact(expired)
             retained_result = find_audit_artifact(retained)
             with database.connect() as conn:
-                remaining_child_rows = conn.execute(
-                    "SELECT COUNT(*) AS value FROM projection_audit_rows"
-                ).fetchone()["value"]
+                remaining_child_rows = conn.execute("SELECT COUNT(*) AS value FROM projection_audit_rows").fetchone()[
+                    "value"
+                ]
             database.dispose_engine()
 
     assert deleted == 1
@@ -762,3 +766,101 @@ def test_cleanup_deletes_only_expired_temporary_projection_read_models() -> None
     assert retained_result is not None
     assert retained_result["retention_class"] == "default"
     assert remaining_child_rows == 1
+
+
+def test_boxplot_review_matches_scoped_immutable_samples_and_retains_sparse_zeros(tmp_path):
+    manifest = _manifest(tmp_path / "manifest.json")
+    with patch.object(database, "DB_PATH", tmp_path / "review.sqlite3"), patch.object(database, "DB_ENGINE", "sqlite"):
+        database.dispose_engine()
+        upgrade_database()
+        with database.connect() as conn:
+            _seed_taxonomy_dataset(conn)
+        sync_analysis_runs_from_manifest(manifest)
+        try:
+            request = ChartProjectionRequest(scope=AnalysisScope(mode="group", groups=["AD"]), topN=2)
+            projection = project_chart("run-projection", "species", "boxplot", request)
+            species_a = next(item for item in projection["payload"]["items"] if item["shortName"] == "Species_A")
+            assert species_a["groupStats"]["AD"]["detectionRate"] == 0.5
+            assert species_a["values"]["AD"]["raw"]["box"][2] == 5
+            assert projection["projectionRequest"]["scope"]["groups"] == ["AD"]
+            review_request = BoxplotReviewRequest(
+                **projection["projectionRequest"], projectionKey=projection["projectionKey"]
+            )
+            review = get_boxplot_review_data("run-projection", "species", review_request)
+            assert {sample["group"] for sample in review["samples"]} == {"AD"}
+            item = next(item for item in review["items"] if item["featureId"] == species_a["featureId"])
+            values = dict(
+                zip([sample["sampleCode"] for sample in review["samples"]], item["storedValues"], strict=True)
+            )
+            assert values == {"S1": 10, "S2": 0}
+            assert review["displayMultiplier"] == 1  # unknown units remain input units
+            with pytest.raises(BoxplotReviewMismatch):
+                get_boxplot_review_data(
+                    "run-projection", "species", review_request.model_copy(update={"projectionKey": "0" * 64})
+                )
+            # Explicit selection and a subset must export only their displayed feature and exact samples.
+            subset = project_chart(
+                "run-projection",
+                "species",
+                "boxplot",
+                ChartProjectionRequest(
+                    scope=AnalysisScope(mode="subset", sampleCodes=["S2", "S3"]),
+                    selection=FeatureSelection(mode="explicit", featureIds=[species_a["featureId"]]),
+                ),
+            )
+            exported = get_boxplot_review_data(
+                "run-projection",
+                "species",
+                BoxplotReviewRequest(
+                    **subset["projectionRequest"],
+                    projectionKey=subset["projectionKey"],
+                ),
+            )
+            assert {sample["sampleCode"] for sample in exported["samples"]} == {"S2", "S3"}
+            assert [item["featureId"] for item in exported["items"]] == [species_a["featureId"]]
+        finally:
+            database.dispose_engine()
+            _compute_chart_projection.cache_clear()
+
+
+def test_heatmap_analysis_rows_are_persisted_and_reused_across_display_requests(tmp_path):
+    from app.services.heatmap_analysis_record_service import get_heatmap_analysis
+
+    db_path = tmp_path / "heatmap-record.sqlite3"
+    with patch.object(database, "DB_PATH", db_path), patch.object(database, "DB_ENGINE", "sqlite"):
+        database.dispose_engine()
+        upgrade_database()
+        with database.connect() as conn:
+            _seed_taxonomy_dataset(conn)
+        sync_analysis_runs_from_manifest(_manifest(tmp_path / "manifest.json"))
+        with database.connect() as conn:
+            run_id = int(conn.execute("SELECT id FROM analysis_runs").fetchone()["id"])
+            artifact_id = int(conn.execute("SELECT id FROM analysis_artifacts").fetchone()["id"])
+        frame = pd.DataFrame(
+            {
+                "Sample": ["S1", "S2", "S3"],
+                "Group": ["AD", "AD", "NC"],
+                "Species A": [0.0, 1.0, 3.0],
+                "Species B": [0.0, 0.0, 0.0],
+            }
+        )
+        parameters = {"prefilter": "none", "minimumPrevalence": 0.1, "detectionThreshold": 0.0001}
+        first, rows = get_heatmap_analysis(
+            run_id, artifact_id, "species-r1", frame, ["Species A", "Species B"], parameters
+        )
+        with patch(
+            "app.services.heatmap_analysis_record_service.analyze_heatmap",
+            side_effect=AssertionError("Must reuse saved statistics"),
+        ):
+            second, restored = get_heatmap_analysis(
+                run_id, artifact_id, "species-r1", frame, ["Species A", "Species B"], parameters
+            )
+        assert first == second and rows == restored
+        with database.connect() as conn:
+            artifact = conn.execute(
+                "SELECT * FROM projection_audit_artifacts WHERE id = ?", (first["storageId"],)
+            ).fetchone()
+            assert artifact["row_count"] == 2 and artifact["retention_class"] == "analysis_record"
+            assert artifact["expires_at"] is None
+        assert first["statisticsSha256"]
+        database.dispose_engine()

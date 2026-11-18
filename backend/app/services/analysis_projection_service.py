@@ -195,6 +195,7 @@ def list_scoped_analysis_samples(
     scope: AnalysisScope,
     *,
     query: str | None = None,
+    phenotype: str | None = None,
     limit: int = 100,
     offset: int = 0,
 ) -> dict[str, Any]:
@@ -208,6 +209,8 @@ def list_scoped_analysis_samples(
         available = _artifact_samples(conn, int(run["id"]), int(artifact["id"]))
         selected = _select_scope_samples(available, scope)
 
+    if phenotype:
+        selected = [sample for sample in selected if sample.get("phenotype") == phenotype]
     needle = (query or "").strip().casefold()
     if needle:
         selected = [

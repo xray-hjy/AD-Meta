@@ -9,15 +9,25 @@ const PROJECTION_STATE_STORAGE_VERSION = 'v1';
 const VALID_MODES = new Set(['cohort', 'group', 'subset', 'sample']);
 
 const PARAMETER_FIELDS = Object.freeze({
+  mergeBelow: { queryKey: 'phylumMerge', type: 'number', min: 0, max: 1 },
   qValueMax: { queryKey: 'q', type: 'number', min: 0.0001, max: 1 },
   log2FcMinAbs: { queryKey: 'log2fc', type: 'number', min: 0, max: 20 },
   prevalenceMin: { queryKey: 'prevalence', type: 'number', min: 0, max: 1 },
   abundanceThreshold: { queryKey: 'detection', type: 'number', min: 0, max: 1_000_000_000 },
+  minimumRelativeAbundance: { queryKey: 'ordAbundance', type: 'number', min: 0, max: 1 },
+  minimumPrevalence: { queryKey: 'ordPrevalence', type: 'number', min: 0, max: 1 },
   filterPreset: {
     queryKey: 'pcoaFilter',
     type: 'choice',
-    choices: ['unfiltered', 'inclusive', 'standard', 'robust'],
+    choices: ['unfiltered', 'inclusive', 'standard', 'robust', 'top_n', 'custom'],
   },
+  prefilter: { queryKey: 'heatmapPrefilter', type: 'choice', choices: ['none', 'prevalence', 'abundance_prevalence'] },
+  detectionThreshold: { queryKey: 'heatmapDetection', type: 'number', min: 0, max: 1 },
+  viewMode: { queryKey: 'heatmapView', type: 'choice', choices: ['differential', 'exploratory'] },
+  explorationRanking: { queryKey: 'heatmapRank', type: 'choice', choices: ['abundance', 'variance', 'q_value'] },
+  visualTransform: { queryKey: 'heatmapColor', type: 'choice', choices: ['log1p', 'relative', 'log', 'zscore'] },
+  visualPseudocount: { queryKey: 'heatmapPc', type: 'number', min: 1e-12, max: 1 },
+  clustering: { queryKey: 'heatmapOrder', type: 'choice', choices: ['hierarchical', 'grouped'] },
 });
 
 function controlDefaultValue(control) {

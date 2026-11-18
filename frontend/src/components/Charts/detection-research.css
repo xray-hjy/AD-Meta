@@ -1,0 +1,9 @@
+.detection-research { min-width: 0; padding: 12px; font-size: 12px; line-height: 1.8; }
+.detection-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-block: 12px; }
+.detection-research input,.detection-research select,.detection-research textarea,.detection-research button { border: 1px solid var(--color-border); border-radius: 6px; padding: 6px 10px; background: var(--color-bg-panel); color: var(--color-text-main); max-width: 100%; }
+.detection-research input[type=number] { width: 75px; }
+.detection-research label { display: inline-flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+.detection-research button[aria-pressed=true] { background: #e0f2fe; color: #075985; }
+.detection-research button:disabled { opacity: .5; }
+.detection-pool { max-height: 180px; overflow: auto; display: flex; gap: 5px; flex-wrap: wrap; }
+.detection-research details { margin-block: 12px; padding: 8px; border: 1px solid var(--color-border); border-radius: 6px; }

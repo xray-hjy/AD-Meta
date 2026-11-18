@@ -74,17 +74,19 @@ describe('chart analysis-scope capabilities', () => {
     expect(pcaTopN).toMatchObject({ min: 2, max: 500 });
 
     const pcoaControls = getChartDefinition('pcoa').analysisPolicy.controls;
-    expect(pcoaControls.find(control => control.key === 'topN')).toBeUndefined();
+    expect(pcoaControls.find(control => control.key === 'topN')).toMatchObject({ purpose: 'feature_selection' });
     expect(pcoaControls.find(control => control.key === 'filterPreset')).toMatchObject({
       input: 'select',
       defaultValue: 'standard',
       purpose: 'ordination_filter',
     });
-    expect(pcoaControls[0].options.map(option => option.value)).toEqual([
+    expect(pcoaControls.find(control => control.key === 'filterPreset').options.map(option => option.value)).toEqual([
+      'top_n',
       'unfiltered',
-      'inclusive',
       'standard',
+      'inclusive',
       'robust',
+      'custom',
     ]);
 
     const heatmapTopN = heatmap.controls.find(control => control.key === 'topN');

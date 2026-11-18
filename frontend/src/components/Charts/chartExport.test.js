@@ -1,7 +1,13 @@
 import { describe, expect, test } from 'vitest';
-import { withChartExport, withExportGrid, withoutTransientInteraction, exportSize } from './chartExport';
+import { withChartExport, withExportGrid, withoutTransientInteraction, exportSize, exportPixelRatio } from './chartExport';
 
 describe('chart export option contract', () => {
+  test('PNG pixel budgets bound large overview canvases while retaining requested resolution for facets', () => {
+    expect(exportPixelRatio({ width: 1100, height: 1176 }, 3)).toBe(3);
+    const ratio = exportPixelRatio({ width: 14000, height: 550 }, 3);
+    expect(14000 * ratio).toBeLessThanOrEqual(16384);
+    expect(14000 * 550 * ratio * ratio).toBeLessThanOrEqual(32000000);
+  });
   test('explicit export bounds keep responsive screen dimensions out of the downloaded figure', () => {
     const chart = { getWidth: () => 9844, getHeight: () => 3015 };
     expect(exportSize(chart, {}, { minWidth: 4020, maxWidth: 4020, minHeight: 1284, maxHeight: 1284 }))

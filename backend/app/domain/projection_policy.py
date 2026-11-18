@@ -95,6 +95,14 @@ MULTI_SAMPLE_SCOPES = frozenset({"cohort", "group", "subset"})
 COMPARISON_SCOPES = frozenset({"cohort", "subset"})
 
 
+def ordination_parameters(default: str) -> dict[str, NumericParameterPolicy | ChoiceParameterPolicy]:
+    return {
+        "filterPreset": ChoiceParameterPolicy(default=default, choices=("top_n", "unfiltered", "inclusive", "standard", "robust", "custom"), role="ordination_filter"),
+        "minimumRelativeAbundance": NumericParameterPolicy(default=0.0001, minimum=0, maximum=1),
+        "minimumPrevalence": NumericParameterPolicy(default=0.1, minimum=0, maximum=1),
+    }
+
+
 PROJECTION_POLICIES: dict[str, ProjectionPolicy] = {
     "composition": ProjectionPolicy(
         scopes=ALL_SCOPES,
@@ -103,7 +111,8 @@ PROJECTION_POLICIES: dict[str, ProjectionPolicy] = {
         top_n_default=8,
         top_n_maximum=50,
         top_n_recommended=(5, 8, 10, 20, 50),
-        top_n_role="aggregation_limit",
+        top_n_role="not_applicable",
+        parameters={"mergeBelow": NumericParameterPolicy(default=0, minimum=0, maximum=1)},
     ),
     # A true KEGG category composition needs a versioned KO annotation mapping;
     # see docs/development/ko-functional-category-composition-follow-up.md.
@@ -148,20 +157,17 @@ PROJECTION_POLICIES: dict[str, ProjectionPolicy] = {
         top_n_minimum=2,
         top_n_recommended=(50, 100, 200, 500),
         top_n_role="feature_selection",
+        parameters=ordination_parameters("top_n"),
     ),
     "pcoa": ProjectionPolicy(
         scopes=MULTI_SAMPLE_SCOPES,
         analysis_family="ordination_with_optional_inference",
         min_samples=3,
         feature_kind="taxonomy",
-        top_n_role="not_applicable",
-        parameters={
-            "filterPreset": ChoiceParameterPolicy(
-                default="standard",
-                choices=("unfiltered", "inclusive", "standard", "robust"),
-                role="ordination_filter",
-            ),
-        },
+        top_n_default=50,
+        top_n_minimum=2,
+        top_n_role="feature_selection",
+        parameters=ordination_parameters("standard"),
         inference_min_per_group=3,
     ),
     "heatmap": ProjectionPolicy(
@@ -174,6 +180,14 @@ PROJECTION_POLICIES: dict[str, ProjectionPolicy] = {
         top_n_recommended=(20, 50, 100, 200),
         top_n_role="display_cap",
         parameters={
+            "prefilter": ChoiceParameterPolicy(default="none", choices=("none", "prevalence", "abundance_prevalence")),
+            "minimumPrevalence": NumericParameterPolicy(default=0.1, minimum=0, maximum=1),
+            "detectionThreshold": NumericParameterPolicy(default=0.0001, minimum=0, maximum=1),
+            "viewMode": ChoiceParameterPolicy(default="differential", choices=("differential", "exploratory"), role="display"),
+            "explorationRanking": ChoiceParameterPolicy(default="abundance", choices=("abundance", "variance", "q_value"), role="display"),
+            "visualTransform": ChoiceParameterPolicy(default="log1p", choices=("log1p", "relative", "log", "zscore"), role="display"),
+            "visualPseudocount": NumericParameterPolicy(default=0.00001, minimum=1e-12, maximum=1, role="display"),
+            "clustering": ChoiceParameterPolicy(default="hierarchical", choices=("hierarchical", "grouped"), role="display"),
             "qValueMax": NumericParameterPolicy(
                 default=0.05,
                 minimum=0.0001,

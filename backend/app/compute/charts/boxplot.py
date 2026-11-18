@@ -25,6 +25,46 @@ BOXPLOT_VALUE_TRANSFORM_NOTE = (
     "数值变换仅用于箱线图展示；物种选择、样本范围和输入丰度不随变换改变。"
 )
 
+BOXPLOT_STATISTICAL_METHODS = {
+    "detection": "stored abundance > 0",
+    "detectionDenominator": "finite values in the selected group and sample scope",
+    "zeros": "included in quartiles and detection denominator",
+    "missing": "non-finite values excluded; never replaced with zero",
+    "sparseMatrix": "absent abundance rows in the revision matrix represent zero",
+    "quartiles": "numpy.percentile, method=linear, percentiles=[25, 50, 75]",
+    "whiskers": "most extreme observed values within Q1 - 1.5*IQR and Q3 + 1.5*IQR",
+    "transforms": "transform each sample first, then recompute quartiles and outliers",
+}
+
+
+def describe_boxplot_group(values: np.ndarray, samples: np.ndarray) -> tuple[dict, dict]:
+    """Describe the actual scoped population without treating missing values as zeros.
+
+    Values are in display units. The positive/zero predicates are unchanged by
+    the positive percentage multiplier used for relative abundance.
+    """
+    values = np.asarray(values, dtype=float)
+    finite = np.isfinite(values)
+    valid = values[finite]
+    detected = int(np.count_nonzero(valid > 0))
+    counts = {
+        "sampleCount": int(len(values)),
+        "validCount": int(len(valid)),
+        "missingCount": int(len(values) - len(valid)),
+        "detectedCount": detected,
+        "zeroCount": int(np.count_nonzero(valid == 0)),
+        "detectionRate": detected / len(valid) if len(valid) else None,
+    }
+    summaries: dict[str, dict[str, Any]] = {
+        "raw": _box_summary(values, samples),
+        "sqrt": _box_summary(_sqrt_abundance(values), samples),
+        "log": _box_summary(_log10_abundance(values), samples),
+    }
+    for summary in summaries.values():
+        if not len(valid):
+            summary["box"] = None
+    return counts, summaries
+
 
 def boxplot_display(abundance_scale: str) -> tuple[float, dict]:
     """Keep storage fractional while displaying relative abundances as percent."""
@@ -68,7 +108,7 @@ def _box_summary(values: np.ndarray, samples: list[str] | np.ndarray | None = No
         return {"box": [0, 0, 0, 0, 0], "outliers": [], "outlierPoints": []}
 
     # Tukey 箱线图规则：1.5 * IQR 之外的点视为离群点。
-    q1, median, q3 = np.percentile(values, [25, 50, 75])
+    q1, median, q3 = np.percentile(values, [25, 50, 75], method="linear")
     iqr = q3 - q1
     lower_fence = q1 - 1.5 * iqr
     upper_fence = q3 + 1.5 * iqr
@@ -128,17 +168,17 @@ def compute_boxplot(df: pd.DataFrame, species_cols: list[str], top_n: int = 30) 
         # 每个特征分别计算 AD/NC 原始丰度和 log 丰度的箱线图统计值。
         ad_values = ad[col].to_numpy(dtype=float) * display_scale
         nc_values = nc[col].to_numpy(dtype=float) * display_scale
-        ad_summary = _box_summary(ad_values, ad_samples)
-        nc_summary = _box_summary(nc_values, nc_samples)
-        ad_sqrt_summary = _box_summary(_sqrt_abundance(ad_values), ad_samples)
-        nc_sqrt_summary = _box_summary(_sqrt_abundance(nc_values), nc_samples)
-        ad_log_summary = _box_summary(_log10_abundance(ad_values), ad_samples)
-        nc_log_summary = _box_summary(_log10_abundance(nc_values), nc_samples)
+        ad_stats, ad_summaries = describe_boxplot_group(ad_values, ad_samples)
+        nc_stats, nc_summaries = describe_boxplot_group(nc_values, nc_samples)
+        ad_summary, nc_summary = ad_summaries["raw"], nc_summaries["raw"]
+        ad_sqrt_summary, nc_sqrt_summary = ad_summaries["sqrt"], nc_summaries["sqrt"]
+        ad_log_summary, nc_log_summary = ad_summaries["log"], nc_summaries["log"]
         items.append(
             {
                 "fullName": col,
                 "shortName": short_name(col),
                 "total": item["total"],
+                "groupStats": {"AD": ad_stats, "NC": nc_stats},
                 "adBox": ad_summary["box"],
                 "ncBox": nc_summary["box"],
                 "adOutliers": ad_summary["outliers"],
@@ -161,5 +201,6 @@ def compute_boxplot(df: pd.DataFrame, species_cols: list[str], top_n: int = 30) 
         )
     return {
         "items": items,
+        "statisticalMethods": BOXPLOT_STATISTICAL_METHODS,
         **display,
     }

@@ -45,6 +45,7 @@ def _copy_projection_node(item: dict) -> dict:
         "rank": item.get("rank", ""),
         "value": _node_value(item),
         "mergedCount": int(item.get("mergedCount", 0) or 0),
+        **({"sourceMembers": item["sourceMembers"], "aggregationKind": item.get("aggregationKind")} if item.get("sourceMembers") else {}),
     }
 
 
@@ -55,6 +56,8 @@ def _aggregate_hidden_nodes(items: list[dict], rank: str) -> dict:
         "rank": rank,
         "value": sum(_node_value(item) for item in items),
         "mergedCount": sum(_hidden_category_count(item, other_label) for item in items),
+        "aggregationKind": "sankey_layout_compression",
+        "sourceMembers": items,
     }
 
 
@@ -189,6 +192,9 @@ def compute_taxonomy_sankey_projection(tree: list[dict]) -> dict:
                         "depth": depth,
                         "value": float(item.get("value", 0) or 0),
                         "mergedCount": int(item.get("mergedCount", 0) or 0),
+                        "sourceMembers": item.get("sourceMembers", []),
+                        "aggregationKind": item.get("aggregationKind"),
+                        "fullPath": " > ".join([part.split(":", 2)[-1] for part in [*current_path, node_path]]),
                         "itemStyle": {"color": SANKEY_LEVEL_COLORS[depth % len(SANKEY_LEVEL_COLORS)]},
                     }
                 )
@@ -219,6 +225,8 @@ def compute_taxonomy_sankey_projection(tree: list[dict]) -> dict:
         "nodes": nodes,
         "links": links,
         "layout": {
+            "columnBudgets": SANKEY_COLUMN_BUDGETS,
+            "realChildLimits": SANKEY_REAL_CHILD_LIMITS,
             "width": width,
             "height": height,
             "nodeGap": node_gap,

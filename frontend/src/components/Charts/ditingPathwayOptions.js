@@ -3,7 +3,7 @@ import { density, empiricalCdf, formatPathwayValue as fmt, formatProbability as 
   GROUPS, shortPathway, summarize, swarmOffsets, transformValue, zScores, clusterOrder } from './ditingPathwayMath';
 
 export const PATHWAY_VIEWS = {
-  overview: [['coverage', '覆盖率—丰度'], ['dumbbell', '分组均值哑铃'], ['heatmap', '聚类热图']],
+  overview: [['coverage', '非零检出比例—平均丰度'], ['dumbbell', '分组均值哑铃'], ['heatmap', '聚类热图']],
   effects: [['forest', '效应森林图'], ['significance', '效应—显著性']],
   distribution: [['raincloud', '雨云图'], ['violin', '小提琴图'], ['swarm', '箱线＋蜂群'], ['ecdf', 'ECDF'], ['ridge', '山脊图']],
 };
@@ -155,7 +155,7 @@ function distributionPanel(item, samples, view, style, colors, transform, group,
         tooltip: { formatter: p => `${esc(item.name)} · ${g}<br/>丰度 ≤ ${fmt(p.value[0])} 的样本占 ${(p.value[1] * 100).toFixed(1)}%<br/>${transform === 'log' ? '横轴已 log10(x + 1) 变换' : '横轴为 DiTing 原值'}` } });
       const point = points.find(point => point.id === highlighted);
       if (point) series.push({ type: 'scatter', name: `${g} 定位样本`, symbol: 'diamond', symbolSize: 12, itemStyle: { color: colors[g] },
-        data: [{ value: [point.v, points.filter(p => p.v <= point.v).length / points.length], sampleId: point.id, name: point.id,
+        data: [{ value: [point.v, points.filter(p => p.v <= point.v).length / points.length], sampleId: point.id, pathwayId: item.id, name: point.id,
           tooltip: { formatter: () => `${esc(point.id)} · ${g}<br/>原始丰度 ${fmt(point.raw)}` } }] });
     });
     return { xAxis: { ...axis, type: 'value', min: 0, max: Math.max(extent, .1), name: transform === 'log' ? 'log10(丰度 + 1)' : 'DiTing 原始丰度', nameLocation: 'middle', nameGap: 32 },
@@ -180,7 +180,7 @@ function distributionPanel(item, samples, view, style, colors, transform, group,
         return { type: 'group', children };
       } });
     series.push({ type: 'custom', name: g, itemStyle: { color: colors[g] }, clip: true, encode: { x: 0, y: 1 },
-      data: points.map(point => ({ sampleId: point.id, name: point.id, raw: point.raw, value: [gi, point.v] })),
+      data: points.map(point => ({ sampleId: point.id, pathwayId: item.id, name: point.id, raw: point.raw, value: [gi, point.v] })),
       tooltip: { formatter: p => `${esc(p.data.sampleId)} · ${g}<br/>${esc(item.name)}<br/>原始丰度 ${fmt(p.data.raw)}${transform === 'log' ? `<br/>log10(x + 1) ${fmt(p.value[1])}` : ''}` },
       renderItem: (p, api) => {
         const cache = `swarm-${gi}`;
@@ -233,8 +233,8 @@ export function buildPathwayOption({ view, items, samples, style, colors, transf
     items.forEach((item, i) => {
       const panel = distributionPanel(item, samples, view, style, colors, transform, group, highlighted);
       const col = i % columns, row = Math.floor(i / columns), cellWidth = width / columns, cellHeight = height / rows;
-      grids.push({ left: col * cellWidth + 80, top: row * cellHeight + 65, width: cellWidth - 115, height: Math.max(80, cellHeight - 125) });
-      titles.push({ text: style.fullNames ? item.name : shortPathway(item.name), subtext: `AD n=${samples.filter(s => s.group === 'AD').length} · NC n=${samples.filter(s => s.group === 'NC').length} · q ${prob(item.qValue)}`,
+      grids.push({ left: col * cellWidth + 80, top: row * cellHeight + 85, width: cellWidth - 115, height: Math.max(80, cellHeight - 145) });
+      titles.push({ text: style.fullNames ? item.name : shortPathway(item.name), subtext: `显示 ${group==='all'?'AD / NC':group} · 统计 AD n=${samples.filter(s => s.group === 'AD').length} / NC n=${samples.filter(s => s.group === 'NC').length} · 全队列 q ${prob(item.qValue)}`,
         left: col * cellWidth + 60, top: row * cellHeight + 6, textStyle: { fontSize: 12, width: cellWidth - 115, overflow: 'break', lineHeight: 15 }, subtextStyle: { fontSize: 10 } });
       xAxes.push({ ...panel.xAxis, gridIndex: i }); yAxes.push({ ...panel.yAxis, gridIndex: i });
       panels.push(...panel.series.map(series => ({ ...series, xAxisIndex: i, yAxisIndex: i })));

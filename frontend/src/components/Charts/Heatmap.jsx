@@ -7,6 +7,7 @@ import ClientDataTable from '../data-display/ClientDataTable';
 import ResultDisclosure from '../data-display/ResultDisclosure';
 import ChartSupplement from './ChartSupplement';
 import ChartFrameActionGroup from './ChartFrameActionGroup';
+import HeatmapAnalysisPanel from './HeatmapAnalysisPanel';
 import { escapeTooltipText } from '../../utils/tooltipHtml';
 
 const ABUNDANCE_COLORS = ['#ffffcc', '#ffeda0', '#fed976', '#feb24c', '#fd8d3c', '#fc4e2a', '#e31a1c', '#bd0026', '#800026'];
@@ -33,6 +34,7 @@ function formatP(p) {
 
 function fmt(n, d) {
   if (!Number.isFinite(n)) return 'NA';
+  if (n !== 0 && Math.abs(n) < 10 ** -d) return n.toExponential(2);
   return n.toFixed(d);
 }
 
@@ -181,11 +183,11 @@ export function buildHeatmapLayout({ rows, cols, compact, fixedRows, showDendrog
   };
 }
 
-function makeColorScale(mode, maxV, maxAbs) {
+function makeColorScale(mode, maxV, maxAbs, minV = 0) {
   if (mode === 'diff') {
     return d3.scaleSequential(d3.interpolateRdBu).domain([maxAbs || 1, -(maxAbs || 1)]);
   }
-  return d3.scaleSequential(d3.interpolateYlOrRd).domain([0.15, maxV || 1]);
+  return d3.scaleSequential(d3.interpolateYlOrRd).domain([minV, maxV === minV ? minV + 1 : maxV]);
 }
 
 function canvasPoint(event, canvas, layout) {
@@ -302,18 +304,37 @@ function drawHeatmap(canvas, params, renderScale = getRenderScale(), options = {
   const rows = matrix.length;
   const cols = colLabels.length;
   const showDendrograms = Boolean(rowDendrogram && columnDendrogram);
-  const pixelRatio = Math.max(1, renderScale);
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
+  const note = filter?.selectionNote
+    ? `${filter.selectionNote} | ${filter.clustering === 'grouped' ? '按组排列，无聚类' : '欧氏距离 / average 聚类'} | ${filter.transformNote} | 记录 ${filter.analysisKey?.slice(0, 12)}`
+    : `筛选: Mann-Whitney U + BH-FDR q<${filter?.qValueMax ?? 0.05}, |log₂FC|>${filter?.log2FcMinAbs ?? 1} | 行列聚类: 层次聚类(average) | 数据: log₁₀(丰度+1)`;
+  const noteLines = [];
+  if (options.includeNote) {
+    let line = '';
+    ctx.font = '9px sans-serif';
+    for (const character of note) {
+      const candidate = line + character;
+      if (line && (ctx.measureText?.(candidate).width ?? candidate.length * 6) > totalW - 24) {
+        noteLines.push(line); line = character;
+      } else line = candidate;
+    }
+    if (line) noteLines.push(line);
+  }
+  const exportHeight = totalH + noteLines.length * 15 + (noteLines.length ? 16 : 0);
+  const pixelRatio = Math.min(renderScale, 16384 / totalW, 16384 / exportHeight, Math.sqrt(32_000_000 / (totalW * exportHeight)));
 
-  canvas.width = Math.max(1, Math.ceil(totalW * pixelRatio));
-  canvas.height = Math.max(1, Math.ceil(totalH * pixelRatio));
+  canvas.width = Math.max(1, Math.floor(totalW * pixelRatio));
+  canvas.height = Math.max(1, Math.floor(exportHeight * pixelRatio));
   ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-  ctx.clearRect(0, 0, totalW, totalH);
+  ctx.clearRect(0, 0, totalW, exportHeight);
   ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, totalW, totalH);
+  ctx.fillRect(0, 0, totalW, exportHeight);
 
-  const colorScale = makeColorScale(mode, maxV, maxAbs);
+  const signedAbundance = mode !== 'diff' && filter?.visualTransform === 'zscore';
+  const minV = filter?.colorMin ?? 0;
+  const colorScale = makeColorScale(signedAbundance ? 'diff' : mode, maxV,
+    signedAbundance ? filter.colorMaxAbs : maxAbs, minV);
 
   ctx.save();
   ctx.translate(L.left, L.top);
@@ -326,7 +347,7 @@ function drawHeatmap(canvas, params, renderScale = getRenderScale(), options = {
       const x = j * L.cellW;
       const width = Math.max(0.5, L.cellW - 0.4);
       const height = Math.max(0.5, ch - 0.4);
-      ctx.fillStyle = v > 0 || mode === 'diff' ? colorScale(v) : '#ffffe0';
+      ctx.fillStyle = Number.isFinite(v) ? colorScale(v) : '#e2e8f0';
       ctx.fillRect(x, y, width, height);
     }
   }
@@ -379,7 +400,7 @@ function drawHeatmap(canvas, params, renderScale = getRenderScale(), options = {
   const legY = L.top;
   const legH = Math.min(140, gridH);
   const legW = 10;
-  const stops = mode === 'diff' ? DIFF_COLORS : ABUNDANCE_COLORS;
+  const stops = mode === 'diff' || signedAbundance ? DIFF_COLORS : ABUNDANCE_COLORS;
   const nStops = stops.length;
 
   for (let i = 0; i < nStops; i += 1) {
@@ -396,7 +417,8 @@ function drawHeatmap(canvas, params, renderScale = getRenderScale(), options = {
   const tickCount = 4;
   for (let i = 0; i <= tickCount; i += 1) {
     const t = i / tickCount;
-    const val = mode === 'diff' ? maxAbs * (1 - 2 * t) : maxV * (1 - t);
+    const val = mode === 'diff' ? maxAbs * (1 - 2 * t) : signedAbundance
+      ? filter.colorMaxAbs * (1 - 2 * t) : maxV + (minV - maxV) * t;
     const y = legY + t * legH;
     drawLine(ctx, legX + legW, y, legX + legW + 4, y, '#64748b', 0.6);
     ctx.fillText(val >= 1000 ? `${(val / 1000).toFixed(1)}k` : fmt(val, 1), legX + legW + 6, y);
@@ -407,19 +429,15 @@ function drawHeatmap(canvas, params, renderScale = getRenderScale(), options = {
     ctx.fillStyle = '#b2182b';
     ctx.fillText('AD↑', legX + legW / 2, legY - 4);
     ctx.fillStyle = '#2166ac';
-    ctx.fillText('NC↓', legX + legW / 2, legY + legH + 12);
+    ctx.fillText('NC↑', legX + legW / 2, legY + legH + 12);
   }
 
   if (options.includeNote) {
-    ctx.textAlign = 'center';
+    ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
     ctx.fillStyle = '#475569';
-    ctx.font = '7px sans-serif';
-    ctx.fillText(
-      `筛选: Mann-Whitney U + BH-FDR q<${filter?.qValueMax ?? 0.05}, |log₂FC|>${filter?.log2FcMinAbs ?? 1} | 行列聚类: 层次聚类(average) | 数据: log₁₀(丰度+1)`,
-      totalW / 2,
-      totalH - 6
-    );
+    ctx.font = '9px sans-serif';
+    noteLines.forEach((line, index) => ctx.fillText(line, 12, totalH + 16 + index * 15));
   }
 }
 
@@ -516,7 +534,7 @@ const HeatmapCanvas = memo(function HeatmapCanvas({
     try {
       const link = document.createElement('a');
       link.href = createSnapshot(SNAPSHOT_SCALE, true);
-      const filterStr = `q${filter?.qValueMax ?? 0.05}-log2FC${filter?.log2FcMinAbs ?? 1}`;
+      const filterStr = `${filter?.viewMode || 'differential'}-${filter?.visualTransform || 'log1p'}-q${filter?.qValueMax ?? 0.05}-log2FC${filter?.log2FcMinAbs ?? 1}`;
       const filename = `heatmap_${chartSubType}_${filterStr}_${dateStamp()}`;
       link.download = `${sanitizeFilename(filename)}.png`;
       link.click();
@@ -547,13 +565,13 @@ const HeatmapCanvas = memo(function HeatmapCanvas({
       `log2FC = ${fmt(stat.log2FC, 3)}`,
     ];
     if (mode === 'diff') {
-      lines.push(`AD−NC = ${fmt(value, 4)}`);
+      lines.push(`显示变换后的组均值 AD−NC = ${fmt(value, 4)}`, escapeTooltipText(filter?.transformNote || 'log10(丰度+1)'));
     } else {
-      lines.push(`样本: ${escapeTooltipText(rowLabels[hit.i])}`, `log10(丰度+1) = ${fmt(value, 4)}`);
+      lines.push(`样本: ${escapeTooltipText(rowLabels[hit.i])}`, `${escapeTooltipText(filter?.transformNote || 'log10(丰度+1)')} = ${fmt(value, 4)}`);
       if (rowGroups?.[hit.i]) lines.push(`分组: ${escapeTooltipText(rowGroups[hit.i])}`);
     }
     return lines.join('<br/>');
-  }, [cols, colLabels, layout, matrix, mode, rowGroups, rowLabels, rows, stats]);
+  }, [cols, colLabels, filter, layout, matrix, mode, rowGroups, rowLabels, rows, stats]);
 
   const handleMouseMove = useCallback((event) => {
     if (!canvasRef.current) return;
@@ -582,9 +600,10 @@ const HeatmapCanvas = memo(function HeatmapCanvas({
 
   const heatmapHint = mode === 'diff'
     ? '红色=AD高 蓝色=NC高'
+    : filter?.visualTransform === 'zscore' ? '物种内标准化：红色高于自身均值，蓝色低于自身均值；不能跨物种比较绝对丰度'
     : showDendrograms
-      ? `颜色越深 log丰度越高 · 分组条：${colorBlindFriendly ? '橙色=AD 蓝色=NC' : '红色=AD 绿色=NC'}`
-      : '颜色越深 log丰度越高';
+      ? `颜色越深，当前显示值越高 · 分组条：${colorBlindFriendly ? '橙色=AD 蓝色=NC' : '红色=AD 绿色=NC'}`
+      : '颜色表示当前显示变换值；色阶范围随当前矩阵计算';
 
   return (
     <section className={`heatmap-panel ${compact ? 'heatmap-panel--compact' : ''}`}>
@@ -642,7 +661,7 @@ const HeatmapCanvas = memo(function HeatmapCanvas({
 
 /* ====== 主组件 ====== */
 
-function Heatmap({ data, featureLabel = '物种' }) {
+function HeatmapPlots({ data, featureLabel = '物种' }) {
   const result = data;
   const { colorBlindFriendly } = useColorVision();
   const groupColors = colorBlindFriendly ? COLORBLIND_GROUP_COLORS : GROUP_COLORS;
@@ -704,10 +723,10 @@ function Heatmap({ data, featureLabel = '物种' }) {
     <div className="chart-plain chart-plain--document">
       {/* 筛选信息 */}
       <div className="chart-info-strip">
-        <span><b style={{ color: '#0f172a' }}>差异{resolvedFeatureLabel}：</b>{stats.length}</span>
+        <span><b style={{ color: '#0f172a' }}>{result.display?.viewMode === 'exploratory' ? '探索性' : '差异'}{resolvedFeatureLabel}：</b>{stats.length}</span>
         <span style={{ color: GROUP_TEXT_COLORS.AD }}><b>AD：</b>{adLabels.length} 样本</span>
         <span style={{ color: GROUP_TEXT_COLORS.NC }}><b>NC：</b>{ncLabels.length} 样本</span>
-        <span><b style={{ color: '#0f172a' }}>列排序：</b>层次聚类（average linkage）</span>
+        <span><b style={{ color: '#0f172a' }}>列排序：</b>{result.display?.clustering === 'grouped' ? '选择排名' : '层次聚类（average linkage）'}</span>
       </div>
 
       {/* AD → NC → 合并 → 差异纵向排列，列顺序保持一致 */}
@@ -746,7 +765,7 @@ function Heatmap({ data, featureLabel = '物种' }) {
 
         {combinedData ? (
           <HeatmapCanvas
-            title="AD + NC 合并丰度热图（层次聚类）"
+            title={result.display?.clustering === 'grouped' ? 'AD + NC 合并丰度热图（按组排列）' : 'AD + NC 合并丰度热图（层次聚类）'}
             matrix={combinedData.matrix}
             rowLabels={combinedData.rowLabels}
             rowGroups={combinedData.rowGroups}
@@ -779,7 +798,7 @@ function Heatmap({ data, featureLabel = '物种' }) {
 
         {/* 差异热图 */}
         <HeatmapCanvas
-          title="差异热图 (AD − NC 平均 log 丰度)"
+          title={result.display ? `组均值差热图 (AD − NC，${result.display.visualTransform})` : '差异热图 (AD − NC 平均 log 丰度)'}
           matrix={orderedData.diffMatrix}
           rowLabels={diffLabels}
           colLabels={orderedData.colLabels}
@@ -803,6 +822,13 @@ function Heatmap({ data, featureLabel = '物种' }) {
       )}
     </div>
   );
+}
+
+function Heatmap(props) {
+  return <div className="heatmap-workspace">
+    <HeatmapAnalysisPanel data={props.data} projection={props.projection} onExplore={props.onExplore} />
+    {props.data?.summary && props.data?.error ? null : <HeatmapPlots {...props} />}
+  </div>;
 }
 
 export default Heatmap;

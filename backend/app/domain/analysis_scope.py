@@ -86,6 +86,12 @@ class ChartProjectionRequest(BaseModel):
     selection: FeatureSelection | None = None
 
 
+class BoxplotReviewRequest(ChartProjectionRequest):
+    """Download data for an exact displayed projection, including retained old results."""
+
+    projectionKey: str = Field(min_length=16)
+
+
 AuditProjectionKind = Literal[
     "abundance",
     "composition",
@@ -124,6 +130,7 @@ class ScopedSampleRequest(BaseModel):
 
     scope: AnalysisScope = Field(default_factory=AnalysisScope)
     query: str = ""
+    phenotype: Literal["AD", "NC"] | None = None
     limit: int = Field(default=100, ge=1, le=500)
     offset: int = Field(default=0, ge=0)
 

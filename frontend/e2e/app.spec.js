@@ -120,15 +120,18 @@ test('heatmap reports the current result and supports interaction when candidate
   await expectNoBlockingAccessibilityViolations(page);
 
   const firstCanvas = page.getByRole('img', { name: 'AD 组丰度热图' });
-  const emptyState = page.getByText(/未筛选到满足.*差异(物种|KO)/).first();
+  const emptyState = page.getByText('本次统计筛选为零候选，丰度数据仍可查看');
   await expect(firstCanvas.or(emptyState).first()).toBeVisible();
   if (await emptyState.isVisible()) {
-    return;
+    await expect(page.getByText(/不等于不存在生物学差异/)).toBeVisible();
+    await page.getByRole('button', { name: '查看探索性丰度热图', exact: true }).click();
+    await expect(page.getByText('探索性丰度热图 · 不代表显著差异')).toBeVisible();
+    await expect(firstCanvas).toBeVisible();
   }
   await firstCanvas.hover();
   const tooltip = page.locator('[data-chart-tooltip][style*="opacity: 1"]');
   await expect(tooltip).toContainText('样本:');
-  await expect(tooltip).toContainText('log10(丰度+1)');
+  await expect(tooltip).toContainText('log10(存储丰度 + 1)');
 
   const firstHeatmap = page.getByRole('button', { name: /^AD 组丰度热图，按回车放大/ });
   await firstHeatmap.press('Enter');
@@ -144,7 +147,7 @@ test('heatmap reports the current result and supports interaction when candidate
   await page.getByRole('button', { name: '关闭' }).click();
 
   const downloadPromise = page.waitForEvent('download');
-  await page.getByRole('button', { name: '导出图片' }).first().click();
+  await page.getByRole('button', { name: '导出AD 组丰度热图', exact: true }).click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toMatch(/^heatmap_AD-abundance_.*\.png$/);
 });

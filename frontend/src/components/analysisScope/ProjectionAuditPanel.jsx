@@ -25,7 +25,7 @@ const PRIMARY_SECTION = {
 const SECTION_LABEL_TEMPLATES = {
   selection: '展示与未展示{featureLabel}',
   contribution_selection: '展示与未展示 KO',
-  aggregation: 'Other 合并明细',
+  aggregation: '合并明细',
   feature_selection: '计算{featureLabel}选择',
   ordination_filter: 'PCoA {featureLabel}过滤',
   statistical_filter: '统计筛选明细',
@@ -51,10 +51,14 @@ const REASON_LABELS = {
   outside_top_n: '位于当前 Top N 之外',
   within_top_n_by_mean_relative_abundance: '按平均相对丰度位于当前 Top N',
   outside_top_n_by_mean_relative_abundance: '按平均相对丰度位于当前 Top N 之外',
+  user_low_abundance_merge: '用户主动按平均相对丰度阈值合并',
+  all_phyla_displayed: '完整展示，未合并',
   category_top_n_aggregation: '按类别 Top N 合并到 Other',
   largest_detection_rate_gap: '按检出率差排序进入展示',
   not_detected_above_threshold: '没有样本超过检出阈值',
   significance_effect_rank: '通过显著性与效应阈值并进入展示',
+  exploratory_display_not_significance: '探索性展示，不代表通过显著性筛选',
+  below_pooled_prevalence: '检验前未达到预先设定的合并样本检出率',
   q_value_threshold: '未通过 q 值阈值',
   effect_size_threshold: '未通过效应量阈值',
   below_prevalence_threshold: '未通过最低检出比例',
@@ -92,7 +96,7 @@ function formatNumber(value) {
 }
 
 function formatCell(value, format) {
-  if (format === 'percent') return value == null ? '—' : `${(Number(value) * 100).toFixed(3)}%`;
+  if (format === 'percent') { const number = Number(value) * 100; return value == null ? '—' : `${number !== 0 && Math.abs(number) < 0.001 ? number.toExponential(3) : Number(number.toPrecision(7))}%`; }
   if (format === 'number') return formatNumber(value);
   if (format === 'integer') return value == null ? '—' : new Intl.NumberFormat('zh-CN').format(Number(value));
   if (format === 'status') return STATUS_LABELS[value] || value || '—';
@@ -216,14 +220,14 @@ export default function ProjectionAuditPanel({
 
   const auditRequest = useMemo(() => ({
     projectionKey,
-    ...projectionRequest,
+    ...(projectionData?.projectionRequest || projectionRequest),
     section,
     filters,
     sortBy: sort.by,
     sortDirection: sort.direction,
     limit,
     offset,
-  }), [filters, limit, offset, projectionKey, projectionRequest, section, sort]);
+  }), [filters, limit, offset, projectionKey, projectionRequest, projectionData?.projectionRequest, section, sort]);
   const state = useProjectionAudit(
     runKey,
     artifactKey,
@@ -303,7 +307,7 @@ export default function ProjectionAuditPanel({
     || Object.values(filterDraft).some(Boolean);
 
   return (
-    <ResultDisclosure title="查看筛选与合并明细" summary="当前图表的筛选与聚合记录" className="projection-audit" onToggle={event => setOpen(event.currentTarget.open)}>
+    <ResultDisclosure title="查看筛选与合并明细" summary="当前图表的筛选与聚合记录" className={`projection-audit${projectionKind === 'composition' ? ' projection-audit--composition' : ''}`} onToggle={event => setOpen(event.currentTarget.open)}>
       {open ? (
         <div className="projection-audit__content">
           <p className="projection-audit__context">明细与当前图表参数及投影版本一致。</p>
@@ -312,13 +316,17 @@ export default function ProjectionAuditPanel({
             <strong>{scopeView.label}</strong>
             {scopeView.detail ? <span>{scopeView.detail}</span> : null}
           </div>
-          <ScopedSampleList
+          <div className={projectionKind === 'composition' ? 'composition-audit-columns' : undefined}>
+          <div><ScopedSampleList
             runKey={runKey}
             artifactKey={artifactKey}
             scope={projectionRequest?.scope}
             sampleCount={scopeView.count}
             prominent={sampleListProminent}
-          />
+            searchable={projectionKind === 'composition'}
+          /></div>
+          <div className={projectionKind === 'composition' ? 'composition-audit-detail' : undefined}>
+          {projectionKind === 'composition' ? <p>{projectionData?.payload?.mergedCategoryCount ? `已主动合并 ${projectionData.payload.mergedCategoryCount} 个门；下表包括直接展示和合并的全部门类。` : '当前未发生合并，以下列出全部门类及直接展示状态。'}</p> : null}
           <SlidingTabs className="projection-audit__tabs" aria-label="审计明细类型">
             {sections.map(key => (
               <button
@@ -473,6 +481,7 @@ export default function ProjectionAuditPanel({
                 </tbody>
             </DataTableViewport>
           ) : null}
+          </div></div>
         </div>
       ) : null}
     </ResultDisclosure>

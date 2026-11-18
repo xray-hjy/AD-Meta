@@ -37,14 +37,17 @@ export default function AnalysisScopeToolbar({
   analysisPolicy = null,
   chartControls = null,
   showTopN = true,
+  externalParameters = false,
   onChange,
 }) {
   const [query, setQuery] = useState('');
+  const [pendingScope, setPendingScope] = useState(scope);
   const [draftCodes, setDraftCodes] = useState(scope.sampleCodes);
   const [selectionMode, setSelectionMode] = useState(selectedMode(scope));
   const [draftParameters, setDraftParameters] = useState(parameters);
 
   useEffect(() => {
+    setPendingScope(scope);
     setDraftCodes(scope.sampleCodes);
     setSelectionMode(selectedMode(scope));
   }, [scope]);
@@ -92,13 +95,15 @@ export default function AnalysisScopeToolbar({
     [draftSubsetScope, resolvedPolicy, samples]
   );
   useEffect(() => {
+    if (externalParameters) return;
     const normalized = normalizeAnalysisParameters(resolvedPolicy, topN, parameters);
     const parametersChanged = JSON.stringify(normalized.parameters) !== JSON.stringify(parameters);
     if (normalized.topN === Number(topN) && !parametersChanged) return;
     setDraftParameters(normalized.parameters);
     onChange(scope, normalized.topN, normalized.parameters);
-  }, [onChange, parameters, resolvedPolicy, scope, topN]);
+  }, [externalParameters, onChange, parameters, resolvedPolicy, scope, topN]);
   const commit = (nextScope = scope, nextTopN = topN, nextParameters = draftParameters) => {
+    if (externalParameters) { setPendingScope(nextScope); return; }
     onChange(nextScope, nextTopN, nextParameters);
   };
   const changeMode = nextMode => {
@@ -150,13 +155,18 @@ export default function AnalysisScopeToolbar({
           onChange={next => commit(scope, next)} /> : null}
       </div>
 
+      {externalParameters ? <div className="projection-controls__parameters">
+        <button type="button" disabled={JSON.stringify(pendingScope) === JSON.stringify(scope)}
+          onClick={() => onChange(pendingScope, topN, parameters)}>应用样本范围并重新计算</button>
+        {JSON.stringify(pendingScope) !== JSON.stringify(scope) ? <span role="status">样本范围尚未应用，当前图仍为上次计算结果。</span> : null}
+      </div> : null}
       {parameterControls.length ? (
         <div className="projection-controls__parameters" aria-label="科学筛选参数">
           {parameterControls.map(control => {
             const value = draftParameters[control.key] ?? control.defaultValue;
             return (
               <label key={control.key}>
-                <span>{control.label}<small aria-hidden="true">分析筛选</small></span>
+                <span>{control.label}<small aria-hidden="true">{control.purpose === 'display' ? '显示设置' : '分析筛选'}</small></span>
                 {control.input === 'select' ? (
                   <StyledSelect
                     aria-label={control.label}
@@ -180,10 +190,6 @@ export default function AnalysisScopeToolbar({
             );
           })}
         </div>
-      ) : null}
-
-      {chartControls ? (
-        <div className="projection-controls__chart">{chartControls}</div>
       ) : null}
 
       {!currentScopeSupported ? (
@@ -254,6 +260,9 @@ export default function AnalysisScopeToolbar({
             ))}
           </div>
         </div>
+      ) : null}
+      {chartControls ? (
+        <div className="projection-controls__chart">{chartControls}</div>
       ) : null}
     </div>
   );

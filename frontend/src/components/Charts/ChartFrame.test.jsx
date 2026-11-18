@@ -3,6 +3,29 @@ import ChartFrame from './ChartFrame';
 import ChartSupplement from './ChartSupplement';
 
 describe('ChartFrame', () => {
+  test('keeps selection drafts and chart results mounted when folding the optional selection panel', () => {
+    const { container } = render(<ChartFrame sectioned title="丰度箱线图"
+      controls={<input aria-label="对象搜索" defaultValue="Alpha" />}
+      selectionPanel={{ summary: '对象池 2 个 · 当前图表 1 个' }}
+      disclosure={<p>当前样本与单位</p>} audit={<div>完整结果查询</div>}>
+      <div>箱线图内容</div>
+      <ChartSupplement><p>查看图表数据</p></ChartSupplement>
+    </ChartFrame>);
+    const search = screen.getByRole('textbox', { name: '对象搜索' });
+    fireEvent.change(search, { target: { value: 'Beta' } });
+    fireEvent.change(screen.getByRole('slider', { name: '对象区宽度' }), { target: { value: '440' } });
+    expect(container.querySelector('.selection-workspace')).toHaveStyle('--selection-width: 440px');
+    fireEvent.click(screen.getByRole('button', { name: '收起对象池' }));
+    expect(search).not.toBeVisible();
+    expect(search).toBeInTheDocument();
+    expect(screen.getByText('箱线图内容')).toBeVisible();
+    expect(screen.getByText('查看图表数据')).toBeVisible();
+    expect(screen.getByText('完整结果查询')).toBeVisible();
+    expect(screen.getByText('对象池 2 个 · 当前图表 1 个')).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: '展开对象池' }));
+    expect(search).toBeVisible();
+    expect(search).toHaveValue('Beta');
+  });
   test('places scope above the card, controls in the chart header, and results outside the folded chart', () => {
     const { container } = render(<ChartFrame sectioned title="KO 丰度对比"
       controls={<button>全部样本</button>} chartControls={<select aria-label="Top N"><option>20</option></select>}

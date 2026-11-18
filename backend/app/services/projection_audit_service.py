@@ -15,6 +15,8 @@ from typing import Any
 
 import pandas as pd
 
+from app.compute.charts.composition import compute_phylum_composition
+from app.compute.charts.heatmap import heatmap_audit_rows
 from app.compute.charts.ko_contribution import (
     compute_relative_series_values,
     rank_relative_contributions,
@@ -76,7 +78,7 @@ def _build_lock(projection_key: str, section: str) -> threading.Lock:
 SECTION_TITLE_TEMPLATES = {
     "selection": "展示与未展示{feature_label}",
     "contribution_selection": "展示与未展示 KO",
-    "aggregation": "Other 合并明细",
+    "aggregation": "合并明细",
     "feature_selection": "计算{feature_label}选择",
     "ordination_filter": "PCoA {feature_label}过滤",
     "statistical_filter": "统计筛选明细",
@@ -264,39 +266,6 @@ def _ranked_feature_rows(
     return rows
 
 
-def _composition_rows(frame, features, scope, top_n: int) -> list[dict[str, Any]]:
-    series, series_values = _series_values(frame, features, scope)
-    buckets: dict[str, dict[str, float]] = {}
-    bucket_members: dict[str, list[str]] = {}
-    for feature in features:
-        label = short_name(feature) if frame.attrs["feature_kind"] == "ko" else taxonomy_chain(feature)["phylum"]
-        target = buckets.setdefault(label, {item["key"]: 0.0 for item in series})
-        bucket_members.setdefault(label, []).append(feature)
-        for item in series:
-            target[item["key"]] += float(series_values[item["key"]].get(feature, 0.0))
-    for item in series:
-        total = sum(bucket[item["key"]] for bucket in buckets.values()) or 1.0
-        for bucket in buckets.values():
-            bucket[item["key"]] /= total
-    ordered = sorted(buckets, key=lambda label: (-sum(buckets[label].values()), label))
-    rows = []
-    for rank, label in enumerate(ordered, start=1):
-        values = buckets[label]
-        row = {
-            "rank": rank,
-            "feature": label,
-            "_featureKeys": bucket_members[label],
-            "values": values,
-            "status": "displayed" if rank <= top_n else "merged",
-            "destination": label if rank <= top_n else "Other",
-            "reason": "within_top_n" if rank <= top_n else "category_top_n_aggregation",
-        }
-        for index, item in enumerate(series):
-            row[f"series_{index}"] = values.get(item["key"])
-        rows.append(row)
-    return rows
-
-
 def _ko_contribution_rows(
     frame,
     features,
@@ -438,6 +407,7 @@ def _pcoa_filter_rows(frame, features, request) -> list[dict[str, Any]]:
         frame,
         features,
         str(parameters["filterPreset"]),
+        parameters["minimumRelativeAbundance"], parameters["minimumPrevalence"], request.topN,
     )
     return [dict(row) for row in prepared["auditRows"]]
 
@@ -446,7 +416,8 @@ def _rows_for_section(kind, section, selected, frame, features, projection, requ
     if kind == "abundance":
         return _ranked_feature_rows(frame, features, request.topN, "selection", request.scope)
     if kind == "composition":
-        return _composition_rows(frame, features, request.scope, request.topN)
+        return compute_phylum_composition(frame, features, _series_values(frame, features, request.scope)[0],
+            _resolve_projection_parameters(kind, request.parameters)["mergeBelow"])["_aggregationRows"]
     if kind == "ko_contribution":
         return _ko_contribution_rows(
             frame,
@@ -471,13 +442,22 @@ def _rows_for_section(kind, section, selected, frame, features, projection, requ
                 row["reason"] = "within_top_n" if selected_row else "outside_top_n"
         return rows
     if kind == "pca":
+        parameters = _resolve_projection_parameters("pca", request.parameters)
         prepared = prepare_pca_input(
             frame, features, request.topN, include_audit=True,
+            filter_preset=parameters["filterPreset"],
+            minimum_relative_abundance=parameters["minimumRelativeAbundance"],
+            minimum_prevalence=parameters["minimumPrevalence"],
         )
         return [dict(row) for row in prepared["auditRows"]]
     if kind == "pcoa":
         return _pcoa_filter_rows(frame, features, request)
     if kind in {"heatmap", "detection", "differential_ko"}:
+        if kind == "heatmap" and (projection.get("payload") or {}).get("analysisRecord", {}).get("storageId"):
+            payload = projection["payload"]
+            rows = load_audit_rows(int(payload["analysisRecord"]["storageId"]))
+            return heatmap_audit_rows(rows, {row["col"] for row in payload["stats"]},
+                payload["filter"]["qValueMax"], payload["filter"]["log2FcMinAbs"], payload["display"]["viewMode"])
         return _statistical_rows(kind, frame, features, request)
     tree = compute_taxonomy_hierarchy(frame, features)
     if section == "sankey_layout":
@@ -565,6 +545,19 @@ def _columns_for_section(section: str, projection: dict[str, Any]) -> list[dict[
         else COMMON_COLUMNS[section]
     )
     columns = [dict(column) for column in source_columns]
+    if section == "statistical_filter" and projection_kind == "heatmap":
+        columns.extend([
+            {"key": key, "label": label, "format": format_, "sortable": True}
+            for key, label, format_ in [
+                ("nAD", "AD 有效样本", "integer"), ("nNC", "NC 有效样本", "integer"),
+                ("detectedAD", "AD 检出样本", "integer"), ("detectedNC", "NC 检出样本", "integer"),
+                ("prevalenceAD", "AD 检出率", "percent"), ("prevalenceNC", "NC 检出率", "percent"),
+                ("meanAD", "AD 均值（源单位）", "number"), ("meanNC", "NC 均值（源单位）", "number"),
+                ("medianAD", "AD 中位数", "number"), ("medianNC", "NC 中位数", "number"),
+                ("log2FCAtEps1e10", "log2FC：eps=1e-10", "number"),
+                ("log2FCAtEps1e8", "log2FC：eps=1e-8", "number"),
+            ]
+        ])
     feature_label = str(projection.get("featureLabel") or "物种")
     for column in columns:
         if column.pop("labelRole", None) == "feature":
@@ -575,7 +568,7 @@ def _columns_for_section(section: str, projection: dict[str, Any]) -> list[dict[
         {
             "key": f"series_{index}",
             "label": str(item.get("label") or item.get("key") or f"序列 {index + 1}"),
-            "format": "percent",
+            "format": "percent" if section != "aggregation" or (projection.get("payload") or {}).get("semantics", {}).get("abundanceScale") == "relative_abundance" else "number",
         }
         for index, item in enumerate((projection.get("payload") or {}).get("series") or [])
     ]
@@ -720,6 +713,7 @@ def _ensure_projection_audit_artifact(
                     "sourceRevisionKey": identity.source_revision_key,
                     "computeVersion": identity.compute_version,
                     "schemaVersion": identity.schema_version,
+                    "analysisRecord": (projection.get("payload") or {}).get("analysisRecord"),
                 },
             }
             complete_audit_artifact(

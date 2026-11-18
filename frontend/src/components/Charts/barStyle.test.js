@@ -62,3 +62,10 @@ test('width adapts to category bands and invalid saved settings are ignored', ()
   expect(styled.animation).toBe(true);
   expect(applyBarStyle(horizontal, { rounded: 'invalid', precision: '99' })).toBe(horizontal);
 });
+
+
+test('phylum precision settings never label a nonzero abundance as zero', () => {
+  const styled = applyBarStyle(horizontal, { precision: '2' }, { scale: 100, suffix: '%', preserveNonzero: true });
+  expect(styled.series[0].label.formatter({ value: 1e-10 })).toBe('1.000e-8%');
+  expect(styled.series[0].label.formatter({ value: 0 })).toBe('0.00%');
+});

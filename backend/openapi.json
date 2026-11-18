@@ -599,6 +599,144 @@
         "title": "AnalysisScope",
         "type": "object"
       },
+      "BoxplotReviewDataResponse": {
+        "properties": {
+          "displayMultiplier": {
+            "title": "Displaymultiplier",
+            "type": "number"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BoxplotReviewItemResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "projectionKey": {
+            "title": "Projectionkey",
+            "type": "string"
+          },
+          "samples": {
+            "items": {
+              "$ref": "#/components/schemas/BoxplotReviewSampleResponse"
+            },
+            "title": "Samples",
+            "type": "array"
+          }
+        },
+        "required": [
+          "projectionKey",
+          "samples",
+          "items",
+          "displayMultiplier"
+        ],
+        "title": "BoxplotReviewDataResponse",
+        "type": "object"
+      },
+      "BoxplotReviewItemResponse": {
+        "properties": {
+          "displayValues": {
+            "additionalProperties": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            "title": "Displayvalues",
+            "type": "object"
+          },
+          "featureId": {
+            "title": "Featureid",
+            "type": "string"
+          },
+          "storedValues": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Storedvalues",
+            "type": "array"
+          }
+        },
+        "required": [
+          "featureId",
+          "storedValues",
+          "displayValues"
+        ],
+        "title": "BoxplotReviewItemResponse",
+        "type": "object"
+      },
+      "BoxplotReviewRequest": {
+        "description": "Download data for an exact displayed projection, including retained old results.",
+        "properties": {
+          "parameters": {
+            "additionalProperties": true,
+            "title": "Parameters",
+            "type": "object"
+          },
+          "projectionKey": {
+            "minLength": 16,
+            "title": "Projectionkey",
+            "type": "string"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/AnalysisScope"
+          },
+          "selection": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FeatureSelection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "topN": {
+            "default": 20,
+            "maximum": 500.0,
+            "minimum": 1.0,
+            "title": "Topn",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "projectionKey"
+        ],
+        "title": "BoxplotReviewRequest",
+        "type": "object"
+      },
+      "BoxplotReviewSampleResponse": {
+        "properties": {
+          "group": {
+            "title": "Group",
+            "type": "string"
+          },
+          "sampleCode": {
+            "title": "Samplecode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sampleCode",
+          "group"
+        ],
+        "title": "BoxplotReviewSampleResponse",
+        "type": "object"
+      },
       "CapabilityState": {
         "properties": {
           "reasonCodes": {
@@ -755,6 +893,18 @@
           "projectionKey": {
             "title": "Projectionkey",
             "type": "string"
+          },
+          "projectionRequest": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projectionrequest"
           },
           "runKey": {
             "title": "Runkey",
@@ -1282,6 +1432,43 @@
           }
         },
         "title": "FeatureSelection",
+        "type": "object"
+      },
+      "FunctionExplorationRequest": {
+        "properties": {
+          "feature": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feature"
+          },
+          "kind": {
+            "default": "ko",
+            "enum": [
+              "ko",
+              "pathway"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "prevalenceMin": {
+            "default": 0.1,
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Prevalencemin",
+            "type": "number"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/AnalysisScope"
+          }
+        },
+        "title": "FunctionExplorationRequest",
         "type": "object"
       },
       "FunctionalCommunity": {
@@ -7681,6 +7868,21 @@
             "title": "Offset",
             "type": "integer"
           },
+          "phenotype": {
+            "anyOf": [
+              {
+                "enum": [
+                  "AD",
+                  "NC"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phenotype"
+          },
           "query": {
             "default": "",
             "title": "Query",
@@ -8004,6 +8206,74 @@
           }
         },
         "summary": "Scoped Analysis Features",
+        "tags": [
+          "analysis-runs"
+        ]
+      }
+    },
+    "/api/analysis-runs/{run_key}/artifacts/{artifact_key}/ordinations/{projection_kind}/preview": {
+      "post": {
+        "operationId": "ordination_preview_api_analysis_runs__run_key__artifacts__artifact_key__ordinations__projection_kind__preview_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_key",
+            "required": true,
+            "schema": {
+              "title": "Run Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "artifact_key",
+            "required": true,
+            "schema": {
+              "title": "Artifact Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "projection_kind",
+            "required": true,
+            "schema": {
+              "title": "Projection Kind",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChartProjectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ordination Preview",
         "tags": [
           "analysis-runs"
         ]
@@ -8439,6 +8709,67 @@
           }
         },
         "summary": "Abundance Projection",
+        "tags": [
+          "analysis-runs"
+        ]
+      }
+    },
+    "/api/analysis-runs/{run_key}/artifacts/{artifact_key}/projections/boxplot/review-data": {
+      "post": {
+        "operationId": "boxplot_review_data_api_analysis_runs__run_key__artifacts__artifact_key__projections_boxplot_review_data_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_key",
+            "required": true,
+            "schema": {
+              "title": "Run Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "artifact_key",
+            "required": true,
+            "schema": {
+              "title": "Artifact Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BoxplotReviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoxplotReviewDataResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Boxplot Review Data",
         "tags": [
           "analysis-runs"
         ]
@@ -9370,6 +9701,69 @@
           }
         },
         "summary": "Download",
+        "tags": [
+          "DiTing"
+        ]
+      }
+    },
+    "/api/datasets/{slug}/revisions/{revision}/diting/exploration": {
+      "post": {
+        "operationId": "exploration_api_datasets__slug__revisions__revision__diting_exploration_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "revision",
+            "required": true,
+            "schema": {
+              "title": "Revision",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FunctionExplorationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Exploration Api Datasets  Slug  Revisions  Revision  Diting Exploration Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Exploration",
         "tags": [
           "DiTing"
         ]

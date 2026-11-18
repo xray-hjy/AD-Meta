@@ -106,6 +106,15 @@ beforeEach(() => {
 });
 
 describe('ProjectionAuditPanel', () => {
+  test('keeps the displayed projection request paired with its key while controls are changing', () => {
+    const recordedRequest = { ...baseProps.projectionRequest, parameters: { viewMode: 'differential', qValueMax: .05 } };
+    render(<ProjectionAuditPanel {...baseProps} projectionKind="heatmap"
+      projectionRequest={{ ...recordedRequest, parameters: { viewMode: 'exploratory', qValueMax: .1 } }}
+      projectionData={{ ...baseProps.projectionData, projectionRequest: recordedRequest }} />);
+    expect(useProjectionAudit).toHaveBeenLastCalledWith('run-1', 'ko-abundance', 'heatmap',
+      expect.objectContaining({ projectionKey: 'projection-key-1', parameters: recordedRequest.parameters }), false);
+  });
+
   test('loads the chart-specific primary section only after expansion', async () => {
     render(<ProjectionAuditPanel {...baseProps} />);
 

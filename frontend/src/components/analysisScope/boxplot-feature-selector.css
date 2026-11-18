@@ -1,0 +1,38 @@
+.boxplot-feature-selector { min-width: 0; }
+.boxplot-selector-fields { display: grid; gap: 12px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.boxplot-selector-fields legend { margin-bottom: 8px; }
+.boxplot-selector-fields .analysis-button { font-size: 11px; padding: 4px 8px; min-height: 30px; }
+.boxplot-selector-fields .analysis-button:disabled { cursor: default; opacity: .55; }
+.boxplot-selector-ranked { display: grid; gap: 10px; }
+.boxplot-selector-ranked p, .boxplot-selector-status { margin: 0; color: var(--color-text-muted); font-size: 11px; line-height: 1.65; overflow-wrap: anywhere; }
+.boxplot-selector-ranked label, .boxplot-selector-lookup > label { color: var(--color-text-main); font-size: 12px; font-weight: 600; }
+.boxplot-selector-lookup { display: grid; gap: 8px; min-width: 0; }
+.boxplot-selector-candidates { max-height: 280px; overflow: auto; border-block: 1px solid var(--color-border-soft); scrollbar-gutter: stable; }
+.boxplot-selector-candidates:empty { border: 0; }
+.boxplot-selector-candidate, .boxplot-selector-pool-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 8px; padding: 10px 4px; border-bottom: 1px solid var(--color-border-soft); }
+.boxplot-selector-candidate:last-child, .boxplot-selector-pool-item:last-child { border-bottom: 0; }
+.boxplot-selector-candidate.is-selected { background: var(--workspace-accent-soft, #eff6ff); }
+.boxplot-selector-name { display: grid; gap: 4px; min-width: 0; }
+.boxplot-selector-name > strong, .boxplot-selector-name label strong { color: var(--color-text-main); font-size: 12px; line-height: 1.6; font-weight: 600; overflow-wrap: anywhere; white-space: normal; }
+.boxplot-selector-name small { color: var(--color-text-muted); font-size: 10px; line-height: 1.6; overflow-wrap: anywhere; }
+.boxplot-selector-name label { display: flex; align-items: start; gap: 7px; cursor: pointer; }
+.boxplot-selector-name input[type=checkbox] { width: 15px; height: 15px; min-height: 15px; flex-shrink: 0; margin: 3px 0 0; accent-color: var(--color-accent); }
+.boxplot-feature-identity { color: var(--color-text-muted); font-size: 10px; line-height: 1.65; min-width: 0; }
+.boxplot-feature-identity summary { cursor: pointer; }
+.boxplot-feature-identity span, .boxplot-feature-identity code { display: block; overflow-wrap: anywhere; white-space: normal; margin-top: 4px; font-size: 10px; }
+.boxplot-selector-row-actions { display: grid; justify-items: end; gap: 8px; }
+.boxplot-selector-pagination { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; font-size: 11px; color: var(--color-text-muted); }
+.boxplot-selector-pool { display: grid; gap: 10px; border-top: 1px solid var(--color-border); padding-top: 14px; }
+.boxplot-selector-pool-heading { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; font-size: 12px; }
+.boxplot-selector-pool-heading span { color: var(--color-accent); }
+.boxplot-selector-pool-search, .boxplot-selector-pool-filter { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 8px; font-size: 11px; }
+.boxplot-selector-pool-search input { width: 100%; min-width: 0; padding: 5px 8px; }
+.boxplot-selector-batch { display: flex; flex-wrap: wrap; gap: 6px; }
+.boxplot-selector-pool-list { max-height: 320px; min-width: 0; overflow: auto; scrollbar-gutter: stable; }
+.boxplot-selector-pool-item.is-excluded { background: #f8fafc; }
+.boxplot-selector-pool-item.is-excluded strong { color: var(--color-text-muted); }
+.boxplot-selector-warning { margin: 0; color: #a34d0b; font-size: 11px; line-height: 1.6; }
+.boxplot-selector-apply { position: sticky; bottom: 0; z-index: 1; display: grid; gap: 10px; padding: 12px 0; border-top: 1px solid var(--color-border); background: #fff; box-shadow: 0 -6px 10px rgba(255,255,255,.9); }
+.boxplot-selector-apply > div:first-child { display: grid; gap: 4px; color: var(--color-text-muted); font-size: 11px; line-height: 1.5; }
+.boxplot-selector-apply strong { font-size: 12px; color: var(--color-text-main); }
+.boxplot-selector-apply-buttons { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }

@@ -194,12 +194,12 @@ test('shows the four supported chart tabs for KO datasets', async () => {
   render(<App />);
 
   expect(
-    await screen.findByText('KO 检出率热图', {}, { timeout: 10_000 })
+    await screen.findByText('KO 检出率探索', {}, { timeout: 10_000 })
   ).toBeTruthy();
 
   expect(screen.getAllByText('丰度对比').length).toBeGreaterThan(0);
   expect(screen.getByText('高丰度 KO')).toBeTruthy();
-  expect(screen.getByText('KO 检出率热图')).toBeTruthy();
+  expect(screen.getByText('KO 检出率探索')).toBeTruthy();
   expect(screen.getByText('KO 差异特征')).toBeTruthy();
   expect(screen.queryByText('差异热图')).toBeNull();
   expect(screen.queryByText('丰度箱线图')).toBeNull();

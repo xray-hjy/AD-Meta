@@ -55,6 +55,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/analysis-runs/{run_key}/artifacts/{artifact_key}/ordinations/{projection_kind}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ordination Preview */
+        post: operations["ordination_preview_api_analysis_runs__run_key__artifacts__artifact_key__ordinations__projection_kind__preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/analysis-runs/{run_key}/artifacts/{artifact_key}/projection-audits/{projection_kind}": {
         parameters: {
             query?: never;
@@ -134,6 +151,23 @@ export interface paths {
         put?: never;
         /** Abundance Projection */
         post: operations["abundance_projection_api_analysis_runs__run_key__artifacts__artifact_key__projections_abundance_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analysis-runs/{run_key}/artifacts/{artifact_key}/projections/boxplot/review-data": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Boxplot Review Data */
+        post: operations["boxplot_review_data_api_analysis_runs__run_key__artifacts__artifact_key__projections_boxplot_review_data_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -338,6 +372,23 @@ export interface paths {
         get: operations["download_api_datasets__slug__revisions__revision__diting_download__kind__get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/datasets/{slug}/revisions/{revision}/diting/exploration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Exploration */
+        post: operations["exploration_api_datasets__slug__revisions__revision__diting_exploration_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1641,6 +1692,54 @@ export interface components {
             /** Samplecodes */
             sampleCodes?: string[];
         };
+        /** BoxplotReviewDataResponse */
+        BoxplotReviewDataResponse: {
+            /** Displaymultiplier */
+            displayMultiplier: number;
+            /** Items */
+            items: components["schemas"]["BoxplotReviewItemResponse"][];
+            /** Projectionkey */
+            projectionKey: string;
+            /** Samples */
+            samples: components["schemas"]["BoxplotReviewSampleResponse"][];
+        };
+        /** BoxplotReviewItemResponse */
+        BoxplotReviewItemResponse: {
+            /** Displayvalues */
+            displayValues: {
+                [key: string]: (number | null)[];
+            };
+            /** Featureid */
+            featureId: string;
+            /** Storedvalues */
+            storedValues: (number | null)[];
+        };
+        /**
+         * BoxplotReviewRequest
+         * @description Download data for an exact displayed projection, including retained old results.
+         */
+        BoxplotReviewRequest: {
+            /** Parameters */
+            parameters?: {
+                [key: string]: unknown;
+            };
+            /** Projectionkey */
+            projectionKey: string;
+            scope?: components["schemas"]["AnalysisScope"];
+            selection?: components["schemas"]["FeatureSelection"] | null;
+            /**
+             * Topn
+             * @default 20
+             */
+            topN: number;
+        };
+        /** BoxplotReviewSampleResponse */
+        BoxplotReviewSampleResponse: {
+            /** Group */
+            group: string;
+            /** Samplecode */
+            sampleCode: string;
+        };
         /** CapabilityState */
         CapabilityState: {
             /** Reasoncodes */
@@ -1704,6 +1803,10 @@ export interface components {
             };
             /** Projectionkey */
             projectionKey: string;
+            /** Projectionrequest */
+            projectionRequest?: {
+                [key: string]: unknown;
+            } | null;
             /** Runkey */
             runKey: string;
             /** Scope */
@@ -1928,6 +2031,23 @@ export interface components {
              * @constant
              */
             ranking: "mean_abundance";
+        };
+        /** FunctionExplorationRequest */
+        FunctionExplorationRequest: {
+            /** Feature */
+            feature?: string | null;
+            /**
+             * Kind
+             * @default ko
+             * @enum {string}
+             */
+            kind: "ko" | "pathway";
+            /**
+             * Prevalencemin
+             * @default 0.1
+             */
+            prevalenceMin: number;
+            scope?: components["schemas"]["AnalysisScope"];
         };
         /** FunctionalCommunity */
         FunctionalCommunity: {
@@ -4191,6 +4311,8 @@ export interface components {
              * @default 0
              */
             offset: number;
+            /** Phenotype */
+            phenotype?: ("AD" | "NC") | null;
             /**
              * Query
              * @default
@@ -4366,6 +4488,43 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AnalysisFeaturePageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ordination_preview_api_analysis_runs__run_key__artifacts__artifact_key__ordinations__projection_kind__preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_key: string;
+                artifact_key: string;
+                projection_kind: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChartProjectionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -4555,6 +4714,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AbundanceProjectionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    boxplot_review_data_api_analysis_runs__run_key__artifacts__artifact_key__projections_boxplot_review_data_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_key: string;
+                artifact_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BoxplotReviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BoxplotReviewDataResponse"];
                 };
             };
             /** @description Validation Error */
@@ -5025,6 +5220,44 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    exploration_api_datasets__slug__revisions__revision__diting_exploration_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+                revision: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FunctionExplorationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
             /** @description Validation Error */
