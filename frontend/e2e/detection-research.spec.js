@@ -14,12 +14,12 @@ test('real KO detection Top 50/200, manual pool, shared views and exports preser
   const next=page.waitForResponse(r=>r.url().endsWith('/projections/detection')&&r.request().method()==='POST');
   await page.getByRole('button',{name:'KO 展示上限',exact:true}).click();await page.getByRole('button',{name:'Top 200',exact:true}).click();await page.getByRole('button',{name:'应用',exact:true}).click();await next;
   await expect(panel).toContainText('快捷 Top 200 KO');await expect(panel).toContainText('对象池 200');await expect(panel).toContainText('第 1/8 页');
-  await panel.evaluate(el=>el.scrollIntoView({block:'start'})); await expect.poll(()=>panel.locator('canvas').first().evaluate(c=>c.clientWidth)).toBeGreaterThan(800); await page.screenshot({path:'/private/tmp/opt009-top200.png'});
+  await panel.evaluate(el=>el.scrollIntoView({block:'start'})); await expect.poll(()=>panel.locator('canvas').first().evaluate(c=>c.clientWidth)).toBeGreaterThan(800); await page.screenshot({path:test.info().outputPath('opt009-top200.png')});
   await panel.getByRole('button',{name:'下一页',exact:true}).click();await expect(panel).toContainText('第 2/8 页');
   await panel.locator('summary').filter({hasText:'手动对象池与批量编号'}).click();await panel.getByRole('button',{name:'清空对象池'}).click();
   await panel.getByLabel('批量检出 KO 编号').fill('K00368,K15864,K99999');await panel.getByRole('button',{name:'加入对象池',exact:true}).click();
   await expect(panel).toContainText('对象池 2');await expect(panel).toContainText('未知编号 K99999');
-  await panel.getByRole('button',{name:'双组哑铃比较',exact:true}).click();await panel.screenshot({path:'/private/tmp/opt009-dumbbell.png'});
+  await panel.getByRole('button',{name:'双组哑铃比较',exact:true}).click();await panel.screenshot({path:test.info().outputPath('opt009-dumbbell.png')});
   const csvEvent=page.waitForEvent('download');await panel.getByRole('button',{name:'下载对象池 CSV',exact:true}).click();
   const csv=await readFile(await(await csvEvent).path(),'utf8');expect(csv.trim().split('\r\n')).toHaveLength(3);expect(csv).toContain('"K00368","58","122"');expect(csv).toContain('"41","63"');
   await panel.getByRole('button',{name:'检出率差值',exact:true}).click();await expect(panel.getByRole('img',{name:'KO 检出率比较图'})).toBeVisible();
@@ -33,7 +33,7 @@ test('real KO detection Top 50/200, manual pool, shared views and exports preser
   await expect(panel).toContainText('已框选 1 项');
   await panel.locator('summary').filter({hasText:'完整检出统计查询'}).click();await panel.getByRole('button',{name:'K00368',exact:true}).click();
   await expect(panel).toContainText('AD 58/122（47.54%），NC 41/63（65.08%）');
-  await page.setViewportSize({width:390,height:844});await expect.poll(()=>panel.locator('canvas').first().evaluate(c=>c.clientWidth)).toBeLessThan(350);await page.screenshot({path:'/private/tmp/opt009-mobile.png'});
+  await page.setViewportSize({width:390,height:844});await expect.poll(()=>panel.locator('canvas').first().evaluate(c=>c.clientWidth)).toBeLessThan(350);await page.screenshot({path:test.info().outputPath('opt009-mobile.png')});
   await panel.getByRole('button',{name:'查看 K00368 样本原值与统计证据',exact:true}).click();
   await expect(page.getByRole('region',{name:'功能对象样本证据'})).toContainText('AD：n=122，检出 58/122');
   expect(errors).toEqual([]);

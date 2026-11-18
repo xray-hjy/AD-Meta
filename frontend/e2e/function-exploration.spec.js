@@ -22,7 +22,7 @@ test('real DiTing zero results remain searchable and pathway KO links share samp
   await expect(evidence).toContainText('AD：n=122，检出 58/122');
   await expect(evidence).toContainText('最大绝对差 0.0000');
   await panel.getByLabel('搜索功能对象').fill('');
-  await evidence.scrollIntoViewIfNeeded(); await evidence.screenshot({path:'/private/tmp/opt008-functional-desktop.png'});
+  await evidence.scrollIntoViewIfNeeded(); await evidence.screenshot({path:test.info().outputPath('opt008-functional-desktop.png')});
   const svgEvent=page.waitForEvent('download'); await evidence.getByRole('button',{name:'导出所选分布 SVG'}).click();
   const svg=await readFile(await(await svgEvent).path(),'utf8'); expect(svg).toContain('<svg');
   const download=page.waitForEvent('download');
@@ -36,7 +36,7 @@ test('real DiTing zero results remain searchable and pathway KO links share samp
   await expect(evidence).toContainText('p=');
   await page.setViewportSize({width:390,height:844});await evidence.scrollIntoViewIfNeeded();
   await expect.poll(() => evidence.locator('canvas').first().evaluate(c => c.clientWidth)).toBeLessThan(350);
-  await page.screenshot({path:'/private/tmp/opt008-functional-mobile.png'});
+  await page.screenshot({path:test.info().outputPath('opt008-functional-mobile.png')});
   await expect(page.locator('vite-error-overlay')).toHaveCount(0);expect(errors).toEqual([]);
   await page.setViewportSize({width:1600,height:1100});
   await page.goto('/analysis/abundance?dataset=ad-nc-ko-abundance&chart=ditingOverview');

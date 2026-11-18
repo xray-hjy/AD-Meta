@@ -12,7 +12,7 @@ test('treemap fills wide canvas and supports exact-path focus, back, sizes and s
   await expect(page.getByText(/数值为样本相对丰度之和|数值为源丰度之和/)).toBeVisible();
   const size = await page.locator('.taxonomy-treemap-panel').evaluate(element => ({ width: element.clientWidth, available: element.parentElement.clientWidth }));
   expect(size.width / size.available).toBeGreaterThan(.96);
-  await page.locator('.taxonomy-explorer').screenshot({ path: '/private/tmp/opt004-treemap-wide.png' });
+  await page.locator('.taxonomy-explorer').screenshot({ path: test.info().outputPath('opt004-treemap-wide.png') });
   await page.locator('.taxonomy-chart-surface canvas').first().click({ position: { x: 150, y: 150 } });
   await expect(page.getByRole('region', { name: '分类节点详情' })).toBeVisible();
   await page.getByRole('button', { name: '恢复全图', exact: true }).click();
@@ -34,7 +34,7 @@ test('treemap fills wide canvas and supports exact-path focus, back, sizes and s
   await expect.poll(() => page.locator('.taxonomy-treemap-panel').evaluate(element => element.clientHeight)).toBe(1100);
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.locator('.taxonomy-chart-surface canvas')).toBeVisible();
-  await page.locator('.taxonomy-explorer').screenshot({ path: '/private/tmp/opt004-treemap-mobile.png' });
+  await page.locator('.taxonomy-explorer').screenshot({ path: test.info().outputPath('opt004-treemap-mobile.png') });
   expect(errors).toEqual([]);
 });
 
@@ -72,10 +72,10 @@ test('sunburst circular canvas and draggable keyboard legend stay bounded and ex
   await page.getByRole('button', { name: '导出图形', exact: true }).click();
   const svg = await readFile(await (await downloadEvent).path(), 'utf8');
   expect(svg).toContain('门级占比'); expect(svg).toContain('占完整范围总和');
-  await page.locator('.taxonomy-explorer').screenshot({ path: '/private/tmp/opt004-sunburst-wide.png' });
+  await page.locator('.taxonomy-explorer').screenshot({ path: test.info().outputPath('opt004-sunburst-wide.png') });
   await page.setViewportSize({ width: 390, height: 844 });
   await expect.poll(() => card.evaluate(element => getComputedStyle(element).position)).toBe('static');
-  await page.locator('.taxonomy-explorer').screenshot({ path: '/private/tmp/opt004-sunburst-mobile.png' });
+  await page.locator('.taxonomy-explorer').screenshot({ path: test.info().outputPath('opt004-sunburst-mobile.png') });
   expect(errors).toEqual([]);
 });
 
@@ -121,9 +121,9 @@ test('real MetaPhlAn hierarchy preserves 185-sample semantics and Other member a
   await page.getByRole('button', { name: '恢复全图', exact: true }).click();
   await page.getByRole('searchbox', { name: '查找分类名称或路径' }).fill('');
   await page.mouse.move(0, 0);
-  await page.locator('.taxonomy-explorer').screenshot({ path: '/private/tmp/opt004-real-treemap.png' });
+  await page.locator('.taxonomy-explorer').screenshot({ path: test.info().outputPath('opt004-real-treemap.png') });
   await page.goto(URL('sunburst'));
   await expect(page.getByRole('complementary', { name: '门级图例卡片' })).toBeVisible();
   await page.mouse.move(0, 0);
-  await page.locator('.taxonomy-explorer').screenshot({ path: '/private/tmp/opt004-real-sunburst.png' });
+  await page.locator('.taxonomy-explorer').screenshot({ path: test.info().outputPath('opt004-real-sunburst.png') });
 });

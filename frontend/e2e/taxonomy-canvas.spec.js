@@ -89,7 +89,7 @@ test('real 183-node Sankey uses page scrolling, live overview, spacing and full 
   await expect(overview.locator('.chart-minimap')).toBeVisible();
   await overview.getByRole('button', { name: '图底', exact: true }).click();
   await expect.poll(async () => Number(await frame.getAttribute('y'))).toBeGreaterThan(firstY);
-  await page.screenshot({ path: '/private/tmp/opt005-sankey-page-overview.png' });
+  await page.screenshot({ path: test.info().outputPath('opt005-sankey-page-overview.png') });
   await page.getByRole('button', { name: '展开画布', exact: true }).click();
   await expect.poll(async () => (await chartState(page)).height).toBeGreaterThan(initial.height);
   expect((await chartState(page)).values).toEqual(initial.values);
@@ -100,7 +100,7 @@ test('real 183-node Sankey uses page scrolling, live overview, spacing and full 
   const event = page.waitForEvent('download');
   await page.getByRole('button', { name: '导出完整桑基图 PNG', exact: true }).click();
   const download = await event;
-  await download.saveAs('/private/tmp/opt005-sankey-full-export.png');
+  await download.saveAs(test.info().outputPath('opt005-sankey-full-export.png'));
   const png = await readFile(await download.path());
   expect(png.subarray(1, 4).toString()).toBe('PNG');
   const pixels = { width: png.readUInt32BE(16), height: png.readUInt32BE(20) };
@@ -115,13 +115,13 @@ test('real 183-node Sankey uses page scrolling, live overview, spacing and full 
   await page.getByRole('button', { name: '全屏分类图', exact: true }).click();
   await expect.poll(() => page.evaluate(() => !!document.fullscreenElement)).toBe(false);
   await page.locator('.taxonomy-explorer__controls').scrollIntoViewIfNeeded();
-  await page.screenshot({ path: '/private/tmp/opt005-sankey-toolbar.png' });
+  await page.screenshot({ path: test.info().outputPath('opt005-sankey-toolbar.png') });
   await page.setViewportSize({ width: 390, height: 844 });
   await expect.poll(() => page.locator('.taxonomy-sankey-scroll').evaluate(el => el.scrollWidth > el.clientWidth)).toBe(true);
   await page.locator('.taxonomy-viewport').evaluate(el => el.scrollIntoView({ block: 'start' }));
   await page.locator('.taxonomy-sankey-scroll').evaluate(el => { el.scrollLeft = el.scrollWidth; });
   await expect(overview).toBeVisible();
-  await page.screenshot({ path: '/private/tmp/opt005-sankey-mobile.png' });
+  await page.screenshot({ path: test.info().outputPath('opt005-sankey-mobile.png') });
   expect(await page.locator('.taxonomy-sankey-scroll').evaluate(el => el.scrollHeight - el.clientHeight)).toBeLessThanOrEqual(1);
   console.log(JSON.stringify({ sourceNodes: initial.count, initialHeight: initial.height, exportPixels: pixels, elapsedMs: Date.now() - started }));
   expect(errors).toEqual([]);

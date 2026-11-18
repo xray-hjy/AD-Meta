@@ -28,7 +28,7 @@ test('real-source zero, exploratory, single candidate and prespecified sensitivi
   await expect(page.getByText('本次统计筛选为零候选，丰度数据仍可查看')).toBeVisible();
   await expect(page.locator('.heatmap-panel canvas')).toHaveCount(0);
   const key = zero.analysisRecord.analysisKey, storage = zero.analysisRecord.storageId;
-  await page.locator('.heatmap-analysis').screenshot({ path: '/private/tmp/opt007-zero-result.png' });
+  await page.locator('.heatmap-analysis').screenshot({ path: test.info().outputPath('opt007-zero-result.png') });
 
   await page.getByRole('button', { name: '查看完整统计结果', exact: true }).click();
   await expect(page.locator('details.projection-audit')).toHaveAttribute('open', '');
@@ -75,7 +75,7 @@ test('real-source zero, exploratory, single candidate and prespecified sensitivi
   expect(changed.dendrograms.rows.merges).toHaveLength(0);
   expect(changed.analysisRecord.storageId).toBe(storage);
   await page.getByRole('button', { name: /AD 组丰度热图，按回车放大/ }).scrollIntoViewIfNeeded();
-  await page.screenshot({ path: '/private/tmp/opt007-exploratory-real.png' });
+  await page.screenshot({ path: test.info().outputPath('opt007-exploratory-real.png') });
   const imageEvent = page.waitForEvent('download');
   await page.getByRole('button', { name: '导出AD 组丰度热图', exact: true }).click();
   const image = await imageEvent;
@@ -96,7 +96,7 @@ test('real-source zero, exploratory, single candidate and prespecified sensitivi
   expect(single.adLabels).toHaveLength(122); expect(single.ncLabels).toHaveLength(63);
   await expect(page.getByRole('region', { name: '单物种样本分布' })).toBeVisible();
   await expect(page.getByText(/AD 检出 67\/122/)).toBeVisible();
-  await page.locator('.heatmap-single-feature').screenshot({ path: '/private/tmp/opt007-single-real.png' });
+  await page.locator('.heatmap-single-feature').screenshot({ path: test.info().outputPath('opt007-single-real.png') });
 
   const filtered = await change('检验前预筛', 'prevalence');
   expect(filtered.summary.testedFeatureCount).toBe(499);
@@ -111,7 +111,7 @@ test('real-source zero, exploratory, single candidate and prespecified sensitivi
   expect(excludedCSV).toContain('below_pooled_prevalence');
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('region', { name: '热图分析记录与结果解释' }).scrollIntoViewIfNeeded();
-  await page.screenshot({ path: '/private/tmp/opt007-mobile.png' });
+  await page.screenshot({ path: test.info().outputPath('opt007-mobile.png') });
   await expect(page.locator('vite-error-overlay')).toHaveCount(0);
   expect(errors).toEqual([]);
 });

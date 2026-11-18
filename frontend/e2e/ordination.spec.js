@@ -90,11 +90,11 @@ for (const kind of ['pca', 'pcoa']) {
     await page.getByRole('button', { name: '应用样本范围并重新计算' }).click();
     await expect(page.getByText(/有效样本 8 \/ 8/)).toBeVisible();
     await page.locator('.ordination-tools summary').click();
-    await page.locator('.chart-plain--ordination').screenshot({ path: `/private/tmp/opt002-${kind}-controls.png` });
-    await page.locator('.ordination-chart__surface').screenshot({ path: `/private/tmp/opt002-${kind}-desktop.png` });
+    await page.locator('.chart-plain--ordination').screenshot({ path: test.info().outputPath(`opt002-${kind}-controls.png`) });
+    await page.locator('.ordination-chart__surface').screenshot({ path: test.info().outputPath(`opt002-${kind}-desktop.png`) });
     await page.setViewportSize({ width: 390, height: 844 });
     await expect(page.locator('.ordination-chart__surface canvas')).toBeVisible();
-    await page.locator('.chart-plain--ordination').screenshot({ path: `/private/tmp/opt002-${kind}-mobile.png` });
+    await page.locator('.chart-plain--ordination').screenshot({ path: test.info().outputPath(`opt002-${kind}-mobile.png`) });
     expect(errors).toEqual([]);
   });
 }

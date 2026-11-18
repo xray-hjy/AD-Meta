@@ -19,7 +19,7 @@ test('phylum overview, all six views, matching exports and responsive details', 
   await expect(page.locator('.phylum-overview__card')).toHaveCount(6);
   await expect(page.getByText(/当前未发生合并，显示全部可用门/)).toBeVisible();
   await expect(page.getByLabel('显示组成项')).toHaveCount(0);
-  await page.locator('.phylum-workspace').screenshot({ path: '/private/tmp/opt003-overview.png' });
+  await page.locator('.phylum-workspace').screenshot({ path: test.info().outputPath('opt003-overview.png') });
   const nav = page.getByRole('navigation', { name: '门级图形切换' });
   for (const name of views) {
     await nav.getByRole('button', { name, exact: true }).click();
@@ -55,16 +55,16 @@ test('phylum overview, all six views, matching exports and responsive details', 
   await expect(page.locator('.projection-samples__meta')).toContainText('共 4 个');
   await page.getByRole('searchbox', { name: '搜索参与样本' }).fill('900008');
   await expect(page.locator('.projection-samples__meta')).toContainText('共 1 个');
-  await page.locator('.projection-audit--composition').screenshot({ path: '/private/tmp/opt003-details.png' });
+  await page.locator('.projection-audit--composition').screenshot({ path: test.info().outputPath('opt003-details.png') });
   await nav.getByRole('button', { name: '门级丰度热图', exact: true }).click();
   await page.getByRole('combobox', { name: '颜色尺度' }).selectOption('log');
   await expect(page.getByText(/颜色表示log10/)).toBeVisible();
-  await page.locator('.phylum-workspace').screenshot({ path: '/private/tmp/opt003-heatmap.png' });
+  await page.locator('.phylum-workspace').screenshot({ path: test.info().outputPath('opt003-heatmap.png') });
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.locator('.phylum-workspace canvas').first()).toBeVisible();
   const scroll = await page.getByRole('region', { name: '门级图形画布，窄屏可左右滚动' }).evaluate(element => ({ width: element.clientWidth, content: element.scrollWidth }));
   expect(scroll.content).toBeGreaterThan(scroll.width);
-  await page.locator('.phylum-workspace').screenshot({ path: '/private/tmp/opt003-mobile.png' });
+  await page.locator('.phylum-workspace').screenshot({ path: test.info().outputPath('opt003-mobile.png') });
   expect(errors).toEqual([]);
 });
 
@@ -128,5 +128,5 @@ test('185-sample browsing and export include the complete matrix', async ({ page
   expect(csv).toContain('SyntheticLarge_185');
   await nav.getByRole('button', { name: '门级丰度热图', exact: true }).click();
   await expect(page.locator('.phylum-workspace canvas').first()).toBeVisible();
-  await page.locator('.phylum-workspace').screenshot({ path: '/private/tmp/opt003-large-synthetic.png' });
+  await page.locator('.phylum-workspace').screenshot({ path: test.info().outputPath('opt003-large-synthetic.png') });
 });

@@ -34,14 +34,14 @@ test('real pathways preserve pool across modules, distinguish search and scope, 
   const sampleEvent=page.waitForEvent('download');await page.getByRole('button',{name:'导出当前所见样本原值',exact:true}).click();
   const csv=await readFile(await(await sampleEvent).path(),'utf8');expect(csv.trim().split('\r\n')).toHaveLength(367);expect(csv).not.toContain('"NC"');
   const chosenEvent=page.waitForEvent('download');await page.getByRole('button',{name:'导出当前已选通路统计',exact:true}).click();expect((await readFile(await(await chosenEvent).path(),'utf8')).trim().split('\r\n')).toHaveLength(4);
-  await page.locator('.research-chart-surface').screenshot({path:'/private/tmp/opt010-ad-distribution.png'});
-  await page.locator('.diting-focused-summary').screenshot({path:'/private/tmp/opt010-focus.png'});
+  await page.locator('.research-chart-surface').screenshot({path:test.info().outputPath('opt010-ad-distribution.png')});
+  await page.locator('.diting-focused-summary').screenshot({path:test.info().outputPath('opt010-focus.png')});
   const first7=payload.items.slice(0,7), url=new URL(page.url());url.searchParams.set('pathways',first7.map(r=>r.id).join(','));url.searchParams.set('pathway',first7[0].id);url.searchParams.set('pathwayPage','0');url.searchParams.delete('pathwayGroup');
   await page.goto(url.toString());await expect(context).toContainText('当前图 6 项');
   await page.getByRole('button',{name:'下一页',exact:true}).click();await expect(context).toContainText('当前图 1 项');await expect(page.getByRole('combobox',{name:'选择研究通路',exact:true})).toContainText(first7[6].name);
   await page.getByRole('combobox',{name:'选择研究通路',exact:true}).click();await page.locator(`[role="option"][data-select-value="${first7[1].id}"]`).click();await expect(context).toContainText('对象池已选 7 项');await expect(context).toContainText('当前图 6 项');
-  const svgEvent=page.waitForEvent('download');await page.getByRole('button',{name:'导出全部已选通路 SVG',exact:true}).click();const downloadedSvg=await svgEvent; await downloadedSvg.saveAs('/private/tmp/opt010-selected7.svg'); const svg=await readFile(await downloadedSvg.path(),'utf8');for(const item of first7) expect(svg).toContain(item.name.replaceAll('&','&amp;').replaceAll('>','&gt;'));
-  await context.screenshot({path:'/private/tmp/opt010-pool.png'});
+  const svgEvent=page.waitForEvent('download');await page.getByRole('button',{name:'导出全部已选通路 SVG',exact:true}).click();const downloadedSvg=await svgEvent; await downloadedSvg.saveAs(test.info().outputPath('opt010-selected7.svg')); const svg=await readFile(await downloadedSvg.path(),'utf8');for(const item of first7) expect(svg).toContain(item.name.replaceAll('&','&amp;').replaceAll('>','&gt;'));
+  await context.screenshot({path:test.info().outputPath('opt010-pool.png')});
   const zero=payload.items.find(r=>r.values.every(v=>v===0));const zeroUrl=new URL(page.url());zeroUrl.searchParams.set('pathways',zero.id);zeroUrl.searchParams.set('pathway',zero.id);zeroUrl.searchParams.set('pathwayPage','0');await page.goto(zeroUrl.toString());
   await expect(page.getByText(/全部样本为零：显示实际观测值/)).toBeVisible();await page.locator('.diting-selection summary').click();await page.getByRole('button',{name:'清空对象池',exact:true}).click();await expect(page.getByText('通路对象池为空，请从候选列表加入通路。')).toBeVisible();
   await expect(page.locator('vite-error-overlay')).toHaveCount(0);expect(errors).toEqual([]);
