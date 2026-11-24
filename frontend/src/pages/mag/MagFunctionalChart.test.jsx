@@ -1,5 +1,5 @@
 import { forwardRef, useImperativeHandle } from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { setPlatformAPI } from 'zrender/lib/core/platform';
 import { echarts } from '../../components/Charts/EChartBase';
@@ -38,4 +38,24 @@ it('renders a functional matrix using the shared viewport contract, which does n
   expect(rendered.zoom[0].start).toBe(0);
   expect(rendered.zoom[1].end).toBe(100);
   expect(JSON.stringify(rendered)).not.toContain('null');
+});
+
+it('switches palette lists by value meaning and remembers binary and continuous choices separately', () => {
+  const data = { projectionFingerprint: 'stable-matrix', namespace: 'kofam_ko', valueKind: 'presence',
+    mags: [{ magId: 'M1', quality: {} }], features: [{ featureId: 'K00929' }], values: [[1]] };
+  const { rerender } = render(<MagFunctionalChart kind="matrix" data={data} buildOption={functionMatrixOption} camera />);
+  const initialView = screen.getByTestId('functional-surface').textContent;
+  fireEvent.click(screen.getByRole('button', { name: '配色', exact: true }));
+  expect(within(screen.getByRole('listbox', { name: '配色系列' })).getAllByRole('option')).toHaveLength(12);
+  fireEvent.click(screen.getByRole('option', { name: /深色系 · 墨蓝/ }));
+  expect(screen.getByTestId('functional-surface')).toHaveTextContent(initialView);
+  expect(JSON.parse(localStorage.getItem('admeta.chart-style.v1.mag-functional-matrix')).presencePalette).toBe('dark-navy');
+  rerender(<MagFunctionalChart kind="matrix" data={{ ...data, valueKind: 'count' }} buildOption={functionMatrixOption} camera />);
+  fireEvent.click(screen.getByRole('button', { name: '配色', exact: true }));
+  expect(within(screen.getByRole('listbox', { name: '配色系列' })).queryByRole('option', { name: /墨蓝/ })).toBeNull();
+  fireEvent.click(screen.getByRole('option', { name: /Viridis/ }));
+  const saved = JSON.parse(localStorage.getItem('admeta.chart-style.v1.mag-functional-matrix'));
+  expect(saved.presencePalette).toBe('dark-navy'); expect(saved.palette).toBe('viridis');
+  rerender(<MagFunctionalChart kind="matrix" data={data} buildOption={functionMatrixOption} camera />);
+  expect(screen.getByRole('button', { name: '配色', exact: true })).toHaveTextContent('墨蓝');
 });

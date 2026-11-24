@@ -973,6 +973,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/mag/robustness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Cohort Robustness */
+        get: operations["cohort_robustness_api_mag_robustness_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mag/robustness/download/{kind}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Cohort Robustness */
+        get: operations["download_cohort_robustness_api_mag_robustness_download__kind__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/mag/samples": {
         parameters: {
             query?: never;
@@ -1469,6 +1503,22 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /** AdjustedCandidate */
+        AdjustedCandidate: {
+            /** Beta */
+            beta: number | null;
+            /** Magid */
+            magId: string;
+            /** Qvalue */
+            qValue: number | null;
+            /** Reason */
+            reason: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "estimated" | "unavailable";
+        };
         /** AnalysisArtifactResponse */
         AnalysisArtifactResponse: {
             /**
@@ -1691,6 +1741,55 @@ export interface components {
             mode: "cohort" | "group" | "subset" | "sample";
             /** Samplecodes */
             sampleCodes?: string[];
+        };
+        /** Association */
+        Association: {
+            /** Adcount */
+            adCount: number;
+            adjusted: components["schemas"]["Estimate"];
+            /** Influentialsamplecount */
+            influentialSampleCount?: number | null;
+            /** Magid */
+            magId: string;
+            /** Maxcooksdistance */
+            maxCooksDistance?: number | null;
+            /** Maxsinglesamplebetachange */
+            maxSingleSampleBetaChange?: number | null;
+            /** Minabundancepercent */
+            minAbundancePercent?: number | null;
+            /** Mostinfluentialsampleid */
+            mostInfluentialSampleId?: string | null;
+            /** Nccount */
+            ncCount: number;
+            /** Nonfinitecount */
+            nonFiniteCount: number;
+            /** Nonpositivecount */
+            nonPositiveCount: number;
+            /** Outofrangecount */
+            outOfRangeCount: number;
+            /** Samplecount */
+            sampleCount: number;
+            unadjusted: components["schemas"]["Estimate"];
+        };
+        /** BatchOmission */
+        BatchOmission: {
+            /** Adcount */
+            adCount: number;
+            /** Betachange */
+            betaChange?: number | null;
+            /** Directionreversed */
+            directionReversed?: boolean | null;
+            estimate: components["schemas"]["Estimate"];
+            /** Excludedbatch */
+            excludedBatch: string;
+            /** Intervalwidthratio */
+            intervalWidthRatio?: number | null;
+            /** Magid */
+            magId: string;
+            /** Nccount */
+            ncCount: number;
+            /** Samplecount */
+            sampleCount: number;
         };
         /** BoxplotReviewDataResponse */
         BoxplotReviewDataResponse: {
@@ -1982,6 +2081,30 @@ export interface components {
             detail: string;
             /** Requestid */
             requestId?: string | null;
+        };
+        /** Estimate */
+        Estimate: {
+            /** Beta */
+            beta?: number | null;
+            /** Cihigh */
+            ciHigh?: number | null;
+            /** Cilow */
+            ciLow?: number | null;
+            /** Geometricmeanratio */
+            geometricMeanRatio?: number | null;
+            /** Pvalue */
+            pValue?: number | null;
+            /** Qvalue */
+            qValue?: number | null;
+            /** Reason */
+            reason?: string | null;
+            /** Standarderror */
+            standardError?: number | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "estimated" | "unavailable";
         };
         /** EvidenceBlocker */
         EvidenceBlocker: {
@@ -2574,6 +2697,10 @@ export interface components {
             representativeMag: string | null;
             /** Runkey */
             runKey: string;
+            /** Sourcedomain */
+            sourceDomain?: string | null;
+            /** Sourcegenus */
+            sourceGenus?: string | null;
             /** Sourcerevision */
             sourceRevision: string;
             /** Status */
@@ -2681,6 +2808,14 @@ export interface components {
             mappingMethod: string | null;
             /** Mappingstatus */
             mappingStatus: string;
+            /** Ncbidomain */
+            ncbiDomain?: string | null;
+            /** Ncbigenus */
+            ncbiGenus?: string | null;
+            /** Ncbilineagereason */
+            ncbiLineageReason?: string | null;
+            /** Ncbilineagestatus */
+            ncbiLineageStatus?: ("verified" | "pending" | "conflict") | null;
             /** Ncbiorganismname */
             ncbiOrganismName: string | null;
             /** Ncbispeciestaxid */
@@ -2698,6 +2833,10 @@ export interface components {
             limit: number;
             /** Mappingstatus */
             mappingStatus: string;
+            /** Ncbilineagestatuscounts */
+            ncbiLineageStatusCounts?: {
+                [key: string]: number;
+            };
             /** Offset */
             offset: number;
             provenance: components["schemas"]["MagProvenance"];
@@ -2909,11 +3048,17 @@ export interface components {
             lowAniOnly: boolean;
             /** Mappingstatus */
             mappingStatus: string;
+            /** Matchedtotal */
+            matchedTotal: number;
             /** Offset */
             offset: number;
             provenance: components["schemas"]["MagProvenance"];
             /** Query */
             query: string;
+            /** Sizebin */
+            sizeBin: string;
+            /** Sizedistribution */
+            sizeDistribution: components["schemas"]["MagLineageSizeBin"][];
             /** Sortby */
             sortBy: string;
             summary: components["schemas"]["MagLineageDatasetSummary"];
@@ -3053,6 +3198,19 @@ export interface components {
              * @enum {string}
              */
             queryRole: "representative" | "member";
+        };
+        /** MagLineageSizeBin */
+        MagLineageSizeBin: {
+            /** Count */
+            count: number;
+            /** Id */
+            id: string;
+            /** Label */
+            label: string;
+            /** Maxmembers */
+            maxMembers: number | null;
+            /** Minmembers */
+            minMembers: number;
         };
         /** MagManifestReference */
         MagManifestReference: {
@@ -4271,6 +4429,69 @@ export interface components {
             }[];
             /** Studyid */
             studyId: string | null;
+        };
+        /** RobustnessResponse */
+        RobustnessResponse: {
+            association?: components["schemas"]["Association"] | null;
+            /** Items */
+            items?: components["schemas"]["AdjustedCandidate"][];
+            /** Reason */
+            reason?: string | null;
+            /** Release */
+            release: string;
+            /** Sensitivity */
+            sensitivity?: components["schemas"]["BatchOmission"][];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ready" | "unavailable";
+            summary?: components["schemas"]["RobustnessSummary"] | null;
+        };
+        /** RobustnessSummary */
+        RobustnessSummary: {
+            /** Adcount */
+            adCount: number;
+            /** Analysisversion */
+            analysisVersion: string;
+            /** Batchdefinition */
+            batchDefinition: string | null;
+            /** Batchsourcecolumn */
+            batchSourceColumn: string | null;
+            /** Belowfdradjusted */
+            belowFdrAdjusted: number;
+            /** Belowfdrunadjusted */
+            belowFdrUnadjusted: number;
+            /** Cohortsamplecount */
+            cohortSampleCount: number;
+            /** Covariatenotes */
+            covariateNotes: string[];
+            /** Covariates */
+            covariates: ("age" | "gender" | "batch")[];
+            /** Datasetkey */
+            datasetKey: string;
+            /** Fdralpha */
+            fdrAlpha: number;
+            /** Magcount */
+            magCount: number;
+            /** Nccount */
+            ncCount: number;
+            /** Observationunitnote */
+            observationUnitNote: string;
+            /** Omittedbatches */
+            omittedBatches: string[];
+            /** Projectaccession */
+            projectAccession: string;
+            /** Release */
+            release: string;
+            /** Samplecount */
+            sampleCount: number;
+            /** Statsmodelsversion */
+            statsmodelsVersion: string;
+            /** Testedadjusted */
+            testedAdjusted: number;
+            /** Testedunadjusted */
+            testedUnadjusted: number;
         };
         /**
          * ScopedFeatureRequest
@@ -6623,6 +6844,7 @@ export interface operations {
                 query?: string;
                 mappingStatus?: "" | "matched_exact_ncbi_species_taxid" | "ncbi_species_taxid_not_observed_in_reads" | "no_gtdb_reference";
                 lowAniOnly?: boolean;
+                sizeBin?: "" | "1" | "2-5" | "6-20" | "21+";
                 sortBy?: "clusterId" | "representativeMag" | "memberCount" | "sourceSampleCount" | "aniMin" | "aniMax" | "below095AniCount" | "completenessPercent" | "contaminationPercent";
                 direction?: "asc" | "desc";
                 limit?: number;
@@ -6683,6 +6905,7 @@ export interface operations {
                 direction?: "asc" | "desc";
                 limit?: number;
                 offset?: number;
+                allMembers?: boolean;
                 revision?: string;
                 dataset?: string;
                 release?: string;
@@ -6904,6 +7127,93 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MagQualityResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    cohort_robustness_api_mag_robustness_get: {
+        parameters: {
+            query?: {
+                magId?: string;
+                revision?: string;
+                dataset?: string;
+                release?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RobustnessResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MagErrorResponse"];
+                };
+            };
+        };
+    };
+    download_cohort_robustness_api_mag_robustness_download__kind__get: {
+        parameters: {
+            query?: {
+                revision?: string;
+                dataset?: string;
+                release?: string;
+            };
+            header?: never;
+            path: {
+                kind: "associations" | "sensitivity" | "methods";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

@@ -1,5 +1,6 @@
+import { formatMagNumber, distributionRange, distributionRangeLabel, downloadDistributionCsv } from './magDistributionView';
 import StyledSelect from '../../components/ui/StyledSelect';
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ApiError } from '../../api/client';
 import {
@@ -9,9 +10,11 @@ import {
   getMagFeatures,
   getMagOverview,
   getMagQuality,
+  getMagRobustness,
   getMagSamples,
   getMagTaxonomy,
   magDownloadUrl,
+  magRobustnessDownloadUrl,
 } from '../../api/mag';
 import AppShell from '../../components/layout/AppShell';
 import MainWorkspace from '../../components/layout/MainWorkspace';
@@ -32,16 +35,17 @@ import MagDatasetDescription from './MagDatasetDescription';
 import MagHeatmapWorkspace from './MagHeatmapWorkspace';
 import MagCatalogExplorer from './MagCatalogExplorer';
 import MagDetailDrawer from './MagDetailDrawer';
-import MagResearchPlans from './MagResearchPlans';
+import MagFunctionPlan from './MagFunctionPlan';
 import MagSearchInput, { MagEntityPicker } from './MagSearchInput';
 import { getMagComparisonSelection } from './magComparisonSelection';
+import { fullCohortLabel } from './magRobustnessLabels';
 import { MagCandidateBrowser, MagChartControls, MagChartExportMenu, MagColumnSettings, MagListSort } from './MagToolbar';
 import './mag-workspace.css';
 
 const MagChart = lazy(() => import('./MagCharts'));
 const MagLineageView = lazy(() => import('./MagLineageView'));
 const MagSourceResults = lazy(() => import('./MagSourceResults'));
-const number = value => value == null ? '—' : Number(value).toLocaleString('en-US', { maximumSignificantDigits: 4 });
+const number = formatMagNumber;
 const DEFAULT_SCOPE = { disease: '', gender: '', batch: '', ageMin: '', ageMax: '', abundanceThresholdPercent: '0' };
 const MAG_VIEWS = [
   { key: 'features', label: '丰度与候选列表', subtitle: '候选 MAG 的组均值、效应量与 FDR' },
@@ -134,10 +138,10 @@ function DownloadIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3v11m0 0 4-4m-4 4-4-4M4 16v5h16v-5" /></svg>;
 }
 
-function SampleTable({ items, distribution = false }) {
+function SampleTable({ items, distribution = false, selectedSample }) {
   return <DataTableViewport ariaLabel="MAG 样本数据" className={distribution ? 'mag-sample-table' : ''} resizable>
     <thead><tr>{['样本 ID', 'disease', '年龄', '性别', 'HPC_Batch', ...(distribution ? ['丰度 %'] : ['映射 %', '未映射 %', '超过阈值的 MAG 数'])].map(v => <th scope="col" key={v}>{v}</th>)}</tr></thead>
-    <tbody>{items.map(s => <tr key={s.sampleId}>
+    <tbody>{items.map(s => <tr key={s.sampleId} data-sample-id={s.sampleId} tabIndex={-1} className={selectedSample === s.sampleId ? 'mag-sample-selected' : undefined}>
       <td>{s.sampleId}</td><td>{s.disease}</td><td>{s.age}</td><td>{s.gender}</td><td>{s.batch}</td>
       {distribution ? <td>{number(s.abundancePercent)}</td> : <><td>{number(s.mappedPercent)}</td><td>{number(s.unmappedPercent)}</td><td>{s.aboveThresholdMagCount}</td></>}
     </tr>)}</tbody>
@@ -155,11 +159,11 @@ function DistributionSummary({ data }) {
       <span><strong>{number(row.qValue)}</strong> BH-FDR q · 检验族 {data.provenance.testedFeatureCount} 个 MAG</span>
       <span><strong>{number(row.completenessPercent)}% / {number(row.contaminationPercent)}%</strong> 完整度 / 污染率</span>
     </div>
-    <p className="mag-muted">当前范围：AD {data.provenance.groupCounts.AD} 个样本，NC {data.provenance.groupCounts.NC} 个样本；散点包含零丰度样本。组间检验未做协变量校正。</p>
+    <p className="mag-muted">当前范围 AD {data.provenance.groupCounts.AD} 个样本，NC {data.provenance.groupCounts.NC} 个样本。散点包含零丰度样本。Mann–Whitney U 组间检验未做协变量校正。</p>
   </section>;
 }
 
-function WorkspaceResults({ overview, scope, view, setView, selectedMag, setSelectedMag, onDetail, heatmapCandidate, onHeatmapCandidate, onScopeChange }) {
+function WorkspaceResults({ overview, scope, view, setView, selectedMag, setSelectedMag, onDetail, heatmapCandidate, onHeatmapCandidate, onScopeChange, showAdjusted, setShowAdjusted }) {
   const [page, setPage] = useState(1);
   const [query, setQuery] = useState('');
   const [draftQuery, setDraftQuery] = useState('');
@@ -171,6 +175,9 @@ function WorkspaceResults({ overview, scope, view, setView, selectedMag, setSele
   const [taxonomyRank, setTaxonomyRank] = useState('phylum');
   const [taxonSelection, setTaxonSelection] = useState(null);
   const [brushSelection, setBrushSelection] = useState([]);
+  const [distributionFocus, setDistributionFocus] = useState(false);
+  const [selectedSample, setSelectedSample] = useState('');
+  const sampleSection = useRef(null);
   const [format, setFormat] = useState('svg');
   const [size, setSize] = useState('standard');
   const columnStorageKey = `admeta:mag:columns:${overview.provenance.dataFingerprint}`;
@@ -190,12 +197,26 @@ function WorkspaceResults({ overview, scope, view, setView, selectedMag, setSele
   const featureParams = { ...params, query, sortBy, direction, limit: QUERY_TABLE_PAGE_SIZE, offset: (page - 1) * QUERY_TABLE_PAGE_SIZE };
   const featuresEnabled = view === 'features' || view === 'distribution';
   const features = useQuery({ queryKey: ['mag', 'features', featureParams], queryFn: ({ signal }) => getMagFeatures(featureParams, { signal }), enabled: featuresEnabled, placeholderData: previous => previous });
+  const robustness = useQuery({ queryKey: ['mag', 'robustness', staticParams.revision],
+    queryFn: ({ signal }) => getMagRobustness(staticParams, { signal }), enabled: featuresEnabled && showAdjusted, staleTime: 60_000 });
+  const cohortResult = showAdjusted && robustness.data?.release === staticParams.revision ? robustness.data : null;
+  const adjustedSummary = cohortResult?.status === 'ready' && cohortResult.summary?.release === staticParams.revision ? cohortResult.summary : null;
+  const adjustedByMag = useMemo(() => adjustedSummary ? new Map(cohortResult.items.map(row => [row.magId, row])) : null, [adjustedSummary, cohortResult]);
   const chartParams = { ...params, query, sortBy: chartSortBy, direction: 'desc', limit: topN, offset: 0 };
   const comparison = useQuery({ queryKey: ['mag', 'comparison', chartParams], queryFn: ({ signal }) => getMagComparisonSelection(chartParams, { signal }), enabled: view === 'features', placeholderData: previous => previous });
   useEffect(() => {
     if (view === 'distribution' && !selectedMag && features.data?.items[0]) setSelectedMag(features.data.items[0].magId);
   }, [view, selectedMag, features.data, setSelectedMag]);
   const magId = selectedMag || features.data?.items[0]?.magId || '';
+  const selectSample = sampleId => {
+    setSelectedSample(sampleId);
+    const section = sampleSection.current;
+    section?.querySelector('button[aria-expanded="false"]')?.click();
+    requestAnimationFrame(() => {
+      const row = [...(section?.querySelectorAll('[data-sample-id]') || [])].find(element => element.dataset.sampleId === sampleId);
+      row?.scrollIntoView?.({ block: 'center', behavior: 'smooth' }); row?.focus({ preventScroll: true });
+    });
+  };
   const distribution = useQuery({ queryKey: ['mag', 'distribution', params, magId], queryFn: ({ signal }) => getMagDistribution(magId, params, { signal }), enabled: view === 'distribution' && Boolean(magId) });
   const mapping = useQuery({ queryKey: ['mag', 'samples', params], queryFn: ({ signal }) => getMagSamples(params, { signal }), enabled: view === 'mapping' });
   const taxonomy = useQuery({ queryKey: ['mag', 'taxonomy', staticParams.revision, taxonomyRank], queryFn: ({ signal }) => getMagTaxonomy({ ...staticParams, rank: taxonomyRank, topN: 20 }, { signal }), enabled: view === 'taxonomy' });
@@ -203,7 +224,7 @@ function WorkspaceResults({ overview, scope, view, setView, selectedMag, setSele
   if (view === 'heatmap') return <MagHeatmapWorkspace key={heatmapCandidate || 'saved'} params={params} overview={overview} initialMagId={heatmapCandidate} onSelect={onDetail} />;
   if (view === 'lineage') return <Suspense fallback={<LoadingState message="正在加载来源与去冗余视图..." />}><MagLineageView overview={overview} initialMagId={selectedMag} onDetail={onDetail} /></Suspense>;
   if (view === 'phylogeny' || (view === 'function' && (overview.capabilities.metabolism || overview.capabilities.arg || overview.capabilities.bgc))) return <Suspense fallback={<LoadingState />}><MagSourceResults overview={overview} scope={scope} view={view} initialMagId={selectedMag} onDetail={onDetail} onNavigate={(next, id) => { setSelectedMag(id); setView(next); }} scopeControls={<ScopeForm value={scope} options={overview.options} onApply={onScopeChange} />} /></Suspense>;
-  if (view === 'roadmap' || view === 'function') return <MagResearchPlans capabilities={overview.capabilities} />;
+  if (view === 'function') return <MagFunctionPlan />;
   const active = { features: comparison, distribution, taxonomy, quality, mapping }[view];
   const data = active.data;
   const audit = data?.provenance || overview.provenance;
@@ -272,16 +293,16 @@ function WorkspaceResults({ overview, scope, view, setView, selectedMag, setSele
         renderChartActions={actions => <MagChartExportMenu actions={actions} format={format} size={size} onFormatChange={setFormat} onSizeChange={setSize}
           pngLabel="PNG（按图形尺寸适配）" note="导出当前完整展示集合，不含导航面板。大量 MAG 的 PNG 会适配像素尺寸；保留矢量细节请选择 SVG。" />}>
         {disclosure}
+        <p className="mag-muted">按{{ meanPercent: '全部所选样本平均丰度', adMeanPercent: 'AD 组平均丰度', ncMeanPercent: 'NC 组平均丰度' }[chartSortBy]}降序 · 展示 {data.items.length} / {data.total ?? audit.magCount} 个匹配 MAG。点击柱条查看 MAG 研究证据（完整分类与 MAG ID）。</p>
         <div className="mag-heatmap-navigation" ref={setComparisonZoomToolbarTarget} />
         <Suspense fallback={<LoadingState />}><MagChart view={view} data={data} format={format} size={size} onSelect={selectMag} toolbarTarget={comparisonZoomToolbarTarget} /></Suspense>
       </CollapsibleResultSection> : view === 'distribution' ? <CollapsibleResultSection title="MAG 分布与证据" storageKey="admeta:mag:distribution:fold" className="mag-distribution-section"
-        actions={<><button type="button" className="analysis-button" onClick={() => { onHeatmapCandidate(magId); setView('heatmap'); }}>加入热图候选</button>
+        actions={<><button type="button" className="analysis-button" onClick={() => { onHeatmapCandidate(magId); setView('heatmap'); }}>加入热图清单并打开</button>
           {overview.capabilities?.lineage ? <button type="button" className="analysis-button" onClick={() => setView('lineage')}>查看该 MAG 来源与去冗余</button> : null}</>}
         controls={<div className="mag-distribution-picker">
-          <label>选择 MAG<MagEntityPicker revision={params.revision} label="选择 MAG" value={magId} onChange={setSelectedMag} /></label>
+          <label>选择 MAG<MagEntityPicker revision={params.revision} label="选择 MAG" value={magId} onChange={id => { setSelectedMag(id); setDistributionFocus(false); setSelectedSample(''); }} /></label>
           <MagCandidateBrowser sortBy={sortBy} direction={direction} onSortChange={changeSort} onDirectionChange={value => { setDirection(value); setPage(1); }}
-            total={features.data?.total} page={page} loading={features.isFetching} error={features.error?.message} onRetry={features.refetch}
-            pagination={features.data ? <PaginationControls page={page} pageCount={Math.ceil(features.data.total / QUERY_TABLE_PAGE_SIZE)} onPageChange={setPage} disabled={features.isFetching} ariaLabel="MAG 候选分页" /> : null}
+            total={features.data?.total} loading={features.isFetching} error={features.error?.message} onRetry={features.refetch}
             downloads={<><a className="analysis-button" href={magDownloadUrl('features', downloadParams)} download>下载全部候选 CSV</a>
               <a className="analysis-button" href={magDownloadUrl('matrix', params)} download>下载所选样本 × 全部 MAG</a></>} />
         </div>}
@@ -291,16 +312,24 @@ function WorkspaceResults({ overview, scope, view, setView, selectedMag, setSele
           <h4>{data.feature.magId}</h4>
           <p>{selectedTaxonomy}</p>
         </div>
-        <Suspense fallback={<LoadingState />}><MagChart view={view} data={data} format={format} size={size} onSelect={selectMag} /></Suspense>
+        <div className="mag-distribution-range" role="group" aria-label="分布显示范围">
+          <button type="button" className="analysis-button" aria-pressed={!distributionFocus} onClick={() => setDistributionFocus(false)}>完整范围</button>
+          <button type="button" className="analysis-button" aria-pressed={distributionFocus} onClick={() => setDistributionFocus(true)}>放大主体</button>
+          <span role="status">{distributionRangeLabel(distributionRange(data, distributionFocus))}</span>
+        </div>
+        <p className="mag-muted">仅调整显示范围；统计仍使用全部 {data.samples.length} 个所选样本。点击样本点定位下方明细，图片导出注明当前范围。
+          {distributionRange(data, distributionFocus).fallback ? '箱体和须均为零，保留完整范围。' : ''}</p>
+        <Suspense fallback={<LoadingState />}><MagChart view={view} data={data} format={format} size={size} onSelect={selectMag} distributionFocus={distributionFocus} onSampleSelect={selectSample} /></Suspense>
         <DistributionSummary data={data} />
       </CollapsibleResultSection> : <Suspense fallback={<LoadingState />}><MagChart view={view} data={data} format={format} size={size}
         onSelect={view === 'taxonomy' ? label => setTaxonSelection({ rank: taxonomyRank, label }) : view === 'quality' ? selectMag : undefined}
         onBrush={view === 'quality' ? onBrush : undefined} selected={view === 'quality' ? brushSelection : undefined} /></Suspense>}
-      {view === 'distribution' && features.error ? <ErrorState message={`MAG 列表加载失败：${features.error.message}`} onRetry={features.refetch} /> : null}
-      {view === 'features' ? <CollapsibleResultSection title="MAG 结果列表" storageKey="admeta:mag:results:fold" className="result-section--table"
+      {featuresEnabled ? <CollapsibleResultSection title="MAG 结果列表" storageKey="admeta:mag:results:fold" className="result-section--table"
         summary={features.data ? `${features.data.total} 个 MAG · ${page} / ${Math.max(1, Math.ceil(features.data.total / QUERY_TABLE_PAGE_SIZE))} 页` : '正在读取列表'}
         actions={<><MagListSort sortBy={sortBy} direction={direction} onSortChange={changeSort} onDirectionChange={value => { setDirection(value); setPage(1); }} />
           <MagColumnSettings value={visibleColumns} onChange={setVisibleColumns} />
+          <button type="button" className="analysis-button mag-adjustment-toggle" aria-pressed={showAdjusted}
+            onClick={() => setShowAdjusted(!showAdjusted)}>显示协变量校正</button>
           <a className="analysis-button" href={magDownloadUrl('features', downloadParams)} download aria-label="下载全部候选 CSV" title="下载全部候选 CSV">
           <DownloadIcon />候选 CSV</a>
           <a className="analysis-button" href={magDownloadUrl('matrix', params)} download aria-label="下载所选样本 × 全部 MAG" title="下载所选样本 × 全部 MAG">
@@ -309,15 +338,24 @@ function WorkspaceResults({ overview, scope, view, setView, selectedMag, setSele
         {features.isPending ? <LoadingState message="正在读取 MAG 结果列表..." /> : null}
         {features.data ? <>
         {features.isPlaceholderData && features.isFetching ? <p className="mag-muted" role="status">正在加载第 {page} 页，暂时保留上一版列表。</p> : null}
-        <MagFeatureTable data={features.data} onSelect={selectMag} page={page} visibleColumns={visibleColumns}
-          description={`检验族 ${features.data.provenance.testedFeatureCount} 个 MAG · 搜索与排序不重新计算 q 值 · 图表${topN === 0 ? '全部匹配' : ' Top'} ${data.items.length} 个 MAG，独立于列表分页`}
+        {showAdjusted && <div className="mag-adjusted-list-context" role="status">
+          {adjustedSummary ? <><strong>{fullCohortLabel(adjustedSummary)}</strong>
+            <span>校正模型检验 {adjustedSummary.testedAdjusted} 个 MAG，{adjustedSummary.belowFdrAdjusted} 个达到 q &lt; {adjustedSummary.fdrAlpha}</span>
+            <a href={magRobustnessDownloadUrl('associations', staticParams.revision)} download>下载完整队列主结果 CSV</a></>
+            : robustness.isPending ? <span>正在读取完整队列校正结果…</span>
+              : <><span>{cohortResult?.reason || (robustness.isError ? '校正结果读取失败。' : '当前数据修订暂无可用的完整队列校正结果。')}</span>
+                <button type="button" className="analysis-button" disabled={robustness.isFetching} onClick={() => robustness.refetch()}>重新读取校正结果</button></>}
+        </div>}
+        <MagFeatureTable data={features.data} onSelect={selectMag} page={page} visibleColumns={visibleColumns} adjustedByMag={adjustedByMag}
+          description={`点击查看 MAG 研究证据 · 当前范围 Mann–Whitney U（未校正）· 检验族 ${features.data.provenance.testedFeatureCount} 个 MAG · 搜索与排序不重新计算 q 值${view === 'features' ? ` · 图表${topN === 0 ? '全部匹配' : ' Top'} ${data.items.length} 个 MAG，独立于列表分页` : ' · 分页不改变当前所选 MAG'}`}
           pagination={<PaginationControls page={page} pageCount={Math.ceil(features.data.total / QUERY_TABLE_PAGE_SIZE)} onPageChange={setPage} disabled={features.isFetching} ariaLabel="MAG 列表分页" />} />
         </> : null}
       </CollapsibleResultSection> : null}
-      {view === 'distribution' ? <CollapsibleResultSection title="样本丰度明细" storageKey="admeta:mag:distribution-samples:fold" className="result-section--table"
-        summary={`${data.samples.length} 个样本 · AD ${audit.groupCounts.AD} / NC ${audit.groupCounts.NC}`}>
-        <SampleTable items={data.samples} distribution />
-      </CollapsibleResultSection> : null}
+      {view === 'distribution' ? <div ref={sampleSection}><CollapsibleResultSection title="样本丰度明细" storageKey="admeta:mag:distribution-samples:fold" className="result-section--table"
+        summary={`${data.samples.length} 个样本 · AD ${audit.groupCounts.AD} / NC ${audit.groupCounts.NC}`}
+        actions={<button type="button" className="analysis-button" onClick={() => downloadDistributionCsv(data)}>下载当前 MAG 样本丰度 CSV</button>}>
+        <SampleTable items={data.samples} distribution selectedSample={selectedSample} />
+      </CollapsibleResultSection></div> : null}
       {view === 'mapping' ? <><div className="mag-stat-grid" aria-label="映射证据摘要">
         {['AD', 'NC'].map(group => { const rows = data.items.filter(row => row.disease === group); const average = key => rows.length ? rows.reduce((total, row) => total + row[key], 0) / rows.length : null;
           return <span key={group}><strong>{group} · {rows.length} 样本</strong>平均映射 {number(average('mappedPercent'))}% · 平均超阈值 {number(average('aboveThresholdMagCount'))} 个 MAG</span>; })}
@@ -362,7 +400,8 @@ export default function MagWorkspacePage({ datasets = [], onDatasetChange, onDom
   const [detailMag, setDetailMag] = useState(restored.detailMag || '');
   const [detailContext, setDetailContext] = useState({});
   const [heatmapCandidate, setHeatmapCandidate] = useState(restored.heatmapCandidate || '');
-  const [view, setView] = useState(restored.view || 'features');
+  const [view, setView] = useState(MAG_VIEWS.some(item => item.key === restored.view) ? restored.view : 'features');
+  const [showAdjusted, setShowAdjusted] = useState(false);
   useEffect(() => { try { sessionStorage.removeItem('admeta:evidence:mag-return'); } catch { /* Optional browser storage. */ } }, []);
   const [release, setRelease] = useState(restored.release || '');
   const cohorts = useQuery({ queryKey: ['mag', 'datasets'], queryFn: ({ signal }) => getMagDatasets({ signal }) });
@@ -401,7 +440,6 @@ export default function MagWorkspacePage({ datasets = [], onDatasetChange, onDom
     overview.data && !overview.data.capabilities?.taxonomy ? 'MAG分类' : null,
     overview.data && !overview.data.capabilities?.quality ? 'MAG质量' : null,
     overview.data && !overview.data.capabilities?.lineage ? '来源与去冗余' : null,
-    '独立外部队列验证',
   ].filter(Boolean).join('、');
   const summary = audit ? {
     featureKind: 'mag',
@@ -414,13 +452,18 @@ export default function MagWorkspacePage({ datasets = [], onDatasetChange, onDom
   const magRun = {
     key: audit?.dataFingerprint || 'mag',
     name: audit ? (cohortEntry?.name || audit.datasetKey) : 'MAG 分析结果加载中',
-    sampleCount: audit?.sampleCount || 0,
+    sampleCount: audit?.processing?.sampleCount ?? audit?.sampleCount ?? 0,
   };
+  const releaseItems = releases.data?.items || [];
   const topbar = <TopBar
     featureKind="mag"
     summary={summary}
     workspaceSubtitle="MAG 解析"
-    runs={releases.data?.items?.length ? releases.data.items.map(item => ({ key: item.key, name: cohortEntry?.name || activeDataset, sampleCount: audit?.processing?.sampleCount || 0 })) : [magRun]}
+    runs={releaseItems.length ? releaseItems.map(item => ({
+      key: item.key,
+      name: `${cohortEntry?.name || activeDataset}${releaseItems.length > 1 ? ` · ${item.key.slice(0, 12)}` : ''}`,
+      sampleCount: audit?.processing?.sampleCount || 0,
+    })) : [magRun]}
     runsLoading={overview.isPending}
     runsError={overview.error?.message || null}
     activeRun={magRun}
@@ -438,7 +481,6 @@ export default function MagWorkspacePage({ datasets = [], onDatasetChange, onDom
     </section>
     <section className="sidebar-section sidebar-section--navigation"><h3 className="sidebar-heading">分析导航</h3>
       <ChartNav charts={views} activeChart={view} featureKind="mag" onChange={setView} />
-      <button type="button" className={`nav-item ${view === 'roadmap' ? 'nav-item--active' : ''}`} onClick={() => setView('roadmap')}><span className="nav-item-label">研究拓展</span><span className="nav-item-hint">已规划，待完成 · 查看证据补充模板</span></button>
     </section>
     <section className="sidebar-section"><h3 className="sidebar-heading">HPC_Batch 分组构成</h3><p className="mag-muted">筛选不是协变量校正；留意批次内组别比例。</p>
       {overview.data ? <DataTableViewport ariaLabel="批次分组构成"><thead><tr><th>批次</th><th>AD</th><th>NC</th></tr></thead><tbody>{overview.data.batches.map(b => <tr key={b.batch}><td>{b.batch}</td><td>{b.AD}</td><td>{b.NC}</td></tr>)}</tbody></DataTableViewport> : null}
@@ -446,7 +488,7 @@ export default function MagWorkspacePage({ datasets = [], onDatasetChange, onDom
     <div className="mag-readiness" aria-label="MAG 模块数据就绪度">
       <strong>数据就绪度</strong>
       <span><i className="mag-readiness__dot mag-readiness__dot--ready" aria-hidden="true" />已接入：{readyLabels}</span>
-      <span><i className="mag-readiness__dot" aria-hidden="true" />待核验：{pendingLabels}</span>
+      {pendingLabels && <span><i className="mag-readiness__dot" aria-hidden="true" />待核验：{pendingLabels}</span>}
       {overview.data && !overview.data.capabilities?.metabolism && <span><i className="mag-readiness__dot" aria-hidden="true" />待接入：MAG 层面的 KO / CAZyme 等结果</span>}
     </div>
   </aside>;
@@ -460,10 +502,11 @@ export default function MagWorkspacePage({ datasets = [], onDatasetChange, onDom
         <div ref={resultsStart} className="mag-results-anchor" />
         {SAMPLE_SCOPED_VIEWS.has(view) ? <section className="mag-filter-panel"><ScopeForm value={scope} options={overview.data.options} onApply={setScope} />
           <p className="mag-muted">丰度阈值只用于“超过阈值”的比例和数量统计，不定义生物学检出；原始丰度和组间检验保持不变。年龄、性别、批次均在同一筛选范围内比较。</p>
-        </section> : ['lineage', 'roadmap', 'function', 'phylogeny'].includes(view) ? null : <section className="mag-filter-panel"><p className="mag-muted">当前为 MAG 级注释视图，覆盖全部 {audit.magCount} 个代表 MAG，不使用 disease、年龄、性别、批次或丰度阈值筛选。</p></section>}
+        </section> : ['lineage', 'function', 'phylogeny'].includes(view) ? null : <section className="mag-filter-panel"><p className="mag-muted">当前为 MAG 级注释视图，覆盖全部 {audit.magCount} 个代表 MAG，不使用 disease、年龄、性别、批次或丰度阈值筛选。</p></section>}
         {SAMPLE_SCOPED_VIEWS.has(view) && audit.warnings.filter(w => w.includes('全部为 100%') || w.includes('少于 2')).map(w => <p className="mag-inline-notice" key={w}>{w}</p>)}
         <WorkspaceResults key={JSON.stringify([scope, audit.dataFingerprint])} overview={overview.data} scope={scope} view={view} setView={setView} selectedMag={selectedMag} setSelectedMag={setSelectedMag}
-          onDetail={(id, context = {}) => { setDetailContext(context); setDetailMag(id); }} heatmapCandidate={heatmapCandidate} onHeatmapCandidate={setHeatmapCandidate} onScopeChange={setScope} />
+          onDetail={(id, context = {}) => { setDetailContext(context); setDetailMag(id); }} heatmapCandidate={heatmapCandidate} onHeatmapCandidate={setHeatmapCandidate} onScopeChange={setScope}
+          showAdjusted={showAdjusted} setShowAdjusted={setShowAdjusted} />
         {detailMag && <MagDetailDrawer key={`${audit.dataFingerprint}:${detailMag}`} magId={detailMag} overview={overview.data} scope={scope} onClose={() => setDetailMag('')}
           initialTab={detailContext.tab || (restored.detailMag === detailMag ? restored.detailTab : 'abundance')}
           initialFeatureId={detailContext.featureId || ''} initialNamespace={detailContext.namespace || 'kofam_ko'}

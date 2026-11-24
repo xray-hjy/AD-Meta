@@ -17,11 +17,13 @@ vi.mock('../../api/mag', async importOriginal => ({ ...await importOriginal(),
   getMagDatasets: vi.fn(), getMagReleases: vi.fn(),
   getMagOverview: vi.fn(), getMagFeatures: vi.fn(), getMagDistribution: vi.fn(), getMagHeatmap: vi.fn(), getMagSamples: vi.fn(),
   getMagTaxonomy: vi.fn(), getMagQuality: vi.fn(), getMagLineageClusters: vi.fn(), getMagLineageCluster: vi.fn(),
-  getMagLineage: vi.fn(), getMagCrosswalk: vi.fn(), getMagCatalog: vi.fn(),
+  getMagLineage: vi.fn(), getMagCrosswalk: vi.fn(), getMagCatalog: vi.fn(), getMagRobustness: vi.fn(),
 }));
-vi.mock('./MagCharts', () => ({ default: ({ view, data, onSelect }) => <div data-testid={`chart-${view}`} data-mag-ids={view === 'features' ? data.items.map(row => row.magId).join(',') : data.feature?.magId}>
+vi.mock('./MagCharts', () => ({ default: ({ view, data, onSelect, onSampleSelect, distributionFocus }) => <div data-testid={`chart-${view}`} data-focus={distributionFocus ? 'focus' : 'full'} data-mag-ids={view === 'features' ? data.items.map(row => row.magId).join(',') : data.feature?.magId}>
+  {view === 'distribution' && data.samples.length ? <button onClick={() => onSampleSelect(data.samples[0].sampleId)}>选择样本点</button> : null}
   {view === 'features' ? <button onClick={() => onSelect(data.items[0].magId)}>查看图中 MAG</button> : null}
 </div> }));
+vi.mock('./MagLineageOverview', () => ({ default: () => <div data-testid="lineage-overview" /> }));
 vi.mock('./MagResearchChart', () => ({ default: () => <div data-testid="lineage-scatter" /> }));
 
 const audit = { version: 'test-cohort', analysisVersion: 'test-source-statistics', dataFingerprint: 'sha123', requestFingerprint: 'scope123', sampleCount: 185,
@@ -52,6 +54,7 @@ beforeEach(() => {
     batches: [], capabilities: { taxonomy: true, quality: true, lineage: true, crosswalk: true }, options: { genders: ['F', 'M'], batches: ['1', '2'], ageMin: 60, ageMax: 89 } }));
   api.getMagFeatures.mockImplementation(async params => ({ provenance: audit, total: params.query ? 1 : 872, items: [{ ...item, magId: params.offset ? 'MAG_B' : 'MAG_A' }] }));
   api.getMagDistribution.mockResolvedValue({ provenance: audit, feature: item, samples: [], boxes: [] });
+  api.getMagRobustness.mockImplementation(async ({ revision }) => ({ status: 'unavailable', release: revision }));
   api.getMagHeatmap.mockResolvedValue({ provenance: audit, magIds: ['MAG_A'], features: [item],
     samples: [{ sampleId: 'CRR1', disease: 'AD', batch: '1' }], values: [[2]], displayValues: [[Math.log10(3)]], selection: '丰度概览',
     settings: { colorMode: 'abundance' }, warnings: [], methods: {}, constantMagIds: [],
@@ -199,7 +202,7 @@ test('uses button-based module switching and keeps the MAG analysis navigation i
   expect(within(navigation).getByRole('button', { name: /映射与丰度阈值/ })).not.toBeDisabled();
   expect(navigation.querySelectorAll('.nav-item')).toHaveLength(9);
   expect(screen.getByText('已接入：丰度分析、MAG分类、MAG质量、来源与去冗余、技术质控')).toBeTruthy();
-  expect(screen.getByText('待核验：独立外部队列验证')).toBeTruthy();
+  expect(screen.queryByText(/独立外部队列验证/)).toBeNull();
   expect(screen.getByText('待接入：MAG 层面的 KO / CAZyme 等结果')).toBeTruthy();
 
   fireEvent.click(within(document.querySelector('.sidebar')).getByRole('button', { name: /群落功能/ }));
@@ -249,10 +252,8 @@ test('pins the chosen MAG across list pagination, search and sample scope change
   await waitFor(() => expect(screen.getByRole('button', { name: '查看分布图' })).toBeEnabled());
   fireEvent.click(screen.getByRole('button', { name: '查看分布图' }));
   await screen.findByTestId('chart-distribution');
-  fireEvent.click(screen.getByRole('button', { name: '候选浏览' }));
   fireEvent.click(screen.getByRole('button', { name: '下一页' }));
   await waitFor(() => expect(api.getMagFeatures).toHaveBeenLastCalledWith(expect.objectContaining({ offset: 300 }), expect.anything()));
-  fireEvent.click(screen.getByRole('button', { name: '关闭MAG 候选浏览' }));
   expect(screen.getByLabelText('选择 MAG')).toHaveValue('MAG_A');
   fireEvent.change(screen.getByLabelText('MAG 搜索'), { target: { value: 'MAG_B' } });
   fireEvent.click(screen.getByRole('button', { name: '搜索', exact: true }));
@@ -364,8 +365,7 @@ test.each(['features', 'distribution'])('keeps the %s chart visible when the can
     await waitFor(() => expect(screen.getByRole('button', { name: '查看分布图' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: '查看分布图' }));
     await screen.findByTestId('chart-distribution');
-    fireEvent.click(screen.getByRole('button', { name: '候选浏览' }));
-  }
+    }
   fireEvent.click(screen.getByRole('button', { name: '下一页' }));
   await screen.findByText('MAG 列表加载失败：候选页暂时不可用');
   expect(screen.getByTestId(`chart-${view}`)).toHaveAttribute('data-mag-ids', 'MAG_A');
@@ -435,8 +435,8 @@ test('keeps column presets local to display, remembers them, and places controls
   expect(within(list).queryByRole('columnheader', { name: 'AD 均值 %' })).toBeNull();
   expect(within(list).getByRole('columnheader', { name: '完整度 %' })).toBeTruthy();
   expect(within(list).getAllByRole('columnheader')).toHaveLength(5);
-  expect(within(list).getByRole('columnheader', { name: 'MAG ID（查看分布）' })).toHaveClass('mag-feature-table__identity');
-  expect(within(dialog).getByRole('checkbox', { name: 'MAG ID 查看分布' })).toBeDisabled();
+  expect(within(list).getByRole('columnheader', { name: 'MAG ID（查看 MAG 研究证据）' })).toHaveClass('mag-feature-table__identity');
+  expect(within(dialog).getByRole('checkbox', { name: 'MAG ID 研究证据' })).toBeDisabled();
   expect(screen.getByRole('link', { name: '下载全部候选 CSV' })).toHaveAttribute('href', exportHref);
   expect(api.getMagFeatures).toHaveBeenCalledTimes(requests);
   fireEvent.keyDown(document, { key: 'Escape' });
@@ -533,12 +533,60 @@ test('MAG details preserve the chart and list page while distinguishing member a
   expect(within(memberDrawer).getByText(/以下组装指标属于代表 MAG/)).toHaveTextContent('MAG_A');
 });
 
-test('research expansion templates explicitly identify missing inputs without presenting completed results', async () => {
+test('joins optional adjusted columns by MAG ID and uses complete-cohort evidence in the drawer', async () => {
+  const revised = { status: 'ready', release: audit.dataFingerprint,
+    summary: { release: audit.dataFingerprint, projectAccession: 'PRJCA022804', sampleCount: 185, cohortSampleCount: 185,
+      testedAdjusted: 872, testedUnadjusted: 872, belowFdrAdjusted: 0, fdrAlpha: 0.05,
+      covariates: ['age', 'gender', 'batch'], covariateNotes: [], batchSourceColumn: 'HPC_Batch' } };
+  const unadjusted = { status: 'estimated', beta: 0.321, ciLow: -0.37, ciHigh: 1.01, pValue: 0.201, qValue: 0.716 };
+  const adjusted = { status: 'estimated', beta: -0.124, ciLow: -1.15, ciHigh: 0.913, pValue: 0.38, qValue: 0.824 };
+  api.getMagRobustness.mockImplementation(async ({ magId }) => magId ? { ...revised,
+    association: { magId, adCount: 122, ncCount: 63, unadjusted, adjusted },
+    sensitivity: [{ excludedBatch: '3', adCount: 91, ncCount: 54, estimate: { status: 'unavailable', reason: '测试设计秩不足' } }],
+  } : { ...revised, items: [{ magId: 'MAG_B', beta: 0.098, qValue: 0.599 }, { magId: 'MAG_A', beta: -0.124, qValue: 0.824 }] });
   mount();
   await screen.findByTestId('chart-features');
-  fireEvent.click(screen.getByRole('button', { name: /研究拓展/ }));
-  expect(screen.getAllByText('已规划，待完成', { exact: true })).toHaveLength(5);
-  expect(screen.getByRole('heading', { name: '定量与检出证据' })).toBeTruthy();
-  expect(screen.getByText(/样本 × MAG 的 reads 支持/)).toBeTruthy();
-  expect(screen.queryByTestId('chart-features')).toBeNull();
+  expect(screen.queryByRole('button', { name: /研究拓展/ })).toBeNull();
+  expect(screen.queryByRole('columnheader', { name: /校正 β/ })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: '显示协变量校正' }));
+  expect(await screen.findByRole('columnheader', { name: /校正 β.*完整队列/ })).toBeVisible();
+  const table = screen.getByRole('region', { name: /MAG 候选列表/ });
+  const candidate = within(table).getByRole('button', { name: 'MAG_A', exact: true });
+  expect(within(candidate.closest('tr')).getByTitle('-0.124')).toHaveTextContent('-0.124');
+  fireEvent.click(candidate);
+  const drawer = await screen.findByRole('dialog');
+  expect(await within(drawer).findByText(/完整队列 · 185 样本 · AD 122 \/ NC 63/)).toBeVisible();
+  expect(within(drawer).getAllByText('未达 FDR 阈值 0.05')).toHaveLength(2);
+  expect(within(drawer).getByText(/无法估计 · 测试设计秩不足/)).toBeInTheDocument();
+  expect(api.getMagRobustness.mock.calls.map(([params]) => params)).toEqual([
+    { revision: audit.dataFingerprint }, { revision: audit.dataFingerprint, magId: 'MAG_A' },
+  ]);
+});
+
+
+test('focus changes the view only and a sample click opens and locates its detail row', async () => {
+  api.getMagDistribution.mockResolvedValue({ provenance: audit, feature: item,
+    samples: [{ sampleId: 'CRR1', disease: 'AD', abundancePercent: 0.000123456789, age: 70, gender: 'F', batch: '2' }],
+    boxes: [{ group: 'AD', values: [0, 0, 0, 0, 0] }] });
+  sessionStorage.setItem('admeta:mag:distribution-samples:fold', 'collapsed');
+  mount();
+  await screen.findByTestId('chart-features');
+  fireEvent.click(screen.getByRole('button', { name: '查看图中 MAG' }));
+  await screen.findByRole('dialog');
+  await waitFor(() => expect(screen.getByRole('button', { name: '查看分布图' })).toBeEnabled());
+  fireEvent.click(screen.getByRole('button', { name: '查看分布图' }));
+  const chart = await screen.findByTestId('chart-distribution');
+  const calls = api.getMagDistribution.mock.calls.length;
+  fireEvent.click(screen.getByRole('button', { name: '放大主体', exact: true }));
+  expect(chart).toHaveAttribute('data-focus', 'focus');
+  expect(api.getMagDistribution).toHaveBeenCalledTimes(calls);
+  fireEvent.click(screen.getByRole('button', { name: '完整范围', exact: true }));
+  expect(chart).toHaveAttribute('data-focus', 'full');
+  expect(screen.getByRole('button', { name: '下载当前 MAG 样本丰度 CSV' })).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: '选择样本点' }));
+  await waitFor(() => expect(screen.getByRole('button', { name: '收起样本丰度明细' })).toHaveAttribute('aria-expanded', 'true'));
+  expect(screen.getByRole('cell', { name: 'CRR1', exact: true }).closest('tr')).toHaveClass('mag-sample-selected');
+  fireEvent.click(screen.getByRole('button', { name: '结果排序与下载' }));
+  const menu = screen.getByRole('dialog', { name: 'MAG 结果排序与下载' });
+  expect(within(menu).queryByRole('button', { name: '下一页' })).toBeNull();
 });

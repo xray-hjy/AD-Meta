@@ -16,6 +16,7 @@ from app.services import gmrepo_claims as explanations
 from app.services import gmrepo_ledger_service as ledger
 from app.services import gmrepo_primary_evidence as primary
 from app.services import gmrepo_service as reference
+from app.services.mag_crosswalk_import import NCBI_MAPPED, ncbi_genus_path
 
 
 def protocol(data: reference.ReferenceDataset) -> dict[str, Any]:
@@ -142,17 +143,21 @@ def resolve_subject(data: reference.ReferenceDataset, subject_type: str, subject
             if representative not in source.mag_ids:
                 return {**result, "status": "source_unavailable", "reasons": ["该 MAG 不属于固定版本。"]}
             result["representativeMag"] = representative
+            if not source.crosswalk:
+                return {**result, "status": "crosswalk_unavailable", "reasons": ["当前 MAG 发布版本尚未接入 NCBI 分类对应表。"]}
             crosswalk = next((r for r in source.crosswalk if r["magId"] == representative), None)
-            if not crosswalk or crosswalk["mappingStatus"] not in {"matched_exact_ncbi_species_taxid", "ncbi_species_taxid_not_observed_in_reads"}:
-                return {**result, "reasons": ["MAG 缺少经核查的 NCBI 分类对应；GTDB 名称不按相似度补成确定对应。"]}
-            taxonomy = crosswalk.get("ncbiTaxonomy") or ""
-            genus = re.search(r"(?:^|[;|])\s*g__([^;|]+)", taxonomy)
-            domain = re.search(r"(?:^|[;|])\s*(?:k|d)__([^;|]+)", taxonomy)
+            if not crosswalk:
+                return {**result, "reasons": ["对应表中缺少该代表 MAG 的 NCBI 分类记录。"]}
+            if crosswalk.get("ncbiLineageStatus", "verified") != "verified" or crosswalk["mappingStatus"] not in NCBI_MAPPED:
+                reason = crosswalk.get("ncbiLineageReason") or "缺少可用的 NCBI 分类对应，需继续核查。"
+                return {**result, "reasons": [reason]}
+            domain, genus = ncbi_genus_path(crosswalk.get("ncbiTaxonomy"))
             if not genus or not domain:
-                return {**result, "reasons": ["已有 NCBI 物种 crosswalk，但缺少可核查的属级路径；不能从 GTDB 后缀或物种名称猜属。"]}
-            result["mappingMethod"] = "固定 MAG crosswalk 中已核查的 NCBI 分类路径；保留成员到代表关系。"
-            result["ncbiSpeciesTaxid"] = crosswalk.get("ncbiSpeciesTaxid")
-            return _mapping(result, data, genus.group(1), domain.group(1))
+                return {**result, "reasons": ["归档 NCBI 分类路径缺少可核查的域或属信息。"]}
+            result.update(mappingMethod="固定 MAG 发布的 NCBI 路径与 GMrepo 同域属名或已核对旧名对应。",
+                          sourceGenus=genus, sourceDomain=domain, mappingLevel="genus_background",
+                          ncbiSpeciesTaxid=crosswalk.get("ncbiSpeciesTaxid"))
+            return _mapping(result, data, genus, domain)
         return {**result, "status": "unsupported", "reasons": ["当前仅支持物种、MAG 与参考菌属对象；KO/AMP 等待真实功能归属链。"]}
     except (SQLAlchemyError, pymysql.MySQLError, sqlite3.DatabaseError, OSError, ValueError, TypeError):
         return {**result, "status": "source_unavailable", "reasons": ["主对象数据暂不可读取；外部参考目录仍可使用。"]}

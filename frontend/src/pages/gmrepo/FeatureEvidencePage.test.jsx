@@ -31,7 +31,7 @@ test('resolves the source feature and fixed version before loading external evid
   expect(screen.getByRole('heading', { level: 1, name: 'Klebsiella pneumoniae' })).toBeVisible();
   expect(screen.queryByText('EXTERNAL EVIDENCE EVALUATION')).not.toBeInTheDocument();
   fireEvent.click(screen.getByText(/对象与版本详情/));
-  expect(screen.getByText('所属属的外部背景')).toBeVisible();
+  expect(screen.getByText('菌属参考', { exact: true })).toBeVisible();
   expect(screen.getByRole('link', { name: '返回主分析' })).toHaveAttribute('href', '/analysis/abundance?chart=boxplot');
   expect(await screen.findByText(/分布对象 NCBI:570/)).toBeVisible();
 });

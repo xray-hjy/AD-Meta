@@ -140,6 +140,28 @@
             "name": "GTDB-Tk"
           }
         },
+        "crosswalk": {
+          "parser": "ncbi_crosswalk",
+          "files": {
+            "representatives": "storage/raw/ad-nc-mag/PRJCA022804/GTDBTk/crosswalk/species_taxonomy_crosswalk.tsv",
+            "references": "storage/raw/ad-nc-mag/PRJCA022804/GTDBTk/crosswalk/gtdb_reference_ncbi_taxid_mapping.tsv",
+            "gtdb_run": "storage/raw/ad-nc-mag/PRJCA022804/GTDBTk/GTDBTk_results/gtdbtk.json"
+          },
+          "archiveSources": {
+            "representatives": {
+              "file": "server_transfer/02_curated/01_taxonomy/crosswalk/species_taxonomy_crosswalk.tsv",
+              "sha256": "6e217b3beb4112d2d9302435549276eebbe7e04f99b19a63aa0049311f65f491"
+            },
+            "references": {
+              "file": "server_transfer/02_curated/01_taxonomy/crosswalk/gtdb_reference_ncbi_taxid_mapping.tsv",
+              "sha256": "5ae6a94e5760ecbb42c33ae50e5a0546b5c284d89aaa7988db41f2d6d842aa34"
+            }
+          },
+          "tool": {
+            "name": "GTDB R232 → NCBI TaxID → Kraken2 / Bracken",
+            "databaseRelease": "r232"
+          }
+        },
         "lineage": {
           "parser": "drep",
           "files": {

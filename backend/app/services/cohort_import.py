@@ -12,7 +12,10 @@ from app.core.database import connect, utcnow
 from app.core.storage_paths import DEFAULT_MANIFEST
 from app.domain.mag import MagDataError
 from app.services.cohort_repository import encode, fingerprint, save_import
+from app.services.mag_crosswalk_import import parse_crosswalk
 from app.services.mag_source_adapters import ADAPTERS, PARSER_VERSION
+
+COHORT_ADAPTERS = {**ADAPTERS, 'ncbi_crosswalk': (parse_crosswalk, ('abundance', 'taxonomy'))}
 
 
 def sha256(path):
@@ -74,7 +77,7 @@ def import_cohort(key, manifest_path=DEFAULT_MANIFEST, *, publish=True):
         while pending:
             progressed = False
             for name, spec in list(pending.items()):
-                parser, dependencies = ADAPTERS[spec['parser']]
+                parser, dependencies = COHORT_ADAPTERS[spec['parser']]
                 if any(d in pending for d in dependencies):
                     continue
                 progressed = True

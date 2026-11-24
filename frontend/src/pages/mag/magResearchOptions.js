@@ -24,9 +24,10 @@ export function lineageResearchOption(data, preferences) {
   const groups = bySource ? ['CHN', 'CHN2'] : ['AD', 'NC'];
   return { tooltip: { ...tooltip, formatter: p => {
     const row = p.data.details;
-    return `${row.memberMag}\n${row.memberSourceSampleId} · ${row.memberDisease} · ${row.memberGroup}\nANI ${number(row.memberToRepAni * 100)}%\n成员→代表比对比例 ${number(row.memberToRepAlignmentCoverage * 100)}%\n${row.isRepresentative ? '代表自身' : '聚类成员'}`;
-  } }, legend: { top: 0 }, grid: { left: 72, right: 40, top: 48, bottom: 62 },
-    xAxis: { type: 'value', scale: true, name: '成员→代表实际 ANI（%）', nameLocation: 'middle', nameGap: 35 },
+    return `${row.memberMag}\n${row.memberSourceSampleId} · ${row.memberDisease} · ${row.memberGroup}\nANI ${number(row.memberToRepAni * 100)}%（原始比例 ${row.memberToRepAni}）\n成员→代表比对比例 ${number(row.memberToRepAlignmentCoverage * 100)}%（原始比例 ${row.memberToRepAlignmentCoverage}）\n${row.isRepresentative ? '代表自身' : '聚类成员'}`;
+  } }, legend: { top: 0 }, grid: { left: 72, right: 40, top: 48, bottom: 88 },
+    graphic: [{ type: 'text', left: 'center', bottom: 6, style: { text: `整簇 ${data.items.length} 个成员 · 95% 为参考线\nreference：代表 MAG · query：成员 MAG`, lineHeight: 14, font: '11px sans-serif', fill: '#566477' } }],
+    xAxis: { type: 'value', min: Math.max(0, Math.min(95, ...data.items.map(row => row.memberToRepAni * 100)) - .2), max: 100, name: '成员→代表实际 ANI（%）', nameLocation: 'middle', nameGap: 35 },
     yAxis: { type: 'value', min: 0, max: 100, name: '基因组比对比例（%）' },
     series: groups.map((group, index) => ({ name: group, type: 'scatter',
       data: data.items.filter(row => (bySource ? row.memberGroup : row.memberDisease) === group).map(row => ({ name: row.memberMag,

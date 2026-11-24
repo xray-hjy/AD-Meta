@@ -23,16 +23,35 @@
 .gmrepo-summary strong { font-size: 32px; font-weight: 650; line-height: 1.2; font-variant-numeric: tabular-nums; }
 .gmrepo-summary small { color: var(--color-text-soft); font-size: 12px; line-height: 1.5; }
 .gmrepo-scope-caption { margin: 14px 0 22px; color: var(--color-text-muted); font-size: 12px; }
-.gmrepo-charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: start; }
+.gmrepo-charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
 .gmrepo-panel { min-width: 0; background: #fff; border: 1px solid var(--color-border-soft); border-radius: 8px; padding: 22px; margin-bottom: 22px; }
-.gmrepo-charts .gmrepo-panel { margin-bottom: 0; }
+.gmrepo-charts > .gmrepo-panel { margin-bottom: 0; display: grid; grid-row: span 2; grid-template-rows: subgrid; row-gap: 0; }
+.gmrepo-page .gmrepo-charts > .gmrepo-panel > .gmrepo-panel-heading { margin-block-end: 12px; padding-block: 12px; }
+.gmrepo-charts .gmrepo-panel-heading p { margin-block: 4px 0; }
+.gmrepo-quality-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 7px 12px; }
+.gmrepo-quality-heading .sliding-choice-group { display: inline-flex; flex: none; gap: 2px; padding: 2px; background: #eaf0f8; border-radius: 6px; --selection-soft: #fff; }
+.gmrepo-quality-heading .sliding-choice-group > button { padding: 4px 9px; color: var(--color-text-muted); border: 0; border-radius: 5px; font: inherit; font-size: 12px; cursor: pointer; }
+.gmrepo-quality-content { min-width: 0; }
+.gmrepo-quality-content > .gmrepo-note { margin: 8px 0 0; }
+.gmrepo-quality-status { overflow: auto; }
+.gmrepo-quality-status table { white-space: normal; }
+.gmrepo-quality-status :is(td, th):last-child { white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; }
+.gmrepo-page .gmrepo-quality-status :is(td, th) { padding-block: 7px; }
+.gmrepo-quality-status tbody tr:nth-child(even) { background: #f5f8fc; }
+.gmrepo-quality-availability { list-style: none; display: grid; gap: 22px; margin: 0; padding: 8px 0; }
+.gmrepo-quality-availability-label { display: flex; align-items: baseline; gap: 6px 14px; flex-wrap: wrap; font-size: 13px; }
+.gmrepo-quality-availability-label > strong { margin-inline-end: auto; }
+.gmrepo-quality-availability-label span { color: var(--color-text-muted); }
+.gmrepo-quality-availability-label b { font-variant-numeric: tabular-nums; }
+.gmrepo-quality-meter { height: 12px; margin-top: 8px; border-radius: 3px; background: #b8823a; overflow: hidden; }
+.gmrepo-quality-meter span { display: block; height: 100%; background: var(--workspace-accent, #0072b2); }
+.gmrepo-quality-availability .gmrepo-note { margin: 5px 0 0; }
 .gmrepo-panel-heading h2 { margin: 0; font-size: 17px; line-height: 1.5; }
 .gmrepo-panel-heading p { margin: 7px 0 14px; color: var(--color-text-muted); font-size: 12px; line-height: 1.65; }
 .gmrepo-charts + .gmrepo-panel { margin-top: 22px; }
 .gmrepo-chart-empty { min-height: 170px; display: flex; align-items: center; justify-content: center; color: var(--color-text-muted); padding: 20px; text-align: center; font-size: 13px; line-height: 1.7; }
 .gmrepo-chart-host { width: 100%; min-width: 0; }
-.gmrepo-note, .gmrepo-quality-notes { font-size: 12px; line-height: 1.7; color: var(--color-text-muted); }
-.gmrepo-quality-notes p { margin: 6px 0; }
+.gmrepo-note { font-size: 12px; line-height: 1.7; color: var(--color-text-muted); }
 .gmrepo-table-scroll { overflow-x: auto; border: 1px solid var(--color-border-soft); border-radius: 4px; }
 .gmrepo-page table { border-collapse: collapse; width: 100%; text-align: left; font-size: 12px; white-space: nowrap; }
 .gmrepo-page th, .gmrepo-page td { padding: 12px; border-bottom: 1px solid var(--color-border-soft); vertical-align: top; }

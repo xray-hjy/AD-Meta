@@ -39,10 +39,10 @@ export function MagCoverageEvidence({ revision, magId, scope }) {
   const build = (data, style) => coverageOption(data, style, metric);
   return <section><h3>丰度与覆盖证据</h3><label className="mag-inline-field">纵轴<StyledSelect value={metric} onChange={e => setMetric(e.target.value)}><option value="coveredFraction">覆盖广度</option><option value="meanCoverage">平均深度</option></StyledSelect></label>
     {query.error ? <ErrorState message={query.error.message} onRetry={query.refetch} /> : query.isPending ? <LoadingState /> : <>
-      <CollapsibleResultSection title="丰度与覆盖分布" storageKey="admeta:mag:coverage-scatter:fold"><MagFunctionalChart kind="coverage" data={query.data} buildOption={build} height={420} onSelect={setSample} /></CollapsibleResultSection>
+      <CollapsibleResultSection title="丰度与覆盖分布" className="mag-coverage-section" storageKey="admeta:mag:coverage-scatter:fold"><MagFunctionalChart kind="coverage" data={query.data} buildOption={build} height={420} onSelect={setSample} /></CollapsibleResultSection>
       <label className="mag-functional-threshold">覆盖广度参考阈值 {threshold}%<input type="range" min="0" max="100" value={threshold} onChange={e => setThreshold(Number(e.target.value))} /></label>
       <p className="mag-muted">{query.data.items.filter(r => r.coveredFraction * 100 >= threshold).length} / {query.data.items.length} 个当前样本覆盖广度 ≥{threshold}%。这是探索性参考，不修改丰度或定义生物学检出。</p>
-      <CollapsibleResultSection title="覆盖阈值敏感性" summary="各组满足参考阈值的样本数" storageKey="admeta:mag:coverage-sensitivity:fold"><MagFunctionalChart kind="coverage-sensitivity" data={query.data} buildOption={coverageSensitivityOption} height={320} /></CollapsibleResultSection>
+      <CollapsibleResultSection title="覆盖阈值敏感性" className="mag-coverage-section" summary="各组满足参考阈值的样本数" storageKey="admeta:mag:coverage-sensitivity:fold"><MagFunctionalChart kind="coverage-sensitivity" data={query.data} buildOption={coverageSensitivityOption} height={320} /></CollapsibleResultSection>
       {sample && <dl className="mag-detail-facts">{[['样本', sample.sampleId], ['分组', sample.disease], ['MAG 丰度 %', sample.abundancePercent], ['覆盖广度 %', sample.coveredFraction * 100], ['平均深度 ×', sample.meanCoverage], ['Reads 数', sample.readCount]].map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>}
     </>}
   </section>;

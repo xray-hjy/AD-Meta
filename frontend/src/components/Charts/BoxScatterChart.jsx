@@ -27,7 +27,7 @@ function sampleOffset(sample, fallbackIndex) {
 
 export function buildBoxScatterOption({ available, series, activeTransform, visibleCount,
   layout = 'features', scatterMode = 'outliers', boxWidth = [12, 22],
-  tooltipAppearance = 'dark', formatValue, groupCounts = {} }) {
+  tooltipAppearance = 'dark', formatValue, groupCounts = {}, valueRange }) {
     if (!available.length || !series.length) return null;
     const grouped = layout === 'groups';
     const format = formatValue || (value => fmtNum(value, activeTransform.key));
@@ -135,6 +135,7 @@ export function buildBoxScatterOption({ available, series, activeTransform, visi
       },
       yAxis: {
         type: 'value',
+        ...(valueRange ? { min: valueRange.min, max: valueRange.max } : {}),
         name: activeTransform.label,
         axisLabel: {
           color: '#475569',

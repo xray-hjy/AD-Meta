@@ -53,6 +53,7 @@ npm run validate:mag -- --dataset prjca022804-ad-nc
 | coverage | 平均覆盖度、覆盖广度、reads 数、方差、reads/base；明确各自单位，与丰度集合对齐 |
 | quality | CheckM2 全体候选记录；另关联代表集合，校验代表长度，完整度参考区间不等于完整 MIMAG 质量判定 |
 | taxonomy | GTDB-Tk 原 summary；分类、参考 ANI/AF/MSA 与代表集合对齐，版本从 gtdbtk.json 取得 |
+| crosswalk | GTDB R232 与 NCBI 的两份对应表，校验归档 SHA-256、版本化参考 accession、域与属，区分已核实、待核查和冲突 |
 | lineage | Cdb/Wdb/Ndb 等原表；按代表 reference、成员 query 提取实际 ANI，来源样本与质量可追溯 |
 | arg | DRAMMA 运行清单、命中/候选明细及汇总交叉核对；保留 Label、prob、passed 标记的各自含义 |
 | bgc | 解析 regions.js 的 JSON 数据，不执行 JavaScript；与区域 GBK 数量核对，保存原 contig 的 0 起点半开区间 |
@@ -76,6 +77,8 @@ MAG 全序列不是当前已产出结果可视化的必需输入。DRAM2 已通�
 必需的样本或丰度校验失败时不发布，当前已发布结果保持原状。
 可选模块缺少或校验失败时记录状态，其他已通过的模块可发布；不能把失败结果显示为有效数据。
 树、ARG、BGC 等可独立补充；crosswalk 不再是 lineage 的依赖，没有经核对对应时不猜测映射。
+
+PRJCA022804 的两份 crosswalk TSV 随仓库提供。启用该模块仍需此前已归档的 `GTDBTk/GTDBTk_results/gtdbtk.json`、GTDB-Tk 分类输入及 MAG 丰度输入，并由导入生成包含对应表的发布。GMrepo 以经核对的同域 NCBI 属为外部背景参考；历史发布按自身数据提示是否具有对应表。队列内关联的结果包绑定具体发布及原始输入的字节指纹，使用相符的原始档案和另行安装的派生结果，见 [队列内关联分析](../../doc/MAG队列内关联分析.md)。
 
 API 的 `dataset` 指定队列，`release` 或现有图表参数 `revision` 指定正式分析记录；冲突返回 409。
 图表请求和前端缓存固定结果指纹，统计缓存同时包含计算方法和样本范围。

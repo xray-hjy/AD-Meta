@@ -4,6 +4,6 @@ export function functionalMatrixGeometry(rows, columns) {
     viewportHeight: Math.min(760, Math.max(280, rows * 24 + 160)), cellWidth, cellHeight: 24 };
 }
 
-export function phylogenyHeight(leaves) {
+export function collapsiblePhylogenyHeight(leaves) {
   return Math.min(740, Math.max(240, leaves * 28 + 145));
 }

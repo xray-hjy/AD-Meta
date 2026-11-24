@@ -8,7 +8,7 @@ export function safeAnalysisReturn(value) {
     && !value.includes('\\') ? value : '/analysis/abundance';
 }
 
-function RoutedEvidenceLink({ subjectType = 'species', subjectId, sourceRevision, datasetSlug,
+function RoutedEvidenceLink({ subjectType = 'species', subjectId, sourceRevision, referenceRevision, datasetSlug,
   runKey, artifactKey, context, children, onOpen, className = 'analysis-button evidence-entry' }) {
   const location = useLocation();
   const shared = useContext(EvidenceContext) || {};
@@ -17,7 +17,7 @@ function RoutedEvidenceLink({ subjectType = 'species', subjectId, sourceRevision
   const params = new URLSearchParams({ subjectType, subjectId: String(subjectId), sourceRevision: revision,
     returnTo: safeAnalysisReturn(`${location.pathname}${location.search}`) });
   const values = { datasetSlug: datasetSlug || shared.datasetSlug, runKey: runKey || shared.runKey,
-    artifactKey: artifactKey || shared.artifactKey, sourceChart: shared.sourceChart };
+    artifactKey: artifactKey || shared.artifactKey, sourceChart: shared.sourceChart, revision: referenceRevision };
   Object.entries(values).forEach(([key, value]) => { if (value) params.set(key, value); });
   const scope = JSON.stringify(context || shared.scope || {});
   if (scope.length <= 4000) params.set('sourceScope', scope);

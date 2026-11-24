@@ -116,3 +116,10 @@
 }
 @media (prefers-reduced-motion: reduce) { .chart-style-switch__track, .chart-style-switch__track > span { transition: none; } }
 .chart-style-toolbar__action[aria-pressed=true] { color: var(--workspace-accent); background: var(--workspace-accent-soft); }
+
+.chart-palette-states { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; width: 100%; }
+.chart-palette-states > span { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.chart-palette-states i { display: block; height: 16px; border-radius: 1px; }
+.chart-palette-states small { font-size: 9px; color: var(--color-text-muted); white-space: nowrap; }
+.chart-palette-states--compact { width: 48px; gap: 2px; }
+.chart-palette-states--compact i { height: 13px; }

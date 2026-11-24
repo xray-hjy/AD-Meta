@@ -68,3 +68,7 @@ __pycache__/
 !/backend/storage/raw/ad-nc-mag/*/
 !/backend/storage/raw/ad-nc-mag/*/README.md
 !/backend/storage/raw/ad-nc-mag/*/files.tsv
+!/backend/storage/raw/ad-nc-mag/*/GTDBTk/
+!/backend/storage/raw/ad-nc-mag/*/GTDBTk/crosswalk/
+!/backend/storage/raw/ad-nc-mag/*/GTDBTk/crosswalk/species_taxonomy_crosswalk.tsv
+!/backend/storage/raw/ad-nc-mag/*/GTDBTk/crosswalk/gtdb_reference_ncbi_taxid_mapping.tsv

@@ -3,6 +3,12 @@ import SlidingHighlight from '../ui/SlidingHighlight';
 import useSlidingHighlight from '../ui/useSlidingHighlight';
 import usePopupPresence from '../ui/usePopupPresence';
 
+function StateSwatches({ option, compact = false }) {
+  return <span className={`chart-palette-states${compact ? ' chart-palette-states--compact' : ''}`} aria-hidden="true">
+    {option.states.map(state => <span key={state.label} title={state.label}><i style={state.style} />{!compact && <small>{state.label}</small>}</span>)}
+  </span>;
+}
+
 export default function PaletteSelect({ field, value, onChange }) {
   const [open, setOpen] = useState(false);
   const root = useRef(null);
@@ -34,7 +40,7 @@ export default function PaletteSelect({ field, value, onChange }) {
       onClick={() => setOpen(v => !v)} onKeyDown={event => {
         if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); setOpen(true); }
       }}>
-      <span className="chart-palette-select__swatch" style={gradient(current.colors)} aria-hidden="true" />
+      {current.states ? <StateSwatches option={current} compact /> : <span className="chart-palette-select__swatch" style={gradient(current.colors)} aria-hidden="true" />}
       <span>{current.shortLabel || current.label}</span><span aria-hidden="true">⌄</span>
     </button>
     {mounted && <div className="chart-palette-select__panel selection-popup-motion" data-ending-style={!open ? '' : undefined} inert={!open} aria-hidden={!open || undefined}>
@@ -54,7 +60,7 @@ export default function PaletteSelect({ field, value, onChange }) {
           onPointerMove={event => { if (event.pointerType !== 'touch') setActive(option.value); }}
           aria-selected={option.value === current.value} onClick={() => select(option)}>
           <span className="chart-palette-select__option-name">{option.label}<span aria-hidden="true">{option.value === current.value ? '✓' : ''}</span></span>
-          <span className="chart-palette-select__ramp" style={gradient(option.colors)} aria-hidden="true" />
+          {option.states ? <StateSwatches option={option} /> : <span className="chart-palette-select__ramp" style={gradient(option.colors)} aria-hidden="true" />}
         </button>)}
       </div>
       {current.source && <a className="chart-palette-select__source" href={current.source} target="_blank" rel="noreferrer">查看 {current.shortLabel || current.label} 配色来源 ↗</a>}

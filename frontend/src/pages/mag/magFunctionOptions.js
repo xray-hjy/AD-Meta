@@ -1,3 +1,4 @@
+import { presencePalette, presenceState, presenceSeries, presenceLegend } from './magPresencePalette';
 import { HEATMAP_PALETTE_OPTIONS } from './magHeatmapOption';
 import { GROUP_COLORS } from '../../components/Charts/groupPalette';
 import { researchColors } from './magResearchStyle';
@@ -73,27 +74,27 @@ export function functionMatrixOption(data, style = {}) {
     annotation.push({ magId: r.magId, role: 'annotation', name, rawCount: raw, trackIndex: j, value: [0, i, raw ?? 0],
       itemStyle: { color: raw == null ? '#9da5ae' : j ? `rgba(164,64,96,${Math.max(.08, Math.min(1, raw / 10))})` : `rgba(40,120,110,${Math.max(.08, raw / 100)})` } });
   }));
-  const colors = palette(style);
+  const colors = palette(style), preset = presencePalette(style);
   const maximum = Math.max(1, ...items.map(d => d.value[2]));
   const trees = style.dendrograms === false ? [] : [
     functionalDendrogram(data.dendrograms?.[transposed ? 'mags' : 'features'], transposed ? data.mags.map(r => r.magId) : data.features.map(r => r.featureId), 'top', 0),
     functionalDendrogram(data.dendrograms?.[transposed ? 'features' : 'mags'], transposed ? data.features.map(r => r.featureId) : data.mags.map(r => r.magId), 'left'),
   ].filter(Boolean);
   const leftTree = trees.some(r => r.id.endsWith('left')), topTree = trees.some(r => r.id.endsWith('top'));
-  return { ...base, aria: { enabled: true, decal: { show: false } }, grid: { outerBoundsMode: 'none', left: (transposed ? 150 : 210) + (leftTree ? 60 : 0) + (tracks.length ? 36 : 0), right: 90, top: topTree ? 102 : 45, bottom: 90 },
+  return { ...base, aria: { enabled: true, decal: { show: false } }, grid: { outerBoundsMode: 'none', left: (transposed ? 150 : 210) + (leftTree ? 60 : 0) + (tracks.length ? 36 : 0), right: binary ? 135 : 90, top: topTree ? 102 : 45, bottom: 90 },
+    ...(binary ? { graphic: presenceLegend(preset) } : {}),
     tooltip: { ...tip, show: style.hover !== false, formatter: p => p.data?.role === 'annotation'
       ? `${p.data.magId}\n${p.data.name}：${fmt(p.data.rawCount)}`
-      : `${p.data?.magId || ''}\n${p.data?.featureId || ''}\n${p.data?.description || ''}\n注释基因计数：${fmt(p.data?.rawCount)}` },
+      : `${p.data?.magId || ''}\n${p.data?.featureId || ''}\n${p.data?.description || ''}\n${binary ? `状态：${presenceState(p.data?.rawCount)}\n` : ''}注释基因计数：${fmt(p.data?.rawCount)}${binary && p.data?.rawCount === 0 ? '\n仅表示本次注释未命中' : ''}` },
     xAxis: { ...axis, type: 'category', data: columns, triggerEvent: true, axisLabel: { ...axis.axisLabel, show: style.labels !== false, rotate: 45, width: 115, overflow: 'truncate', formatter: label } },
     yAxis: { ...axis, type: 'category', data: rows, inverse: true, triggerEvent: true, axisLabel: { ...axis.axisLabel, show: style.labels !== false, margin: (leftTree ? 68 : 8) + (tracks.length ? 36 : 0), width: transposed ? 130 : 190, overflow: 'truncate', formatter: label } },
-    visualMap: binary ? { type: 'piecewise', seriesIndex: 0, dimension: 2, right: 0, top: 50,
-      pieces: [{ value: 0, label: '本次未命中', color: '#edf0f4' }, { value: 1, label: '命中', color: colors[colors.length - 1] }] }
+    visualMap: binary ? { show: false, seriesIndex: [], min: 0, max: 1 }
       : { type: 'continuous', seriesIndex: 0, dimension: 2, min: 0, max: maximum, calculable: false,
         right: 0, top: 'middle', text: ['log1p(计数)', '0'], inRange: { color: colors } },
-    series: [{ id: 'functional-values', type: 'heatmap', data: items,
+    series: [binary ? presenceSeries('functional-values', items, preset, style) : { id: 'functional-values', type: 'heatmap', data: items,
       itemStyle: { borderWidth: style.borders ? .5 : 0, borderColor: '#fff' }, emphasis: { itemStyle: { borderColor: '#a44060', borderWidth: 1 } },
       label: { show: Boolean(style.values) && items.length <= 1500, formatter: p => String(p.data.rawCount), fontSize: Number(style.fontSize || 11) } },
-    matrixOverlay('functional-missing', missing, true), qualityTracks(annotation), ...trees],
+    binary ? presenceSeries('functional-missing', missing, preset, style) : matrixOverlay('functional-missing', missing, true), qualityTracks(annotation), ...trees],
   };
 }
 
@@ -144,73 +145,12 @@ export function geneTrackOption(items, style = {}, regions = false) {
 
 export function coverageOption(data, style = {}, metric = 'coveredFraction') {
   const colors = groupColors(style);
-  return { ...base, tooltip: { ...tip, show: style.hover !== false, formatter: p => `${p.data.sampleId} · ${p.data.disease}\n丰度 ${fmt(p.data.abundancePercent)}%\n覆盖广度 ${fmt(p.data.coveredFraction * 100)}%\n平均深度 ${fmt(p.data.meanCoverage)}×\nReads ${fmt(p.data.readCount)}` },
+  return { ...base, grid: { left: 72, right: 24, top: 65, bottom: 65 }, tooltip: { ...tip, show: style.hover !== false, formatter: p => `${p.data.sampleId} · ${p.data.disease}\n丰度 ${fmt(p.data.abundancePercent)}%\n覆盖广度 ${fmt(p.data.coveredFraction * 100)}%\n平均深度 ${fmt(p.data.meanCoverage)}×\nReads ${fmt(p.data.readCount)}` },
     xAxis: { ...axis, type: 'value', name: 'MAG 相对丰度（%）', nameLocation: 'middle', nameGap: 35, min: 0 },
     yAxis: { ...axis, type: 'value', name: metric === 'coveredFraction' ? '覆盖广度（%）' : '平均深度（×）', min: 0, ...(metric === 'coveredFraction' ? { max: 100 } : {}) },
-    legend: { data: ['AD', 'NC'] }, series: ['AD', 'NC'].map(group => ({ id: group, name: group, type: 'scatter',
+    legend: { data: ['AD', 'NC'], top: 4, left: 'center', bottom: 'auto' }, series: ['AD', 'NC'].map(group => ({ id: group, name: group, type: 'scatter',
       symbol: group === 'AD' ? 'circle' : 'diamond', symbolSize: Number(style.pointSize || 8), itemStyle: { color: colors[group], opacity: .75 },
       data: data.items.filter(r => r.disease === group).map(r => ({ ...r, value: [r.abundancePercent, metric === 'coveredFraction' ? r.coveredFraction * 100 : r.meanCoverage] })) })) };
-}
-
-export function phylogenyTrackOption(tree, matrix, style = {}, mode = 'topology') {
-  const leaves = [], segments = [], leafPoints = [];
-  const visit = (node, depth, distance) => {
-    const x = mode === 'length' ? distance : depth;
-    if (!node.children?.length) {
-      const y = leaves.length; leaves.push(node.name); leafPoints.push({ magId: node.name, value: [x, y], role: 'leaf' }); return { x, y };
-    }
-    const children = node.children.map(child => visit(child, depth + 1, distance + (Number(child.branchLength) || 0)));
-    const y = children.reduce((sum, child) => sum + child.y, 0) / children.length;
-    segments.push([x, Math.min(...children.map(c => c.y)), x, Math.max(...children.map(c => c.y))]);
-    children.forEach(child => segments.push([x, child.y, child.x, child.y]));
-    return { x, y };
-  };
-  visit(tree.tree, 0, 0);
-  const index = new Map(matrix?.mags.map((r, i) => [r.magId, i]) || []);
-  const fields = [{ featureId: '完整度 %', role: 'quality' }, { featureId: '污染率 %', role: 'quality' }, ...(matrix?.features || [])];
-  const cells = leaves.flatMap((mid, y) => fields.map((f, x) => {
-    const i = index.get(mid), value = i == null ? null : x < 2 ? matrix.mags[i].quality?.[x === 0 ? 'completenessPercent' : 'contaminationPercent'] ?? null : matrix.values[i][x - 2];
-    return { magId: mid, featureId: f.role === 'quality' ? '' : f.featureId, name: f.featureId, role: f.role || 'function', rawCount: value, value: [x, y, value] };
-  }));
-  const width = style.containerWidth || 1000;
-  const labelWidth = Math.min(220, Math.max(95, width * .21));
-  const treeWidth = Math.max(70, (width - labelWidth - 80) * .46);
-  const tracksLeft = 20 + treeWidth + labelWidth + 18;
-  const tracksWidth = Math.max(45, Math.min(width - tracksLeft - 28, fields.length * 54));
-  const axisY = { ...axis, type: 'value', inverse: true, min: -.5, max: leaves.length - .5, interval: 1,
-    splitLine: { show: false }, axisLabel: { show: false } };
-  const visibleEnd = Math.min(leaves.length, 24) - .5;
-  return { ...base, grid: [{ outerBoundsMode: 'none', left: 20, width: treeWidth, top: 65, bottom: 80 }, { outerBoundsMode: 'none', left: tracksLeft, width: tracksWidth, top: 65, bottom: 80 }],
-    graphic: [{ type: 'group', left: 20, top: 12, children: [
-      ...[['命中', '#a44060'], ['本次未命中', '#edf0f4'], ['不可评价', '#a2aab5']].flatMap(([text, fill], i) => [
-        { type: 'rect', shape: { x: i * 95, y: 0, width: 9, height: 9 }, style: { fill, stroke: '#d5dbe4', lineWidth: .5 } },
-        { type: 'text', style: { x: i * 95 + 14, y: 0, text, fill: '#526075', fontSize: 10 } },
-      ]), { type: 'text', style: { x: 300, y: 0, text: '质量轨道：原始百分比', fill: '#526075', fontSize: 10 } },
-    ] }],
-    tooltip: { ...tip, show: style.hover !== false, formatter: p => p.data?.role === 'leaf' ? p.data.magId : p.data?.magId ? `${p.data.magId}\n${p.data.name}\n${p.data.role === 'quality' ? '来源值' : '基因计数'}：${fmt(p.data.rawCount)}` : 'IQ-TREE 原始拓扑分支' },
-    xAxis: [{ ...axis, type: 'value', name: mode === 'length' ? '累计分支长度' : '拓扑层级', nameLocation: 'middle', nameGap: 28, max: Math.max(...leafPoints.map(r => r.value[0])) || 1, splitLine: { show: false } },
-      { ...axis, type: 'category', gridIndex: 1, data: fields.map(r => r.featureId),
-        axisLabel: { ...axis.axisLabel, show: style.labels !== false, interval: 0, rotate: 35, fontSize: Number(style.fontSize || 11) } }],
-    yAxis: [axisY, { ...axisY, gridIndex: 1 }],
-    dataZoom: [{ type: 'inside', yAxisIndex: [0, 1], startValue: -.5, endValue: visibleEnd, filterMode: 'none', zoomOnMouseWheel: 'alt' },
-      { type: 'slider', yAxisIndex: [0, 1], startValue: -.5, endValue: visibleEnd, filterMode: 'none', right: 0, top: 65, bottom: 80, width: 12 }],
-    series: [{ id: 'phylogeny-branches', type: 'custom', silent: true, clip: true, data: segments,
-      renderItem: (_p, api) => { const a = api.coord([api.value(0), api.value(1)]), b = api.coord([api.value(2), api.value(3)]);
-        return { type: 'line', shape: { x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, style: { stroke: '#7e8493', lineWidth: 1 } }; } },
-    { id: 'phylogeny-leaves', type: 'custom', clip: false, data: leafPoints, renderItem: (p, api) => {
-      const point = api.coord([api.value(0), api.value(1)]), box = p.coordSys;
-      if (point[1] < box.y || point[1] > box.y + box.height) return null;
-      const datum = leafPoints[p.dataIndex], end = box.x + box.width;
-      return { type: 'group', children: [{ type: 'circle', shape: { cx: point[0], cy: point[1], r: 3 }, style: { fill: '#a44060' } },
-        { type: 'line', shape: { x1: point[0] + 4, y1: point[1], x2: end, y2: point[1] }, style: { stroke: '#d5dbe4', lineWidth: .5, lineDash: [2, 3] } },
-        ...(style.labels !== false ? [{ type: 'text', style: { x: end + 8, y: point[1], text: label(datum.magId), fill: '#526075', fontSize: Number(style.fontSize || 11), verticalAlign: 'middle', width: labelWidth, overflow: 'truncate' } }] : [])] };
-    } },
-    { id: 'phylogeny-functions', type: 'custom', xAxisIndex: 1, yAxisIndex: 1, clip: true, data: cells,
-      renderItem: (params, api) => { const point = api.coord([api.value(0), api.value(1)]), size = api.size([1, 1]), datum = cells[params.dataIndex], value = datum.rawCount;
-        const w = Math.min(Math.abs(size[0]), datum.role === 'quality' ? 18 : 50);
-        return { type: 'rect', shape: { x: point[0] - w / 2, y: point[1] - Math.abs(size[1]) / 2, width: w, height: Math.abs(size[1]) },
-          style: { fill: value == null ? '#a2aab5' : api.value(0) === 0 ? `rgba(40,120,110,${Math.max(.08, value / 100)})` : api.value(0) === 1 ? `rgba(164,64,96,${Math.max(.08, Math.min(1, value / 10))})` : value > 0 ? '#a44060' : '#edf0f4' } }; } }],
-  };
 }
 
 export function signalOption(data, style = {}) {
@@ -239,10 +179,12 @@ export function themeEvidenceOption(data, style = {}) {
 
 export function coverageSensitivityOption(data, style = {}) {
   const colors = groupColors(style);
-  return { ...base, tooltip: { ...tip, trigger: 'axis', show: style.hover !== false }, legend: { data: ['AD', 'NC'] },
+  return { ...base, grid: { left: 72, right: 24, top: 65, bottom: 65 }, tooltip: { ...tip, trigger: 'axis', show: style.hover !== false }, legend: { data: ['AD', 'NC'].map(group => ({ name: group, icon: 'line',
+      itemStyle: { color: colors[group], borderColor: colors[group], borderWidth: 2, borderType: group === 'AD' ? 'solid' : 'dashed' } })),
+      top: 4, left: 'center', bottom: 'auto' },
     xAxis: { ...axis, type: 'value', min: 0, max: 100, name: '覆盖广度参考阈值（%）', nameLocation: 'middle', nameGap: 35 },
     yAxis: { ...axis, type: 'value', min: 0, minInterval: 1, name: '满足阈值的样本数' },
-    series: ['AD', 'NC'].map(group => ({ id: group, name: group, type: 'line', symbol: 'none', step: 'end', lineStyle: { color: colors[group], type: group === 'AD' ? 'solid' : 'dashed' },
+    series: ['AD', 'NC'].map(group => ({ id: group, name: group, type: 'line', symbol: 'none', step: 'end', itemStyle: { color: colors[group] }, lineStyle: { color: colors[group], type: group === 'AD' ? 'solid' : 'dashed' },
       data: Array.from({ length: 101 }, (_, threshold) => [threshold, data.items.filter(r => r.disease === group && r.coveredFraction * 100 >= threshold).length]) })) };
 }
 

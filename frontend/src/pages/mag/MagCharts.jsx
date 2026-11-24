@@ -9,8 +9,9 @@ import BoxScatterChart, { buildBoxScatterOption } from '../../components/Charts/
 import { buildMagHeatmapOption } from './magHeatmapOption';
 import MagResearchChart from './MagResearchChart';
 import { mappingResearchOption } from './magResearchOptions';
+import { formatMagNumber, distributionRange, distributionRangeLabel } from './magDistributionView';
 
-export const number = value => value == null ? '—' : Number(value).toLocaleString('en-US', { maximumSignificantDigits: 4 });
+export const number = formatMagNumber;
 const shortMag = id => id.replace(/__(CRR\d+)_cleanbin_/, ' · ');
 const tooltip = { trigger: 'item', renderMode: 'richText', confine: true };
 // Live rendering is vector-based regardless of the chosen download format.
@@ -24,7 +25,7 @@ const distributionStyle = { key: 'mag-boxplot', pointLabel: '样本点', allowLe
 
 function comparisonModel(items) {
   return {
-    title: 'MAG 丰度条形图', featureLabel: 'MAG',
+    title: 'MAG 丰度条形图', featureLabel: 'MAG', tableFormatValue: number,
     items: items.map(row => ({ id: row.magId, label: row.taxonomyName ? `${row.taxonomyName} · ${shortMag(row.magId)}` : shortMag(row.magId),
       fullName: row.taxonomyName ? `${row.taxonomyName} · ${row.magId}` : row.magId, values: { AD: row.adMeanPercent, NC: row.ncMeanPercent } })),
     series: ['AD', 'NC'].map(group => ({ key: group, label: `${group} 均值`, color: GROUP_COLORS[group] })),
@@ -39,8 +40,9 @@ export function comparisonOption(items) {
   return buildGroupedBarOption(comparisonModel(items));
 }
 
-function distributionModel(data) {
+function distributionModel(data, focus = false) {
   return {
+    valueRange: distributionRange(data, focus),
     layout: 'groups', scatterMode: 'all', boxWidth: [35, 90], tooltipAppearance: 'light',
     activeTransform: { key: 'raw', label: '相对丰度（%）' }, groupCounts: data.provenance.groupCounts,
     formatValue: value => value == null || value === '-' ? '未提供' : `${number(value)}%`,
@@ -53,8 +55,8 @@ function distributionModel(data) {
   };
 }
 
-export function distributionOption(data) {
-  return buildBoxScatterOption(distributionModel(data));
+export function distributionOption(data, focus = false) {
+  return buildBoxScatterOption(distributionModel(data, focus));
 }
 
 export function heatmapOption(data, preferences, window) {
@@ -147,9 +149,9 @@ export function qualityOption(data) {
   };
 }
 
-export default function MagChart({ view, data, format, size, onSelect, heatmapStyle, toolbarTarget, onBrush, selected }) {
+export default function MagChart({ view, data, format, size, onSelect, heatmapStyle, toolbarTarget, onBrush, selected, distributionFocus = false, onSampleSelect }) {
   const model = useMemo(() => view === 'features' ? comparisonModel(data.items)
-    : view === 'distribution' ? distributionModel(data) : null, [view, data]);
+    : view === 'distribution' ? distributionModel(data, distributionFocus) : null, [view, data, distributionFocus]);
   const option = useMemo(() => {
     if (view === 'distribution' || view === 'features' || view === 'heatmap') return null;
     if (view === 'taxonomy') return taxonomyOption(data);
@@ -164,6 +166,11 @@ export default function MagChart({ view, data, format, size, onSelect, heatmapSt
     return {
       fileName: `ADMeta-${data.provenance.version}-${view}-${(data.projectionFingerprint || data.provenance.requestFingerprint).slice(0, 12)}${view === 'distribution' ? `-${data.feature.magId}` : view === 'heatmap' ? `-${data.settings?.colorMode || 'abundance'}-${data.magIds.length}MAGs${heatmapStyle?.transposed ? '-transposed' : ''}` : view === 'features' ? `-${data.sortBy}-top${data.items.length}-${data.query || 'all'}` : ''}`,
       format, minWidth: width, minHeight: height,
+      ...(view === 'distribution' ? { prepareOption: option => ({ ...option,
+        grid: (Array.isArray(option.grid) ? option.grid : [option.grid]).map(grid => ({ ...grid, top: 96 })),
+        graphic: [...(Array.isArray(option.graphic) ? option.graphic : []), { type: 'text', left: 'center', top: 8,
+          style: { text: `${data.feature.magId}\n${distributionRangeLabel(distributionRange(data, distributionFocus))}\n统计包含当前范围全部 ${data.samples.length} 个样本`, font: '12px sans-serif', fill: '#334155', lineHeight: 17 } }],
+      }) } : {}),
       ...(isHeatmap ? {
         maxHeight: height, maxWidth: width, rasterizeSvg: true,
         // Bound PNG dimensions/memory while retaining every selected cell.
@@ -174,9 +181,9 @@ export default function MagChart({ view, data, format, size, onSelect, heatmapSt
       } : {}),
       fullDataZoom: true, title: `导出 ${format.toUpperCase()} 图形`,
     };
-  }, [data, format, size, view, heatmapStyle]);
+  }, [data, format, size, view, heatmapStyle, distributionFocus]);
   if (view === 'heatmap') return <div className="mag-chart"><MagZoomableHeatmap data={data} heatmapStyle={heatmapStyle} exportConfig={exportConfig} onSelect={onSelect} toolbarTarget={toolbarTarget} /></div>;
-  if (view === 'features') return <div className="mag-chart"><ZoomableGroupedBarChart model={model} barStyleConfig={barStyles.features} exportConfig={exportConfig} onSelect={onSelect} toolbarTarget={toolbarTarget} /></div>;
+  if (view === 'features') return <div className="mag-chart"><ZoomableGroupedBarChart model={model} initialNavigationOpen={false} barStyleConfig={barStyles.features} exportConfig={exportConfig} onSelect={onSelect} toolbarTarget={toolbarTarget} /></div>;
   if (['taxonomy', 'quality', 'mapping'].includes(view)) return <MagResearchChart key={view} kind={view} data={data}
     buildOption={view === 'taxonomy' ? taxonomyOption : view === 'quality' ? qualityOption : mappingResearchOption}
     exportConfig={exportConfig} onSelect={onSelect} onBrush={onBrush} selected={selected}
@@ -190,6 +197,7 @@ export default function MagChart({ view, data, format, size, onSelect, heatmapSt
     ariaLabel="MAG 图表，可横向滚动">
     <Chart {...(model ? { model, ...(view === 'features' ? { onSelect } : {}) } : { option })} barStyleConfig={barStyles[view]}
       boxStyleConfig={view === 'distribution' ? distributionStyle : null} opts={chartInitOptions} notMerge frameActions showDataTable={false} exportConfig={exportConfig}
+      onEvents={view === 'distribution' ? { click: event => { if (event.seriesType === 'scatter' && event.data?.sample) onSampleSelect?.(event.data.sample); } } : undefined}
       ariaLabel={`MAG ${view} 图表`} style={{ height }} />
   </ChartViewport></div>;
 }

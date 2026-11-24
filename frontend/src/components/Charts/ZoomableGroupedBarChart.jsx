@@ -47,7 +47,7 @@ export function groupedBarExportOption(model, preferences, config, seriesMode = 
   }) };
 }
 
-export default function ZoomableGroupedBarChart({ model: inputModel, barStyleConfig, exportConfig, onSelect, toolbarTarget, showDataTable = true }) {
+export default function ZoomableGroupedBarChart({ model: inputModel, barStyleConfig, exportConfig, onSelect, toolbarTarget, showDataTable = true, initialNavigationOpen = true }) {
   const model = useMemo(() => ({ featureLabel: 'MAG', ...inputModel,
     items: inputModel.items.map(item => ({ ...item, id: item.id || item.feature || item.label,
       label: item.label || item.feature || item.id })) }), [inputModel]);
@@ -152,7 +152,7 @@ export default function ZoomableGroupedBarChart({ model: inputModel, barStyleCon
     {frameToolbar ? createPortal(toolbar, frameToolbar) : toolbar}
     {!frameToolbar && <ChartFrameActionGroup actions={frameActions} />}
     {exportStatus && <p role="status">{exportStatus}</p>}
-    <ZoomableChartViewport world={world} resetKey={model.items.map(item => item.id).join('|')} preview={preview} insets={insets}
+    <ZoomableChartViewport initialNavigationOpen={initialNavigationOpen} world={world} resetKey={model.items.map(item => item.id).join('|')} preview={preview} insets={insets}
       coordinateKey={transposed} remapCamera={remapCamera} toolbarTarget={toolbarTarget} navigationAxis={transposed ? 'x' : 'y'} navigationUnit={CATEGORY_SIZE}
       extraBottom={84} extraRight={56} navigationDockBottom={12} nativeWheel
       viewportHeight="clamp(480px, 65vh, 720px)" ariaLabel={model.title || '条形图'}>
@@ -161,7 +161,7 @@ export default function ZoomableGroupedBarChart({ model: inputModel, barStyleCon
     </ZoomableChartViewport>
     {showDataTable ? <ChartSupplement><ResultDisclosure title="当前图表数据（只读）" summary={`${model.items.length} 个${model.featureLabel} · 当前排序与数值${barStyleConfig.suffix || ''}`} open={tableOpen} onToggle={event => setTableOpen(event.currentTarget.open)}>
       {tableOpen && <ClientDataTable ariaLabel={`${model.featureLabel}图表原始数据，只读`} rows={tableRows}
-        renderRow={row => <tr key={row.id}><td>{row.id}</td><td>{row.name}</td>{model.series.map(series => <td key={series.key}>{row[series.key]}</td>)}</tr>}>
+        renderRow={row => <tr key={row.id}><td>{row.id}</td><td>{row.name}</td>{model.series.map(series => <td key={series.key}>{model.tableFormatValue ? model.tableFormatValue(row[series.key]) : row[series.key]}</td>)}</tr>}>
         <thead><tr><th>{model.featureLabel} ID</th><th>{model.nameColumn || '名称 / 分类'}</th>{model.series.map(series => <th key={series.key}>{series.label}{barStyleConfig.suffix ? `（${barStyleConfig.suffix}）` : ''}</th>)}</tr></thead>
       </ClientDataTable>}
     </ResultDisclosure></ChartSupplement> : null}

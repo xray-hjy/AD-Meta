@@ -119,6 +119,10 @@ export default function MagHeatmapWorkspace({ params, overview, onSelect, initia
     layout="document" controls={controls} loading={query.isPending} loadingState={<LoadingState message="正在筛选 MAG 并生成热图…" />}
     error={query.error?.message} onRetry={query.refetch}>
     {data && <>
+      {initialMagId && <p className="mag-inline-notice" role="status">
+        {initialMagId} 已加入手动热图清单。{data.magIds.includes(initialMagId) ? '已在当前热图中显示。'
+          : `当前未绘制：${data.selectionAudit?.requestedMagResults?.find(row => row.magId === initialMagId)?.reason || '请核对当前样本范围、筛选条件和显示上限'}。`}
+      </p>}
       <CollapsibleResultSection title="MAG 样本丰度热图" storageKey="admeta:mag:heatmap:fold" actions={toolbar}
         renderChartActions={actions => <MagChartExportMenu actions={actions} format={format} size={size} onFormatChange={setFormat} onSizeChange={setSize}
           pngLabel="PNG（2× 高清）" note="完整矩阵自适应所选画布，标签按空间疏排，树枝与字号保持可读；不含导航面板。SVG 可无损放大查看全部单元格。" />}>

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { vi } from 'vitest';
@@ -34,9 +34,13 @@ test('lazy loads full results, paginates, resets search and exports all matching
 
 test('species result rows link the exact feature, source version and artifact to external evaluation', async () => {
   getCompleteResults.mockResolvedValue({
-    total: 1, featureKind: 'species', datasetSlug: 'ad-nc-species', datasetRevision: 'fixed-revision',
+    total: 3, featureKind: 'species', datasetSlug: 'ad-nc-species', datasetRevision: 'fixed-revision',
     columns: ['sampleCode', 'featureId', 'featureName', 'abundance'], abundanceScale: 'percent', normalization: 'none',
-    items: [{ sampleCode: 'CRR1', featureId: 1937, featureName: 'Bacteroides uniformis', abundance: 0.2 }],
+    items: [
+      { sampleCode: 'CRR1', featureId: 1937, featureName: 'Bacteroides uniformis', abundance: 0.2 },
+      { sampleCode: 'CRR2', featureId: 1937, featureName: 'Bacteroides uniformis', abundance: 0.1 },
+      { sampleCode: 'CRR1', featureId: 1950, featureName: 'Bacteroides fragilis', abundance: 0.5 },
+    ],
   });
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const result = render(<MemoryRouter initialEntries={['/analysis/abundance?chart=boxplot']}>
@@ -45,10 +49,26 @@ test('species result rows link the exact feature, source version and artifact to
   const details = result.container.querySelector('details');
   details.open = true;
   fireEvent(details, new Event('toggle'));
-  const link = await screen.findByRole('link', { name: '外部证据评估', exact: true });
+  await screen.findByText('已选 0 个物种');
+  const firstRow = result.container.querySelector('tbody tr');
+  const link = within(firstRow.querySelector('.complete-species-evidence')).getByRole('link', { name: '外部证据评估', exact: true });
   const params = new URL(link.getAttribute('href'), 'http://localhost').searchParams;
   expect(Object.fromEntries(params)).toMatchObject({ subjectType: 'species', subjectId: '1937',
     sourceRevision: 'fixed-revision', datasetSlug: 'ad-nc-species', runKey: 'species-run', artifactKey: 'species-matrix',
     returnTo: '/analysis/abundance?chart=boxplot' });
   expect(JSON.parse(params.get('sourceScope')).source).toContain('单行不代表总体差异');
+  expect(screen.getByRole('button', { name: '查看属级对照' })).toBeDisabled();
+  const [first, same] = screen.getAllByRole('checkbox', { name: /Bacteroides uniformis/ });
+  fireEvent.click(first);
+  expect(same).toBeChecked();
+  expect(screen.getByText('已选 1 个物种')).toBeVisible();
+  const target = new URL(screen.getByRole('link', { name: '查看属级对照' }).href);
+  expect(target.searchParams.get('speciesIds')).toBe('1937');
+  fireEvent.click(same);
+  expect(first).not.toBeChecked();
+  fireEvent.click(first);
+  fireEvent.click(screen.getByRole('checkbox', { name: /Bacteroides fragilis/ }));
+  expect(screen.getByText('已选 2 个物种')).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: '清空' }));
+  expect(screen.getByRole('button', { name: '查看属级对照' })).toBeDisabled();
 });

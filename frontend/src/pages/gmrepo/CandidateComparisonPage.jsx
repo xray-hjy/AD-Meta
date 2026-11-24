@@ -69,7 +69,7 @@ export default function CandidateComparisonPage() {
     </section>
     {error || wrongKind ? <ErrorState message={wrongKind ? '该 ID 是对象评估，不是多候选对照；未混用记录。' : error.message} /> : !data ? <LoadingState message="正在读取完整主外检验族…" /> : <>
       <Suspense fallback={<LoadingState />}><EvidenceEffectChart record={{ ...data, evaluationId: fixedId }} candidates={rows} onSelect={inspect} /></Suspense>
-      <section className="gmrepo-panel"><div className="gmrepo-panel-heading"><h2>{fixedId ? '固定候选结果' : '完整候选目录'}</h2><p>图表与下表同步显示当前页；报告与复算包保留全部固定选择。点击唯一对应的图格可继续查看单属区间和样本分布。</p></div>
+      <section className="gmrepo-panel"><div className="gmrepo-panel-heading"><h2>{fixedId ? '固定候选结果' : request.speciesIds ? '所选物种的属级对照' : '完整候选目录'}</h2><p>图表与下表同步显示当前页；报告与复算包保留全部固定选择。点击唯一对应的图格可继续查看单属区间和样本分布。</p></div>
         <div className="gmrepo-table-scroll" tabIndex={0}><table><thead><tr>{!fixedId && <th>选择</th>}<th>候选 / 分类对应</th><th>主队列秩效应 / q</th>{data.cohorts.map(c => <th key={c.projectId}>{c.projectId}<small>秩效应 / q</small></th>)}<th>解释</th></tr></thead>
           <tbody>{rows.map(r => <tr key={r.candidateId}>{!fixedId && <td><input type="checkbox" aria-label={`选择 ${r.name}`} checked={selected.includes(r.candidateId)} onChange={() => toggle(r.candidateId)} /></td>}
             <th scope="row">{r.referenceGenus ? <button type="button" className="gmrepo-text-button" onClick={() => inspect({ entityId: r.candidateId })}>{r.name}</button> : r.name}<small>{labels[r.mappingStatus]} · {r.candidateId}</small></th>

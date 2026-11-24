@@ -11,9 +11,10 @@ import { exportEChart } from '../../components/Charts/chartExport';
 import { HEATMAP_PALETTE_OPTIONS } from './magHeatmapOption';
 import { researchPaletteOptions } from '../../components/Charts/researchPalettes';
 import { GROUP_COLORS } from '../../components/Charts/groupPalette';
+import { PRESENCE_PALETTES, functionalMatrixPreview } from './magPresencePalette';
 import { functionalMatrixGeometry } from './magFunctionalGeometry';
 
-const DEFAULTS = { palette: 'pubugn', labels: true, hover: true, borders: false, annotations: true,
+const DEFAULTS = { presencePalette: 'light-teal', palette: 'pubugn', labels: true, hover: true, borders: false, annotations: true,
   transposed: false, values: false, grid: true, legend: true, fontSize: '11', pointSize: '7', dendrograms: true };
 
 function CameraSurface({ option, world, visible, plot, dimensions, camera, onEvents, chartRef, label }) {
@@ -28,7 +29,7 @@ function CameraSurface({ option, world, visible, plot, dimensions, camera, onEve
     visualMap: { ...option.visualMap, right: 4, top: plot.top },
     dataZoom: [{ type: 'inside', disabled: true, xAxisIndex: 0, start: x0, end: x1, filterMode: 'filter' },
       { type: 'inside', disabled: true, yAxisIndex: 0, start: option.yAxis.inverse ? y0 : 100 - y1, end: option.yAxis.inverse ? y1 : 100 - y0, filterMode: 'filter' }] };
-  return <EChart ref={chartRef} option={rendered} replaceMerge={['series', 'visualMap', 'dataZoom']} showDataTable={false}
+  return <EChart ref={chartRef} option={rendered} replaceMerge={['series', 'visualMap', 'dataZoom', 'graphic']} showDataTable={false}
     opts={{ renderer: 'svg', width: dimensions.width, height: dimensions.height }} style={{ width: dimensions.width, height: dimensions.height }} onEvents={onEvents}
     ariaLabel={label} frameActions />;
 }
@@ -36,6 +37,7 @@ function CameraSurface({ option, world, visible, plot, dimensions, camera, onEve
 export default function MagFunctionalChart({ kind, data, buildOption, onSelect, onAxis, onBrush, height = 520, camera = false, label = 'MAG 功能图形' }) {
   const preferences = useChartStylePreferences(`mag-functional-${kind}`);
   const categorical = kind === 'overview';
+  const binary = camera && data.valueKind === 'presence';
   const grouped = ['coverage', 'signals', 'community-ko', 'comparison-distribution', 'coverage-sensitivity'].includes(kind);
   const style = useMemo(() => ({ ...DEFAULTS, discretePalette: categorical ? 'brewer-paired' : grouped ? 'current-groups' : 'mag-accent', ...preferences.values }), [preferences.values, categorical, grouped]);
   const target = useChartFrameToolbarTarget();
@@ -61,7 +63,8 @@ export default function MagFunctionalChart({ kind, data, buildOption, onSelect, 
   const chart = useRef(null);
   const fields = [
     ...(camera ? [{ key: 'transposed', label: '交换横纵轴', type: 'toggle' },
-      { key: 'palette', label: '配色', type: 'palette', options: HEATMAP_PALETTE_OPTIONS },
+      { key: binary ? 'presencePalette' : 'palette', label: '配色', type: 'palette', options: binary ? PRESENCE_PALETTES : HEATMAP_PALETTE_OPTIONS,
+        description: binary ? '浅色系 / 深色系各 6 组 · 色样依次为命中、未命中、不可评价' : '连续色板 · log1p(注释基因计数)' },
       { key: 'annotations', label: '质量旁注', type: 'switch' }, { key: 'borders', label: '单元格边界', type: 'switch', more: true },
       ...(data?.dendrograms ? [{ key: 'dendrograms', label: '聚类树', type: 'switch', more: true }] : [])] : []),
     ...(!camera && (categorical || grouped || kind.includes('ranking')) ? [{ key: 'discretePalette', label: '配色', type: 'palette', discrete: true,
@@ -104,18 +107,9 @@ export default function MagFunctionalChart({ kind, data, buildOption, onSelect, 
   const world = geometry.world;
   const preview = useMemo(() => {
     if (!camera) return '';
-    const rows = style.transposed ? data.features.length : data.mags.length;
-    const columns = style.transposed ? data.mags.length : data.features.length;
-    const rowStep = Math.max(1, Math.ceil(rows / 100)), columnStep = Math.max(1, Math.ceil(columns / 100));
     const colors = HEATMAP_PALETTE_OPTIONS.find(p => p.value === style.palette)?.colors || ['#edf0f4', '#0a5747'];
-    const rects = [];
-    for (let y = 0; y < rows; y += rowStep) for (let x = 0; x < columns; x += columnStep) {
-      const value = style.transposed ? data.values[x][y] : data.values[y][x];
-      const color = value == null ? '#a2aab5' : value > 0 ? colors[colors.length - 1] : '#edf0f4';
-      rects.push(`<rect x="${x}" y="${y}" width="${Math.min(columnStep, columns - x)}" height="${Math.min(rowStep, rows - y)}" fill="${color}"/>`);
-    }
-    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${Math.max(1, columns)} ${Math.max(1, rows)}" preserveAspectRatio="none">${rects.join('')}</svg>`)}`;
-  }, [camera, data, style.transposed, style.palette]);
+    return functionalMatrixPreview(data, style, colors);
+  }, [camera, data, style]);
   const actualHeight = kind === 'comparison-distribution' ? Math.ceil((data?.items.length || 1) / (containerWidth > 900 ? 2 : 1)) * 270
     : kind.includes('ranking') ? Math.min(760, Math.max(260, (data?.items.length || 1) * 25 + 100)) : height;
   return <div className="mag-functional-chart" ref={host}>
@@ -127,10 +121,10 @@ export default function MagFunctionalChart({ kind, data, buildOption, onSelect, 
       <span>框选定位目录，不改变分析集合。</span></div>}
     {camera ? <><ZoomableChartViewport world={world} resetKey={`${data.projectionFingerprint}:${style.transposed}`} preview={preview}
       initialScale={1} initialNavigationOpen={false} previewStretch
-      insets={{ left: option.grid.left, top: option.grid.top }} extraRight={80}
+      insets={{ left: option.grid.left, top: option.grid.top }} extraRight={binary ? 140 : 80}
       viewportHeight={`min(${geometry.viewportHeight}px, 78vh)`} ariaLabel={label}>
       {viewport => <CameraSurface {...viewport} world={world} option={option} onEvents={events} label={label} chartRef={chart} />}
-    </ZoomableChartViewport><p className="mag-functional-viewport-note">全部 {data.mags.length} 个 MAG × {data.features.length} 项功能已载入。默认按可读单元格显示；Alt + 拖动或方向键平移，“全图”用于定位，“1:1”恢复读值。缩略图抽样用于定位，数值以主图为准；左侧窄轨道为完整度 / 污染率。</p></> : <EChart ref={chart} option={option} replaceMerge={['series', 'visualMap', 'dataZoom', 'xAxis', 'yAxis', 'grid']}
+    </ZoomableChartViewport><p className="mag-functional-viewport-note">全部 {data.mags.length} 个 MAG × {data.features.length} 项功能已载入。默认按可读单元格显示；Alt + 拖动或方向键平移，“全图”用于定位，“1:1”恢复读值。缩略图抽样用于定位，数值以主图为准；左侧窄轨道为完整度 / 污染率。{binary ? '二值图：主题填充为命中，近白底与内描边为本次未命中，浅灰底与斜纹为不可评价；红色外框为交互高亮。' : '计数图：连续颜色映射 log1p(计数)，原始计数见悬浮与下载。'}</p></> : <EChart ref={chart} option={option} replaceMerge={['series', 'visualMap', 'dataZoom', 'xAxis', 'yAxis', 'grid']}
       opts={{ renderer: 'svg', width: containerWidth, height: actualHeight }} style={{ height: actualHeight }} frameActions showDataTable={false} ariaLabel={label} onEvents={events} />}
   </div>;
 }

@@ -212,6 +212,8 @@ LINEAGE_CLUSTER_SORT_FIELDS = {
     "clusterId", "representativeMag", "memberCount", "sourceSampleCount", "aniMin", "aniMax",
     "below095AniCount", "completenessPercent", "contaminationPercent",
 }
+LINEAGE_SIZE_BINS = (("1", "1", 1, 1), ("2-5", "2–5", 2, 5),
+                     ("6-20", "6–20", 6, 20), ("21+", "21 及以上", 21, None))
 
 
 def lineage_cluster_page(
@@ -221,6 +223,7 @@ def lineage_cluster_page(
     query: str = "",
     mapping_status: str = "",
     low_ani_only: bool = False,
+    size_bin: str = "",
     sort_by: str = "memberCount",
     direction: str = "desc",
     limit: int = 25,
@@ -242,6 +245,16 @@ def lineage_cluster_page(
         rows = [row for row in rows if row["mappingStatus"] == mapping_status]
     if low_ani_only:
         rows = [row for row in rows if row["below095AniCount"] > 0]
+    if size_bin and size_bin not in {item[0] for item in LINEAGE_SIZE_BINS}:
+        raise ValueError("不支持的聚类大小分档。")
+    distribution = [{"id": key, "label": label, "minMembers": lower, "maxMembers": upper,
+                     "count": sum(row["memberCount"] >= lower and (upper is None or row["memberCount"] <= upper) for row in rows)}
+                    for key, label, lower, upper in LINEAGE_SIZE_BINS]
+    matched_total = len(rows)
+    if size_bin:
+        selected_bin = next(item for item in distribution if item["id"] == size_bin)
+        rows = [row for row in rows if row["memberCount"] >= selected_bin["minMembers"]
+                and (selected_bin["maxMembers"] is None or row["memberCount"] <= selected_bin["maxMembers"])]
     present = sorted((row for row in rows if row[sort_by] is not None), key=lambda row: row["clusterId"])
     present.sort(key=lambda row: row[sort_by], reverse=direction == "desc")
     missing = sorted((row for row in rows if row[sort_by] is None), key=lambda row: row["clusterId"])
@@ -255,6 +268,9 @@ def lineage_cluster_page(
         "query": query,
         "mappingStatus": mapping_status,
         "lowAniOnly": low_ani_only,
+        "sizeBin": size_bin,
+        "matchedTotal": matched_total,
+        "sizeDistribution": distribution,
         "sortBy": sort_by,
         "direction": direction,
         "summary": {
@@ -291,9 +307,10 @@ def lineage_cluster_detail(
     if summary is None:
         raise KeyError("dRep 聚类不存在。")
     needle = query.strip().casefold()
-    rows = [row for row in data.lineage if row["clusterId"] == cluster_id and (
-        not needle or needle in row["memberMag"].casefold() or needle in row["memberSourceSampleId"].casefold()
-    )]
+    members = [row for row in data.lineage if row["clusterId"] == cluster_id]
+    exact_id = needle in {value.casefold() for row in members for value in (row["memberMag"], row["memberSourceSampleId"])}
+    rows = [row for row in members if (needle in (row["memberMag"].casefold(), row["memberSourceSampleId"].casefold()) if exact_id else
+            not needle or needle in row["memberMag"].casefold() or needle in row["memberSourceSampleId"].casefold())]
     if disease:
         rows = [row for row in rows if row["memberDisease"] == disease]
     if group:
@@ -366,6 +383,7 @@ def crosswalk_page(
         "query": query,
         "mappingStatus": mapping_status,
         "statusCounts": {status: counts.get(status, 0) for status in MAPPING_STATUSES},
+        "ncbiLineageStatusCounts": dict(Counter(row['ncbiLineageStatus'] for row in data.crosswalk if row.get('ncbiLineageStatus'))),
     }
 
 

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { vi } from 'vitest';
@@ -14,7 +14,7 @@ const cohort = { projectId: 'PRJTEST1', metadataRuns: 7, completeProfiles: 5, gr
   stageReferenceRuns: 1, pendingRuns: 1, noProfileRuns: 2, noResolvedGenusRuns: 2, unresolvedMedianPercent: 50, originalStudyUrl: 'https://example.org/study' };
 const overview = { provenance, counts: { selectedRuns: 7, completeProfiles: 5, groupConfirmedRuns: 3, plotReadyRuns: 2, adRuns: 1, ncRuns: 1, pendingRuns: 1, noResolvedGenusRuns: 2 },
   cohorts: [cohort], decisions: [{ key: 'plot_ready', label: '属级图表可用', count: 2 }],
-  missingness: [{ field: 'age', label: '年龄无精确数值', denominator: 5, unavailableCount: 4, unavailablePercent: 80, intervalCount: 1, unmappedCodeCount: 0 }], resolution: [] };
+  missingness: [{ field: 'age', label: '年龄无精确数值', denominator: 5, knownCount: 1, unavailableCount: 4, unavailablePercent: 80, intervalCount: 1, unmappedCodeCount: 0 }], resolution: [] };
 const genus = { featureId: 'NCBI:816', name: 'Bacteroides', domain: 'Bacteria', sourceTaxonIds: ['816'], sourceNames: ['Bacteroides'] };
 const row = { projectId: 'PRJTEST1', runId: 'ERR1', researchGroup: 'NC', sourceGroup: 'NC', decisionKey: 'plot_ready', decisionLabel: '属级图表可用',
   ageYears: null, ageRaw: '90+', sex: 'unknown', sourceSexCode: '1', unresolvedPercent: 20, genusAbundancePercent: 0, specimenId: 's1', biosampleAccession: 'SAMN1',
@@ -41,7 +41,10 @@ test('shows real scope, quality denominators, source values and traceable eviden
   expect(await screen.findByText('当前元数据')).toBeVisible();
   expect(screen.getByText(/Run 是测序记录/)).toBeVisible();
   expect(screen.getByText(/版本总计 7 Run/)).toBeVisible();
-  expect(screen.getByText(/年龄无精确数值：4 \/ 5/)).toBeVisible();
+  expect(screen.getByText(/年龄无精确数值 4 \/ 5/)).toBeVisible();
+  const availability = within(screen.getByRole('region', { name: '年龄与性别可用情况' }));
+  expect(availability.getByText('20%')).toBeVisible();
+  expect(availability.getByText('80%')).toBeVisible();
   expect(await screen.findByText('90+')).toBeVisible();
   expect(screen.getByText('原码 1，未解码')).toBeVisible();
   fireEvent.click(screen.getByText('查看依据'));
@@ -80,8 +83,24 @@ test('empty selections keep the quality denominator unavailable', async () => {
   await screen.findByText('当前元数据');
   fireEvent.click(screen.getByText('各队列覆盖明细'));
   expect(await screen.findByText('当前筛选没有对应队列。')).toBeVisible();
-  expect(screen.getByText(/年龄无精确数值：0 \/ 0（—）/)).toBeVisible();
+  expect(screen.getByText('暂无完整 profile，比例不可用')).toBeVisible();
   expect(await screen.findByText(/当前筛选没有样本记录/)).toBeVisible();
+});
+
+test('switches the status chart to its corresponding counts in place', async () => {
+  mount();
+  const chart = await screen.findByRole('img', { name: '纳入与核查状态' });
+  const details = screen.getByRole('button', { name: '明细' });
+  details.focus();
+  fireEvent.click(details);
+  const table = screen.getByRole('table', { name: '纳入与核查状态明细' });
+  expect(table.parentElement.id).toBe('gmrepo-quality-status');
+  expect(table).toHaveTextContent('属级图表可用2');
+  expect(chart).not.toBeInTheDocument();
+  expect(details).toHaveFocus();
+  fireEvent.click(screen.getByRole('button', { name: '图表' }));
+  expect(await screen.findByRole('img', { name: '纳入与核查状态' })).toBeVisible();
+  expect(table).not.toBeInTheDocument();
 });
 
 test('the default resource view is a searchable study directory, with quality and methods separate', async () => {

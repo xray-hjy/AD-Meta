@@ -17,6 +17,8 @@ import CollapsibleResultSection from '../../components/data-display/CollapsibleR
 import MagResearchChart from './MagResearchChart';
 import { lineageResearchOption } from './magResearchOptions';
 import MagSearchInput from './MagSearchInput';
+import MagLineageOverview from './MagLineageOverview';
+import { downloadLineageMembers } from './magLineageDownload';
 
 const PAGE_SIZE = QUERY_TABLE_PAGE_SIZE;
 const STATUS_OPTIONS = [
@@ -80,8 +82,8 @@ function MemberTable({ data, onSelect, pagination, page }) {
     <tbody>{data.items.map(row => <tr key={row.memberMag}>
       <td><button className="analysis-text-button" onClick={() => onSelect(row.memberMag)}>{row.memberMag}</button></td>
       <td>{row.memberSourceSampleId}</td><td>{row.memberDisease}</td><td>{row.memberGroup}</td>
-      <td className={row.memberToRepAni < 0.95 ? 'mag-low-ani' : ''}>{number(row.memberToRepAni)}</td>
-      <td>{percent(row.memberToRepAlignmentCoverage)}</td><td>{number(row.memberCompletenessPercent)}% / {number(row.memberContaminationPercent)}%</td>
+      <td title={`ANI 原始比例 ${row.memberToRepAni}`} className={row.memberToRepAni < 0.95 ? 'mag-low-ani' : ''}>{number(row.memberToRepAni)}</td>
+      <td title={`原始比例 ${row.memberToRepAlignmentCoverage}`}>{percent(row.memberToRepAlignmentCoverage)}</td><td>{number(row.memberCompletenessPercent)}% / {number(row.memberContaminationPercent)}%</td>
       <td>{row.isRepresentative ? '代表自身' : '成员'}</td>
     </tr>)}</tbody>
   </DataTableViewport>;
@@ -89,10 +91,12 @@ function MemberTable({ data, onSelect, pagination, page }) {
 
 function CrosswalkTable({ data, pagination, page, onSelect }) {
   return <DataTableViewport ariaLabel="MAG 物种 crosswalk，可横向滚动" resizable pagination={pagination} pageKey={page}>
-    <thead><tr>{['代表 MAG', 'GTDB R232 物种', 'GTDB 参考', 'NCBI species TaxID', 'NCBI 名称', 'Kraken2 / Bracken 物种', '状态'].map(label => <th scope="col" key={label}>{label}</th>)}</tr></thead>
+    <thead><tr>{['代表 MAG', 'GTDB R232 物种', 'GTDB 参考', 'NCBI species TaxID', 'NCBI 名称', 'NCBI 属级核查', 'Kraken2 / Bracken 物种', '原批次观察状态'].map(label => <th scope="col" key={label}>{label}</th>)}</tr></thead>
     <tbody>{data.items.map(row => <tr key={row.magId}>
       <td><button type="button" className="analysis-text-button" onClick={() => onSelect?.(row.magId)}>{row.magId}</button></td><td>{row.gtdbSpecies || '未解析'}</td><td>{row.gtdbReferenceAccession || '—'}</td>
-      <td>{row.ncbiSpeciesTaxid || '—'}</td><td>{row.ncbiOrganismName || '—'}</td><td>{row.krakenSpeciesName || '本批未观察到'}</td>
+      <td>{row.ncbiSpeciesTaxid || '—'}</td><td>{row.ncbiOrganismName || '—'}</td>
+      <td>{row.ncbiLineageStatus === 'verified' ? row.ncbiGenus : <><span>待核查</span>{row.ncbiLineageReason && <small>{row.ncbiLineageReason}</small>}</>}</td>
+      <td>{row.krakenSpeciesName || (row.mappingStatus === 'ncbi_species_taxid_not_observed_in_reads' ? '本批未观察到' : '—')}</td>
       <td><StatusBadge status={row.mappingStatus} /></td>
     </tr>)}</tbody>
   </DataTableViewport>;
@@ -107,27 +111,37 @@ export default function MagLineageView({ overview, initialMagId = '', onDetail }
   const [lowAniOnly, setLowAniOnly] = useState(false);
   const [selectedCluster, setSelectedCluster] = useState('');
   const [memberPage, setMemberPage] = useState(1);
+  const [memberPageSize, setMemberPageSize] = useState(PAGE_SIZE);
+  const [memberQuery, setMemberQuery] = useState('');
+  const [memberDraft, setMemberDraft] = useState('');
+  const [memberLowAni, setMemberLowAni] = useState(false);
+  const [sizeBin, setSizeBin] = useState('');
   const [selectedMag, setSelectedMag] = useState(initialMagId);
   const [crosswalkPage, setCrosswalkPage] = useState(1);
   const [crosswalkDraft, setCrosswalkDraft] = useState(initialMagId);
   const [crosswalkQuery, setCrosswalkQuery] = useState(initialMagId);
   const [crosswalkStatus, setCrosswalkStatus] = useState('');
   const [brush, setBrush] = useState({ source: null, ids: [] });
-  const clusterParams = { revision, query: clusterQuery, mappingStatus, lowAniOnly, sortBy: 'memberCount', direction: 'desc', limit: PAGE_SIZE, offset: (clusterPage - 1) * PAGE_SIZE };
+  const clusterParams = { revision, query: clusterQuery, mappingStatus, lowAniOnly, sizeBin, sortBy: 'memberCount', direction: 'desc', limit: PAGE_SIZE, offset: (clusterPage - 1) * PAGE_SIZE };
   const clusters = useQuery({ queryKey: ['mag', 'lineage-clusters', clusterParams], queryFn: ({ signal }) => getMagLineageClusters(clusterParams, { signal }), placeholderData: previous => previous });
   const clusterId = selectedCluster || clusters.data?.items[0]?.clusterId || '';
-  const memberParams = { revision, limit: PAGE_SIZE, offset: (memberPage - 1) * PAGE_SIZE, sortBy: 'memberToRepAni', direction: 'asc' };
+  const plotParams = { revision, allMembers: true, sortBy: 'memberToRepAni', direction: 'asc' };
+  const plot = useQuery({ queryKey: ['mag', 'lineage-plot', clusterId, revision], queryFn: ({ signal }) => getMagLineageCluster(clusterId, plotParams, { signal }), enabled: Boolean(clusterId), staleTime: Infinity });
+  const memberParams = { revision, query: memberQuery, lowAniOnly: memberLowAni, limit: memberPageSize, offset: (memberPage - 1) * memberPageSize, sortBy: 'memberToRepAni', direction: 'asc' };
   const cluster = useQuery({ queryKey: ['mag', 'lineage-cluster', clusterId, memberParams], queryFn: ({ signal }) => getMagLineageCluster(clusterId, memberParams, { signal }), enabled: Boolean(clusterId), placeholderData: (previous, previousQuery) => previousQuery?.queryKey[2] === clusterId ? previous : undefined });
-  const selectedIds = brush.source === cluster.data ? brush.ids : [];
-  const evidenceMag = selectedMag || cluster.data?.items[0]?.memberMag || '';
+  const selectedIds = brush.source === plot.data ? brush.ids : [];
+  const evidenceMag = clusterId ? selectedMag || plot.data?.items[0]?.memberMag || '' : '';
+  const selectedMember = plot.data?.items.find(row => row.memberMag === evidenceMag);
+  const resetCluster = () => { setSelectedCluster(''); setSelectedMag(''); setMemberPage(1); setMemberQuery(''); setMemberDraft(''); setMemberLowAni(false); };
+  const selectMember = id => { setSelectedMag(id); onDetail?.(id); };
   const evidence = useQuery({ queryKey: ['mag', 'lineage-evidence', evidenceMag, revision], queryFn: ({ signal }) => getMagLineage(evidenceMag, { revision }, { signal }), enabled: Boolean(evidenceMag) });
   const crosswalkParams = { revision, query: crosswalkQuery, mappingStatus: crosswalkStatus, limit: PAGE_SIZE, offset: (crosswalkPage - 1) * PAGE_SIZE };
   const crosswalk = useQuery({ queryKey: ['mag', 'crosswalk', crosswalkParams], queryFn: ({ signal }) => getMagCrosswalk(crosswalkParams, { signal }), placeholderData: previous => previous, enabled: Boolean(overview.capabilities.crosswalk) });
 
   useEffect(() => { setMemberPage(1); }, [clusterId]);
 
-  const activeError = clusters.error || cluster.error || evidence.error || crosswalk.error;
-  const retry = () => { clusters.refetch(); cluster.refetch(); evidence.refetch(); crosswalk.refetch(); };
+  const activeError = clusters.error || plot.error || cluster.error || evidence.error || crosswalk.error;
+  const retry = () => { clusters.refetch(); plot.refetch(); cluster.refetch(); evidence.refetch(); crosswalk.refetch(); };
   const controls = <div className="analysis-downloads">
     <a className="analysis-button" href={magDownloadUrl('lineage', { revision })} download>下载去冗余关系 CSV</a>
     {overview.capabilities.crosswalk && <a className="analysis-button" href={magDownloadUrl('crosswalk', { revision })} download>下载分类对应 CSV</a>}
@@ -136,11 +150,11 @@ export default function MagLineageView({ overview, initialMagId = '', onDetail }
   return <ChartFrame title="来源与去冗余" subtitle="查看来源样本、成员—代表关系、实际 ANI 与质量。跨分类体系对应作为独立可选结果。" layout="document" controls={controls}>
     <div className="mag-lineage-stack">
       <p className="mag-inline-notice">disease 是 AD/NC 疾病分组；Group 是元数据中的来源组。这里展示跨样本去冗余，不是独立外部队列验证。</p>
-      <form className="analysis-filter-form" aria-label="筛选 dRep 聚类" onSubmit={event => { event.preventDefault(); setClusterQuery(clusterDraft.trim()); setClusterPage(1); setSelectedCluster(''); }}>
+      <form className="analysis-filter-form" aria-label="筛选 dRep 聚类" onSubmit={event => { event.preventDefault(); setClusterQuery(clusterDraft.trim()); setSizeBin(''); setClusterPage(1); resetCluster(); }}>
         <label>聚类 / 代表 MAG / GTDB 物种<MagSearchInput revision={revision} context="lineage" label="聚类 / 代表 MAG / GTDB 物种" value={clusterDraft} onChange={setClusterDraft}
-          onSelect={value => { setClusterQuery(value); setClusterPage(1); setSelectedCluster(''); }} /></label>
-        {overview.capabilities.crosswalk && <label>物种映射状态<StyledSelect value={mappingStatus} onChange={event => { setMappingStatus(event.target.value); setClusterPage(1); }}>{STATUS_OPTIONS.map(([key, label]) => <option value={key} key={key}>{label}</option>)}</StyledSelect></label>}
-        <label className="mag-check"><input type="checkbox" checked={lowAniOnly} onChange={event => { setLowAniOnly(event.target.checked); setClusterPage(1); }} />仅看含 ANI＜0.95 记录的聚类</label>
+          onSelect={value => { setClusterQuery(value); setSizeBin(''); setClusterPage(1); resetCluster(); }} /></label>
+        {overview.capabilities.crosswalk && <label>物种映射状态<StyledSelect value={mappingStatus} onChange={event => { setMappingStatus(event.target.value); setClusterPage(1); setSizeBin(''); resetCluster(); }}>{STATUS_OPTIONS.map(([key, label]) => <option value={key} key={key}>{label}</option>)}</StyledSelect></label>}
+        <label className="mag-check"><input type="checkbox" checked={lowAniOnly} onChange={event => { setLowAniOnly(event.target.checked); setClusterPage(1); setSizeBin(''); resetCluster(); }} />仅看含 ANI＜0.95 记录的聚类</label>
         <button className="analysis-button analysis-button--primary" type="submit">搜索聚类</button>
       </form>
       {activeError ? <ErrorState message={activeError.message} onRetry={retry} /> : null}
@@ -151,25 +165,45 @@ export default function MagLineageView({ overview, initialMagId = '', onDetail }
           <span><strong>{clusters.data.summary.sourceSampleCount}</strong> 个可追溯来源样本</span>
           <span><strong>{clusters.data.summary.below095AniCount}</strong> 条实际 ANI＜0.95（保留原值）</span>
         </div>
-        <p className="analysis-result-count">筛选后 {clusters.data.total} 个聚类。</p>
-        <ClusterTable data={clusters.data} onSelect={row => { setSelectedCluster(row.clusterId); setSelectedMag(row.representativeMag); }} page={clusterPage} pagination={<PaginationControls page={clusterPage} pageCount={Math.ceil(clusters.data.total / PAGE_SIZE)} onPageChange={setClusterPage} disabled={clusters.isFetching} ariaLabel="dRep 聚类分页" />} />
+        <MagLineageOverview data={clusters.data} selected={sizeBin} loading={clusters.isFetching} onSelect={value => { setSizeBin(value); setClusterPage(1); resetCluster(); }} />
+        <p className="analysis-result-count" role="status">{sizeBin ? `分档 ${clusters.data.sizeDistribution?.find(bin => bin.id === sizeBin)?.label || sizeBin} 个成员：` : '筛选后 '}{clusters.data.total} 个聚类{clusters.isFetching ? ' · 正在更新' : ''}。</p>
+        <ClusterTable data={clusters.data} onSelect={row => { resetCluster(); setSelectedCluster(row.clusterId); setSelectedMag(row.representativeMag); }} page={clusterPage} pagination={<PaginationControls page={clusterPage} pageCount={Math.ceil(clusters.data.total / PAGE_SIZE)} onPageChange={setClusterPage} disabled={clusters.isFetching} ariaLabel="dRep 聚类分页" />} />
       </> : null}
 
-      {cluster.isPending && clusterId ? <LoadingState message="正在读取当前聚类成员..." /> : cluster.data ? <section className="mag-detail-section">
-        <div className="mag-section-heading"><div><span className="mag-kicker">局部关系</span><h3>{cluster.data.cluster.clusterId} · {cluster.data.cluster.representativeMag}</h3></div><span>{cluster.data.total} 个成员</span></div>
-        <p className="mag-muted">仅呈现当前聚类，不绘制全部成员的全局网络。ANI 方向固定为代表 MAG 作 reference、成员 MAG 作 query。</p>
-        <CollapsibleResultSection title="成员与代表的比对证据" storageKey="admeta:mag:lineage-scatter:fold"
-          summary={`当前页 ${cluster.data.items.length} / ${cluster.data.total} 成员 · 菱形为代表自身`}
-          actions={<button type="button" className="analysis-button" onClick={() => onDetail?.(cluster.data.cluster.representativeMag)}>查看代表 MAG 详情</button>}>
-          <MagResearchChart kind="lineage" data={cluster.data} buildOption={lineageResearchOption} selected={selectedIds}
-            onSelect={id => { setSelectedMag(id); onDetail?.(id); }}
-            onBrush={ids => setBrush(previous => previous.source === cluster.data && previous.ids.join('|') === ids.join('|') ? previous : { source: cluster.data, ids })}
-            exportConfig={{ fileName: `ADMeta-lineage-${clusterId}-page${memberPage}-${revision.slice(0, 12)}`, format: 'svg', minWidth: 1100, minHeight: 640, title: '导出比对证据 SVG' }} />
-          <p className="mag-muted">纵轴是成员与代表的基因组比对比例，不是样本测序覆盖广度。成员数量与 AD / NC 来源组成不等于丰度或流行率。</p>
-          {cluster.data.total > cluster.data.items.length && <p className="mag-inline-notice">图中仅包含当前成员页；翻页查看更多，不将本页视为完整聚类。</p>}
-          {selectedIds.length > 0 && <div className="mag-brush-results" aria-label="框选的聚类成员"><strong>框选 {selectedIds.length} 个成员</strong>{selectedIds.map(id => <button key={id} type="button" className="analysis-text-button" onClick={() => onDetail?.(id)}>{id}</button>)}</div>}
+      {plot.isPending && clusterId ? <LoadingState message="正在读取整簇成员比对证据..." /> : plot.data && clusterId ? <section className="mag-detail-section mag-lineage-detail">
+        <div className="mag-section-heading"><div><span className="mag-kicker">局部关系 · 整簇证据</span><h3>{plot.data.cluster.clusterId} · {plot.data.cluster.representativeMag}</h3></div><span>{plot.data.total} 个成员</span></div>
+        <CollapsibleResultSection title="成员与代表的比对证据" storageKey="admeta:mag:lineage-scatter:fold" className="mag-lineage-scatter"
+          summary={`整簇 ${plot.data.total} / ${plot.data.cluster.memberCount} 成员 · 菱形为代表自身`}
+          actions={<><button type="button" className="analysis-button" onClick={() => onDetail?.(plot.data.cluster.representativeMag)}>查看代表 MAG 详情</button>
+            <button type="button" className="analysis-button" onClick={() => downloadLineageMembers(plot.data)}>下载整簇成员原值 CSV</button></>}>
+          <p className="mag-muted">代表 MAG 作 reference、成员 MAG 作 query。95% 为参考线；实际 ANI 保留原值，整簇图不受下方成员表的搜索、筛选和分页影响。</p>
+          <MagResearchChart kind="lineage" data={plot.data} buildOption={lineageResearchOption} selected={[...selectedIds, evidenceMag]}
+            onSelect={selectMember}
+            onBrush={ids => setBrush(previous => previous.source === plot.data && previous.ids.join('|') === ids.join('|') ? previous : { source: plot.data, ids })}
+            exportConfig={{ fileName: `ADMeta-lineage-${clusterId}-all${plot.data.total}-${revision.slice(0, 12)}`, format: 'svg', minWidth: 1100, minHeight: 640, title: '导出整簇比对证据 SVG' }} />
+          <p className="mag-muted">成员计数：AD {plot.data.cluster.adMemberCount} / NC {plot.data.cluster.ncMemberCount}；来源组 {plot.data.cluster.sourceGroups.join(' / ')}。纵轴是基因组比对比例；成员计数不等于样本丰度、检出率或组间差异证据。</p>
+          <div className="mag-lineage-boundaries" aria-label="实际 ANI 低于 95% 的成员">
+            <strong>实际 ANI＜95%：{plot.data.items.filter(row => row.memberToRepAni < .95).length} 条</strong>
+            {plot.data.items.filter(row => row.memberToRepAni < .95).map(row => <button type="button" key={row.memberMag} className="analysis-text-button" onClick={() => selectMember(row.memberMag)}>{row.memberMag} · ANI 原值 {row.memberToRepAni}</button>)}
+          </div>
+          {selectedMember && <section className="mag-lineage-exact" aria-label="所选成员精确比对证据">
+            <h4>{selectedMember.memberMag}</h4>
+            <dl className="mag-detail-facts">{[['来源样本', selectedMember.memberSourceSampleId], ['疾病 / 来源组', `${selectedMember.memberDisease} / ${selectedMember.memberGroup}`],
+              ['实际 ANI（原始比例）', String(selectedMember.memberToRepAni)], ['基因组比对比例（原始比例）', String(selectedMember.memberToRepAlignmentCoverage)],
+              ['reference', selectedMember.representativeMag], ['query', selectedMember.memberMag]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
+          </section>}
+          {selectedIds.length > 0 && <div className="mag-brush-results" aria-label="框选的聚类成员"><strong>框选 {selectedIds.length} 个成员</strong>{selectedIds.map(id => <button key={id} type="button" className="analysis-text-button" onClick={() => selectMember(id)}>{id}</button>)}</div>}
         </CollapsibleResultSection>
-        <MemberTable data={cluster.data} onSelect={id => { setSelectedMag(id); onDetail?.(id); }} page={memberPage} pagination={<PaginationControls page={memberPage} pageCount={Math.ceil(cluster.data.total / PAGE_SIZE)} onPageChange={setMemberPage} disabled={cluster.isFetching} ariaLabel="聚类成员分页" />} />
+        <form className="analysis-filter-form" aria-label="筛选聚类成员表" onSubmit={event => { event.preventDefault(); setMemberQuery(memberDraft.trim()); setMemberPage(1); }}>
+          <label>成员 ID / 来源样本<input aria-label="成员 ID / 来源样本" value={memberDraft} onChange={event => setMemberDraft(event.target.value)} /></label>
+          <label className="mag-check"><input type="checkbox" checked={memberLowAni} onChange={event => { setMemberLowAni(event.target.checked); setMemberPage(1); }} />成员表仅看 ANI＜95%</label>
+          <label>每页成员数<StyledSelect aria-label="每页成员数" value={memberPageSize} onChange={event => { setMemberPageSize(Number(event.target.value)); setMemberPage(1); }}>{[25, 100, PAGE_SIZE].map(count => <option key={count} value={count}>{count}</option>)}</StyledSelect></label>
+          <button type="submit" className="analysis-button">查询成员</button>
+        </form>
+        {cluster.isPending ? <LoadingState message="正在读取成员表..." /> : cluster.data ? <>
+          <p className="mag-muted" role="status">成员表匹配 {cluster.data.total} 条 · 当前页 {cluster.data.items.length} 条；整簇图始终保留 {plot.data.total} 个成员。</p>
+          <MemberTable data={cluster.data} onSelect={selectMember} page={memberPage} pagination={<PaginationControls page={memberPage} pageCount={Math.ceil(cluster.data.total / memberPageSize)} onPageChange={setMemberPage} disabled={cluster.isFetching} ariaLabel="聚类成员分页" />} />
+        </> : null}
       </section> : null}
 
       {evidence.isPending && evidenceMag ? <LoadingState message="正在构建单 MAG 证据链..." /> : <EvidenceChain evidence={evidence.data} />}

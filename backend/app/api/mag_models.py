@@ -292,6 +292,14 @@ class MagLineageDatasetSummary(BaseModel):
     below095AniCount: int
 
 
+class MagLineageSizeBin(BaseModel):
+    id: str
+    label: str
+    minMembers: int
+    maxMembers: int | None
+    count: int
+
+
 class MagLineageClusterPageResponse(BaseModel):
     provenance: MagProvenance
     items: list[MagLineageClusterSummary]
@@ -304,6 +312,9 @@ class MagLineageClusterPageResponse(BaseModel):
     sortBy: str
     direction: str
     summary: MagLineageDatasetSummary
+    sizeBin: str
+    matchedTotal: int
+    sizeDistribution: list[MagLineageSizeBin]
 
 
 class MagLineageMember(BaseModel):
@@ -374,6 +385,10 @@ class MagCrosswalkItem(BaseModel):
     mappingLevel: str | None
     mappingConfidence: str | None
     mappingStatus: str
+    ncbiDomain: str | None = None
+    ncbiGenus: str | None = None
+    ncbiLineageStatus: Literal["verified", "pending", "conflict"] | None = None
+    ncbiLineageReason: str | None = None
 
 
 class MagCrosswalkPageResponse(BaseModel):
@@ -385,6 +400,7 @@ class MagCrosswalkPageResponse(BaseModel):
     query: str
     mappingStatus: str
     statusCounts: dict[str, int]
+    ncbiLineageStatusCounts: dict[str, int] = Field(default_factory=dict)
 
 
 class MagLineageResponse(BaseModel):

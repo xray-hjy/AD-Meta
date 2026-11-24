@@ -25,6 +25,7 @@ export default function ChartFrame({
   collapsible = false,
   sectioned = false,
   chartControls = null,
+  styleControls = null,
   selectionPanel = null,
   children,
 }) {
@@ -87,7 +88,7 @@ export default function ChartFrame({
             </h3>
             {!collapsed && chartControls ? <div className="result-section__controls">{chartControls}</div> : null}
             <div className="result-section__actions" hidden={collapsed}>
-              <div className="chart-frame__style-slot" ref={setToolbarTarget} />
+              <div className="chart-frame__style-slot" ref={setToolbarTarget}>{styleControls}</div>
               <ChartFrameActionGroup actions={frameActions} />
             </div>
           </header>

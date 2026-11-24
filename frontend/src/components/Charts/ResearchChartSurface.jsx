@@ -56,7 +56,7 @@ function FacetChart({ exportSpec, height, chartRef, legendSelected, label, event
 // Uses the exact MAG camera, minimap, joystick and export settings components.
 // ECharts receives the visible data window, so text and symbols stay unscaled.
 export default function ResearchChartSurface({ option, world, resetKey, label, onSelect, onBrush, exportSpec, facet = false, height = 600,
-  exportLabel = '导出通路图形', brushLabel = '框选通路' }) {
+  exportLabel = '导出通路图形', brushLabel = '框选通路', zoomInPlot = false }) {
   const ref = useRef(null), target = useChartFrameToolbarTarget();
   const onSelectRef = useRef(onSelect), onBrushRef = useRef(onBrush);
   useEffect(() => { onSelectRef.current = onSelect; onBrushRef.current = onBrush; }, [onSelect, onBrush]);
@@ -107,7 +107,7 @@ export default function ResearchChartSurface({ option, world, resetKey, label, o
     </div>}
     {status && <p className="diting-caption" role="status">{status}</p>}
     {facet ? <FacetChart chartRef={ref} exportSpec={exportSpec} height={height} legendSelected={legendSelected} label={label} events={events} />
-      : <ZoomableChartViewport world={world} resetKey={resetKey} preview={preview} insets={insets} toolbarTarget={target}
+      : <ZoomableChartViewport world={world} resetKey={resetKey} preview={preview} insets={insets} toolbarTarget={zoomInPlot ? null : target}
         viewportHeight="clamp(500px, 68vh, 760px)" extraRight={option.visualMap ? 75 : 0} extraBottom={55} interactionLocked={brushing} ariaLabel={label}>
         {viewport => <CameraChart {...viewport} option={option} world={world} chartRef={ref} onEvents={events}
           brushing={brushing} legendSelected={legendSelected} label={label} />}

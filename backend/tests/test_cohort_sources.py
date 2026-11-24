@@ -8,7 +8,7 @@ from app.core.migrations import upgrade_database
 from app.domain.mag import MagDataError, MagScope
 from app.services import cohort_import as importer
 from app.services import cohort_repository as repository
-from app.services.mag_analysis_service import load_mag_dataset, overview
+from app.services.mag_analysis_service import crosswalk_page, load_mag_dataset, overview
 from app.services.mag_source_adapters import parse_bgc, parse_drep, parse_trees
 
 
@@ -96,6 +96,56 @@ def test_invalid_optional_artifact_does_not_disable_abundance(source_cohort):
     result = importer.import_cohort('cohort-a', manifest)
     assert result['modules']['taxonomy']['status'] == 'invalid'
     assert overview(load_mag_dataset('cohort-a'), MagScope())['capabilities']['taxonomy'] is False
+
+
+def test_crosswalk_release_preserves_historical_capabilities_and_quarantines_taxid_conflicts(source_cohort):
+    raw, manifest, config = source_cohort
+    old_release = importer.import_cohort('cohort-a', manifest)['release']
+    accession = 'GCF_123456789.2'
+    classification = 'd__Bacteria;p__Bacteroidota;c__Bacteroidia;o__Bacteroidales;f__Bacteroidaceae;g__Bacteroides;s__Bacteroides uniformis'
+    header = 'user_genome\tclassification\tclassification_method\tclosest_genome_reference\n'
+    (raw / 'bac.tsv').write_text(header + f'CRR1__bin\t{classification}\tANI\t{accession}\n', encoding='utf-8')
+    (raw / 'arc.tsv').write_text(header, encoding='utf-8')
+    (raw / 'r232.json').write_text('{"database_version":"r232","version":"2.7.2"}', encoding='utf-8')
+    representatives = raw / 'crosswalk.tsv'
+    representatives.write_text(
+        'MAG_ID\tgtdb_classification\tgtdb_reference_accession\tgtdb_reference_source_field\tgtdb_reference_ani\t'
+        'gtdb_reference_af\treference_ncbi_taxid\tncbi_species_taxid\tncbi_taxonomy\tmapping_status\n'
+        f'CRR1__bin\t{classification}\t{accession}\tclosest_genome_reference\t99\t0.8\t820\t820\t{classification}\t'
+        'ncbi_species_taxid_not_observed_in_reads\n', encoding='utf-8')
+    reference = raw / 'references.tsv'
+    reference_header = 'normalized_accession\taccession\tncbi_taxid\tncbi_species_taxid\tncbi_taxonomy\tmetadata_source\n'
+    reference_row = f'{accession}\tRS_{accession}\t820\t820\t{classification}\tbac120_metadata_r232.tsv.gz\n'
+    reference.write_text(reference_header + reference_row, encoding='utf-8')
+    config['modules']['taxonomy']['files'] = {'bacteria': 'raw/bac.tsv', 'archaea': 'raw/arc.tsv', 'run': 'raw/r232.json'}
+    archive = {key: {'file': path.name, 'sha256': importer.sha256(path)}
+               for key, path in [('representatives', representatives), ('references', reference)]}
+    config['modules']['crosswalk'] = {
+        'parser': 'ncbi_crosswalk',
+        'files': {'representatives': 'raw/crosswalk.tsv', 'references': 'raw/references.tsv', 'gtdb_run': 'raw/r232.json'},
+        'archiveSources': archive, 'tool': {'databaseRelease': 'r232'},
+    }
+    manifest.write_text(json.dumps({'cohorts': [config]}), encoding='utf-8')
+    published = importer.import_cohort('cohort-a', manifest)
+    assert published['modules']['crosswalk']['status'] == 'ready'
+    assert not load_mag_dataset('cohort-a', old_release).crosswalk
+    data = load_mag_dataset('cohort-a', published['release'])
+    assert overview(data, MagScope())['capabilities']['crosswalk']
+    assert crosswalk_page(data, MagScope())['ncbiLineageStatusCounts'] == {'verified': 1}
+    assert data.crosswalk[0]['gtdbReferenceAccession'] == accession
+    assert data.crosswalk[0]['ncbiGenus'] == 'Bacteroides'
+
+    reference.write_text(reference_header + reference_row.replace('\t820\t820', '\t821\t821'), encoding='utf-8')
+    invalid = importer.import_cohort('cohort-a', manifest)
+    assert invalid['modules']['crosswalk']['status'] == 'invalid'
+    assert not load_mag_dataset('cohort-a', invalid['release']).crosswalk
+    archive['references']['sha256'] = importer.sha256(reference)
+    manifest.write_text(json.dumps({'cohorts': [config]}), encoding='utf-8')
+    conflict = importer.import_cohort('cohort-a', manifest)
+    conflicted = load_mag_dataset('cohort-a', conflict['release']).crosswalk[0]
+    assert conflicted['ncbiLineageStatus'] == 'conflict'
+    assert conflicted['mappingStatus'] == 'ncbi_species_taxid_not_observed_in_reads'
+    assert data.crosswalk[0]['ncbiLineageStatus'] == 'verified'
 
 
 def test_bgc_zero_is_different_from_absent_results(tmp_path):

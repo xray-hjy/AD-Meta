@@ -8,7 +8,7 @@ import ChartStyleToolbar from '../../components/Charts/ChartStyleToolbar';
 import useChartStylePreferences from '../../components/Charts/useChartStylePreferences';
 import { resolveResearchPalette, researchPaletteOptions } from '../../components/Charts/researchPalettes';
 import { useColorVision } from '../../context/ColorVisionContext';
-import SegmentedControl from '../../components/ui/SegmentedControl';
+import './evaluation.css';
 
 echarts.use([HeatmapChart, VisualMapComponent, TitleComponent]);
 const fmt = n => n == null ? '—' : Number(n).toLocaleString('zh-CN', { maximumSignificantDigits: 4 });
@@ -53,7 +53,7 @@ export function buildEffectOption({ rows, candidates, adjusted, colors, style, w
       itemStyle: { color: q(r.statistic) < .05 ? colors[effect < 0 ? 0 : 1] : '#fff', borderColor: colors[effect < 0 ? 0 : 1], borderWidth: 2 } }];
   });
   return { ...base, series: [
-    { type: 'custom', silent: true, data: points, renderItem: (params, api) => {
+    { type: 'custom', silent: true, clip: true, encode: { x: [0, 2, 3], y: 1 }, data: points, renderItem: (params, api) => {
       const y = api.value(1), a = api.coord([api.value(2), y]), b = api.coord([api.value(3), y]);
       return { type: 'group', children: [{ type: 'line', shape: { x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, style: { stroke: '#6f8193', lineWidth: 2 } },
         ...[a, b].map(p => ({ type: 'line', shape: { x1: p[0], y1: p[1] - 5, x2: p[0], y2: p[1] + 5 }, style: { stroke: '#6f8193' } }))] };
@@ -77,15 +77,15 @@ export default function EvidenceEffectChart({ record, candidates, onSelect }) {
   const option = { ...buildEffectOption({ rows, candidates, adjusted, colors, style, title, footnote }), title: [] };
   const exportSpec = { fileName: candidates ? 'gmrepo-candidate-effects' : 'gmrepo-main-external-effects', suggestedSize: { width: 1600, height: world.height },
     buildOption: size => buildEffectOption({ rows, candidates, adjusted, colors, style, title: `${title}\n${record.evaluationId ? `评估 ${record.evaluationId}` : '当前选择（未冻结）'}`, footnote, ...size }) };
-  return <ChartFrame title={title} sectioned subtitle={footnote} chartControls={<>
-    <SegmentedControl role="group" aria-label="效应模型"><button type="button" aria-pressed={!adjusted} onClick={() => setAdjusted(false)}>未调整</button><button type="button" aria-pressed={adjusted} onClick={() => setAdjusted(true)}>年龄 / 性别调整</button></SegmentedControl>
-    <ChartStyleToolbar fields={[{ key: 'palette', label: '配色', type: 'palette', options: researchPaletteOptions('evidence'), discrete: true },
+  return <div className="gmrepo-effect-chart"><ChartFrame title={title} sectioned subtitle={footnote} styleControls={<ChartStyleToolbar fields={[
+      { key: 'model', label: '效应模型', options: [{ value: 'raw', label: '未调整' }, { value: 'adjusted', label: '年龄 / 性别调整' }] },
+      { key: 'palette', label: '配色', type: 'palette', options: researchPaletteOptions('evidence'), discrete: true },
       ...['labels', 'hover', 'grid', 'fullNames'].map((key, i) => ({ key, label: ['数值', '悬浮', '网格', '完整名称'][i], type: 'switch', more: i > 1 })),
       { key: 'fontSize', label: '文字大小', more: true, options: [{ value: '10', label: '小' }, { value: '11', label: '中' }, { value: '13', label: '大' }] }]}
-      values={style} onChange={prefs.update} onReset={prefs.reset} />
-  </>}>
+      values={{ ...style, model: adjusted ? 'adjusted' : 'raw' }}
+      onChange={(key, value) => key === 'model' ? setAdjusted(value === 'adjusted') : prefs.update(key, value)} onReset={prefs.reset} />}>
     <ResearchChartSurface option={option} world={world} resetKey={`${record.evaluationId || record.provenance.fingerprint}:${adjusted}:${candidates?.map(r => r.candidateId).join(',') || record.genus.featureId}`}
-      label={title} onSelect={onSelect} exportSpec={exportSpec} exportLabel="导出证据图形" height={world.height} />
+      label={title} onSelect={onSelect} exportSpec={exportSpec} exportLabel="导出证据图形" height={world.height} zoomInPlot />
     {!candidates && rows.some(r => !r.statistic) && <p className="gmrepo-note">仅描述或分类未对应的队列保留空行，未绘为零效应。恒定指标的调整区间不估计，表格保留状态。</p>}
-  </ChartFrame>;
+  </ChartFrame></div>;
 }

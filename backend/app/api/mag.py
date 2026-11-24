@@ -34,9 +34,11 @@ from app.api.mag_models import (
     MagTaxonomyResponse,
 )
 from app.core.config import BACKEND_ROOT, RAW_ROOT, SETTINGS
+from app.domain.mag_robustness import AdjustedCandidate, RobustnessResponse
 from app.services import cohort_repository as repository
 from app.services import mag_analysis_service as service
 from app.services import mag_function_service as functions
+from app.services import mag_robustness_store as robustness
 from app.services.mag_suggestions import suggestions as search_suggestions
 
 router = APIRouter(prefix="/api/mag", tags=["mag"], responses={503: {"model": MagErrorResponse}})
@@ -281,7 +283,12 @@ def functional_download(kind: Literal['features', 'matrix', 'carriers', 'genes',
                       JOIN features f USING(feature_key) JOIN mags m USING(mag_key) WHERE m.mag_id=? AND namespace=?''',
                       (row['magId'], settings['namespace']))}
                     yield {'MAG': row['magId'], **{r['featureId']: values.get(r['featureId'], 0) for r in fields}}
-        items = matrix_rows()
+        # The displayed-matrix download uses the same raw projection, including
+        # any unevaluable cells. Complete matched exports keep streaming storage.
+        items = matrix_rows() if all_matches else (
+            {'MAG': row['magId'], **dict(zip((field['featureId'] for field in fields), values, strict=True))}
+            for row, values in zip(mags, projected['values'], strict=True)
+        )
     else:
         def page(offset):
             if kind == 'features':
@@ -424,6 +431,39 @@ def distribution(mag_id: str, data: Data, scope: Scope):
         raise HTTPException(404, "MAG ID 不存在。") from exc
 
 
+@router.get('/robustness', response_model=RobustnessResponse)
+def cohort_robustness(data: Data, mag_id: str = Query(default='', alias='magId', max_length=200)):
+    # These estimates always use the full published cohort, independently of UI sample filters.
+    bundle = robustness.load_published(data)
+    if bundle is None:
+        return RobustnessResponse(status='unavailable', release=data.fingerprint,
+                                  reason='当前数据修订暂无可用的完整队列校正结果。')
+    summary = bundle.manifest.summary
+    if mag_id:
+        association = bundle.associations.get(mag_id)
+        if association is None:
+            raise HTTPException(404, '该 MAG 不在当前发布的代表目录中。')
+        return RobustnessResponse(status='ready', release=data.fingerprint, summary=summary,
+                                  association=association, sensitivity=bundle.sensitivity.get(mag_id, []))
+    return RobustnessResponse(status='ready', release=data.fingerprint, summary=summary, items=[
+        AdjustedCandidate(magId=row.magId, status=row.adjusted.status, reason=row.adjusted.reason,
+                          beta=row.adjusted.beta, qValue=row.adjusted.qValue)
+        for row in bundle.associations.values()
+    ])
+
+
+@router.get('/robustness/download/{kind}')
+def download_cohort_robustness(kind: Literal['associations', 'sensitivity', 'methods'], data: Data):
+    bundle = robustness.load_published(data)
+    if bundle is None:
+        raise HTTPException(404, '当前数据修订暂无可下载的完整队列校正结果。')
+    name = robustness.DOWNLOADS[kind]
+    media_type = 'application/json' if kind == 'methods' else 'text/csv; charset=utf-8'
+    return FileResponse(bundle.path / name, media_type=media_type,
+                        filename=f'MAG-{bundle.manifest.summary.projectAccession}-{data.fingerprint[:12]}-{name}',
+                        headers={'X-Data-Fingerprint': data.fingerprint})
+
+
 @router.get("/heatmap", response_model=MagHeatmapResponse)
 def heatmap(data: Data, scope: Scope, settings: HeatmapSettings,
             top_n: int = Query(default=20, alias="topN", ge=0, le=1000)):
@@ -457,6 +497,7 @@ def lineage_clusters(
     query: str = Query(default="", max_length=200),
     mapping_status: Annotated[MappingStatus, Query(alias="mappingStatus")] = "",
     low_ani_only: bool = Query(default=False, alias="lowAniOnly"),
+    size_bin: Literal["", "1", "2-5", "6-20", "21+"] = Query(default="", alias="sizeBin"),
     sort_by: Annotated[
         Literal[
             "clusterId", "representativeMag", "memberCount", "sourceSampleCount", "aniMin", "aniMax",
@@ -470,7 +511,7 @@ def lineage_clusters(
 ):
     return service.lineage_cluster_page(
         data, scope, query=query, mapping_status=mapping_status, low_ani_only=low_ani_only,
-        sort_by=sort_by, direction=direction, limit=limit, offset=offset,
+        size_bin=size_bin, sort_by=sort_by, direction=direction, limit=limit, offset=offset,
     )
 
 
@@ -490,11 +531,13 @@ def lineage_cluster(
     direction: Literal["asc", "desc"] = "asc",
     limit: int = Query(default=25, ge=1, le=300),
     offset: int = Query(default=0, ge=0),
+    all_members: bool = Query(default=False, alias="allMembers"),
 ):
     try:
         return service.lineage_cluster_detail(
             data, scope, cluster_id, query=query, disease=member_disease, group=source_group,
-            low_ani_only=low_ani_only, sort_by=sort_by, direction=direction, limit=limit, offset=offset,
+            low_ani_only=low_ani_only, sort_by=sort_by, direction=direction,
+            limit=max(1, len(data.lineage)) if all_members else limit, offset=0 if all_members else offset,
         )
     except KeyError as exc:
         raise HTTPException(404, "dRep 聚类不存在。") from exc

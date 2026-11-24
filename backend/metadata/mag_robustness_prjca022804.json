@@ -1,0 +1,29 @@
+{
+  "datasetKey": "prjca022804-ad-nc",
+  "release": "254e42605c83ac844542123a39c0ba06181803fb5cdb9baca6150e48f686cddc",
+  "projectAccession": "PRJCA022804",
+  "processingBatch": {
+    "canonicalField": "batch",
+    "sourceColumn": "HPC_Batch",
+    "definition": "该发布内的技术处理批次，按分类固定效应处理。Group（CHN / CHN2）为来源组。",
+    "sourceFile": "storage/raw/source-metadata/PRJCA022804/metadata_NC_AD.csv",
+    "sourceSha256": "c9452d33b71759a250fd8725c77326f35701b9b5ba5a181020877df83f6c58b4",
+    "definitionSource": "PRJCA022804 元数据归档说明及 OPT-014 队列核对"
+  },
+  "archiveCheck": {
+    "metadataFile": "storage/raw/source-metadata/PRJCA022804/metadata_NC_AD.csv",
+    "matrixFile": "storage/raw/ad-nc-mag/PRJCA022804/CoverM/sample_mag_relative_abundance.tsv",
+    "readbackRelativeTolerance": 0.0000051
+  },
+  "observationUnitNote": "以唯一粪便样本为观测单位。原研究报告 122 AD 和 63 NC，归档的 185 个样本名均唯一匹配补充表 S1，年龄、性别、分组及来源组一致。可用资料未提供独立受试者键或访视键，独立性仍是模型假设。",
+  "participantReview": {
+    "paper": "https://doi.org/10.1038/s41380-025-02973-7",
+    "authorsCode": "https://github.com/ZhaoXM-Lab/metaAD_analysis#0-introduction",
+    "supplement": "storage/raw/source-supplements/PRJCA022804/41380_2025_2973_MOESM2_ESM.xlsx",
+    "sha256": "2c474596c5e1697de01f2eaa711f9e9985bbe5957795bd2d0734cfb978f0b16e",
+    "table": "Table S1",
+    "join": "metadata Sample_name = Table S1 Sample",
+    "matchedSamples": 185,
+    "conflictingAgeSexDiseaseOrSourceGroup": 0
+  }
+}

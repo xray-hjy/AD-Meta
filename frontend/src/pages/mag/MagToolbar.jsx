@@ -103,12 +103,11 @@ export function MagChartExportMenu({ actions, format, size, onFormatChange, onSi
   </>;
 }
 
-export function MagCandidateBrowser({ sortBy, direction, onSortChange, onDirectionChange, pagination, total, page, loading, error, onRetry, downloads }) {
-  return <ToolbarPopover label="候选浏览" title="MAG 候选浏览">{() => <>
+export function MagCandidateBrowser({ sortBy, direction, onSortChange, onDirectionChange, total, loading, error, onRetry, downloads }) {
+  return <ToolbarPopover label="结果排序与下载" title="MAG 结果排序与下载">{() => <>
     <MagListSort sortBy={sortBy} direction={direction} onSortChange={onSortChange} onDirectionChange={onDirectionChange} />
-    <p role="status">{loading ? '正在读取候选 MAG…' : `共 ${total ?? 0} 个 MAG · 第 ${page} 页`}</p>
+    <p role="status">{loading ? '正在读取候选 MAG…' : `共 ${total ?? 0} 个 MAG · 结果与分页见下方 MAG 结果列表`}</p>
     {error ? <div role="alert"><p>{error}</p><button type="button" className="analysis-button" onClick={onRetry}>重试候选查询</button></div> : null}
-    <div className="mag-candidate-pagination">{pagination}</div>
     <div className="mag-candidate-downloads">{downloads}</div>
   </>}</ToolbarPopover>;
 }

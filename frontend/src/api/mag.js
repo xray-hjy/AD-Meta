@@ -26,7 +26,7 @@ export function getMagRecords(module, params, options) {
 }
 
 /** @typedef {import('./client').FetchJsonOptions} FetchJsonOptions */
-/** @typedef {Record<string, string | number | null | undefined>} MagParams */
+/** @typedef {Record<string, string | number | boolean | null | undefined>} MagParams */
 
 /** @param {MagParams} params */
 export function magParams(params = {}) {
@@ -42,6 +42,17 @@ export function magParams(params = {}) {
 export function getMagOverview(params, options) {
   // First access validates and loads the complete snapshot; later requests reuse it.
   return fetchJson(`/api/mag/overview?${magParams(params)}`, { timeoutMs: 60_000, ...options });
+}
+
+/** @param {MagParams} params @param {FetchJsonOptions} [options]
+ * @returns {Promise<import('./generated').components['schemas']['RobustnessResponse']>} */
+export function getMagRobustness(params, options) {
+  return fetchJson(`/api/mag/robustness?${magParams(params)}`, options);
+}
+
+/** @param {'associations' | 'sensitivity' | 'methods'} kind @param {string} revision */
+export function magRobustnessDownloadUrl(kind, revision) {
+  return `${import.meta.env.VITE_API_BASE_URL || ''}/api/mag/robustness/download/${kind}?${magParams({ revision })}`;
 }
 
 /** @param {string} resource @param {MagParams} params @param {FetchJsonOptions} [options] @returns {Promise<any>} */

@@ -92,6 +92,8 @@ class GmrepoSubjectResponse(BaseModel):
     reasons: list[str]
     mappingMethod: str
     representativeMag: str | None
+    sourceGenus: str | None = None
+    sourceDomain: str | None = None
 
 
 class GmrepoEvaluationResponse(BaseModel):

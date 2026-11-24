@@ -95,6 +95,64 @@
         "title": "AbundanceProjectionResponse",
         "type": "object"
       },
+      "AdjustedCandidate": {
+        "properties": {
+          "beta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Beta"
+          },
+          "magId": {
+            "title": "Magid",
+            "type": "string"
+          },
+          "qValue": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qvalue"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "status": {
+            "enum": [
+              "estimated",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "magId",
+          "status",
+          "reason",
+          "beta",
+          "qValue"
+        ],
+        "title": "AdjustedCandidate",
+        "type": "object"
+      },
       "AnalysisArtifactResponse": {
         "properties": {
           "abundanceScale": {
@@ -597,6 +655,191 @@
           }
         },
         "title": "AnalysisScope",
+        "type": "object"
+      },
+      "Association": {
+        "properties": {
+          "adCount": {
+            "minimum": 0.0,
+            "title": "Adcount",
+            "type": "integer"
+          },
+          "adjusted": {
+            "$ref": "#/components/schemas/Estimate"
+          },
+          "influentialSampleCount": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Influentialsamplecount"
+          },
+          "magId": {
+            "title": "Magid",
+            "type": "string"
+          },
+          "maxCooksDistance": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maxcooksdistance"
+          },
+          "maxSingleSampleBetaChange": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maxsinglesamplebetachange"
+          },
+          "minAbundancePercent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minabundancepercent"
+          },
+          "mostInfluentialSampleId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mostinfluentialsampleid"
+          },
+          "ncCount": {
+            "minimum": 0.0,
+            "title": "Nccount",
+            "type": "integer"
+          },
+          "nonFiniteCount": {
+            "minimum": 0.0,
+            "title": "Nonfinitecount",
+            "type": "integer"
+          },
+          "nonPositiveCount": {
+            "minimum": 0.0,
+            "title": "Nonpositivecount",
+            "type": "integer"
+          },
+          "outOfRangeCount": {
+            "minimum": 0.0,
+            "title": "Outofrangecount",
+            "type": "integer"
+          },
+          "sampleCount": {
+            "minimum": 0.0,
+            "title": "Samplecount",
+            "type": "integer"
+          },
+          "unadjusted": {
+            "$ref": "#/components/schemas/Estimate"
+          }
+        },
+        "required": [
+          "sampleCount",
+          "adCount",
+          "ncCount",
+          "magId",
+          "unadjusted",
+          "adjusted",
+          "nonPositiveCount",
+          "nonFiniteCount",
+          "outOfRangeCount"
+        ],
+        "title": "Association",
+        "type": "object"
+      },
+      "BatchOmission": {
+        "properties": {
+          "adCount": {
+            "minimum": 0.0,
+            "title": "Adcount",
+            "type": "integer"
+          },
+          "betaChange": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Betachange"
+          },
+          "directionReversed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Directionreversed"
+          },
+          "estimate": {
+            "$ref": "#/components/schemas/Estimate"
+          },
+          "excludedBatch": {
+            "title": "Excludedbatch",
+            "type": "string"
+          },
+          "intervalWidthRatio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Intervalwidthratio"
+          },
+          "magId": {
+            "title": "Magid",
+            "type": "string"
+          },
+          "ncCount": {
+            "minimum": 0.0,
+            "title": "Nccount",
+            "type": "integer"
+          },
+          "sampleCount": {
+            "minimum": 0.0,
+            "title": "Samplecount",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "sampleCount",
+          "adCount",
+          "ncCount",
+          "magId",
+          "excludedBatch",
+          "estimate"
+        ],
+        "title": "BatchOmission",
         "type": "object"
       },
       "BoxplotReviewDataResponse": {
@@ -1337,6 +1580,117 @@
           "detail"
         ],
         "title": "ErrorResponse",
+        "type": "object"
+      },
+      "Estimate": {
+        "properties": {
+          "beta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Beta"
+          },
+          "ciHigh": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cihigh"
+          },
+          "ciLow": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cilow"
+          },
+          "geometricMeanRatio": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geometricmeanratio"
+          },
+          "pValue": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pvalue"
+          },
+          "qValue": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qvalue"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "standardError": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Standarderror"
+          },
+          "status": {
+            "enum": [
+              "estimated",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "Estimate",
         "type": "object"
       },
       "EvidenceBlocker": {
@@ -2923,6 +3277,28 @@
             "title": "Runkey",
             "type": "string"
           },
+          "sourceDomain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourcedomain"
+          },
+          "sourceGenus": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourcegenus"
+          },
           "sourceRevision": {
             "title": "Sourcerevision",
             "type": "string"
@@ -3317,6 +3693,55 @@
             "title": "Mappingstatus",
             "type": "string"
           },
+          "ncbiDomain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ncbidomain"
+          },
+          "ncbiGenus": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ncbigenus"
+          },
+          "ncbiLineageReason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ncbilineagereason"
+          },
+          "ncbiLineageStatus": {
+            "anyOf": [
+              {
+                "enum": [
+                  "verified",
+                  "pending",
+                  "conflict"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ncbilineagestatus"
+          },
           "ncbiOrganismName": {
             "anyOf": [
               {
@@ -3402,6 +3827,13 @@
           "mappingStatus": {
             "title": "Mappingstatus",
             "type": "string"
+          },
+          "ncbiLineageStatusCounts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Ncbilineagestatuscounts",
+            "type": "object"
           },
           "offset": {
             "title": "Offset",
@@ -4093,6 +4525,10 @@
             "title": "Mappingstatus",
             "type": "string"
           },
+          "matchedTotal": {
+            "title": "Matchedtotal",
+            "type": "integer"
+          },
           "offset": {
             "title": "Offset",
             "type": "integer"
@@ -4103,6 +4539,17 @@
           "query": {
             "title": "Query",
             "type": "string"
+          },
+          "sizeBin": {
+            "title": "Sizebin",
+            "type": "string"
+          },
+          "sizeDistribution": {
+            "items": {
+              "$ref": "#/components/schemas/MagLineageSizeBin"
+            },
+            "title": "Sizedistribution",
+            "type": "array"
           },
           "sortBy": {
             "title": "Sortby",
@@ -4127,7 +4574,10 @@
           "lowAniOnly",
           "sortBy",
           "direction",
-          "summary"
+          "summary",
+          "sizeBin",
+          "matchedTotal",
+          "sizeDistribution"
         ],
         "title": "MagLineageClusterPageResponse",
         "type": "object"
@@ -4494,6 +4944,46 @@
           "crosswalk"
         ],
         "title": "MagLineageResponse",
+        "type": "object"
+      },
+      "MagLineageSizeBin": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "maxMembers": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maxmembers"
+          },
+          "minMembers": {
+            "title": "Minmembers",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "minMembers",
+          "maxMembers",
+          "count"
+        ],
+        "title": "MagLineageSizeBin",
         "type": "object"
       },
       "MagManifestReference": {
@@ -7814,6 +8304,217 @@
           "evidenceRefs"
         ],
         "title": "ResearchProjectRecord",
+        "type": "object"
+      },
+      "RobustnessResponse": {
+        "properties": {
+          "association": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Association"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AdjustedCandidate"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "release": {
+            "title": "Release",
+            "type": "string"
+          },
+          "sensitivity": {
+            "items": {
+              "$ref": "#/components/schemas/BatchOmission"
+            },
+            "title": "Sensitivity",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "ready",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RobustnessSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "status",
+          "release"
+        ],
+        "title": "RobustnessResponse",
+        "type": "object"
+      },
+      "RobustnessSummary": {
+        "properties": {
+          "adCount": {
+            "minimum": 0.0,
+            "title": "Adcount",
+            "type": "integer"
+          },
+          "analysisVersion": {
+            "title": "Analysisversion",
+            "type": "string"
+          },
+          "batchDefinition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Batchdefinition"
+          },
+          "batchSourceColumn": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Batchsourcecolumn"
+          },
+          "belowFdrAdjusted": {
+            "title": "Belowfdradjusted",
+            "type": "integer"
+          },
+          "belowFdrUnadjusted": {
+            "title": "Belowfdrunadjusted",
+            "type": "integer"
+          },
+          "cohortSampleCount": {
+            "title": "Cohortsamplecount",
+            "type": "integer"
+          },
+          "covariateNotes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Covariatenotes",
+            "type": "array"
+          },
+          "covariates": {
+            "items": {
+              "enum": [
+                "age",
+                "gender",
+                "batch"
+              ],
+              "type": "string"
+            },
+            "title": "Covariates",
+            "type": "array"
+          },
+          "datasetKey": {
+            "title": "Datasetkey",
+            "type": "string"
+          },
+          "fdrAlpha": {
+            "title": "Fdralpha",
+            "type": "number"
+          },
+          "magCount": {
+            "title": "Magcount",
+            "type": "integer"
+          },
+          "ncCount": {
+            "minimum": 0.0,
+            "title": "Nccount",
+            "type": "integer"
+          },
+          "observationUnitNote": {
+            "title": "Observationunitnote",
+            "type": "string"
+          },
+          "omittedBatches": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Omittedbatches",
+            "type": "array"
+          },
+          "projectAccession": {
+            "title": "Projectaccession",
+            "type": "string"
+          },
+          "release": {
+            "title": "Release",
+            "type": "string"
+          },
+          "sampleCount": {
+            "minimum": 0.0,
+            "title": "Samplecount",
+            "type": "integer"
+          },
+          "statsmodelsVersion": {
+            "title": "Statsmodelsversion",
+            "type": "string"
+          },
+          "testedAdjusted": {
+            "title": "Testedadjusted",
+            "type": "integer"
+          },
+          "testedUnadjusted": {
+            "title": "Testedunadjusted",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "sampleCount",
+          "adCount",
+          "ncCount",
+          "datasetKey",
+          "projectAccession",
+          "release",
+          "analysisVersion",
+          "cohortSampleCount",
+          "magCount",
+          "testedUnadjusted",
+          "testedAdjusted",
+          "belowFdrUnadjusted",
+          "belowFdrAdjusted",
+          "fdrAlpha",
+          "covariates",
+          "covariateNotes",
+          "batchSourceColumn",
+          "batchDefinition",
+          "omittedBatches",
+          "observationUnitNote",
+          "statsmodelsVersion"
+        ],
+        "title": "RobustnessSummary",
         "type": "object"
       },
       "ScopedFeatureRequest": {
@@ -14828,6 +15529,23 @@
           },
           {
             "in": "query",
+            "name": "sizeBin",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "1",
+                "2-5",
+                "6-20",
+                "21+"
+              ],
+              "title": "Sizebin",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "sortBy",
             "required": false,
             "schema": {
@@ -15156,6 +15874,16 @@
               "minimum": 0,
               "title": "Offset",
               "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "allMembers",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Allmembers",
+              "type": "boolean"
             }
           },
           {
@@ -15966,6 +16694,181 @@
           }
         },
         "summary": "Quality",
+        "tags": [
+          "mag"
+        ]
+      }
+    },
+    "/api/mag/robustness": {
+      "get": {
+        "operationId": "cohort_robustness_api_mag_robustness_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "magId",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 200,
+              "title": "Magid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RobustnessResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Cohort Robustness",
+        "tags": [
+          "mag"
+        ]
+      }
+    },
+    "/api/mag/robustness/download/{kind}": {
+      "get": {
+        "operationId": "download_cohort_robustness_api_mag_robustness_download__kind__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "enum": [
+                "associations",
+                "sensitivity",
+                "methods"
+              ],
+              "title": "Kind",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Revision",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dataset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 128,
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "release",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Release",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Download Cohort Robustness",
         "tags": [
           "mag"
         ]

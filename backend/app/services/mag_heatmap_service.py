@@ -33,11 +33,27 @@ def build_heatmap(data, indices, rows, top_n=20, settings=None):
     positions = {mag_id: i for i, mag_id in enumerate(data.mag_ids)}
     selected = list(rows) if indices else []
     exclusions = []
+    excluded_ids = {}
+    conditions = {
+        "ID / 分类条件": f"搜索 {config['heatmapQuery'].strip()}",
+        "质量条件": "；".join([
+            f"完整度 ≥{config['minCompleteness']}%" if config['minCompleteness'] is not None else "完整度不限",
+            f"污染率 ≤{config['maxContamination']}%" if config['maxContamination'] is not None else "污染率不限",
+        ]),
+        "平均丰度条件": f"所选样本均值 ≥{config['minMean']}%",
+        "超过阈值的样本比例条件": f"丰度 >{config['sampleThreshold']}% 的样本比例 ≥{config['minSamplePercent']}%",
+    }
 
     def retain(label, predicate):
         nonlocal selected
         before = len(selected)
-        selected = [row for row in selected if predicate(row)]
+        kept = []
+        for row in selected:
+            if predicate(row):
+                kept.append(row)
+            else:
+                excluded_ids[row["magId"]] = f"{label}（{conditions[label]}）" if label in conditions else label
+        selected = kept
         exclusions.append({"reason": label, "count": before - len(selected)})
 
     needle = config["heatmapQuery"].strip().casefold()
@@ -74,6 +90,13 @@ def build_heatmap(data, indices, rows, top_n=20, settings=None):
         selected.sort(key=lambda r: (-(r["meanPercent"] or 0), r["magId"]))
     matched = len(selected)
     shown = selected if top_n == 0 else selected[:top_n]
+    requested_results = []
+    if config["heatmapMode"] == "candidate" and config["candidateKind"] == "manual":
+        displayed_ids = {row["magId"] for row in shown}
+        for mag_id in ids:
+            reason = ("当前样本范围为空" if not indices else excluded_ids.get(mag_id)
+                      or (f"超过当前显示上限 {top_n} 个 MAG（按手动清单顺序）" if mag_id not in displayed_ids else "已显示"))
+            requested_results.append({"magId": mag_id, "displayed": mag_id in displayed_ids, "reason": reason})
     columns = [positions[r["magId"]] for r in shown]
     raw = matrix[:, columns]
     display = np.log10(1 + raw)
@@ -126,5 +149,6 @@ def build_heatmap(data, indices, rows, top_n=20, settings=None):
             "dendrograms": {"metric": "euclidean", "linkage": "average", "mags": mag_tree, "samples": sample_trees},
             "selection": f"{mode}；{sample_method}。", "settings": {**config, "topN": top_n}, "methods": methods,
             "selectionAudit": {"sourceCount": len(data.mag_ids), "matchedCount": matched, "displayedCount": len(shown),
-                               "omittedCount": matched - len(shown), "exclusions": exclusions},
+                               "omittedCount": matched - len(shown), "exclusions": exclusions,
+                               "requestedMagResults": requested_results},
             "warnings": warnings, "constantMagIds": constant, "projectionFingerprint": fingerprint}

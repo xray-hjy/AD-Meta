@@ -123,6 +123,25 @@ def test_http_contracts_and_csv_use_the_same_pinned_values(data):
         assert client.get('/api/mag/functions/download/matrix', params={'magIds': 'unknown'}).status_code == 422
 
 
+def test_matrix_csv_preserves_zero_positive_counts_and_empty_cells(data, monkeypatch):
+    import csv
+    import io
+
+    monkeypatch.setattr(service, 'matrix', lambda *_args, **_kwargs: {
+        'mags': [{'magId': 'M1'}], 'features': [{'featureId': f'F{i}'} for i in range(3)],
+        'values': [[0, 7, None]],
+    })
+    app = FastAPI()
+    app.include_router(api.router)
+    app.dependency_overrides[api.dataset] = lambda: data
+    with TestClient(app) as client:
+        for mode in ['presence', 'count']:
+            response = client.get('/api/mag/functions/download/matrix', params={'valueKind': mode})
+            assert response.status_code == 200
+            rows = list(csv.reader(io.StringIO(response.text.lstrip('\ufeff'))))
+            assert rows == [['MAG', 'F0', 'F1', 'F2'], ['M1', '0', '7', '']]
+
+
 def test_large_body_queries_preserve_matrix_order_download_values_and_validation(data):
     app = FastAPI()
     app.include_router(api.router)

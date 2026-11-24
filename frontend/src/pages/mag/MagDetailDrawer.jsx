@@ -1,16 +1,18 @@
+import { formatMagNumber } from './magDistributionView';
 import { useEffect, useRef, useState } from 'react';
 import SlidingTabs from '../../components/ui/SlidingTabs';
 import { useQuery } from '@tanstack/react-query';
 import { getMagCatalog, getMagDistribution, getMagLineage, getMagRecords } from '../../api/mag';
 import LoadingState from '../../components/ui/LoadingState';
 import ErrorState from '../../components/ui/ErrorState';
-import { MagPlanCard, MAG_RESEARCH_PLANS } from './MagResearchPlans';
-import EvidenceLink from '../../components/evidence/EvidenceLink';
+import MagFunctionPlan from './MagFunctionPlan';
+import MagRobustnessEvidence from './MagRobustnessEvidence';
+import MagExternalReference from './MagExternalReference';
 import MagFunctionDetail, { MagCoverageEvidence } from './MagFunctionDetail';
 
 const TABS = [['abundance', '丰度与差异'], ['taxonomy', '分类证据'], ['quality', '质量与组装'], ['lineage', '来源与去冗余'], ['function', '功能潜力'], ['coverage', '覆盖证据']];
 const RANKS = [['domain', '域'], ['phylum', '门'], ['class', '纲'], ['order', '目'], ['family', '科'], ['genus', '属'], ['species', '种']];
-const number = value => value == null ? '—' : Number(value).toLocaleString('en-US', { maximumSignificantDigits: 5 });
+const number = formatMagNumber;
 const integer = value => value == null ? '—' : Number(value).toLocaleString('en-US', { maximumFractionDigits: 0 });
 const percent = value => value == null ? '—' : `${number(value * 100)}%`;
 function EvidenceList({ items }) { return <dl className="mag-detail-facts">{items.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value ?? '未提供'}</dd></div>)}</dl>; }
@@ -69,16 +71,18 @@ export default function MagDetailDrawer({ magId, overview, scope, onClose, onNav
             ['p 值 / BH-FDR q', `${number(distribution.data.feature.pValue)} / ${number(distribution.data.feature.qValue)}`],
             ['多重检验族', `${distribution.data.provenance.testedFeatureCount} 个 MAG`],
           ]} />}
-          <p className="mag-muted">相对丰度保留上游百分比；阈值为严格大于，非检出判据。组间检验未做协变量校正；这些结果用于生成研究线索。</p>
+          <p className="mag-muted">相对丰度保留上游百分比。阈值仅用于统计丰度严格大于设定值的样本比例。Mann–Whitney U 组间检验未做协变量校正。</p>
+          {canNavigate && <MagRobustnessEvidence revision={revision} magId={representative} />}
         </>}
-        {tab === 'taxonomy' && <><h3>代表 MAG 分类与参考</h3><EvidenceLink subjectType="mag" subjectId={magId} sourceRevision={revision}
-          context={{ scope, magId, representative, source: 'MAG 分类证据', tab }} onOpen={() => onEvidenceOpen?.(tab)} />{taxonomy ? <EvidenceList items={[...RANKS.map(([key, label]) => [label, taxonomy[key] || '未解析']),
+        {tab === 'taxonomy' && <><h3>代表 MAG 分类与参考</h3><MagExternalReference overview={overview} magId={magId} revision={revision} scope={scope}
+          onOpen={() => onEvidenceOpen?.(tab)} />{taxonomy ? <EvidenceList items={[...RANKS.map(([key, label]) => [label, taxonomy[key] || '未解析']),
           ['分类方法', taxonomy.classificationMethod], ['最近参考', taxonomy.closestReference], ['参考 ANI', taxonomy.closestAni == null ? '未提供' : `${number(taxonomy.closestAni)}%`],
           ['参考比对比例 AF', percent(taxonomy.closestAf)], ['MSA 比例', taxonomy.msaPercent == null ? '未提供' : `${number(taxonomy.msaPercent)}%`]]} /> : <p>该版本未提供完整分类证据。</p>}
           {crosswalk && <><h3>分类标识符对应</h3><EvidenceList items={[
-            ['GTDB 参考 accession', crosswalk.gtdbReferenceAccession], ['NCBI species TaxID', crosswalk.ncbiSpeciesTaxid], ['NCBI 名称', crosswalk.ncbiOrganismName],
-            ['Kraken / Bracken 物种', crosswalk.krakenSpeciesName], ['匹配状态', crosswalk.mappingStatus === 'matched_exact_ncbi_species_taxid' ? '精确 TaxID 对应' : crosswalk.mappingStatus === 'ncbi_species_taxid_not_observed_in_reads' ? 'TaxID 有效，Kraken/Bracken 来源批次未观察到' : '未解析'],
-          ]} /><p className="mag-muted">对应表来自原始分析结果，观察状态来自其 Kraken/Bracken 结果，不代表当前 MetaPhlAn 物种矩阵的检出状态。</p></>}<p className="mag-muted">分类标识符对应不证明 reads 直接比对到具体 MAG；未解析结果不按名称相似度补成确定匹配。</p></>}
+            ['GTDB 参考 accession', crosswalk.gtdbReferenceAccession], ['参考 NCBI TaxID', crosswalk.referenceNcbiTaxid],
+            ['NCBI species TaxID', crosswalk.ncbiSpeciesTaxid], ['NCBI 分类路径', crosswalk.ncbiTaxonomy],
+            ['Kraken / Bracken 物种', crosswalk.krakenSpeciesName], ['原批次观察状态', crosswalk.mappingStatus === 'matched_exact_ncbi_species_taxid' ? '精确 TaxID 对应' : crosswalk.mappingStatus === 'ncbi_species_taxid_not_observed_in_reads' ? 'Kraken / Bracken 来源批次未观察到' : '未解析'],
+          ]} /><p className="mag-muted">观察状态采用归档 Kraken / Bracken 批次的口径。当前物种矩阵由 MetaPhlAn 独立生成。</p></>}<p className="mag-muted">外部评估提供菌属层级的研究背景。</p></>}
         {tab === 'quality' && <><h3>{isMember ? '成员质量与代表组装信息' : '质量与组装'}</h3>
           {isMember && member && <EvidenceList items={[
             ['成员完整度', `${number(member.memberCompletenessPercent)}%`], ['成员污染率', `${number(member.memberContaminationPercent)}%`],
@@ -110,10 +114,10 @@ export default function MagDetailDrawer({ magId, overview, scope, onClose, onNav
           ]} />
           <p className="mag-muted">这些结果属于代表 MAG，不自动转赋给所有聚类成员；候选和合成潜力不等同于表达或已验证功能。</p>
           <button type="button" className="analysis-button" onClick={() => onNavigate('function', representative)}>查看功能明细</button>
-        </> : !overview.capabilities.metabolism ? <MagPlanCard plan={MAG_RESEARCH_PLANS[0]} /> : null)}
+        </> : !overview.capabilities.metabolism ? <MagFunctionPlan /> : null)}
       </section>
       <footer><button type="button" disabled={!canNavigate} className="analysis-button analysis-button--primary" onClick={() => onNavigate('distribution', representative)}>查看分布图</button>
-        <button type="button" disabled={!canNavigate} className="analysis-button" onClick={() => onNavigate('heatmap', representative)}>加入热图候选</button>
+        <button type="button" disabled={!canNavigate} className="analysis-button" onClick={() => onNavigate('heatmap', representative)}>加入热图清单并打开</button>
         {overview.capabilities.lineage && <button type="button" disabled={!canNavigate} className="analysis-button" onClick={() => onNavigate('lineage', representative)}>查看所在聚类</button>}</footer>
     </div>
   </dialog>;

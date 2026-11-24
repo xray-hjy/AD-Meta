@@ -4,8 +4,8 @@ import { CustomChart, HeatmapChart, ScatterChart } from 'echarts/charts';
 import { GridComponent, VisualMapComponent, TooltipComponent, DataZoomComponent } from 'echarts/components';
 import { SVGRenderer } from 'echarts/renderers';
 import { setPlatformAPI } from 'zrender/lib/core/platform';
-import { functionMatrixOption, geneTrackOption, phylogenyTrackOption, coverageSensitivityOption } from './magFunctionOptions';
-import { functionalMatrixGeometry, phylogenyHeight } from './magFunctionalGeometry';
+import { functionMatrixOption, geneTrackOption, coverageSensitivityOption, coverageOption } from './magFunctionOptions';
+import { functionalMatrixGeometry } from './magFunctionalGeometry';
 
 const matrix = { namespace: 'kofam_ko', valueKind: 'count', mags: [{ magId: 'M1', quality: { completenessPercent: 90, contaminationPercent: 1 } }, { magId: 'M2' }],
   features: [{ featureId: 'K00929', description: 'butyrate kinase' }, { featureId: 'K01580' }], values: [[2, 0], [null, 1]] };
@@ -14,6 +14,23 @@ echarts.use([CustomChart, HeatmapChart, ScatterChart, GridComponent, VisualMapCo
 setPlatformAPI({ measureText: text => ({ width: String(text).length * 7 }) });
 
 describe('functional ECharts projections', () => {
+  it('keeps coverage legends above the plot with consistent group colors, shapes and line styles', () => {
+    const data = { items: [{ disease: 'AD', coveredFraction: .8, abundancePercent: .1, meanCoverage: 2 },
+      { disease: 'NC', coveredFraction: .6, abundancePercent: .2, meanCoverage: 3 }] };
+    const scatter = coverageOption(data), sensitivity = coverageSensitivityOption(data);
+    for (const option of [scatter, sensitivity]) {
+      expect(option.legend.top).toBeLessThan(option.grid.top);
+      expect(option.legend.bottom).toBe('auto');
+      expect(option.grid.bottom).toBeGreaterThan(option.xAxis.nameGap);
+    }
+    expect(scatter.series.map(series => series.symbol)).toEqual(['circle', 'diamond']);
+    expect(sensitivity.series.map(series => series.lineStyle.type)).toEqual(['solid', 'dashed']);
+    expect(sensitivity.legend.data.map(item => item.icon)).toEqual(['line', 'line']);
+    expect(sensitivity.legend.data.map(item => item.itemStyle.borderType)).toEqual(['solid', 'dashed']);
+    expect(sensitivity.series.map(series => series.itemStyle.color)).toEqual(scatter.series.map(series => series.itemStyle.color));
+    expect(sensitivity.series[0].data[80]).toEqual([80, 1]);
+    expect(sensitivity.series[0].data[81]).toEqual([81, 0]);
+  });
   it('keeps raw values and stable identity through transpose', () => {
     const normal = functionMatrixOption(matrix, { annotations: true });
     const transposed = functionMatrixOption(matrix, { transposed: true });
@@ -43,29 +60,6 @@ describe('functional ECharts projections', () => {
     expect(functionalMatrixGeometry(3, 2).viewportHeight).toBe(280);
   });
 
-  it('adapts small trees and gives large trees an aligned readable initial leaf window', () => {
-    expect(phylogenyHeight(3)).toBe(240);
-    expect(phylogenyHeight(869)).toBe(740);
-    const children = Array.from({ length: 869 }, (_, i) => ({ name: `M${i}`, branchLength: i / 10 }));
-    const chart = phylogenyTrackOption({ tree: { children } }, matrix, {}, 'length');
-    expect(chart.series[1].data).toHaveLength(869);
-    expect(chart.series[1].data[868].value[0]).toBe(86.8);
-    expect(chart.dataZoom[0].endValue).toBe(23.5);
-    expect(chart.dataZoom[0].yAxisIndex).toEqual([0, 1]);
-    const short = phylogenyTrackOption({ tree: { children: [{ name: 'M1', branchLength: .02 }, { name: 'M2', branchLength: .01 }] } }, matrix, {}, 'length');
-    expect(short.xAxis[0].max).toBe(.02);
-  });
-
-  it('uses one leaf order for phylogeny and tracks even with reversed input rows', () => {
-    const tree = { tree: { children: [{ name: 'M2', branchLength: 2 }, { name: 'M1', branchLength: 1 }] } };
-    const chart = phylogenyTrackOption(tree, matrix, {}, 'length');
-    const cells = chart.series.find(s => s.id === 'phylogeny-functions').data;
-    expect(cells.find(r => r.magId === 'M1' && r.featureId === 'K00929').value).toEqual([2, 1, 2]);
-    expect(chart.yAxis[0].min).toBe(chart.yAxis[1].min);
-    expect(chart.yAxis[0].max).toBe(chart.yAxis[1].max);
-    expect(chart.dataZoom[0].yAxisIndex).toEqual([0, 1]);
-  });
-
   it('computes threshold counts including the exact boundary without altering abundance', () => {
     const chart = coverageSensitivityOption({ items: [{ disease: 'AD', coveredFraction: .5 }, { disease: 'NC', coveredFraction: 0 }] });
     expect(chart.series[0].data[50]).toEqual([50, 1]);
@@ -73,10 +67,9 @@ describe('functional ECharts projections', () => {
     expect(chart.series[1].data[0]).toEqual([0, 1]);
   });
 
-  it('renders heatmaps, gene intervals and aligned tree tracks with the actual SVG engine', () => {
-    const tree = { tree: { children: [{ name: 'M2', branchLength: 2 }, { name: 'M1', branchLength: 1 }] } };
+  it('renders heatmaps and gene intervals with the actual SVG engine', () => {
     const clustered = { ...matrix, dendrograms: { mags: { leafIds: ['M1', 'M2'], merges: [{ left: 0, right: 1, distance: 1, size: 2 }] } } };
-    const options = [functionMatrixOption(clustered, {}), geneTrackOption([{ geneId: 'g1', contigId: 'c1', start: 100, end: 20, strand: -1 }]), phylogenyTrackOption(tree, matrix)];
+    const options = [functionMatrixOption(clustered, {}), geneTrackOption([{ geneId: 'g1', contigId: 'c1', start: 100, end: 20, strand: -1 }])];
     for (const option of options) {
       const chart = echarts.init(null, null, { renderer: 'svg', ssr: true, width: 1200, height: 600 });
       try {

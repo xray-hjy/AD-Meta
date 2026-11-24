@@ -25,7 +25,7 @@ def decode(value):
 
 
 KEYS = {'samples': 'sampleId', 'representatives': 'magId', 'quality': 'magId', 'taxonomy': 'magId',
-        'lineage': 'memberMag', 'arg_summary': 'magId', 'arg_hits': 'id', 'bgc_regions': 'id',
+        'lineage': 'memberMag', 'crosswalk': 'magId', 'arg_summary': 'magId', 'arg_hits': 'id', 'bgc_regions': 'id',
         'bgc_status': 'magId', 'trees': 'id', 'coverage_metrics': 'id', 'archived_files': 'id'}
 
 
@@ -207,6 +207,7 @@ def load_release(release):
                       mag_ids=mag_ids, matrix=matrix, samples=tuple(samples), lengths=tuple(r['lengthBp'] for r in representatives),
                       fingerprint=release, sources=sources, max_mapping_error=abundance['report']['maxMappingError'],
                       taxonomy=get('taxonomy', 'taxonomy'), quality=quality, lineage=get('lineage', 'lineage'),
+                      crosswalk=get('crosswalk', 'crosswalk'),
                       annotation_manifest=annotation, modules=report,
                       community_results=decode(entry['community_json']),
                       cohort_info={'name': entry['name'], 'projectAccession': entry['project_accession'],

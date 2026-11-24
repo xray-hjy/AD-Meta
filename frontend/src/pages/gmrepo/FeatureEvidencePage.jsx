@@ -98,12 +98,12 @@ export default function FeatureEvidencePage() {
           {record?.evaluationId ? <details className="evaluation-object-details"><summary>固定评估与当前用途状态</summary><p className="reference-fingerprint">评估 ID：{record.evaluationId}</p><p>页面与两种导出使用同一固定评估。生成于 {record.generatedAt}。</p><p>{record.snapshotStatus?.status === 'current' ? '当前依赖可校验；用途仍为外部参考。' : '这是历史评估，当前用途需重新核查。'}</p><Link to={`/reference/gmrepo/evidence?evaluationId=${record.evaluationId}`}>按此 ID 读取归档评估</Link>{record.snapshotStatus?.reasons?.map(text => <p key={text}>{text}</p>)}</details> : null}
           {!!id && !fixedId && resolved.isPending ? <LoadingState message="正在核对固定版本的对象分类…" /> : null}
           {subject ? <>
-            {genus ? <p className="evaluation-relationship">{type !== 'genus' ? <><span aria-hidden="true">↳</span> {subject.genus.name} <span className="evaluation-inline-note">{genus} · 所属属的外部背景</span><span className="evaluation-separator" aria-hidden="true">/</span></> : null}
+            {genus ? <p className="evaluation-relationship">{type !== 'genus' ? <><span aria-hidden="true">↳</span> {subject.genus.name} <span className="evaluation-inline-note">{genus} · 菌属参考</span><span className="evaluation-separator" aria-hidden="true">/</span></> : null}
               <span>GMrepo · {referenceVersion}</span></p> : null}
             {subject.reasons.length ? <div className={genus ? 'evaluation-limit' : 'gmrepo-inference-pending'}>{subject.reasons.map(text => <p key={text}>{text}</p>)}</div> : null}
             <details className="evaluation-object-details"><summary>对象与版本详情{Object.keys(scope).length ? ' · 原分析范围' : ''}</summary>
               <dl className="evaluation-facts"><div><dt>{type === 'genus' ? '参考对象版本' : '主对象版本'}</dt><dd>{type === 'genus' ? referenceVersion : subject.sourceRevision || '未提供'}</dd></div><div><dt>外部参考版本</dt><dd>{referenceVersion}</dd></div>
-                <div><dt>对应层级</dt><dd>{subject.mappingLevel === 'genus_background' ? '所属属的外部背景' : subject.status === 'mapped' ? '参考菌属' : '对应待核查'}</dd></div>
+                <div><dt>对应层级</dt><dd>{subject.mappingLevel === 'genus_background' ? '菌属参考' : subject.status === 'mapped' ? '参考菌属' : '对应待核查'}</dd></div>
                 {subject.representativeMag ? <div><dt>代表 MAG</dt><dd>{subject.representativeMag}</dd></div> : null}</dl><p>{subject.mappingMethod}</p>
               {Object.keys(scope).length ? <><p>原可视化范围与选择（不改变外部检验分母）</p><pre className="evaluation-context">{JSON.stringify(scope, null, 2)}</pre><p className="gmrepo-note">来源图：{params.get('sourceChart') || '对象明细'}；不合并主外样本。</p></> : null}
             </details></> : null}

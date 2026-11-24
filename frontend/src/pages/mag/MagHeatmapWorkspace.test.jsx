@@ -20,6 +20,18 @@ function mount(props = {}) {
   return render(<QueryClientProvider client={client}><MagHeatmapWorkspace overview={overview} params={{ revision: 'fixture', batch: '2' }} onSelect={vi.fn()} {...props} /></QueryClientProvider>);
 }
 
+test('keeps an existing manual list and explains why an added MAG is not plotted', async () => {
+  sessionStorage.setItem('admeta:mag:heatmap:fixture', JSON.stringify({ settings: {
+    heatmapIds: 'MAG_A\nMAG_B', topN: 1, minCompleteness: 90,
+  } }));
+  getMagHeatmap.mockResolvedValue({ ...base, selectionAudit: { ...base.selectionAudit,
+    requestedMagResults: [{ magId: 'MAG_B', displayed: false, reason: '超过当前显示上限 1 个 MAG（按手动清单顺序）' }] } });
+  mount({ initialMagId: 'MAG_B' });
+  await screen.findByTestId('heatmap');
+  expect(getMagHeatmap).toHaveBeenLastCalledWith(expect.objectContaining({ heatmapIds: 'MAG_A\nMAG_B', topN: 1, minCompleteness: 90 }), expect.anything());
+  expect(screen.getByText(/当前未绘制：超过当前显示上限 1/)).toBeVisible();
+});
+
 test('analysis edits apply explicitly while style changes do not request a new selection', async () => {
   mount(); await screen.findByTestId('heatmap');
   const count = getMagHeatmap.mock.calls.length;

@@ -1,8 +1,9 @@
-import { lazy, Suspense, useEffect, useMemo } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getGmrepoCatalog, getGmrepoGenera, getGmrepoOverview, getGmrepoSamples } from '../../api/gmrepo';
 import StyledSelect from '../../components/ui/StyledSelect';
+import SegmentedControl from '../../components/ui/SegmentedControl';
 import LoadingState from '../../components/ui/LoadingState';
 import ErrorState from '../../components/ui/ErrorState';
 import PaginationControls from '../../components/data-display/PaginationControls';
@@ -11,6 +12,7 @@ import ReferenceRegistry from './ReferenceRegistry';
 import ReferenceGenusBrowser from './ReferenceGenusBrowser';
 import ReferenceSubjectContext from './ReferenceSubjectContext';
 import { referenceHref, referenceParams, subjectHref } from './referenceNavigation';
+import { DECISION_CHART_HEIGHT } from './referenceChartOptions';
 import './gmrepo.css';
 
 const ReferenceChart = lazy(() => import('./ReferenceChart'));
@@ -33,12 +35,55 @@ function Summary({ data }) {
   </div>;
 }
 
-function ChartSection({ kind, title, subtitle, data, children }) {
+function QualityCard({ title, subtitle, tools, children }) {
   return <section className="gmrepo-panel" aria-label={title}>
-    <div className="gmrepo-panel-heading"><h2>{title}</h2><p>{subtitle}</p></div>
-    <Suspense fallback={<LoadingState />}><ReferenceChart kind={kind} data={data} title={title} /></Suspense>
-    {children}
+    <div className="gmrepo-panel-heading">
+      <div className="gmrepo-quality-heading"><h2>{title}</h2>{tools}</div>
+      <p>{subtitle}</p>
+    </div>
+    <div className="gmrepo-quality-content">{children}</div>
   </section>;
+}
+
+function QualityChart({ kind, data, title }) {
+  return <Suspense fallback={<LoadingState />}><ReferenceChart kind={kind} data={data} title={title} /></Suspense>;
+}
+
+function QualityStatus({ data, view, onViewChange }) {
+  const title = '纳入与核查状态';
+  return <QualityCard title={title} subtitle={`六种状态互不重叠，合计 ${number(data.counts.selectedRuns)} 个 Run。`}
+    tools={<SegmentedControl role="group" aria-label="纳入与核查状态显示方式">
+      {[['chart', '图表'], ['table', '明细']].map(([value, label]) => <button key={value} type="button"
+        aria-pressed={view === value} aria-controls="gmrepo-quality-status" onClick={() => onViewChange(value)}>{label}</button>)}
+    </SegmentedControl>}>
+    <div id="gmrepo-quality-status" className="gmrepo-quality-status" style={{ blockSize: DECISION_CHART_HEIGHT }}>
+      {view === 'chart' ? <QualityChart kind="decisions" data={data} title={title} /> :
+        <table aria-label="纳入与核查状态明细"><thead><tr><th scope="col">状态</th><th scope="col">Run 数</th></tr></thead>
+          <tbody>{data.decisions.map(row => <tr key={row.key}><th scope="row">{row.label}</th><td>{number(row.count)}</td></tr>)}</tbody>
+        </table>}
+    </div>
+    <p className="gmrepo-note">“阶段参考”包括 MCI、风险组和临床前研究。“属级信息不足”单列分组已核对的 AD/NC，其他阶段记录仍计入对应阶段。</p>
+  </QualityCard>;
+}
+
+function MetadataAvailability({ data }) {
+  return <QualityCard title="年龄与性别可用情况" subtitle={`以当前范围的 ${number(data.counts.completeProfiles)} 个完整 profile 为分母。`}>
+    <ul className="gmrepo-quality-availability">{data.missingness.map(row => {
+      const field = row.field === 'age' ? '年龄' : '性别';
+      const knownPercent = row.denominator ? row.knownCount / row.denominator * 100 : null;
+      return <li key={row.field}>
+        <div className="gmrepo-quality-availability-label">
+          <strong>{field}</strong>
+          {row.denominator ? <><span>可标准化 <b>{percent(knownPercent)}</b></span><span>缺失或未标准化 <b>{percent(row.unavailablePercent)}</b></span></> :
+            <span>暂无完整 profile，比例不可用</span>}
+        </div>
+        {row.denominator ? <div className="gmrepo-quality-meter" aria-hidden="true"><span style={{ width: `${knownPercent}%` }} /></div> : null}
+        <p className="gmrepo-note">{row.label} {number(row.unavailableCount)} / {number(row.denominator)}
+          {row.intervalCount ? `，其中 ${number(row.intervalCount)} 条为年龄区间` : ''}
+          {row.unmappedCodeCount ? `，其中 ${number(row.unmappedCodeCount)} 条为未解码原码` : ''}。</p>
+      </li>;
+    })}</ul>
+  </QualityCard>;
 }
 
 function CohortTable({ data, onChoose }) {
@@ -91,6 +136,7 @@ export default function GmrepoPage() {
     return () => { document.title = previous; };
   }, []);
   const [params, setParams] = useSearchParams();
+  const [statusView, setStatusView] = useState('chart');
   const cohort = params.get('cohort') || '';
   const group = params.get('group') || '';
   const scope = params.get('scope') || 'all';
@@ -152,17 +198,15 @@ export default function GmrepoPage() {
           <Summary data={data} />
           <div className="gmrepo-scope-caption" aria-live="polite">当前范围 {number(data.counts.selectedRuns)} Run / 版本总计 {number(data.provenance.metadataTotal)} Run · {data.cohorts.length} 个队列 · {number(data.provenance.genusTotal)} 个目标属</div>
           <div className="gmrepo-charts">
-            <ChartSection kind="cohorts" title="各队列 AD/NC 可用记录" subtitle="仅显示当前范围内属级图表可用的测序 Run。" data={data} />
-            <ChartSection kind="decisions" title="纳入与核查状态" subtitle="六种状态互不重叠，合计为当前筛选的元数据记录数。" data={data}>
-              <details className="gmrepo-evidence"><summary>查看状态数量</summary><dl>{data.decisions.map(d => <div key={d.key}><dt>{d.label}</dt><dd>{number(d.count)}</dd></div>)}</dl>
-                <p>“阶段参考”包含 MCI、风险组和临床前研究。“属级信息不足”仅单列分组已核对的 AD/NC，其他阶段的同类质量问题仍留在其阶段状态内。</p></details>
-            </ChartSection>
-            <ChartSection kind="missingness" title="年龄与性别可用情况" subtitle={`分母：当前范围 ${number(data.counts.completeProfiles)} 个完整 profile。`} data={data}>
-              <div className="gmrepo-quality-notes">{data.missingness.map(m => <p key={m.field}>{m.label}：{number(m.unavailableCount)} / {number(m.denominator)}（{percent(m.unavailablePercent)}）{m.intervalCount ? `，含 ${m.intervalCount} 条年龄区间记录` : ''}{m.unmappedCodeCount ? `，含 ${m.unmappedCodeCount} 条未解码原码` : ''}。</p>)}</div>
-            </ChartSection>
-            <ChartSection kind="resolution" title="各队列分类待解析比例" subtitle="完整 profile 中，不能可靠对应细菌/古菌属的原丰度比例中位数；横轴固定 0–100%。" data={data}>
+            <QualityCard title="各队列 AD/NC 可用记录" subtitle="统计当前范围内属级图表可用的测序 Run。">
+              <QualityChart kind="cohorts" data={data} title="各队列 AD/NC 可用记录" />
+            </QualityCard>
+            <QualityStatus data={data} view={statusView} onViewChange={setStatusView} />
+            <MetadataAvailability data={data} />
+            <QualityCard title="各队列分类待解析比例" subtitle="统计完整 profile 中待解析丰度比例的中位数，横轴固定 0–100%。">
+              <QualityChart kind="resolution" data={data} title="各队列分类待解析比例" />
               <p className="gmrepo-note">当前范围 {number(data.counts.noResolvedGenusRuns)} 个 profile 没有可确认目标属。待解析比例包含 Unknown、层级不符和目标类群不符，不能解释为菌不存在。</p>
-            </ChartSection>
+            </QualityCard>
           </div>
           <details className="evaluation-sample-disclosure"><summary>各队列覆盖明细</summary><CohortTable data={data} onChoose={value => update('cohort', value)} /></details>
         </> : null}
